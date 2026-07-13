@@ -1,0 +1,1 @@
+export default function PendingPage(){return <main className="pending-page"><div className="brand-mark">B</div><span className="eyebrow">TOEGANGSAANVRAAG ONTVANGEN</span><h1>Je account wacht op goedkeuring.</h1><p>Een beheerder van BESC moet je rol en toegang nog bevestigen. Daarna kun je het Command Center gebruiken.</p><a href="/login">Terug naar inloggen</a></main>}

@@ -1,0 +1,3 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+export function EntityForm({ title, action, children }: { title: string; action: (formData: FormData) => void | Promise<void>; children: ReactNode }) { return <div className="form-card"><div className="form-heading"><h2>{title}</h2><Link href="?">Sluiten</Link></div><form action={action}><label>Titel<input name="title" required minLength={3}/></label><label>Beschrijving<textarea name="description" rows={4}/></label>{children}<div className="form-actions"><Link href="?">Annuleren</Link><button className="primary" type="submit">Opslaan</button></div></form></div>; }
