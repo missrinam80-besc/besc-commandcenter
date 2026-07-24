@@ -1,0 +1,13 @@
+create index campaigns_project_idx on public.campaigns(project_id) where deleted_at is null;
+create index campaigns_event_idx on public.campaigns(event_id) where deleted_at is null;
+create index campaigns_owner_idx on public.campaigns(owner_id) where deleted_at is null;
+create index campaigns_created_by_idx on public.campaigns(created_by) where deleted_at is null;
+create index community_people_owner_idx on public.community_people(owner_id) where deleted_at is null;
+create index community_people_created_by_idx on public.community_people(created_by) where deleted_at is null;
+create index partners_owner_idx on public.partners(owner_id) where deleted_at is null;
+create index partners_created_by_idx on public.partners(created_by) where deleted_at is null;
+create index social_posts_content_idx on public.social_posts(content_id) where deleted_at is null;
+create index social_posts_event_idx on public.social_posts(event_id) where deleted_at is null;
+create index social_posts_partner_idx on public.social_posts(partner_id) where deleted_at is null;
+create index social_posts_owner_idx on public.social_posts(owner_id) where deleted_at is null;
+create index social_posts_created_by_idx on public.social_posts(created_by) where deleted_at is null;
