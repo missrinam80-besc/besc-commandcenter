@@ -1,0 +1,4 @@
+export const contentTypes = {idea:"Idee",blog:"Blog",social_post:"Social post",short_reel:"Short / Reel",youtube_video:"YouTube-video",livestream:"Livestream",podcast:"Podcast",tutorial:"Tutorial",review:"Review",newsletter:"Nieuwsbrief",community_post:"Communitypost",partner_post:"Partnerpost",event_promo:"Eventpromo"} as const;
+export const contentStatuses = {idea:"Idee",research:"Research",draft:"Concept",production:"Productie",review:"Review",approved:"Goedgekeurd",scheduled:"Gepland",published:"Gepubliceerd",repurpose:"Hergebruiken",archived:"Gearchiveerd"} as const;
+export const contentChannels = ["Discord","Twitch","YouTube","TikTok","Instagram","Facebook","X","Threads","LinkedIn","Blogger","Website","Nieuwsbrief"] as const;
+export const approvalStatuses = {not_required:"Niet nodig",pending:"Te beoordelen",changes_requested:"Aanpassingen gevraagd",approved:"Goedgekeurd"} as const;

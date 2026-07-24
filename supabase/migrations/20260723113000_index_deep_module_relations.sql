@@ -1,0 +1,4 @@
+create index campaign_deliverables_campaign_idx on public.campaign_deliverables(campaign_id);
+create index community_assignments_person_idx on public.community_assignments(person_id);
+create index community_onboarding_person_idx on public.community_onboarding_items(person_id);
+create index partner_interactions_partner_idx on public.partner_interactions(partner_id);
