@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ModulePage } from "@/components/module-page";
 import { EntityForm } from "@/components/entity-form";
+import { SavedViews } from "@/components/saved-views";
 import { demoDashboard } from "@/lib/demo-data";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { requireActiveMembership } from "@/lib/auth-context";
@@ -75,6 +76,8 @@ export default async function TasksPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
+  const currentQuery = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) if (value) currentQuery.set(key, value);
   const search = params.zoek?.trim() ?? "";
   const status = params.status ?? "";
   const mine = params.van_mij === "1";
@@ -193,6 +196,11 @@ export default async function TasksPage({
             </label>
           </EntityForm>
         )}
+        <SavedViews
+          module="tasks"
+          path="/app/taken"
+          currentQuery={currentQuery.toString()}
+        />
         {tasks.length > 0 ? (
           <TaskList tasks={tasks} />
         ) : (
