@@ -1,14 +1,47 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { hasPermission } from "@/lib/permissions";
+import { requiredCapabilityForQuery } from "@/lib/route-permissions";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
+
+function redirectWithCookies(url: URL, response: NextResponse) {
+  const redirectResponse = NextResponse.redirect(url);
+  for (const cookie of response.cookies.getAll()) {
+    redirectResponse.cookies.set(cookie.name, cookie.value, cookie);
+  }
+  return redirectResponse;
+}
 
 export async function proxy(request: NextRequest) {
   if (!isSupabaseConfigured()) return NextResponse.next();
   let response = NextResponse.next({ request });
   const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, { cookies: { getAll: () => request.cookies.getAll(), setAll: items => { items.forEach(({name,value}) => request.cookies.set(name,value)); response = NextResponse.next({request}); items.forEach(({name,value,options}) => response.cookies.set(name,value,options)); } } });
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user && request.nextUrl.pathname.startsWith("/app")) return NextResponse.redirect(new URL("/login", request.url));
-  if (user && request.nextUrl.pathname === "/login") return NextResponse.redirect(new URL("/app", request.url));
+  if (!user && request.nextUrl.pathname.startsWith("/app")) return redirectWithCookies(new URL("/login", request.url), response);
+  if (user && request.nextUrl.pathname === "/login") return redirectWithCookies(new URL("/app", request.url), response);
+
+  const capability = user && request.nextUrl.pathname.startsWith("/app")
+    ? requiredCapabilityForQuery(request.nextUrl.pathname, request.nextUrl.searchParams)
+    : null;
+  if (user && capability) {
+    const { data: membership } = await supabase
+      .from("organization_members")
+      .select("role,finance_role,status")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .limit(1)
+      .maybeSingle();
+    if (!membership) {
+      return redirectWithCookies(new URL("/wachten-op-goedkeuring", request.url), response);
+    }
+    if (!hasPermission(membership, capability)) {
+      const destination = request.nextUrl.clone();
+      destination.searchParams.delete("nieuw");
+      destination.searchParams.delete("bewerken");
+      destination.searchParams.set("fout", "geen-toegang");
+      return redirectWithCookies(destination, response);
+    }
+  }
   return response;
 }
 export const config = { matcher: ["/app/:path*", "/login"] };
