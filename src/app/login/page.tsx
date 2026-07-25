@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { KeyRound, Mail } from "lucide-react";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { registerWithPassword, requestPasswordReset, sendMagicLink, signInWithDiscord, signInWithPassword } from "./actions";
@@ -13,7 +14,7 @@ const messages:Record<string,string>={
 
 export default async function LoginPage({searchParams}:{searchParams:Promise<Record<string,string|undefined>>}){
   const params=await searchParams;const configured=isSupabaseConfigured();
-  return <main className="login-page"><section className="login-brand"><div className="brand-mark">B</div><span>BESC COMMAND CENTER</span><h1>Samen bouwen aan<br/>een sterkere community.</h1><p>De centrale werkplek voor het bestuur, team en vrijwilligers van BESC vzw.</p></section><section className="login-card"><div><span className="eyebrow">WELKOM TERUG</span><h2>Log in op je werkplek</h2><p>Gebruik je bestaande account of log in via Discord.</p></div>
+  return <main className="login-page"><section className="login-brand"><Image className="login-logo" src="/besc-logo.png" width={875} height={286} priority alt="BESC"/><span>COMMAND CENTER</span><h1>Samen bouwen aan<br/>een sterkere community.</h1><p>De centrale werkplek voor het bestuur, team en vrijwilligers van BESC vzw.</p></section><section className="login-card"><div><span className="eyebrow">WELKOM TERUG</span><h2>Log in op je werkplek</h2><p>Gebruik je bestaande account of log in via Discord.</p></div>
     {!configured&&<div className="demo-notice">Demomodus actief. Configureer Supabase om inloggen te activeren.</div>}
     {params.error&&<div className="error-note">{messages[params.error]||"Inloggen is mislukt."}</div>}
     {params.sent&&<div className="success">De magic link is verstuurd. De link kan maximaal één keer gebruikt worden.</div>}
