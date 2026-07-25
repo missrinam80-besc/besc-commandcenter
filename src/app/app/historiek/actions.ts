@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireActiveMembership } from "@/lib/auth-context";
+import { requirePermission } from "@/lib/auth-context";
 import { historicalModules } from "./constants";
 
 const assignmentSchema = z.object({
@@ -14,9 +14,7 @@ const assignmentSchema = z.object({
 const bulkSchema = z.object({ ids: z.array(z.string().uuid()).min(1).max(175) });
 
 async function requireManager() {
-  const context = await requireActiveMembership();
-  if (!(["admin", "board"] as string[]).includes(context.membership.role)) redirect("/app/historiek?fout=geen-toegang");
-  return context;
+  return requirePermission("manageOrganization", "/app/historiek?fout=geen-toegang");
 }
 
 export async function assignHistoricalRecord(formData: FormData) {
