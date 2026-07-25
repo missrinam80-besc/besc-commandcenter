@@ -1,5 +1,218 @@
-import Link from "next/link"; import { AppShell } from "@/components/app-shell"; import { ModulePage } from "@/components/module-page"; import { EntityForm } from "@/components/entity-form"; import { demoDashboard } from "@/lib/demo-data"; import { isSupabaseConfigured } from "@/lib/supabase/configured"; import { createClient } from "@/lib/supabase/server"; import { createTask, updateTaskStatus } from "../actions";
-type TaskRow={id:string;title:string;status:string;priority:string;due_at:string|null;projects:{title:string}|null};
-const labels:Record<string,string>={todo:"Te doen",doing:"Bezig",waiting:"Wachten",review:"Review",done:"Afgerond",cancelled:"Geannuleerd"};
-function TaskList({tasks,completed=false}:{tasks:TaskRow[];completed?:boolean}){return <div className={`data-list ${completed?"completed-list":""}`}>{tasks.map(t=><article key={t.id}><form action={updateTaskStatus}><input type="hidden" name="id" value={t.id}/><input type="hidden" name="status" value={completed?"todo":"done"}/><button className={`check ${completed?"checked":""}`} aria-label={completed?"Heropenen":"Afronden"}>{completed?"✓":""}</button></form><div><Link className="task-link" href={`/app/taken/${t.id}`}><strong>{t.title}</strong></Link><p>{t.projects?.title??"Zonder project"} · {t.due_at||"geen deadline"}</p></div><span className="badge">{labels[t.status]??t.status}</span><form action={updateTaskStatus}><input type="hidden" name="id" value={t.id}/><input type="hidden" name="status" value={completed?"todo":"doing"}/><button type="submit">{completed?"Heropen":"Start"}</button></form></article>)}</div>}
-export default async function TasksPage({searchParams}:{searchParams:Promise<Record<string,string|undefined>>}){const params=await searchParams;let tasks:TaskRow[]=demoDashboard.tasks.map(t=>({id:t.id,title:t.title,status:t.status,priority:t.priority,due_at:t.due,projects:{title:t.project}}));let completed:TaskRow[]=[];let projects:{id:string;title:string}[]=[];if(isSupabaseConfigured()){const s=await createClient();const[{data:t},{data:c},{data:p}]=await Promise.all([s.from("tasks").select("id,title,status,priority,due_at,projects(title)").is("deleted_at",null).not("status","in","(done,cancelled)").order("due_at"),s.from("tasks").select("id,title,status,priority,due_at,projects(title)").is("deleted_at",null).eq("status","done").order("completed_at",{ascending:false}).limit(20),s.from("projects").select("id,title").is("deleted_at",null).in("status",["planned","active"])]);tasks=(t??[]) as unknown as TaskRow[];completed=(c??[]) as unknown as TaskRow[];projects=p??[];}return <AppShell active="Mijn werk"><ModulePage eyebrow="PERSOONLIJK OVERZICHT" title="Mijn werk" description="Alles wat nu jouw aandacht vraagt, over alle BESC-projecten heen." action="Taak">{params.fout&&<div className="error-note">De taak kon niet worden opgeslagen.</div>}{params.succes&&<div className="success">De taak werd aangemaakt.</div>}{params.nieuw&&<EntityForm title="Nieuwe taak" action={createTask}><div className="form-row"><label>Project<select name="project_id" defaultValue=""><option value="">Geen project</option>{projects.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></label><label>Deadline<input type="datetime-local" name="due_at"/></label></div><label>Prioriteit<select name="priority" defaultValue="normal"><option value="low">Laag</option><option value="normal">Normaal</option><option value="high">Hoog</option><option value="urgent">Urgent</option></select></label></EntityForm>}<TaskList tasks={tasks}/>{completed.length>0&&<section className="completed-section"><div><span className="eyebrow">HISTORIEK</span><h2>Recent afgerond</h2><p>Afgeronde taken blijven zichtbaar en kunnen opnieuw worden geopend.</p></div><TaskList tasks={completed} completed/></section>}</ModulePage></AppShell>}
+import Link from "next/link";
+import { AppShell } from "@/components/app-shell";
+import { ModulePage } from "@/components/module-page";
+import { EntityForm } from "@/components/entity-form";
+import { demoDashboard } from "@/lib/demo-data";
+import { isSupabaseConfigured } from "@/lib/supabase/configured";
+import { requireActiveMembership } from "@/lib/auth-context";
+import { createTask, updateTaskStatus } from "../actions";
+
+type TaskRow = {
+  id: string;
+  title: string;
+  status: string;
+  priority: string;
+  due_at: string | null;
+  completed_at?: string | null;
+  projects: { title: string } | null;
+};
+
+const taskStatuses = [
+  { value: "todo", label: "Te doen" },
+  { value: "doing", label: "Bezig" },
+  { value: "waiting", label: "Wachten" },
+  { value: "review", label: "Review" },
+  { value: "done", label: "Afgerond" },
+  { value: "cancelled", label: "Geannuleerd" },
+];
+
+const labels = Object.fromEntries(taskStatuses.map(({ value, label }) => [value, label]));
+
+function TaskList({ tasks, completed = false }: { tasks: TaskRow[]; completed?: boolean }) {
+  return (
+    <div className={`data-list ${completed ? "completed-list" : ""}`}>
+      {tasks.map((task) => (
+        <article key={task.id}>
+          <form action={updateTaskStatus}>
+            <input type="hidden" name="id" value={task.id} />
+            <input type="hidden" name="status" value={completed ? "todo" : "done"} />
+            <button
+              className={`check ${completed ? "checked" : ""}`}
+              aria-label={completed ? "Heropenen" : "Afronden"}
+            >
+              {completed ? "✓" : ""}
+            </button>
+          </form>
+          <div>
+            <Link className="task-link" href={`/app/taken/${task.id}`}>
+              <strong>{task.title}</strong>
+            </Link>
+            <p>
+              {task.projects?.title ?? "Zonder project"} ·{" "}
+              {task.due_at
+                ? new Intl.DateTimeFormat("nl-BE", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  }).format(new Date(task.due_at))
+                : "geen deadline"}
+            </p>
+          </div>
+          <span className="badge">{labels[task.status] ?? task.status}</span>
+          <form action={updateTaskStatus}>
+            <input type="hidden" name="id" value={task.id} />
+            <input type="hidden" name="status" value={completed ? "todo" : "doing"} />
+            <button type="submit">{completed ? "Heropen" : "Start"}</button>
+          </form>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+export default async function TasksPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const params = await searchParams;
+  const search = params.zoek?.trim() ?? "";
+  const status = params.status ?? "";
+  const mine = params.van_mij === "1";
+  let allTasks: TaskRow[] = demoDashboard.tasks.map((task) => ({
+    id: task.id,
+    title: task.title,
+    status: task.status,
+    priority: task.priority,
+    due_at: task.due,
+    projects: { title: task.project },
+  }));
+  let projects: { id: string; title: string }[] = [];
+
+  if (isSupabaseConfigured()) {
+    const { supabase, user, membership } = await requireActiveMembership();
+    let assignedTaskIds: string[] | null = null;
+
+    if (mine) {
+      const { data: assignments } = await supabase
+        .from("task_assignees")
+        .select("task_id")
+        .eq("user_id", user.id);
+      assignedTaskIds = (assignments ?? []).map((assignment) => assignment.task_id);
+    }
+
+    let taskQuery = supabase
+      .from("tasks")
+      .select("id,title,status,priority,due_at,completed_at,projects(title)")
+      .eq("organization_id", membership.organization_id)
+      .is("deleted_at", null)
+      .order("due_at", { ascending: true, nullsFirst: false });
+
+    if (search) taskQuery = taskQuery.ilike("title", `%${search}%`);
+    if (status) taskQuery = taskQuery.eq("status", status);
+    if (assignedTaskIds) {
+      taskQuery =
+        assignedTaskIds.length > 0
+          ? taskQuery.in("id", assignedTaskIds)
+          : taskQuery.in("id", ["00000000-0000-0000-0000-000000000000"]);
+    }
+
+    const [{ data: taskData }, { data: projectData }] = await Promise.all([
+      taskQuery,
+      supabase
+        .from("projects")
+        .select("id,title")
+        .eq("organization_id", membership.organization_id)
+        .is("deleted_at", null)
+        .in("status", ["planned", "active"])
+        .order("title"),
+    ]);
+    allTasks = (taskData ?? []) as unknown as TaskRow[];
+    projects = projectData ?? [];
+  } else {
+    if (search) {
+      allTasks = allTasks.filter((task) =>
+        task.title.toLocaleLowerCase("nl-BE").includes(search.toLocaleLowerCase("nl-BE")),
+      );
+    }
+    if (status) allTasks = allTasks.filter((task) => task.status === status);
+    if (mine) allTasks = [];
+  }
+
+  const tasks = allTasks.filter((task) => !["done", "cancelled"].includes(task.status));
+  const completed = allTasks
+    .filter((task) => ["done", "cancelled"].includes(task.status))
+    .sort(
+      (a, b) =>
+        new Date(b.completed_at ?? 0).getTime() - new Date(a.completed_at ?? 0).getTime(),
+    )
+    .slice(0, 20);
+
+  return (
+    <AppShell active="Mijn werk">
+      <ModulePage
+        eyebrow="PERSOONLIJK OVERZICHT"
+        title="Mijn werk"
+        description="Alles wat nu jouw aandacht vraagt, over alle BESC-projecten heen."
+        action="Taak"
+        search={search}
+        status={status}
+        mine={mine}
+        statusOptions={taskStatuses}
+        showMine
+        resultCount={tasks.length + completed.length}
+      >
+        {params.fout && <div className="error-note">De taak kon niet worden opgeslagen.</div>}
+        {params.succes && <div className="success">De taak werd aangemaakt.</div>}
+        {params.nieuw && (
+          <EntityForm title="Nieuwe taak" action={createTask}>
+            <div className="form-row">
+              <label>
+                Project
+                <select name="project_id" defaultValue="">
+                  <option value="">Geen project</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Deadline
+                <input type="datetime-local" name="due_at" />
+              </label>
+            </div>
+            <label>
+              Prioriteit
+              <select name="priority" defaultValue="normal">
+                <option value="low">Laag</option>
+                <option value="normal">Normaal</option>
+                <option value="high">Hoog</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </label>
+          </EntityForm>
+        )}
+        {tasks.length > 0 ? (
+          <TaskList tasks={tasks} />
+        ) : (
+          <div className="empty">
+            {search || status || mine
+              ? "Geen open taken gevonden met deze filters."
+              : "Er zijn momenteel geen open taken."}
+          </div>
+        )}
+        {completed.length > 0 && (
+          <section className="completed-section">
+            <div>
+              <span className="eyebrow">HISTORIEK</span>
+              <h2>Recent afgerond</h2>
+              <p>Afgeronde taken blijven zichtbaar en kunnen opnieuw worden geopend.</p>
+            </div>
+            <TaskList tasks={completed} completed />
+          </section>
+        )}
+      </ModulePage>
+    </AppShell>
+  );
+}
