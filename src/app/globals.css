@@ -240,6 +240,10 @@
 .filter-submit:hover{background:var(--besc-dark-red)}
 .filter-reset{display:inline-flex;align-items:center;justify-content:center;gap:5px;text-decoration:none}
 .filter-count{margin-left:auto;color:var(--muted);font-size:11px;white-space:nowrap}
+.extended-filters{flex-wrap:wrap}
+.extended-filters .search{flex:1 1 240px}
+.extended-filters .mine-filter{height:39px}
+.extended-filters .filter-count{padding:0 4px}
 @media(max-width:760px){
   .module-filters>*{flex:1}
   .module-filters .search{flex-basis:100%}
