@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarDays, Search, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { EventForm, eventStatuses, eventTypes } from "@/components/event-form";
+import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { saveEvent } from "./actions";
 
@@ -126,6 +127,7 @@ export default async function Events({
             {total} {total === 1 ? "resultaat" : "resultaten"}
           </span>
         </form>
+        <SavedViews module="events" path="/app/events" currentQuery={pageUrl(1).slice(1)} />
         <div className="content-list">
           {rows.map((event) => (
             <article key={event.id}>

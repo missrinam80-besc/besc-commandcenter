@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Clapperboard, Search, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ContentForm } from "@/components/content-form";
+import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { createContent } from "./actions";
 import { contentStatuses, contentTypes } from "./constants";
@@ -165,6 +166,7 @@ export default async function ContentPage({
             {total} {total === 1 ? "resultaat" : "resultaten"}
           </span>
         </form>
+        <SavedViews module="content" path="/app/content" currentQuery={pageUrl(1).slice(1)} />
         <div className="content-list">
           {rows.map((row) => (
             <article key={row.id}>

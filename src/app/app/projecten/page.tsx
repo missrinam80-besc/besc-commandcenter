@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ModulePage } from "@/components/module-page";
 import { EntityForm } from "@/components/entity-form";
+import { SavedViews } from "@/components/saved-views";
 import { demoDashboard } from "@/lib/demo-data";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { requireActiveMembership } from "@/lib/auth-context";
@@ -33,6 +34,8 @@ export default async function ProjectsPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
+  const currentQuery = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) if (value) currentQuery.set(key, value);
   const search = params.zoek?.trim() ?? "";
   const status = params.status ?? "";
   const mine = params.van_mij === "1";
@@ -111,6 +114,11 @@ export default async function ProjectsPage({
             </label>
           </EntityForm>
         )}
+        <SavedViews
+          module="projects"
+          path="/app/projecten"
+          currentQuery={currentQuery.toString()}
+        />
         <div className="data-list">
           {projects.map((project, index) => (
             <article key={project.id}>

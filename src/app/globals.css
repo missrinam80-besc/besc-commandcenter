@@ -244,9 +244,26 @@
 .extended-filters .search{flex:1 1 240px}
 .extended-filters .mine-filter{height:39px}
 .extended-filters .filter-count{padding:0 4px}
+.saved-views{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:-5px 0 16px;padding:10px 12px;background:#fffdf4;border:1px solid #eee3b0;border-radius:10px}
+.saved-views-list{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.saved-views-list>span{display:flex;align-items:center;gap:6px;color:#75691c;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-right:3px}
+.saved-views-list small{color:var(--muted);font-size:10px}
+.saved-view{display:flex;align-items:center;border:1px solid #e7d982;background:#fff;border-radius:999px;overflow:hidden}
+.saved-view>a{padding:6px 9px;color:#5f571e;font-size:10px;text-decoration:none;font-weight:650}
+.saved-view form{display:flex}
+.saved-view button{display:grid;place-items:center;border:0;border-left:1px solid #eee3b0;background:#fff;padding:6px 7px;color:#9b3d35;cursor:pointer}
+.save-view{position:relative;flex:0 0 auto}
+.save-view>summary{list-style:none;color:var(--besc-dark-red);font-size:10px;font-weight:750;cursor:pointer;white-space:nowrap}
+.save-view>summary::-webkit-details-marker{display:none}
+.save-view form{position:absolute;z-index:20;right:0;top:25px;display:flex;gap:7px;width:285px;padding:10px;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 12px 30px #0002}
+.save-view label{flex:1}
+.save-view input{width:100%;border:1px solid var(--line);border-radius:7px;padding:8px;font-size:11px}
+.save-view button{border:0;border-radius:7px;padding:7px 10px;background:var(--besc-red);color:#fff;font-size:10px;font-weight:750}
 @media(max-width:760px){
   .module-filters>*{flex:1}
   .module-filters .search{flex-basis:100%}
   .module-filters .filter,.module-filters .mine-filter{width:100%;justify-content:center}
   .filter-count{flex-basis:100%;text-align:right}
+  .saved-views{align-items:flex-start;flex-direction:column}
+  .save-view form{left:0;right:auto;width:min(285px,calc(100vw - 68px))}
 }

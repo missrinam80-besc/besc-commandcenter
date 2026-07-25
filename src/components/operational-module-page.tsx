@@ -7,6 +7,7 @@ import {
 } from "@/app/app/operations/config";
 import { AppShell } from "@/components/app-shell";
 import { OperationalRecordForm } from "@/components/operational-record-form";
+import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
 
 const PAGE_SIZE = 25;
@@ -283,6 +284,11 @@ export async function OperationalModulePage({
             </div>
           )}
         </div>
+        <SavedViews
+          module={module}
+          path={`/app/${module}`}
+          currentQuery={queryString({ pagina: null })}
+        />
         {calendar ? (
           <div className="social-calendar">
             {rows
