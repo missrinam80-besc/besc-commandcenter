@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { ContentForm } from "@/components/content-form";
 import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { hasPermission } from "@/lib/permissions";
 import { createContent } from "./actions";
 import { contentStatuses, contentTypes } from "./constants";
 
@@ -35,6 +36,7 @@ export default async function ContentPage({
     : "newest";
   const page = Math.max(1, Number.parseInt(params.pagina ?? "1", 10) || 1);
   const { supabase, membership, user } = await requireActiveMembership();
+  const canManage = hasPermission(membership, "manageContent");
   const orderColumn =
     sort === "title" ? "title" : sort === "publication" ? "publication_at" : "created_at";
   const ascending = sort === "oldest" || sort === "title" || sort === "publication";
@@ -100,9 +102,11 @@ export default async function ContentPage({
           <p>CREATIE & PLANNING</p>
           <h1>Content Studio</h1>
         </div>
-        <Link className="primary" href="?nieuw=1">
-          Nieuwe content
-        </Link>
+        {canManage && (
+          <Link className="primary" href="?nieuw=1">
+            Nieuwe content
+          </Link>
+        )}
       </header>
       <div className="module-body">
         <p className="lead">
@@ -119,7 +123,7 @@ export default async function ContentPage({
         {params.fout && (
           <div className="error-note">Content kon niet worden opgeslagen ({params.fout}).</div>
         )}
-        {params.nieuw && (
+        {params.nieuw && canManage && (
           <section className="form-card">
             <div className="form-heading">
               <h2>Nieuw contentitem</h2>

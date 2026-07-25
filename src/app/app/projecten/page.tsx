@@ -6,6 +6,7 @@ import { SavedViews } from "@/components/saved-views";
 import { demoDashboard } from "@/lib/demo-data";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { hasPermission } from "@/lib/permissions";
 import { createProject } from "../actions";
 
 type ProjectRow = {
@@ -45,9 +46,11 @@ export default async function ProjectsPage({
     status: project.status,
     due_date: project.due,
   }));
+  let canManage = false;
 
   if (isSupabaseConfigured()) {
     const { supabase, user, membership } = await requireActiveMembership();
+    canManage = hasPermission(membership, "manageProjects");
     let query = supabase
       .from("projects")
       .select("id,title,status,due_date")
@@ -78,6 +81,7 @@ export default async function ProjectsPage({
         title="Projecten"
         description="Volg doelen, eigenaarschap, planning en uitvoering vanuit één helder dossier."
         action="Project"
+        canCreate={canManage}
         search={search}
         status={status}
         mine={mine}
@@ -87,7 +91,7 @@ export default async function ProjectsPage({
       >
         {params.fout && <div className="error-note">Het project kon niet worden opgeslagen.</div>}
         {params.succes && <div className="success">Het project werd aangemaakt.</div>}
-        {params.nieuw && (
+        {params.nieuw && canManage && (
           <EntityForm title="Nieuw project" action={createProject}>
             <div className="form-row">
               <label>
