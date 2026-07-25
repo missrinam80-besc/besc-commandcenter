@@ -160,7 +160,7 @@ export async function AppShell({
   const role = providedRole || organizationRoleLabels[membershipRole] || "Teamlid";
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-role={membershipRole} data-active={active}>
       <aside className="sidebar">
         <Link className="brand" href="/app" aria-label="BESC Command Center home">
           <Image src="/besc-logo.png" width={875} height={286} priority alt="BESC"/>

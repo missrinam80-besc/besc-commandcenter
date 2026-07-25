@@ -9,6 +9,7 @@ import { AppShell } from "@/components/app-shell";
 import { OperationalRecordForm } from "@/components/operational-record-form";
 import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { hasPermission } from "@/lib/permissions";
 
 const PAGE_SIZE = 25;
 
@@ -65,6 +66,7 @@ export async function OperationalModulePage({
       : "newest";
   const page = Math.max(1, Number.parseInt(params.pagina ?? "1", 10) || 1);
   const { supabase, membership, user } = await requireActiveMembership();
+  const canManage = hasPermission(membership, "manageOrganization");
   const org = membership.organization_id;
   const columns = module === "social" ? "*,social_post_variants(id,platform)" : "*";
   const orderColumn =
@@ -170,9 +172,11 @@ export async function OperationalModulePage({
           <p>{config.eyebrow}</p>
           <h1>{config.label}</h1>
         </div>
-        <Link className="primary" href="?nieuw=1">
-          Nieuwe {config.singular}
-        </Link>
+        {canManage && (
+          <Link className="primary" href="?nieuw=1">
+            Nieuwe {config.singular}
+          </Link>
+        )}
       </header>
       <div className="module-body">
         <p className="lead">
@@ -194,7 +198,7 @@ export async function OperationalModulePage({
         </section>
         {params.fout && <div className="error-note">Opslaan is mislukt ({params.fout}).</div>}
         {params.succes && <div className="success">Wijziging opgeslagen.</div>}
-        {params.nieuw && (
+        {params.nieuw && canManage && (
           <section className="form-card">
             <div className="form-heading">
               <h2>Nieuwe {config.singular}</h2>

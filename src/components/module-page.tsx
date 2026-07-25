@@ -9,6 +9,7 @@ type ModulePageProps = {
   title: string;
   description: string;
   action: string;
+  canCreate?: boolean;
   children: ReactNode;
   search?: string;
   status?: string;
@@ -23,6 +24,7 @@ export function ModulePage({
   title,
   description,
   action,
+  canCreate = true,
   children,
   search = "",
   status = "",
@@ -40,10 +42,12 @@ export function ModulePage({
           <p>{eyebrow}</p>
           <h1>{title}</h1>
         </div>
-        <Link className="primary" href="?nieuw=1">
-          <Plus size={17} />
-          {action}
-        </Link>
+        {canCreate && (
+          <Link className="primary" href="?nieuw=1">
+            <Plus size={17} />
+            {action}
+          </Link>
+        )}
       </header>
       <div className="module-body">
         <p className="lead">{description}</p>

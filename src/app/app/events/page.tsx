@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { EventForm, eventStatuses, eventTypes } from "@/components/event-form";
 import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { hasPermission } from "@/lib/permissions";
 import { saveEvent } from "./actions";
 
 const PAGE_SIZE = 25;
@@ -34,6 +35,7 @@ export default async function Events({
     : "date";
   const page = Math.max(1, Number.parseInt(params.pagina ?? "1", 10) || 1);
   const { supabase, membership, user } = await requireActiveMembership();
+  const canManage = hasPermission(membership, "manageEvents");
   const orderColumn = sort === "title" ? "title" : sort === "date" ? "start_at" : "created_at";
   const ascending = sort === "date" || sort === "oldest" || sort === "title";
 
@@ -79,14 +81,14 @@ export default async function Events({
     <AppShell active="Events">
       <header className="topbar module-top">
         <div><p>PLANNING & PRODUCTIE</p><h1>Events</h1></div>
-        <Link className="primary" href="?nieuw=1">Nieuw event</Link>
+        {canManage && <Link className="primary" href="?nieuw=1">Nieuw event</Link>}
       </header>
       <div className="module-body">
         <p className="lead">
           Beheer community-events, workshops, streams en externe deelnames in één dossier.
         </p>
         {params.fout && <div className="error-note">Event kon niet worden opgeslagen.</div>}
-        {params.nieuw && (
+        {params.nieuw && canManage && (
           <section className="form-card">
             <div className="form-heading"><h2>Nieuw event</h2><Link href="?">Sluiten</Link></div>
             <EventForm action={saveEvent} projects={projects ?? []} />
