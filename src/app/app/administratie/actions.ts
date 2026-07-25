@@ -3,17 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireActiveMembership } from "@/lib/auth-context";
+import { requirePermission } from "@/lib/auth-context";
 
 const optionalUrl = z.string().url().optional().or(z.literal(""));
 const optionalUuid = z.string().uuid().optional().or(z.literal(""));
 
 async function requireBoardManager() {
-  const context = await requireActiveMembership();
-  if (!["admin", "board"].includes(context.membership.role)) {
-    redirect("/app/administratie?fout=geen-toegang");
-  }
-  return context;
+  return requirePermission("manageOrganization", "/app/administratie?fout=geen-toegang");
 }
 
 const clean = <T extends Record<string, unknown>>(values: T) =>

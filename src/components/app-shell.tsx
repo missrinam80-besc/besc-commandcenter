@@ -9,14 +9,17 @@ import {
 import type { ComponentType, ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
 import { requireActiveMembership } from "@/lib/auth-context";
+import {
+  type FinanceRole,
+  type OrganizationRole,
+  organizationRoleLabels,
+} from "@/lib/permissions";
 
-type MembershipRole = "admin" | "board" | "member" | "volunteer";
-type FinanceRole = "none" | "submitter" | "approver" | "treasurer";
 type NavigationItem = {
   label: string;
   href: string;
   icon: ComponentType<{ size?: number }>;
-  roles?: MembershipRole[];
+  roles?: OrganizationRole[];
   financeRoles?: FinanceRole[];
   counter?: "inbox";
 };
@@ -24,13 +27,6 @@ type NavigationGroup = {
   label: string;
   icon: ComponentType<{ size?: number }>;
   items: NavigationItem[];
-};
-
-const roleLabels: Record<MembershipRole, string> = {
-  admin: "Beheerder",
-  board: "Bestuur",
-  member: "Teamlid",
-  volunteer: "Vrijwilliger",
 };
 
 const navigationGroups: NavigationGroup[] = [
@@ -91,7 +87,7 @@ const navigationGroups: NavigationGroup[] = [
   },
 ];
 
-function canSeeItem(item: NavigationItem, role: MembershipRole, financeRole: FinanceRole) {
+function canSeeItem(item: NavigationItem, role: OrganizationRole, financeRole: FinanceRole) {
   if (!item.roles && !item.financeRoles) return true;
   return Boolean(item.roles?.includes(role) || item.financeRoles?.includes(financeRole));
 }
@@ -103,7 +99,7 @@ function Navigation({
   inboxCount,
 }: {
   active: string;
-  role: MembershipRole;
+  role: OrganizationRole;
   financeRole: FinanceRole;
   inboxCount: number;
 }) {
@@ -158,10 +154,10 @@ export async function AppShell({
     supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("read_at", null),
   ]);
 
-  const membershipRole = membership.role as MembershipRole;
+  const membershipRole = membership.role as OrganizationRole;
   const financeRole = membership.finance_role as FinanceRole;
   const name = providedName || profile?.display_name || user.email?.split("@")[0] || "Gebruiker";
-  const role = providedRole || roleLabels[membershipRole] || "Teamlid";
+  const role = providedRole || organizationRoleLabels[membershipRole] || "Teamlid";
 
   return (
     <main className="app-shell">

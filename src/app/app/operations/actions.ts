@@ -2,13 +2,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireActiveMembership } from "@/lib/auth-context";
+import { requirePermission } from "@/lib/auth-context";
 import { operationalModules, type OperationalModule } from "./config";
 const optionalNumber=z.preprocess(value=>value===""?undefined:value,z.coerce.number().min(0).optional());
 const optionalUuid=z.string().uuid().optional().or(z.literal(""));
 const csv=(value:string|undefined)=>(value??"").split(",").map(item=>item.trim()).filter(Boolean);
 
-async function manager(module:OperationalModule){const context=await requireActiveMembership();if(!["admin","board"].includes(context.membership.role))redirect(`/app/${module}?fout=geen-toegang`);return context;}
+async function manager(module:OperationalModule){return requirePermission("manageOrganization",`/app/${module}?fout=geen-toegang`);}
 export async function createOperationalRecord(formData:FormData){
   const moduleResult=z.enum(["sponsors","campagnes","community","social"]).safeParse(formData.get("module"));
   if(!moduleResult.success) redirect("/app");

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { cache } from "react";
+import { type Capability, hasPermission } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 
 export const requireActiveMembership = cache(async function requireActiveMembership() {
@@ -10,3 +11,9 @@ export const requireActiveMembership = cache(async function requireActiveMembers
   if (!membership) redirect("/wachten-op-goedkeuring");
   return { supabase, user, membership };
 });
+
+export async function requirePermission(capability: Capability, fallback = "/app?fout=geen-toegang") {
+  const context = await requireActiveMembership();
+  if (!hasPermission(context.membership, capability)) redirect(fallback);
+  return context;
+}

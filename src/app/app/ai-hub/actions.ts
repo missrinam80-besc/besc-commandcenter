@@ -4,7 +4,7 @@ import { generateText } from "ai";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireActiveMembership } from "@/lib/auth-context";
+import { requireActiveMembership, requirePermission } from "@/lib/auth-context";
 
 const generationSchema = z.object({
   template_id: z.string().uuid().optional().or(z.literal("")),
@@ -26,10 +26,7 @@ export async function savePrompt(formData: FormData) {
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/ai-hub?fout=velden");
 
-  const { supabase, user, membership } = await requireActiveMembership();
-  if (!["admin", "board"].includes(membership.role)) {
-    redirect("/app/ai-hub?fout=rechten");
-  }
+  const { supabase, user, membership } = await requirePermission("manageAiTemplates", "/app/ai-hub?fout=rechten");
 
   const { error } = await supabase.from("ai_prompt_templates").insert({
     organization_id: membership.organization_id,
