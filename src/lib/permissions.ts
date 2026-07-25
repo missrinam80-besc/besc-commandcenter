@@ -9,20 +9,23 @@ export type MembershipAccess = {
   finance_role: string;
 };
 
-export type Capability =
-  | "manageUsers"
-  | "manageOrganization"
-  | "manageInbox"
-  | "manageProjects"
-  | "manageContent"
-  | "manageEvents"
-  | "manageFinance"
-  | "submitExpenses"
-  | "viewFinance"
-  | "manageIntegrations"
-  | "manageKpis"
-  | "manageAiTemplates"
-  | "useAi";
+export const capabilities = [
+  "manageUsers",
+  "manageOrganization",
+  "manageInbox",
+  "manageProjects",
+  "manageContent",
+  "manageEvents",
+  "manageFinance",
+  "submitExpenses",
+  "viewFinance",
+  "manageIntegrations",
+  "manageKpis",
+  "manageAiTemplates",
+  "useAi",
+] as const;
+
+export type Capability = (typeof capabilities)[number];
 
 export const organizationRoleLabels: Record<OrganizationRole, string> = {
   admin: "Beheerder",

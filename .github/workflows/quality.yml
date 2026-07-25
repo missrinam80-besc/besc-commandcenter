@@ -1,0 +1,47 @@
+name: Kwaliteitscontrole
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  permissions-lint-build:
+    name: Rechten, lint en build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Repository ophalen
+        uses: actions/checkout@v4
+
+      - name: pnpm instellen
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Node.js instellen
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Dependencies installeren
+        run: pnpm install --frozen-lockfile
+
+      - name: Rechtenmatrix controleren
+        run: pnpm run test:permissions
+
+      - name: Codekwaliteit controleren
+        run: pnpm run lint
+
+      - name: Productiebuild controleren
+        run: pnpm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://commandcenter.besc.be
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: test-publishable-key
