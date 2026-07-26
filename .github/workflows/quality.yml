@@ -33,8 +33,8 @@ jobs:
       - name: Dependencies installeren
         run: pnpm install --frozen-lockfile
 
-      - name: Rechtenmatrix controleren
-        run: pnpm run test:permissions
+      - name: Rechten- en auditcontroles uitvoeren
+        run: pnpm test
 
       - name: Codekwaliteit controleren
         run: pnpm run lint
