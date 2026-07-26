@@ -21,6 +21,11 @@ import {
   targetScore,
   type ReportPeriod,
 } from "@/lib/management-report";
+import {
+  projectProgress,
+  sponsorPerformance,
+  workloadByPerson,
+} from "@/lib/management-analytics";
 
 function money(value: number) {
   return new Intl.NumberFormat("nl-BE", { style: "currency", currency: "EUR" }).format(value);
@@ -59,7 +64,9 @@ export default async function ManagementReportPage({
     periodEvents, previousPeriodEvents, newPeople, previousNewPeople, openTasks, overdueTasksCount,
     projects, activePartners, overduePartnerCount, openActions, overdueComplianceCount,
     campaigns, expenses, income, budgets, kpis, overdueTaskRows, blockedProjects,
-    overduePartners, overdueCompliance,
+    overduePartners, overdueCompliance, projectTasks, projectMilestones, workloadTasks,
+    organizationPeople, resultContent, resultEvents, resultCampaigns, sponsorPartners,
+    sponsorCampaigns, sponsorDeliverables,
   ] = await Promise.all([
     supabase.from("tasks").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).is("deleted_at", null).gte("completed_at", start).lt("completed_at", end),
     supabase.from("tasks").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).is("deleted_at", null).gte("completed_at", previousStart).lt("completed_at", previousEnd),
@@ -85,6 +92,16 @@ export default async function ManagementReportPage({
     supabase.from("projects").select("id,title,due_date").eq("organization_id", organizationId).is("deleted_at", null).eq("status", "blocked").order("due_date").limit(5),
     supabase.from("partners").select("id,name,next_follow_up").eq("organization_id", organizationId).is("deleted_at", null).lt("next_follow_up", todayDate).not("status", "in", "(inactive,rejected,archived)").order("next_follow_up").limit(5),
     supabase.from("compliance_deadlines").select("id,title,due_date").eq("organization_id", organizationId).is("deleted_at", null).lt("due_date", todayDate).in("status", ["open", "planned"]).order("due_date").limit(5),
+    supabase.from("tasks").select("project_id,status").eq("organization_id", organizationId).is("deleted_at", null).not("project_id", "is", null),
+    supabase.from("project_milestones").select("project_id,is_done,projects!inner(organization_id)").eq("projects.organization_id", organizationId),
+    supabase.from("tasks").select("status,priority,due_at,task_assignees(user_id)").eq("organization_id", organizationId).is("deleted_at", null).not("status", "in", "(done,cancelled)"),
+    supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", organizationId).eq("status", "active"),
+    supabase.from("content_items").select("id,title,status,content_type,publication_at").eq("organization_id", organizationId).is("deleted_at", null).gte("publication_at", start).lt("publication_at", end),
+    supabase.from("events").select("id,title,status,event_type,start_at,expected_attendees").eq("organization_id", organizationId).is("deleted_at", null).gte("start_at", start).lt("start_at", end).not("status", "in", "(cancelled,archived)"),
+    supabase.from("campaigns").select("id,title,status,start_date,end_date,value,impressions,clicks,partner_id").eq("organization_id", organizationId).is("deleted_at", null).not("status", "in", "(cancelled,archived)"),
+    supabase.from("partners").select("id,name,estimated_value").eq("organization_id", organizationId).is("deleted_at", null).not("status", "in", "(inactive,rejected,archived)"),
+    supabase.from("campaigns").select("id,partner_id,value,impressions,clicks").eq("organization_id", organizationId).is("deleted_at", null).not("status", "in", "(cancelled,archived)"),
+    supabase.from("campaign_deliverables").select("campaign_id,status,due_date").eq("organization_id", organizationId),
   ]);
 
   const taskDone = completedTasks.count ?? 0;
@@ -99,6 +116,67 @@ export default async function ManagementReportPage({
   const budgetTotal = (budgets.data ?? []).reduce((sum, item) => sum + Number(item.planned_amount), 0);
   const kpiScore = targetScore((kpis.data ?? []).map((item) => ({ value: Number(item.value), target: item.target === null ? null : Number(item.target) })));
   const riskCount = (overdueTasksCount.count ?? 0) + projectRows.filter((project) => project.status === "blocked").length + (overduePartnerCount.count ?? 0) + (overdueComplianceCount.count ?? 0);
+  const progressRows = projectProgress(
+    projectRows,
+    (projectTasks.data ?? []) as { project_id: string | null; status: string }[],
+    (projectMilestones.data ?? []) as { project_id: string; is_done: boolean }[],
+  ).filter((project) => ["planned", "active", "blocked"].includes(project.status))
+    .sort((a, b) => b.percentage - a.percentage);
+  const people = (organizationPeople.data ?? []).map((item) => {
+    const profile = item.profiles as unknown as
+      | { display_name?: string }
+      | { display_name?: string }[]
+      | null;
+    return {
+      user_id: item.user_id,
+      name: (Array.isArray(profile) ? profile[0]?.display_name : profile?.display_name) ?? "Gebruiker",
+    };
+  });
+  const workloadRows = workloadByPerson(
+    (workloadTasks.data ?? []) as {
+      status: string;
+      priority: string;
+      due_at: string | null;
+      task_assignees?: { user_id: string }[];
+    }[],
+    people,
+  );
+  const sponsorRows = sponsorPerformance(
+    (sponsorPartners.data ?? []) as { id: string; name: string; estimated_value: number | string | null }[],
+    (sponsorCampaigns.data ?? []) as { id: string; partner_id: string | null; value: number | string | null; impressions: number | string | null; clicks: number | string | null }[],
+    (sponsorDeliverables.data ?? []) as { campaign_id: string; status: string; due_date: string | null }[],
+    todayDate,
+  ).sort((a, b) => b.realizedValue - a.realizedValue);
+  const contentRows = resultContent.data ?? [];
+  const eventRows = resultEvents.data ?? [];
+  const campaignRows = (resultCampaigns.data ?? []).filter((item) => {
+    const startsBeforeEnd = !item.start_date || item.start_date < end.slice(0, 10);
+    const endsAfterStart = !item.end_date || item.end_date >= start.slice(0, 10);
+    return startsBeforeEnd && endsAfterStart;
+  });
+  const operationalResults = [
+    {
+      label: "Content",
+      href: "/app/content",
+      records: contentRows.length,
+      completed: contentRows.filter((item) => item.status === "published").length,
+      result: (kpis.data ?? []).filter((item) => item.domain === "content").length,
+    },
+    {
+      label: "Events",
+      href: "/app/events",
+      records: eventRows.length,
+      completed: eventRows.filter((item) => item.status === "completed").length,
+      result: (kpis.data ?? []).filter((item) => item.domain === "events").length,
+    },
+    {
+      label: "Campagnes",
+      href: "/app/campagnes",
+      records: campaignRows.length,
+      completed: campaignRows.filter((item) => item.status === "completed").length,
+      result: (kpis.data ?? []).filter((item) => item.domain === "campaigns").length,
+    },
+  ];
   const risks = [
     ...(overdueTaskRows.data ?? []).map((item) => ({ id: `task-${item.id}`, title: item.title, type: "Achterstallige taak", date: item.due_at, href: `/app/taken/${item.id}` })),
     ...(blockedProjects.data ?? []).map((item) => ({ id: `project-${item.id}`, title: item.title, type: "Geblokkeerd project", date: item.due_date, href: `/app/projecten/${item.id}` })),
@@ -110,7 +188,7 @@ export default async function ManagementReportPage({
     <AppShell active="Rapportage & KPI">
       <header className="topbar module-top management-report-top">
         <div><p>BESTUURSRAPPORT</p><h1>Managementoverzicht</h1></div>
-        <div><ManagementReportActions/><Link className="row-action" href="/app/rapportage">KPI-register</Link></div>
+        <div><ManagementReportActions exportHref={`/app/rapportage/management/export?periode=${period}&datum=${anchor.toISOString().slice(0, 10)}`}/><Link className="row-action" href="/app/rapportage">KPI-register</Link></div>
       </header>
       <div className="module-body management-report">
         <section className="management-report-intro">
@@ -161,6 +239,30 @@ export default async function ManagementReportPage({
             <div className="management-target-score"><div style={{ "--score": `${kpiScore.percentage}%` } as CSSProperties}><strong>{kpiScore.percentage}%</strong></div><span><b>{kpiScore.reached} van {kpiScore.total}</b> KPI-doelen behaald in deze periode</span></div>
           </section>
         </div>
+
+        <div className="management-grid management-detail-grid">
+          <section className="panel management-progress">
+            <div className="panel-head"><div><span className="eyebrow">PROJECTVOORTGANG</span><h3>Taken en mijlpalen</h3></div><Link href="/app/projecten">Alle projecten</Link></div>
+            <div className="management-progress-list">
+              {progressRows.slice(0, 8).map((project) => <Link href={`/app/projecten/${project.id}`} key={project.id}><div><strong>{project.title}</strong><span>{project.completed} van {project.total} onderdelen afgerond · {project.open} open</span></div><i><b style={{width:`${project.percentage}%`}}/></i><em>{project.percentage}%</em></Link>)}
+              {!progressRows.length && <div className="empty">Geen actieve projecten met voortgangsgegevens.</div>}
+            </div>
+          </section>
+          <section className="panel management-workload">
+            <div className="panel-head"><div><span className="eyebrow">WERKDRUK</span><h3>Open werk per persoon</h3></div><Link href="/app/taken?weergave=open">Alle taken</Link></div>
+            <div className="management-table-wrap"><table className="management-table"><thead><tr><th>Persoon</th><th>Open</th><th>Te laat</th><th>Urgent</th><th>Wacht</th></tr></thead><tbody>{workloadRows.slice(0, 10).map((row)=><tr key={row.id}><td>{row.name}</td><td>{row.open}</td><td className={row.overdue?"negative":""}>{row.overdue}</td><td>{row.urgent}</td><td>{row.waiting}</td></tr>)}</tbody></table>{!workloadRows.length&&<div className="empty">Geen open toegewezen taken.</div>}</div>
+          </section>
+        </div>
+
+        <section className="panel management-results">
+          <div className="panel-head"><div><span className="eyebrow">OPERATIONELE RESULTATEN</span><h3>Event-, campagne- en contentresultaten</h3></div><Link href="/app/rapportage">KPI-details</Link></div>
+          <div className="management-result-grid">{operationalResults.map((result)=><Link href={result.href} key={result.label}><strong>{result.label}</strong><span><b>{result.records}</b> in periode</span><span><b>{result.completed}</b> afgerond/gepubliceerd</span><span><b>{result.result}</b> KPI-metingen</span></Link>)}</div>
+        </section>
+
+        <section className="panel management-sponsors">
+          <div className="panel-head"><div><span className="eyebrow">SPONSORWAARDE & DELIVERABLES</span><h3>Realisatie per sponsor</h3></div><Link href="/app/sponsors">Sponsor-CRM</Link></div>
+          <div className="management-table-wrap"><table className="management-table sponsor-value-table"><thead><tr><th>Sponsor</th><th>Geschat</th><th>Gerealiseerd</th><th>Campagnes</th><th>Deliverables</th><th>Te laat</th><th>Bereik</th><th>Kliks</th></tr></thead><tbody>{sponsorRows.map((row)=><tr key={row.id}><td><Link href={`/app/sponsors/${row.id}`}>{row.name}</Link></td><td>{money(row.estimatedValue)}</td><td>{money(row.realizedValue)}</td><td>{row.campaigns}</td><td>{row.completed}/{row.deliverables}</td><td className={row.overdue?"negative":""}>{row.overdue}</td><td>{row.impressions.toLocaleString("nl-BE")}</td><td>{row.clicks.toLocaleString("nl-BE")}</td></tr>)}</tbody></table>{!sponsorRows.length&&<div className="empty">Nog geen sponsorwaarde of deliverables geregistreerd.</div>}</div>
+        </section>
 
         <section id="risicos" className="panel management-risks">
           <div className="panel-head"><div><span className="eyebrow">RISICO’S & AANDACHTSPUNTEN</span><h3>Prioriteiten voor het bestuur</h3></div><span>{risks.length} van {riskCount} getoond</span></div>
