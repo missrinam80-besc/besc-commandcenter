@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
+import { GlobalSearchTrigger } from "@/components/global-search-trigger";
 import { requireActiveMembership } from "@/lib/auth-context";
 import {
   type FinanceRole,
@@ -170,6 +171,7 @@ export async function AppShell({
         </Link>
         <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0}/>
         <div className="sidebar-utility">
+          <GlobalSearchTrigger active={active === "Zoeken"}/>
           <Link className={active === "Meldingen" ? "active" : ""} href="/app/meldingen">
             <Bell size={17}/><span>Meldingen</span>
             {(notificationCount ?? 0) > 0 && <b>{(notificationCount ?? 0) > 99 ? "99+" : notificationCount}</b>}
