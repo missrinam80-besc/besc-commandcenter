@@ -14,23 +14,44 @@ const requiredVariables = [
 
 export type GoogleWorkspaceVariable = (typeof requiredVariables)[number];
 
+function env(name: GoogleWorkspaceVariable) {
+  return (process.env[name] ?? "").trim().replace(/^["']|["']$/g, "");
+}
+
+function resourceSegment(value: string, marker: string) {
+  const normalized = value.replace(/^\/\/iam\.googleapis\.com\//, "");
+  const index = normalized.lastIndexOf(marker);
+  return index >= 0 ? normalized.slice(index + marker.length).split("/")[0] : normalized;
+}
+
+export function googleWorkloadAudience(input: {
+  projectNumber: string;
+  workloadIdentityPoolId: string;
+  workloadIdentityProviderId: string;
+}) {
+  const projectNumber = resourceSegment(input.projectNumber.trim(), "projects/");
+  const poolId = resourceSegment(input.workloadIdentityPoolId.trim(), "workloadIdentityPools/");
+  const providerId = resourceSegment(input.workloadIdentityProviderId.trim(), "providers/");
+  return `//iam.googleapis.com/projects/${projectNumber}/locations/global/workloadIdentityPools/${poolId}/providers/${providerId}`;
+}
+
 export function googleWorkspaceConfiguration() {
-  const missing = requiredVariables.filter((name) => !process.env[name]?.trim());
+  const missing = requiredVariables.filter((name) => !env(name));
   return {
     configured: missing.length === 0,
     missing,
-    email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ?? "",
-    projectId: process.env.GOOGLE_CLOUD_PROJECT_ID ?? "",
-    projectNumber: process.env.GOOGLE_CLOUD_PROJECT_NUMBER ?? "",
-    workloadIdentityPoolId: process.env.GOOGLE_WORKLOAD_IDENTITY_POOL_ID ?? "",
-    workloadIdentityProviderId: process.env.GOOGLE_WORKLOAD_IDENTITY_POOL_PROVIDER_ID ?? "",
-    sharedDriveId: process.env.GOOGLE_SHARED_DRIVE_ID ?? "",
-    rootFolderId: process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID ?? "",
-    calendarId: process.env.GOOGLE_CALENDAR_ID ?? "",
+    email: env("GOOGLE_SERVICE_ACCOUNT_EMAIL"),
+    projectId: env("GOOGLE_CLOUD_PROJECT_ID"),
+    projectNumber: env("GOOGLE_CLOUD_PROJECT_NUMBER"),
+    workloadIdentityPoolId: env("GOOGLE_WORKLOAD_IDENTITY_POOL_ID"),
+    workloadIdentityProviderId: env("GOOGLE_WORKLOAD_IDENTITY_POOL_PROVIDER_ID"),
+    sharedDriveId: env("GOOGLE_SHARED_DRIVE_ID"),
+    rootFolderId: env("GOOGLE_DRIVE_ROOT_FOLDER_ID"),
+    calendarId: env("GOOGLE_CALENDAR_ID"),
     templates: {
-      minutes: process.env.GOOGLE_TEMPLATE_MINUTES_ID ?? "",
-      sponsorReport: process.env.GOOGLE_TEMPLATE_SPONSOR_REPORT_ID ?? "",
-      event: process.env.GOOGLE_TEMPLATE_EVENT_ID ?? "",
+      minutes: env("GOOGLE_TEMPLATE_MINUTES_ID"),
+      sponsorReport: env("GOOGLE_TEMPLATE_SPONSOR_REPORT_ID"),
+      event: env("GOOGLE_TEMPLATE_EVENT_ID"),
     },
   };
 }
@@ -50,7 +71,7 @@ export async function googleAccessToken() {
   if (!oidcToken) {
     throw new Error("Geen Vercel OIDC-token beschikbaar. Deploy op Vercel of voer lokaal `vercel env pull` uit.");
   }
-  const audience = `//iam.googleapis.com/projects/${config.projectNumber}/locations/global/workloadIdentityPools/${config.workloadIdentityPoolId}/providers/${config.workloadIdentityProviderId}`;
+  const audience = googleWorkloadAudience(config);
   const stsResponse = await fetch("https://sts.googleapis.com/v1/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -66,7 +87,8 @@ export async function googleAccessToken() {
   });
   const sts = await stsResponse.json() as { access_token?: string; expires_in?: number; error_description?: string; error?: string };
   if (!stsResponse.ok || !sts.access_token) {
-    throw new Error(sts.error_description || sts.error || "Google STS heeft het Vercel-token niet geaccepteerd.");
+    const target = audience.replace("//iam.googleapis.com/", "");
+    throw new Error(`${sts.error_description || sts.error || "Google STS heeft het Vercel-token niet geaccepteerd."} Doel: ${target}`);
   }
   const impersonationResponse = await fetch(
     `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${encodeURIComponent(config.email)}:generateAccessToken`,
