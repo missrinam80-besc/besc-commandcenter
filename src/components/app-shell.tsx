@@ -3,7 +3,7 @@ import Link from "next/link";
 import {
   Archive, BarChart3, Bell, BookOpen, Bot, CalendarDays, CheckCircle2,
   ChevronDown, CircleDollarSign, Clapperboard, Clock3, CloudCog,
-  FolderKanban, Handshake, Inbox, Landmark, LayoutDashboard, LogOut,
+  FileText, FolderKanban, Handshake, Inbox, Landmark, LayoutDashboard, LogOut,
   Megaphone, Menu, ShoppingBag, Sparkles, UserRoundSearch, Users,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
@@ -47,6 +47,7 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Community & vrijwilligers", href: "/app/community", icon: UserRoundSearch },
       { label: "Vergaderingen & besluiten", href: "/app/vergaderingen", icon: Landmark },
+      { label: "Documenten & Drive", href: "/app/documenten", icon: FileText },
       { label: "Kennisbank", href: "/app/kennisbank", icon: BookOpen },
       { label: "VZW-administratie", href: "/app/administratie", icon: Landmark, roles: ["admin", "board"] },
       { label: "Gebruikers", href: "/app/beheer/gebruikers", icon: Users, roles: ["admin"] },
