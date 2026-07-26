@@ -123,21 +123,21 @@ export default async function ManagementReportPage({
           <article><Gauge/><div><span>Gepubliceerde content</span><strong>{contentDone}</strong><Delta current={contentDone} previous={previousPublishedContent.count ?? 0}/></div></article>
           <article><Target/><div><span>Events in periode</span><strong>{eventsDone}</strong><Delta current={eventsDone} previous={previousPeriodEvents.count ?? 0}/></div></article>
           <article><Users/><div><span>Nieuwe profielen</span><strong>{peopleAdded}</strong><Delta current={peopleAdded} previous={previousNewPeople.count ?? 0}/></div></article>
-          <article className={riskCount ? "risk" : "healthy"}><AlertTriangle/><div><span>Open risico’s</span><strong>{riskCount}</strong><small>Actie of beslissing nodig</small></div></article>
+          <Link href="#risicos" className={riskCount ? "risk" : "healthy"}><AlertTriangle/><div><span>Open risico’s</span><strong>{riskCount}</strong><small>Bekijk risico’s en aandachtspunten</small></div><ArrowRight size={16}/></Link>
         </section>
 
         <div className="management-grid">
           <section className="panel management-health">
             <div className="panel-head"><div><span className="eyebrow">OPERATIONELE GEZONDHEID</span><h3>Werkvoorraad</h3></div></div>
             <div className="management-health-grid">
-              <Link href="/app/taken"><span>Open taken</span><strong>{openTasks.count ?? 0}</strong></Link>
-              <Link href="/app/taken?deadline=verlopen"><span>Achterstallig</span><strong>{overdueTasksCount.count ?? 0}</strong></Link>
-              <Link href="/app/projecten"><span>Actieve projecten</span><strong>{projectRows.filter((item) => item.status === "active").length}</strong></Link>
+              <Link href="/app/taken?weergave=open"><span>Open taken</span><strong>{openTasks.count ?? 0}</strong></Link>
+              <Link href="/app/taken?periode=achterstallig&weergave=open"><span>Achterstallig</span><strong>{overdueTasksCount.count ?? 0}</strong></Link>
+              <Link href="/app/projecten?status=active"><span>Actieve projecten</span><strong>{projectRows.filter((item) => item.status === "active").length}</strong></Link>
               <Link href="/app/projecten?status=blocked"><span>Geblokkeerd</span><strong>{projectRows.filter((item) => item.status === "blocked").length}</strong></Link>
-              <Link href="/app/vergaderingen"><span>Open actiepunten</span><strong>{openActions.count ?? 0}</strong></Link>
-              <Link href="/app/campagnes"><span>Actieve campagnes</span><strong>{campaigns.data?.length ?? 0}</strong></Link>
-              <Link href="/app/sponsors"><span>Actieve partners</span><strong>{activePartners.count ?? 0}</strong></Link>
-              <Link href="/app/administratie"><span>VZW achterstallig</span><strong>{overdueComplianceCount.count ?? 0}</strong></Link>
+              <Link href="/app/vergaderingen?actiepunten=open#open-actiepunten"><span>Open actiepunten</span><strong>{openActions.count ?? 0}</strong></Link>
+              <Link href="/app/campagnes?weergave=open"><span>Actieve campagnes</span><strong>{campaigns.data?.length ?? 0}</strong></Link>
+              <Link href="/app/sponsors?status=active"><span>Actieve partners</span><strong>{activePartners.count ?? 0}</strong></Link>
+              <Link href="/app/administratie?periode=achterstallig#deadlines"><span>VZW achterstallig</span><strong>{overdueComplianceCount.count ?? 0}</strong></Link>
             </div>
           </section>
           <section className="panel management-portfolio">
@@ -162,8 +162,8 @@ export default async function ManagementReportPage({
           </section>
         </div>
 
-        <section className="panel management-risks">
-          <div className="panel-head"><div><span className="eyebrow">AANDACHTSPUNTEN</span><h3>Prioriteiten voor het bestuur</h3></div><span>{risks.length} getoond</span></div>
+        <section id="risicos" className="panel management-risks">
+          <div className="panel-head"><div><span className="eyebrow">RISICO’S & AANDACHTSPUNTEN</span><h3>Prioriteiten voor het bestuur</h3></div><span>{risks.length} van {riskCount} getoond</span></div>
           <div>{risks.map((risk) => <Link href={risk.href} key={risk.id}><AlertTriangle size={15}/><span><strong>{risk.title}</strong><small>{risk.type}{risk.date ? ` · ${new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium" }).format(new Date(risk.date))}` : ""}</small></span><ArrowRight size={14}/></Link>)}{!risks.length && <div className="empty">Geen achterstallige of geblokkeerde dossiers.</div>}</div>
         </section>
 

@@ -59,6 +59,7 @@ export async function OperationalModulePage({
   const status = Object.hasOwn(config.statuses, params.status ?? "") ? params.status! : "";
   const type = Object.hasOwn(config.types, params.type ?? "") ? params.type! : "";
   const mine = params.van_mij === "1";
+  const openOnly = params.weergave === "open";
   const sort = ["newest", "oldest", "title", "date"].includes(params.sorteren ?? "")
     ? params.sorteren!
     : module === "social"
@@ -87,6 +88,13 @@ export async function OperationalModulePage({
   if (status) query = query.eq("status", status);
   if (type) query = query.eq(config.typeColumn, type);
   if (mine) query = query.eq("owner_id", user.id);
+  if (openOnly) {
+    query = query.not(
+      "status",
+      "in",
+      "(completed,published,inactive,rejected,archived,cancelled)",
+    );
+  }
 
   const from = (page - 1) * PAGE_SIZE;
   const [
@@ -147,7 +155,7 @@ export async function OperationalModulePage({
       ),
   ).length;
   const calendar = module === "social" && params.weergave === "kalender";
-  const hasFilters = Boolean(search || status || type || mine || params.sorteren);
+  const hasFilters = Boolean(search || status || type || mine || openOnly || params.sorteren);
 
   function queryString(overrides: Record<string, string | null>) {
     const next = new URLSearchParams();
@@ -155,6 +163,7 @@ export async function OperationalModulePage({
     if (status) next.set("status", status);
     if (type) next.set("type", type);
     if (mine) next.set("van_mij", "1");
+    if (openOnly) next.set("weergave", "open");
     if (sort) next.set("sorteren", sort);
     if (calendar) next.set("weergave", "kalender");
     next.set("pagina", String(page));
@@ -218,6 +227,7 @@ export async function OperationalModulePage({
         <div className="view-toolbar">
           <form className="history-filters extended-filters" method="get">
             {calendar && <input type="hidden" name="weergave" value="kalender" />}
+            {openOnly && <input type="hidden" name="weergave" value="open" />}
             <label className="search">
               <Search size={16} />
               <span className="sr-only">Zoeken</span>

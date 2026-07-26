@@ -82,6 +82,7 @@ export default async function TasksPage({
   const status = params.status ?? "";
   const mine = params.van_mij === "1";
   const overdue = params.periode === "achterstallig";
+  const openOnly = params.weergave === "open";
   let allTasks: TaskRow[] = demoDashboard.tasks.map((task) => ({
     id: task.id,
     title: task.title,
@@ -114,6 +115,7 @@ export default async function TasksPage({
     if (search) taskQuery = taskQuery.ilike("title", `%${search}%`);
     if (status) taskQuery = taskQuery.eq("status", status);
     if (overdue) taskQuery = taskQuery.lte("due_at", new Date().toISOString());
+    if (openOnly) taskQuery = taskQuery.not("status", "in", "(done,cancelled)");
     if (assignedTaskIds) {
       taskQuery =
         assignedTaskIds.length > 0
@@ -141,6 +143,7 @@ export default async function TasksPage({
     }
     if (status) allTasks = allTasks.filter((task) => task.status === status);
     if (overdue) allTasks = allTasks.filter((task) => task.due_at && new Date(task.due_at) <= new Date());
+    if (openOnly) allTasks = allTasks.filter((task) => !["done", "cancelled"].includes(task.status));
     if (mine) allTasks = [];
   }
 
@@ -170,6 +173,7 @@ export default async function TasksPage({
         {params.fout && <div className="error-note">De taak kon niet worden opgeslagen.</div>}
         {params.succes && <div className="success">De taak werd aangemaakt.</div>}
         {overdue && <div className="permission-note">Je ziet nu alleen taken waarvan de deadline verstreken is. <Link href="/app/taken?van_mij=1">Toon al mijn taken</Link></div>}
+        {openOnly && <div className="permission-note">Je ziet nu alleen open taken. <Link href="/app/taken">Toon ook de historiek</Link></div>}
         {params.nieuw && (
           <EntityForm title="Nieuwe taak" action={createTask}>
             <div className="form-row">
@@ -214,7 +218,7 @@ export default async function TasksPage({
               : "Er zijn momenteel geen open taken."}
           </div>
         )}
-        {completed.length > 0 && (
+        {!openOnly && completed.length > 0 && (
           <section className="completed-section">
             <div>
               <span className="eyebrow">HISTORIEK</span>
