@@ -148,6 +148,7 @@ export async function AppShell({
   role?: string;
 }) {
   const { supabase, user, membership } = await requireActiveMembership();
+  await supabase.rpc("generate_my_notifications");
   const [{ data: profile }, { count: inboxCount }, { count: notificationCount }] = await Promise.all([
     supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
     supabase.from("inbox_items").select("id", { count: "exact", head: true }).eq("organization_id", membership.organization_id).is("deleted_at", null).in("status", ["new", "reviewing"]),
