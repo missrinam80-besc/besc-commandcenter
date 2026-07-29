@@ -17,6 +17,40 @@ const priorityLabels: Record<string, string> = {
   low: "Laag", normal: "Normaal", high: "Hoog", urgent: "Urgent",
 };
 const statusLabels = Object.fromEntries(statusOptions);
+const conversionGroups = [
+  {
+    label: "Werk & planning",
+    options: [
+      ["task", "Taak", "Een uitvoerbaar actiepunt"],
+      ["project", "Project", "Een groter werktraject"],
+      ["meeting", "Vergadering", "Een overleg of bespreking"],
+    ],
+  },
+  {
+    label: "Communicatie & activiteiten",
+    options: [
+      ["content", "Contentitem", "Een idee voor contentproductie"],
+      ["campaign", "Campagne", "Een marketing- of communitycampagne"],
+      ["social", "Social post", "Een publicatie voor een kanaal"],
+      ["event", "Event", "Een activiteit of evenement"],
+    ],
+  },
+  {
+    label: "Mensen & relaties",
+    options: [
+      ["volunteer", "Vrijwilliger / persoon", "Een kandidaat-communityprofiel"],
+      ["sponsor", "Sponsor / partner", "Een nieuw CRM-prospect"],
+    ],
+  },
+  {
+    label: "Kennis & shop",
+    options: [
+      ["knowledge", "Kennisbankartikel", "Een nieuw conceptartikel"],
+      ["product", "Shopproduct", "Een productidee"],
+      ["launch", "Merchlancering", "Een collectie- of lanceringsidee"],
+    ],
+  },
+] as const;
 
 export default async function InboxItemPage({
   params,
@@ -91,14 +125,21 @@ export default async function InboxItemPage({
             {item.status !== "processed" && (
               <section className="form-card inbox-conversion">
                 <div className="form-heading"><div><h2>Omzetten naar BESC-werk</h2><p>Titel, beschrijving en prioriteit worden overgenomen.</p></div></div>
-                <div className="conversion-options">
-                  {[["task", "Taak", "Een uitvoerbaar actiepunt"], ["project", "Project", "Een groter werktraject"], ["campaign", "Campagne", "Een marketing- of communitycampagne"]].map(([target, label, help]) => (
-                    <form action={convertInboxItem} key={target}>
-                      <input type="hidden" name="id" value={item.id} />
-                      <input type="hidden" name="target" value={target} />
-                      <div><strong>{label}</strong><span>{help}</span></div>
-                      <button type="submit" aria-label={`Omzetten naar ${label}`}><ArrowRight size={16} /></button>
-                    </form>
+                <div className="conversion-groups">
+                  {conversionGroups.map((group) => (
+                    <section key={group.label}>
+                      <h3>{group.label}</h3>
+                      <div className="conversion-options">
+                        {group.options.map(([target, label, help]) => (
+                          <form action={convertInboxItem} key={target}>
+                            <input type="hidden" name="id" value={item.id} />
+                            <input type="hidden" name="target" value={target} />
+                            <div><strong>{label}</strong><span>{help}</span></div>
+                            <button type="submit" aria-label={`Omzetten naar ${label}`}><ArrowRight size={16} /></button>
+                          </form>
+                        ))}
+                      </div>
+                    </section>
                   ))}
                 </div>
               </section>
