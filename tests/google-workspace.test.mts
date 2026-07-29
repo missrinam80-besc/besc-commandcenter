@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   googleDriveFileId,
   googleDriveModuleFolders,
+  eventDriveSubfolders,
   googleWorkloadAudience,
   googleWorkspaceConfiguration,
 } from "../src/lib/google-workspace.ts";
@@ -45,4 +46,14 @@ test("elke Command Center-module heeft een vaste Drive-mapnaam", () => {
   assert.equal(googleDriveModuleFolders.content, "Content");
   assert.equal(googleDriveModuleFolders.finance, "Financiën");
   assert.equal(Object.keys(googleDriveModuleFolders).length, 11);
+});
+
+test("eventmappen krijgen de afgesproken basisstructuur", () => {
+  assert.deepEqual([...eventDriveSubfolders], [
+    "Planning",
+    "Communicatie",
+    "Partners",
+    "Financiën",
+    "Evaluatie",
+  ]);
 });

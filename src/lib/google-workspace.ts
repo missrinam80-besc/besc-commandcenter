@@ -190,12 +190,11 @@ async function createGoogleDriveFolder(name: string, parentId: string): Promise<
   return { ...folder, driveId: folder.driveId ?? config.sharedDriveId, parents: folder.parents ?? [parentId] };
 }
 
-export async function ensureGoogleDriveModuleFolder(module: GoogleDriveModule) {
+async function findGoogleDriveChildFolder(parentId: string, name: string) {
   const config = googleWorkspaceConfiguration();
   if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
-  const name = googleDriveModuleFolders[module];
   const query = [
-    `'${driveQueryValue(config.rootFolderId)}' in parents`,
+    `'${driveQueryValue(parentId)}' in parents`,
     `name = '${driveQueryValue(name)}'`,
     "mimeType = 'application/vnd.google-apps.folder'",
     "trashed = false",
@@ -215,9 +214,19 @@ export async function ensureGoogleDriveModuleFolder(module: GoogleDriveModule) {
   );
   const existing = result.files?.[0];
   if (existing) {
-    return { ...existing, driveId: existing.driveId ?? config.sharedDriveId, parents: existing.parents ?? [config.rootFolderId] };
+    return { ...existing, driveId: existing.driveId ?? config.sharedDriveId, parents: existing.parents ?? [parentId] };
   }
-  return createGoogleDriveFolder(name, config.rootFolderId);
+  return null;
+}
+
+async function ensureGoogleDriveChildFolder(parentId: string, name: string) {
+  return await findGoogleDriveChildFolder(parentId, name) ?? createGoogleDriveFolder(name, parentId);
+}
+
+export async function ensureGoogleDriveModuleFolder(module: GoogleDriveModule) {
+  const config = googleWorkspaceConfiguration();
+  if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
+  return ensureGoogleDriveChildFolder(config.rootFolderId, googleDriveModuleFolders[module]);
 }
 
 export async function getGoogleDriveFolder(fileId: string): Promise<GoogleDriveFolder> {
@@ -233,6 +242,25 @@ export async function getGoogleDriveFolder(fileId: string): Promise<GoogleDriveF
 export async function createProjectDriveFolder(projectTitle: string): Promise<GoogleDriveFolder> {
   const moduleFolder = await ensureGoogleDriveModuleFolder("projects");
   return createGoogleDriveFolder(projectTitle.trim(), moduleFolder.id);
+}
+
+export const eventDriveSubfolders = [
+  "Planning",
+  "Communicatie",
+  "Partners",
+  "Financiën",
+  "Evaluatie",
+] as const;
+
+export async function ensureEventDriveStructure(eventTitle: string, eventFolderId?: string) {
+  const moduleFolder = await ensureGoogleDriveModuleFolder("events");
+  const eventFolder = eventFolderId
+    ? await getGoogleDriveFolder(eventFolderId)
+    : await ensureGoogleDriveChildFolder(moduleFolder.id, eventTitle.trim());
+  const subfolders = await Promise.all(
+    eventDriveSubfolders.map((name) => ensureGoogleDriveChildFolder(eventFolder.id, name)),
+  );
+  return { eventFolder, subfolders };
 }
 
 export async function moveGoogleDriveFolderToModule(folderId: string, module: GoogleDriveModule) {
@@ -251,7 +279,7 @@ export async function moveGoogleDriveFolderToModule(folderId: string, module: Go
   );
   const verified = await getGoogleDriveFolder(moved.id);
   if (!verified.parents.includes(moduleFolder.id)) {
-    throw new Error("De projectmap kon niet onder de modulemap Projecten worden geplaatst.");
+    throw new Error(`De map kon niet onder de modulemap ${googleDriveModuleFolders[module]} worden geplaatst.`);
   }
   return verified;
 }
