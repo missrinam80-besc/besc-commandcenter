@@ -223,7 +223,7 @@ export function googleCalendarEventPayload(event: GoogleCalendarSourceEvent) {
   };
 }
 
-async function findGoogleCalendarEvent(entityId: string) {
+async function findGoogleCalendarEntity(entityType: "event" | "meeting", entityId: string) {
   const config = googleWorkspaceConfiguration();
   const params = new URLSearchParams({
     privateExtendedProperty: `bescEntityId=${entityId}`,
@@ -235,7 +235,7 @@ async function findGoogleCalendarEvent(entityId: string) {
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(config.calendarId)}/events?${params}`,
   );
   return result.items?.find((item) =>
-    item.extendedProperties?.private?.bescEntityType === "event",
+    item.extendedProperties?.private?.bescEntityType === entityType,
   ) ?? null;
 }
 
@@ -248,7 +248,7 @@ export async function syncGoogleCalendarEvent(
   const payload = googleCalendarEventPayload(event);
   let googleEventId = knownGoogleEventId || null;
   if (!googleEventId) {
-    googleEventId = (await findGoogleCalendarEvent(event.id))?.id ?? null;
+    googleEventId = (await findGoogleCalendarEntity("event", event.id))?.id ?? null;
   }
   if (googleEventId) {
     try {
@@ -273,6 +273,89 @@ export async function syncGoogleCalendarEvent(
   return {
     id: created.id,
     name: created.summary ?? event.title,
+    webUrl: created.htmlLink ?? `https://calendar.google.com/calendar/event?eid=${encodeURIComponent(created.id)}`,
+    operation: "created" as const,
+  };
+}
+
+export type GoogleCalendarSourceMeeting = {
+  id: string;
+  organizationId: string;
+  title: string;
+  meetingType: string;
+  startAt: string | null;
+  endAt: string | null;
+  attendees: string[];
+  minutesUrl: string | null;
+};
+
+export function googleCalendarMeetingPayload(meeting: GoogleCalendarSourceMeeting) {
+  if (!meeting.startAt || !meeting.endAt) {
+    throw new Error("Vul zowel de start- als eindtijd in voordat je deze vergadering synchroniseert.");
+  }
+  const start = new Date(meeting.startAt);
+  const end = new Date(meeting.endAt);
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
+    throw new Error("De start- of eindtijd is ongeldig.");
+  }
+  if (end <= start) {
+    throw new Error("De eindtijd moet na de starttijd liggen.");
+  }
+  const description = [
+    `Type: ${meeting.meetingType}`,
+    meeting.attendees.length ? `Deelnemers: ${meeting.attendees.join(", ")}` : null,
+    meeting.minutesUrl ? `Notulen: ${meeting.minutesUrl}` : null,
+    "Beheerd vanuit BESC Command Center.",
+  ].filter(Boolean).join("\n\n");
+  return {
+    summary: meeting.title.trim(),
+    description,
+    start: { dateTime: start.toISOString(), timeZone: "Europe/Brussels" },
+    end: { dateTime: end.toISOString(), timeZone: "Europe/Brussels" },
+    extendedProperties: {
+      private: {
+        bescEntityType: "meeting",
+        bescEntityId: meeting.id,
+        bescOrganizationId: meeting.organizationId,
+      },
+    },
+  };
+}
+
+export async function syncGoogleCalendarMeeting(
+  meeting: GoogleCalendarSourceMeeting,
+  knownGoogleEventId?: string | null,
+) {
+  const config = googleWorkspaceConfiguration();
+  if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
+  const payload = googleCalendarMeetingPayload(meeting);
+  let googleEventId = knownGoogleEventId || null;
+  if (!googleEventId) {
+    googleEventId = (await findGoogleCalendarEntity("meeting", meeting.id))?.id ?? null;
+  }
+  if (googleEventId) {
+    try {
+      const updated = await googleJson<GoogleCalendarEvent>(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(config.calendarId)}/events/${encodeURIComponent(googleEventId)}?sendUpdates=none`,
+        { method: "PATCH", body: JSON.stringify(payload) },
+      );
+      return {
+        id: updated.id,
+        name: updated.summary ?? meeting.title,
+        webUrl: updated.htmlLink ?? `https://calendar.google.com/calendar/event?eid=${encodeURIComponent(updated.id)}`,
+        operation: "updated" as const,
+      };
+    } catch (error) {
+      if (!(error instanceof GoogleApiError) || error.status !== 404) throw error;
+    }
+  }
+  const created = await googleJson<GoogleCalendarEvent>(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(config.calendarId)}/events?sendUpdates=none`,
+    { method: "POST", body: JSON.stringify(payload) },
+  );
+  return {
+    id: created.id,
+    name: created.summary ?? meeting.title,
     webUrl: created.htmlLink ?? `https://calendar.google.com/calendar/event?eid=${encodeURIComponent(created.id)}`,
     operation: "created" as const,
   };

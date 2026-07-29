@@ -5,6 +5,7 @@ import {
   googleDriveModuleFolders,
   eventDriveSubfolders,
   googleCalendarEventPayload,
+  googleCalendarMeetingPayload,
   googleWorkloadAudience,
   googleWorkspaceConfiguration,
 } from "../src/lib/google-workspace.ts";
@@ -66,6 +67,36 @@ test("Google Calendar-sync weigert ontbrekende of omgekeerde tijden", () => {
     }),
     /na de starttijd/,
   );
+});
+
+test("Google Calendar-payload voor vergaderingen bevat geen interne notities", () => {
+  const payload = googleCalendarMeetingPayload({
+    id: "meeting-1",
+    organizationId: "org-1",
+    title: "Bestuursvergadering",
+    meetingType: "board",
+    startAt: "2026-08-04T17:00:00.000Z",
+    endAt: "2026-08-04T19:00:00.000Z",
+    attendees: ["Linda", "Alex"],
+    minutesUrl: "https://docs.google.com/document/d/example",
+  });
+  assert.equal(payload.summary, "Bestuursvergadering");
+  assert.match(payload.description, /Linda, Alex/);
+  assert.match(payload.description, /Notulen/);
+  assert.equal(payload.extendedProperties.private.bescEntityType, "meeting");
+});
+
+test("Google Calendar-sync voor vergaderingen vereist een eindtijd", () => {
+  assert.throws(() => googleCalendarMeetingPayload({
+    id: "meeting-1",
+    organizationId: "org-1",
+    title: "Bestuursvergadering",
+    meetingType: "board",
+    startAt: "2026-08-04T17:00:00.000Z",
+    endAt: null,
+    attendees: [],
+    minutesUrl: null,
+  }), /start- als eindtijd/);
 });
 
 test("Google audience accepteert losse IDs en volledige resourcepaden", () => {
