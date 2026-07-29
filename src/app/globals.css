@@ -309,3 +309,31 @@
 .drive-link-options{display:grid;grid-template-columns:1fr 1fr;gap:16px}.drive-link-options>div{border:1px solid var(--line);border-radius:10px;padding:16px;background:#faf9f6}.drive-link-options p{margin:0 0 13px;color:var(--muted);font-size:12px;line-height:1.5}.drive-link-options form:not(.milestone-add){display:flex}.drive-link-options button{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:8px;padding:9px 13px}.drive-link-options .milestone-add input:first-of-type{grid-column:auto}.drive-link-options .milestone-add{grid-template-columns:minmax(0,1fr) auto}@media(max-width:700px){.drive-link-options{grid-template-columns:1fr}}
 .drive-organize-action{display:flex;justify-content:flex-end;margin-top:14px}.drive-organize-action button{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 11px;color:var(--ink);font-size:11px;cursor:pointer}
 .drive-link-options .drive-new-folder{margin-top:9px}.drive-link-options .drive-new-folder button{border:1px solid var(--line);background:#fff;color:var(--ink)}
+.sponsor-document-dock {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 30;
+  width: min(28rem, calc(100vw - 3rem));
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--card);
+  box-shadow: 0 1rem 3rem rgb(0 0 0 / 18%);
+}
+
+.sponsor-document-dock .section-heading {
+  margin-bottom: 0.75rem;
+}
+
+.sponsor-document-dock .empty-state {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .sponsor-document-dock {
+    right: 1rem;
+    bottom: 1rem;
+    width: calc(100vw - 2rem);
+  }
+}

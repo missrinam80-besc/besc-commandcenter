@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExternalLink, FolderInput, FolderPlus, Link2 } from "lucide-react";
+import { ExternalLink, FilePlus2, FolderInput, FolderPlus, Link2 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { EventForm, eventStatuses, eventTypes } from "@/components/event-form";
@@ -7,6 +7,7 @@ import { requireActiveMembership } from "@/lib/auth-context";
 import { eventDriveSubfolders } from "@/lib/google-workspace";
 import { saveEvent } from "../actions";
 import { createEventFolder, linkEventFolder, organizeEventFolder } from "./actions";
+import { generateEventDossier } from "@/app/app/google-document-actions";
 
 type DriveLink = {
   google_id: string;
@@ -21,6 +22,7 @@ const driveErrors: Record<string, string> = {
   "drive-link": "De opgegeven Drive-link bevat geen herkenbaar map-ID.",
   "drive-koppelen": "De gekozen map kon niet worden gekoppeld of de basisstructuur kon niet worden gemaakt.",
   "drive-verplaatsen": "De eventmap kon niet onder de modulemap Events worden geplaatst.",
+  "document-genereren": "Het eventdossier kon niet vanuit het Google-template worden gegenereerd.",
 };
 
 export default async function Event({
@@ -33,11 +35,12 @@ export default async function Event({
   const { id } = await params;
   const q = await searchParams;
   const { supabase, membership } = await requireActiveMembership();
-  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }] = await Promise.all([
+  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }] = await Promise.all([
     supabase.from("events").select("*").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
     supabase.from("migration_source_links").select("source_url").eq("target_table", "events").eq("target_id", id).limit(1).maybeSingle(),
     supabase.from("google_resource_links").select("google_id,name,web_url,drive_id").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "folder").maybeSingle(),
+    supabase.from("google_resource_links").select("name,web_url").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "document").maybeSingle(),
   ]);
   if (!e) notFound();
   const drive = driveRow as DriveLink | null;
@@ -55,6 +58,7 @@ export default async function Event({
           {e.drive_url && <a href={e.drive_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Drive</a>}
           {e.eventbrite_url && <a href={e.eventbrite_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Eventbrite</a>}
           {source?.source_url && <a href={source.source_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>monday</a>}
+          {!documentRow && <form action={generateEventDossier}><input type="hidden" name="event_id" value={id}/><button><FilePlus2 size={16}/>Genereer eventdossier</button></form>}
           <Link className="primary" href="?bewerken=1">Bewerken</Link>
         </div>
       </header>
@@ -75,6 +79,7 @@ export default async function Event({
           <article><span>Locatie</span><strong>{e.is_online ? "Online" : e.location ?? "Niet bepaald"}</strong></article>
           <article><span>Deelnemers</span><strong>{e.expected_attendees ?? "Niet bepaald"}</strong></article>
         </section>
+        {documentRow && <section className="form-card"><div className="form-heading"><h2>Google-document</h2><a href={documentRow.web_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/> {documentRow.name}</a></div><p>Gegenereerd vanuit het eventtemplate. Alleen de link en metadata staan in het Command Center.</p></section>}
         <section className="form-card">
           <div className="form-heading">
             <div><span className="eyebrow">GOOGLE WORKSPACE</span><h2>Eventmap</h2></div>

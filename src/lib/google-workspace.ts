@@ -229,6 +229,11 @@ export async function ensureGoogleDriveModuleFolder(module: GoogleDriveModule) {
   return ensureGoogleDriveChildFolder(config.rootFolderId, googleDriveModuleFolders[module]);
 }
 
+export async function ensureGoogleDriveEntityFolder(module: GoogleDriveModule, entityTitle: string) {
+  const moduleFolder = await ensureGoogleDriveModuleFolder(module);
+  return ensureGoogleDriveChildFolder(moduleFolder.id, entityTitle.trim());
+}
+
 export async function getGoogleDriveFolder(fileId: string): Promise<GoogleDriveFolder> {
   const folder = await googleJson<GoogleDriveFolder>(
     `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?supportsAllDrives=true&fields=${driveFolderFields}`,
@@ -261,6 +266,66 @@ export async function ensureEventDriveStructure(eventTitle: string, eventFolderI
     eventDriveSubfolders.map((name) => ensureGoogleDriveChildFolder(eventFolder.id, name)),
   );
   return { eventFolder, subfolders };
+}
+
+export type GoogleTemplateRole = "minutes" | "sponsorReport" | "event";
+
+export async function createDocumentFromGoogleTemplate(input: {
+  template: GoogleTemplateRole;
+  name: string;
+  parentId: string;
+  replacements: Record<string, string | number | null | undefined>;
+}) {
+  const config = googleWorkspaceConfiguration();
+  if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
+  const templateId = config.templates[input.template];
+  const copied = await googleJson<{
+    id: string;
+    name: string;
+    mimeType: string;
+    webViewLink?: string;
+    driveId?: string;
+    parents?: string[];
+  }>(
+    `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(templateId)}/copy?supportsAllDrives=true&fields=${driveFolderFields}`,
+    {
+      method: "POST",
+      body: JSON.stringify({ name: input.name.trim(), parents: [input.parentId] }),
+    },
+  );
+  if (copied.mimeType !== "application/vnd.google-apps.document") {
+    throw new Error("Het ingestelde Google-template is geen Google Docs-document.");
+  }
+  const requests = Object.entries(input.replacements).map(([key, value]) => ({
+    replaceAllText: {
+      containsText: { text: `{{${key}}}`, matchCase: false },
+      replaceText: value == null || String(value).trim() === "" ? "Niet ingevuld" : String(value),
+    },
+  }));
+  if (requests.length) {
+    await googleJson<{ replies: unknown[] }>(
+      `https://docs.googleapis.com/v1/documents/${encodeURIComponent(copied.id)}:batchUpdate`,
+      { method: "POST", body: JSON.stringify({ requests }) },
+    );
+  }
+  const verified = await googleJson<{
+    id: string;
+    name: string;
+    mimeType: string;
+    webViewLink?: string;
+    driveId?: string;
+    parents?: string[];
+  }>(
+    `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(copied.id)}?supportsAllDrives=true&fields=${driveFolderFields}`,
+  );
+  return {
+    id: verified.id,
+    name: verified.name,
+    mimeType: verified.mimeType,
+    webViewLink: verified.webViewLink ?? `https://docs.google.com/document/d/${verified.id}/edit`,
+    driveId: verified.driveId ?? null,
+    parents: verified.parents ?? [input.parentId],
+  };
 }
 
 export async function moveGoogleDriveFolderToModule(folderId: string, module: GoogleDriveModule) {
