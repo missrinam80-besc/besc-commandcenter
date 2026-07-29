@@ -22,7 +22,7 @@ type NavigationItem = {
   icon: ComponentType<{ size?: number }>;
   roles?: OrganizationRole[];
   financeRoles?: FinanceRole[];
-  counter?: "inbox";
+  counter?: "inbox" | "approvals";
 };
 type NavigationGroup = {
   label: string;
@@ -40,6 +40,7 @@ const navigationGroups: NavigationGroup[] = [
       { label: "Mijn werk", href: "/app/taken", icon: CheckCircle2 },
       { label: "Projecten", href: "/app/projecten", icon: FolderKanban },
       { label: "Kalender", href: "/app/kalender", icon: CalendarDays },
+      { label: "Goedkeuringen", href: "/app/goedkeuringen", icon: CheckCircle2, counter: "approvals" },
     ],
   },
   {
@@ -99,11 +100,13 @@ function Navigation({
   role,
   financeRole,
   inboxCount,
+  approvalCount,
 }: {
   active: string;
   role: OrganizationRole;
   financeRole: FinanceRole;
   inboxCount: number;
+  approvalCount: number;
 }) {
   return (
     <nav className="navigation-groups" aria-label="Hoofdnavigatie">
@@ -121,7 +124,7 @@ function Navigation({
             <div className="navigation-items">
               {items.map((item) => {
                 const Icon = item.icon;
-                const count = item.counter === "inbox" ? inboxCount : 0;
+                const count = item.counter === "inbox" ? inboxCount : item.counter === "approvals" ? approvalCount : 0;
                 return (
                   <Link className={active === item.label ? "active" : ""} href={item.href} key={item.href}>
                     <Icon size={17}/>
@@ -151,10 +154,20 @@ export async function AppShell({
 }) {
   const { supabase, user, membership } = await requireActiveMembership();
   await supabase.rpc("generate_my_notifications");
-  const [{ data: profile }, { count: inboxCount }, { count: notificationCount }] = await Promise.all([
+  let approvalCountQuery = supabase
+    .from("approval_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", membership.organization_id);
+  if (membership.role === "admin" || membership.role === "board" || ["approver", "treasurer"].includes(membership.finance_role)) {
+    approvalCountQuery = approvalCountQuery.eq("status", "pending");
+  } else {
+    approvalCountQuery = approvalCountQuery.eq("requested_by", user.id).in("status", ["pending", "changes_requested"]);
+  }
+  const [{ data: profile }, { count: inboxCount }, { count: notificationCount }, { count: approvalCount }] = await Promise.all([
     supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
     supabase.from("inbox_items").select("id", { count: "exact", head: true }).eq("organization_id", membership.organization_id).is("deleted_at", null).in("status", ["new", "reviewing"]),
     supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("read_at", null),
+    approvalCountQuery,
   ]);
 
   const membershipRole = membership.role as OrganizationRole;
@@ -169,7 +182,7 @@ export async function AppShell({
           <Image src="/besc-logo.png" width={875} height={286} priority alt="BESC"/>
           <span>Command Center</span>
         </Link>
-        <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0}/>
+        <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
         <div className="sidebar-utility">
           <GlobalSearchTrigger active={active === "Zoeken"}/>
           <Link className={active === "Meldingen" ? "active" : ""} href="/app/meldingen">
@@ -192,7 +205,7 @@ export async function AppShell({
             <Image src="/besc-logo.png" width={875} height={286} alt="BESC"/>
             <span>{name} · {role}</span>
           </div>
-          <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0}/>
+          <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
           <Link className={active === "Meldingen" ? "active" : ""} href="/app/meldingen">
             <Bell size={17}/>Meldingen{(notificationCount ?? 0) > 0 && <b>{notificationCount}</b>}
           </Link>

@@ -56,6 +56,7 @@ export function driveCoverage(documents: DriveDocument[]) {
 export type GeneratedDocumentRecord = {
   id: string;
   entityId: string;
+  documentLinkId: string | null;
   title: string;
   module: "meetings" | "events" | "sponsors";
   moduleLabel: string;

@@ -9,7 +9,9 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { submitForApproval } from "@/app/app/goedkeuringen/actions";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { approvalStatusLabels, type ApprovalStatus } from "@/lib/approvals";
 import {
   documentModuleLabels,
   driveCoverage,
@@ -33,6 +35,7 @@ type BasicRow = {
 };
 
 type GoogleDocumentLink = {
+  id: string;
   entity_type: "meeting" | "event" | "partner";
   entity_id: string;
   name: string;
@@ -77,6 +80,7 @@ export default async function DocumentsPage({
     meetings,
     launches,
     generatedLinks,
+    documentApprovals,
   ] = await Promise.all([
     supabase.from("projects").select("id,title,status,drive_url,updated_at").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
     supabase.from("content_items").select("id,title,status,drive_url,updated_at").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
@@ -88,12 +92,19 @@ export default async function DocumentsPage({
     supabase.from("administrative_documents").select("id,title,status,drive_url,updated_at").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
     supabase.from("meetings").select("id,title,status,minutes_url,updated_at").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
     supabase.from("merch_launches").select("id,title,status,drive_url,updated_at").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
-    supabase.from("google_resource_links").select("entity_type,entity_id,name,web_url,updated_at").eq("organization_id", organizationId).eq("resource_type", "document").in("entity_type", ["meeting", "event", "partner"]),
+    supabase.from("google_resource_links").select("id,entity_type,entity_id,name,web_url,updated_at").eq("organization_id", organizationId).eq("resource_type", "document").in("entity_type", ["meeting", "event", "partner"]),
+    supabase.from("approval_requests").select("entity_id,status").eq("organization_id", organizationId).eq("entity_type", "document").order("requested_at", { ascending: false }),
   ]);
 
   const links = new Map(
     ((generatedLinks.data ?? []) as GoogleDocumentLink[]).map((link) => [`${link.entity_type}:${link.entity_id}`, link]),
   );
+  const documentApprovalMap = new Map<string, ApprovalStatus>();
+  for (const request of documentApprovals.data ?? []) {
+    if (!documentApprovalMap.has(request.entity_id)) {
+      documentApprovalMap.set(request.entity_id, request.status as ApprovalStatus);
+    }
+  }
 
   function expectedDocuments(
     rows: BasicRow[] | null,
@@ -109,6 +120,7 @@ export default async function DocumentsPage({
       return {
         id: `${entityType}:${row.id}`,
         entityId: row.id,
+        documentLinkId: link?.id ?? null,
         title: link?.name ?? `${generatedDocumentTypeLabels[documentType]} - ${entityTitle}`,
         module: moduleKey,
         moduleLabel: documentModuleLabels[moduleKey],
@@ -181,6 +193,8 @@ export default async function DocumentsPage({
       </header>
       <div className="module-body">
         <p className="lead">Notulen, eventdossiers en sponsorrapporten centraal opgevolgd. Bestanden blijven in Google Drive; Supabase bewaart alleen links en metadata.</p>
+        {query.succes === "goedkeuring-aangevraagd" && <div className="success">Het document is ter goedkeuring voorgelegd.</div>}
+        {query.fout && <div className="error-note">De goedkeuringsactie is mislukt ({query.fout}).</div>}
         <section className="drive-principle">
           <Cloud size={20}/>
           <div><strong>Google Drive blijft de documentbron</strong><span>Een ontbrekend document is een verwachte output waarvoor nog geen Google-document geregistreerd is.</span></div>
@@ -207,7 +221,18 @@ export default async function DocumentsPage({
               <span className={`drive-source source-${document.module === "meetings" ? "meeting" : document.module === "events" ? "event" : "sponsor"}`}>{document.moduleLabel} · {document.documentTypeLabel}</span>
               <span className={`document-status ${document.status}`}>{document.status === "available" ? "Beschikbaar" : "Ontbreekt"}</span>
               {document.driveUrl
-                ? <a className="drive-open" href={document.driveUrl} target="_blank" rel="noreferrer">Open document <ExternalLink size={13}/></a>
+                ? <div className="document-actions"><a className="drive-open" href={document.driveUrl} target="_blank" rel="noreferrer">Open document <ExternalLink size={13}/></a>
+                    {document.documentLinkId && documentApprovalMap.get(document.documentLinkId) === "pending"
+                      ? <Link href="/app/goedkeuringen">Wacht op goedkeuring</Link>
+                      : document.documentLinkId && <form action={submitForApproval}>
+                          <input type="hidden" name="entity_type" value="document"/>
+                          <input type="hidden" name="entity_id" value={document.documentLinkId}/>
+                          <input type="hidden" name="source_href" value="/app/documenten"/>
+                          <button>Ter goedkeuring</button>
+                        </form>}
+                    {document.documentLinkId && documentApprovalMap.get(document.documentLinkId) && documentApprovalMap.get(document.documentLinkId) !== "pending" &&
+                      <small>{approvalStatusLabels[documentApprovalMap.get(document.documentLinkId)!]}</small>}
+                  </div>
                 : <Link className="drive-missing" href={document.sourceHref}>Document genereren</Link>}
             </article>
           ))}
