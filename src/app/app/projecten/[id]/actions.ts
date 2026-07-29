@@ -46,7 +46,10 @@ async function saveProjectDriveLink(input: {
 }
 
 export async function createProjectFolder(formData: FormData) {
-  const parsed = z.object({ project_id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
+  const parsed = z.object({
+    project_id: z.string().uuid(),
+    mode: z.enum(["new", "existing"]).default("new"),
+  }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/projecten?fout=drive-velden");
   const context = await requirePermission("manageProjects", `${path(parsed.data.project_id)}?fout=rechten`);
   const { data: project } = await context.supabase
@@ -58,7 +61,12 @@ export async function createProjectFolder(formData: FormData) {
     .maybeSingle();
   if (!project) redirect(`${path(parsed.data.project_id)}?fout=project`);
   try {
-    const existingFolderId = project.drive_url ? googleDriveFileId(project.drive_url) : null;
+    const existingFolderId = parsed.data.mode === "existing" && project.drive_url
+      ? googleDriveFileId(project.drive_url)
+      : null;
+    if (parsed.data.mode === "existing" && !existingFolderId) {
+      redirect(`${path(project.id)}?fout=drive-link`);
+    }
     const folder = existingFolderId
       ? await getGoogleDriveFolder(existingFolderId)
       : await createProjectDriveFolder(project.title);
@@ -70,10 +78,10 @@ export async function createProjectFolder(formData: FormData) {
       userId: context.user.id,
     });
   } catch {
-    redirect(`${path(project.id)}?fout=${project.drive_url ? "drive-bestaande-link" : "drive-aanmaken"}`);
+    redirect(`${path(project.id)}?fout=${parsed.data.mode === "existing" ? "drive-bestaande-link" : "drive-aanmaken"}`);
   }
   revalidatePath(path(project.id));
-  redirect(`${path(project.id)}?succes=${project.drive_url ? "drive-geregistreerd" : "drive-aangemaakt"}`);
+  redirect(`${path(project.id)}?succes=${parsed.data.mode === "existing" ? "drive-geregistreerd" : "drive-aangemaakt"}`);
 }
 
 export async function linkProjectFolder(formData: FormData) {
