@@ -4,8 +4,107 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requirePermission } from "@/lib/auth-context";
+import {
+  createProjectDriveFolder,
+  getGoogleDriveFolder,
+  googleDriveFileId,
+} from "@/lib/google-workspace";
 
 const path = (id: string) => `/app/projecten/${id}`;
+
+async function saveProjectDriveLink(input: {
+  projectId: string;
+  folder: Awaited<ReturnType<typeof getGoogleDriveFolder>>;
+  supabase: Awaited<ReturnType<typeof requirePermission>>["supabase"];
+  organizationId: string;
+  userId: string;
+}) {
+  const { projectId, folder, supabase, organizationId, userId } = input;
+  const webUrl = folder.webViewLink || `https://drive.google.com/drive/folders/${folder.id}`;
+  const { error: linkError } = await supabase.from("google_resource_links").upsert({
+    organization_id: organizationId,
+    entity_type: "project",
+    entity_id: projectId,
+    resource_type: "folder",
+    google_id: folder.id,
+    name: folder.name,
+    mime_type: folder.mimeType,
+    web_url: webUrl,
+    drive_id: folder.driveId,
+    parent_id: folder.parents[0] ?? null,
+    created_by: userId,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "organization_id,entity_type,entity_id,resource_type" });
+  if (linkError) throw linkError;
+  const { error: projectError } = await supabase
+    .from("projects")
+    .update({ drive_url: webUrl })
+    .eq("organization_id", organizationId)
+    .eq("id", projectId);
+  if (projectError) throw projectError;
+}
+
+export async function createProjectFolder(formData: FormData) {
+  const parsed = z.object({ project_id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) redirect("/app/projecten?fout=drive-velden");
+  const context = await requirePermission("manageProjects", `${path(parsed.data.project_id)}?fout=rechten`);
+  const { data: project } = await context.supabase
+    .from("projects")
+    .select("id,title,drive_url")
+    .eq("organization_id", context.membership.organization_id)
+    .eq("id", parsed.data.project_id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!project) redirect(`${path(parsed.data.project_id)}?fout=project`);
+  if (project.drive_url) redirect(`${path(project.id)}?fout=drive-bestaat`);
+  try {
+    const folder = await createProjectDriveFolder(project.title);
+    await saveProjectDriveLink({
+      projectId: project.id,
+      folder,
+      supabase: context.supabase,
+      organizationId: context.membership.organization_id,
+      userId: context.user.id,
+    });
+  } catch {
+    redirect(`${path(project.id)}?fout=drive-aanmaken`);
+  }
+  revalidatePath(path(project.id));
+  redirect(`${path(project.id)}?succes=drive-aangemaakt`);
+}
+
+export async function linkProjectFolder(formData: FormData) {
+  const parsed = z.object({
+    project_id: z.string().uuid(),
+    drive_folder: z.string().trim().min(10),
+  }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) redirect("/app/projecten?fout=drive-velden");
+  const fileId = googleDriveFileId(parsed.data.drive_folder);
+  if (!fileId) redirect(`${path(parsed.data.project_id)}?fout=drive-link`);
+  const context = await requirePermission("manageProjects", `${path(parsed.data.project_id)}?fout=rechten`);
+  const { data: project } = await context.supabase
+    .from("projects")
+    .select("id")
+    .eq("organization_id", context.membership.organization_id)
+    .eq("id", parsed.data.project_id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!project) redirect(`${path(parsed.data.project_id)}?fout=project`);
+  try {
+    const folder = await getGoogleDriveFolder(fileId);
+    await saveProjectDriveLink({
+      projectId: project.id,
+      folder,
+      supabase: context.supabase,
+      organizationId: context.membership.organization_id,
+      userId: context.user.id,
+    });
+  } catch {
+    redirect(`${path(project.id)}?fout=drive-koppelen`);
+  }
+  revalidatePath(path(project.id));
+  redirect(`${path(project.id)}?succes=drive-gekoppeld`);
+}
 
 export async function updateProject(formData: FormData) {
   const parsed = z.object({

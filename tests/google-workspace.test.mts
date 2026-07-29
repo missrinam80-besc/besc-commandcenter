@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  googleDriveFileId,
   googleWorkloadAudience,
   googleWorkspaceConfiguration,
 } from "../src/lib/google-workspace.ts";
@@ -26,4 +27,13 @@ test("Google audience accepteert losse IDs en volledige resourcepaden", () => {
     workloadIdentityPoolId: "projects/154027614837/locations/global/workloadIdentityPools/besc-vercel",
     workloadIdentityProviderId: "projects/154027614837/locations/global/workloadIdentityPools/besc-vercel/providers/provider",
   }), expected);
+});
+
+test("Google Drive-map-ID wordt uit ondersteunde links gelezen", () => {
+  const id = "1AbCdEfGhIjKlMnOpQrStUvWxYz";
+  assert.equal(googleDriveFileId(id), id);
+  assert.equal(googleDriveFileId(`https://drive.google.com/drive/folders/${id}?usp=sharing`), id);
+  assert.equal(googleDriveFileId(`https://drive.google.com/open?id=${id}`), id);
+  assert.equal(googleDriveFileId("https://drive.google.com/drive/my-drive"), null);
+  assert.equal(googleDriveFileId("geen geldige link"), null);
 });

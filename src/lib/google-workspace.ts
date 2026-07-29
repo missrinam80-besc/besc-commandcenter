@@ -127,15 +127,72 @@ export async function googleAccessToken() {
   return tokenCache.token;
 }
 
-async function googleJson<T>(url: string) {
+async function googleJson<T>(url: string, init?: RequestInit) {
   const token = await googleAccessToken();
   const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
+    ...init,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      ...init?.headers,
+    },
     cache: "no-store",
   });
   const result = await response.json() as T & { error?: { message?: string } };
   if (!response.ok) throw new Error(result.error?.message || `Google API-fout (${response.status})`);
   return result;
+}
+
+export type GoogleDriveFolder = {
+  id: string;
+  name: string;
+  mimeType: string;
+  webViewLink: string;
+  driveId: string | null;
+  parents: string[];
+};
+
+const driveFolderFields = "id,name,mimeType,webViewLink,driveId,parents";
+
+export async function getGoogleDriveFolder(fileId: string): Promise<GoogleDriveFolder> {
+  const folder = await googleJson<GoogleDriveFolder>(
+    `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?supportsAllDrives=true&fields=${driveFolderFields}`,
+  );
+  if (folder.mimeType !== "application/vnd.google-apps.folder") {
+    throw new Error("De gekozen Google Drive-link verwijst niet naar een map.");
+  }
+  return { ...folder, driveId: folder.driveId ?? null, parents: folder.parents ?? [] };
+}
+
+export async function createProjectDriveFolder(projectTitle: string): Promise<GoogleDriveFolder> {
+  const config = googleWorkspaceConfiguration();
+  if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
+  const folder = await googleJson<GoogleDriveFolder>(
+    `https://www.googleapis.com/drive/v3/files?supportsAllDrives=true&fields=${driveFolderFields}`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        name: projectTitle.trim(),
+        mimeType: "application/vnd.google-apps.folder",
+        parents: [config.rootFolderId],
+      }),
+    },
+  );
+  return { ...folder, driveId: folder.driveId ?? config.sharedDriveId, parents: folder.parents ?? [config.rootFolderId] };
+}
+
+export function googleDriveFileId(input: string) {
+  const value = input.trim();
+  if (/^[a-zA-Z0-9_-]{10,}$/.test(value)) return value;
+  try {
+    const url = new URL(value);
+    const folderMatch = url.pathname.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+    const queryId = url.searchParams.get("id");
+    const id = folderMatch?.[1] ?? queryId;
+    return id && /^[a-zA-Z0-9_-]{10,}$/.test(id) ? id : null;
+  } catch {
+    return null;
+  }
 }
 
 export type WorkspaceResource = {
