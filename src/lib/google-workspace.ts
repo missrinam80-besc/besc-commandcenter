@@ -127,6 +127,16 @@ export async function googleAccessToken() {
   return tokenCache.token;
 }
 
+export class GoogleApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "GoogleApiError";
+    this.status = status;
+  }
+}
+
 async function googleJson<T>(url: string, init?: RequestInit) {
   const token = await googleAccessToken();
   const response = await fetch(url, {
@@ -139,8 +149,133 @@ async function googleJson<T>(url: string, init?: RequestInit) {
     cache: "no-store",
   });
   const result = await response.json() as T & { error?: { message?: string } };
-  if (!response.ok) throw new Error(result.error?.message || `Google API-fout (${response.status})`);
+  if (!response.ok) {
+    throw new GoogleApiError(result.error?.message || `Google API-fout (${response.status})`, response.status);
+  }
   return result;
+}
+
+export type GoogleCalendarSourceEvent = {
+  id: string;
+  organizationId: string;
+  title: string;
+  description: string | null;
+  startAt: string | null;
+  endAt: string | null;
+  location: string | null;
+  isOnline: boolean;
+  roleBesc: string | null;
+  driveUrl: string | null;
+  eventbriteUrl: string | null;
+  streamUrl: string | null;
+};
+
+type GoogleCalendarEvent = {
+  id: string;
+  summary?: string;
+  description?: string;
+  location?: string;
+  htmlLink?: string;
+  status?: string;
+  start?: { dateTime?: string; timeZone?: string };
+  end?: { dateTime?: string; timeZone?: string };
+  extendedProperties?: {
+    private?: Record<string, string>;
+  };
+};
+
+export function googleCalendarEventPayload(event: GoogleCalendarSourceEvent) {
+  if (!event.startAt || !event.endAt) {
+    throw new Error("Vul zowel de start- als eindtijd in voordat je dit event synchroniseert.");
+  }
+  const start = new Date(event.startAt);
+  const end = new Date(event.endAt);
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
+    throw new Error("De start- of eindtijd is ongeldig.");
+  }
+  if (end <= start) {
+    throw new Error("De eindtijd moet na de starttijd liggen.");
+  }
+  const links = [
+    event.driveUrl ? `Google Drive: ${event.driveUrl}` : null,
+    event.eventbriteUrl ? `Eventbrite: ${event.eventbriteUrl}` : null,
+    event.streamUrl ? `Livestream: ${event.streamUrl}` : null,
+  ].filter(Boolean);
+  const context = [
+    event.description?.trim() || null,
+    event.roleBesc ? `Rol BESC: ${event.roleBesc}` : null,
+    links.length ? links.join("\n") : null,
+    "Beheerd vanuit BESC Command Center.",
+  ].filter(Boolean);
+  return {
+    summary: event.title.trim(),
+    description: context.join("\n\n"),
+    location: event.isOnline ? "Online" : event.location?.trim() || undefined,
+    start: { dateTime: start.toISOString(), timeZone: "Europe/Brussels" },
+    end: { dateTime: end.toISOString(), timeZone: "Europe/Brussels" },
+    extendedProperties: {
+      private: {
+        bescEntityType: "event",
+        bescEntityId: event.id,
+        bescOrganizationId: event.organizationId,
+      },
+    },
+  };
+}
+
+async function findGoogleCalendarEvent(entityId: string) {
+  const config = googleWorkspaceConfiguration();
+  const params = new URLSearchParams({
+    privateExtendedProperty: `bescEntityId=${entityId}`,
+    maxResults: "2",
+    singleEvents: "true",
+    showDeleted: "false",
+  });
+  const result = await googleJson<{ items?: GoogleCalendarEvent[] }>(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(config.calendarId)}/events?${params}`,
+  );
+  return result.items?.find((item) =>
+    item.extendedProperties?.private?.bescEntityType === "event",
+  ) ?? null;
+}
+
+export async function syncGoogleCalendarEvent(
+  event: GoogleCalendarSourceEvent,
+  knownGoogleEventId?: string | null,
+) {
+  const config = googleWorkspaceConfiguration();
+  if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
+  const payload = googleCalendarEventPayload(event);
+  let googleEventId = knownGoogleEventId || null;
+  if (!googleEventId) {
+    googleEventId = (await findGoogleCalendarEvent(event.id))?.id ?? null;
+  }
+  if (googleEventId) {
+    try {
+      const updated = await googleJson<GoogleCalendarEvent>(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(config.calendarId)}/events/${encodeURIComponent(googleEventId)}?sendUpdates=none`,
+        { method: "PATCH", body: JSON.stringify(payload) },
+      );
+      return {
+        id: updated.id,
+        name: updated.summary ?? event.title,
+        webUrl: updated.htmlLink ?? `https://calendar.google.com/calendar/event?eid=${encodeURIComponent(updated.id)}`,
+        operation: "updated" as const,
+      };
+    } catch (error) {
+      if (!(error instanceof GoogleApiError) || error.status !== 404) throw error;
+    }
+  }
+  const created = await googleJson<GoogleCalendarEvent>(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(config.calendarId)}/events?sendUpdates=none`,
+    { method: "POST", body: JSON.stringify(payload) },
+  );
+  return {
+    id: created.id,
+    name: created.summary ?? event.title,
+    webUrl: created.htmlLink ?? `https://calendar.google.com/calendar/event?eid=${encodeURIComponent(created.id)}`,
+    operation: "created" as const,
+  };
 }
 
 export type GoogleDriveFolder = {

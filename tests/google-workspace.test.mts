@@ -4,6 +4,7 @@ import {
   googleDriveFileId,
   googleDriveModuleFolders,
   eventDriveSubfolders,
+  googleCalendarEventPayload,
   googleWorkloadAudience,
   googleWorkspaceConfiguration,
 } from "../src/lib/google-workspace.ts";
@@ -15,6 +16,56 @@ test("Workspace-configuratie rapporteert ontbrekende variabelen zonder waarden t
   assert.equal(result.configured, false);
   assert.ok(result.missing.includes("GOOGLE_WORKLOAD_IDENTITY_POOL_ID"));
   if (previous) process.env.GOOGLE_WORKLOAD_IDENTITY_POOL_ID = previous;
+});
+
+test("Google Calendar-payload bewaart exacte tijden en BESC-herkomst", () => {
+  const payload = googleCalendarEventPayload({
+    id: "event-1",
+    organizationId: "org-1",
+    title: "BESC Community Night",
+    description: "Samen gamen.",
+    startAt: "2026-08-01T18:00:00.000Z",
+    endAt: "2026-08-01T21:00:00.000Z",
+    location: "Antwerpen",
+    isOnline: false,
+    roleBesc: "organizer",
+    driveUrl: "https://drive.google.com/example",
+    eventbriteUrl: null,
+    streamUrl: null,
+  });
+  assert.equal(payload.summary, "BESC Community Night");
+  assert.equal(payload.start.dateTime, "2026-08-01T18:00:00.000Z");
+  assert.equal(payload.end.dateTime, "2026-08-01T21:00:00.000Z");
+  assert.equal(payload.start.timeZone, "Europe/Brussels");
+  assert.equal(payload.extendedProperties.private.bescEntityId, "event-1");
+  assert.match(payload.description, /Google Drive/);
+});
+
+test("Google Calendar-sync weigert ontbrekende of omgekeerde tijden", () => {
+  const base = {
+    id: "event-1",
+    organizationId: "org-1",
+    title: "Testevent",
+    description: null,
+    location: null,
+    isOnline: true,
+    roleBesc: "organizer",
+    driveUrl: null,
+    eventbriteUrl: null,
+    streamUrl: null,
+  };
+  assert.throws(
+    () => googleCalendarEventPayload({ ...base, startAt: null, endAt: null }),
+    /start- als eindtijd/,
+  );
+  assert.throws(
+    () => googleCalendarEventPayload({
+      ...base,
+      startAt: "2026-08-01T20:00:00.000Z",
+      endAt: "2026-08-01T18:00:00.000Z",
+    }),
+    /na de starttijd/,
+  );
 });
 
 test("Google audience accepteert losse IDs en volledige resourcepaden", () => {
