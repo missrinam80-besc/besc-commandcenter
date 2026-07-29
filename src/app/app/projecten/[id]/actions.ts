@@ -56,9 +56,11 @@ export async function createProjectFolder(formData: FormData) {
     .is("deleted_at", null)
     .maybeSingle();
   if (!project) redirect(`${path(parsed.data.project_id)}?fout=project`);
-  if (project.drive_url) redirect(`${path(project.id)}?fout=drive-bestaat`);
   try {
-    const folder = await createProjectDriveFolder(project.title);
+    const existingFolderId = project.drive_url ? googleDriveFileId(project.drive_url) : null;
+    const folder = existingFolderId
+      ? await getGoogleDriveFolder(existingFolderId)
+      : await createProjectDriveFolder(project.title);
     await saveProjectDriveLink({
       projectId: project.id,
       folder,
@@ -67,10 +69,10 @@ export async function createProjectFolder(formData: FormData) {
       userId: context.user.id,
     });
   } catch {
-    redirect(`${path(project.id)}?fout=drive-aanmaken`);
+    redirect(`${path(project.id)}?fout=${project.drive_url ? "drive-bestaande-link" : "drive-aanmaken"}`);
   }
   revalidatePath(path(project.id));
-  redirect(`${path(project.id)}?succes=drive-aangemaakt`);
+  redirect(`${path(project.id)}?succes=${project.drive_url ? "drive-geregistreerd" : "drive-aangemaakt"}`);
 }
 
 export async function linkProjectFolder(formData: FormData) {
