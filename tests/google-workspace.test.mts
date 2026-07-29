@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   googleDriveFileId,
+  googleDriveModuleFolders,
   googleWorkloadAudience,
   googleWorkspaceConfiguration,
 } from "../src/lib/google-workspace.ts";
@@ -36,4 +37,12 @@ test("Google Drive-map-ID wordt uit ondersteunde links gelezen", () => {
   assert.equal(googleDriveFileId(`https://drive.google.com/open?id=${id}`), id);
   assert.equal(googleDriveFileId("https://drive.google.com/drive/my-drive"), null);
   assert.equal(googleDriveFileId("geen geldige link"), null);
+});
+
+test("elke Command Center-module heeft een vaste Drive-mapnaam", () => {
+  assert.equal(googleDriveModuleFolders.projects, "Projecten");
+  assert.equal(googleDriveModuleFolders.events, "Events");
+  assert.equal(googleDriveModuleFolders.content, "Content");
+  assert.equal(googleDriveModuleFolders.finance, "Financiën");
+  assert.equal(Object.keys(googleDriveModuleFolders).length, 11);
 });

@@ -154,6 +154,72 @@ export type GoogleDriveFolder = {
 
 const driveFolderFields = "id,name,mimeType,webViewLink,driveId,parents";
 
+export const googleDriveModuleFolders = {
+  projects: "Projecten",
+  events: "Events",
+  content: "Content",
+  sponsors: "Sponsors & Partners",
+  campaigns: "Campagnes",
+  meetings: "Vergaderingen",
+  finance: "Financiën",
+  administration: "Administratie",
+  community: "Community",
+  knowledge: "Kennisbank",
+  shop: "Shop & Merchandise",
+} as const;
+
+export type GoogleDriveModule = keyof typeof googleDriveModuleFolders;
+
+function driveQueryValue(value: string) {
+  return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+async function createGoogleDriveFolder(name: string, parentId: string): Promise<GoogleDriveFolder> {
+  const config = googleWorkspaceConfiguration();
+  const folder = await googleJson<GoogleDriveFolder>(
+    `https://www.googleapis.com/drive/v3/files?supportsAllDrives=true&fields=${driveFolderFields}`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        name,
+        mimeType: "application/vnd.google-apps.folder",
+        parents: [parentId],
+      }),
+    },
+  );
+  return { ...folder, driveId: folder.driveId ?? config.sharedDriveId, parents: folder.parents ?? [parentId] };
+}
+
+export async function ensureGoogleDriveModuleFolder(module: GoogleDriveModule) {
+  const config = googleWorkspaceConfiguration();
+  if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
+  const name = googleDriveModuleFolders[module];
+  const query = [
+    `'${driveQueryValue(config.rootFolderId)}' in parents`,
+    `name = '${driveQueryValue(name)}'`,
+    "mimeType = 'application/vnd.google-apps.folder'",
+    "trashed = false",
+  ].join(" and ");
+  const params = new URLSearchParams({
+    q: query,
+    fields: `files(${driveFolderFields})`,
+    spaces: "drive",
+    corpora: "drive",
+    driveId: config.sharedDriveId,
+    includeItemsFromAllDrives: "true",
+    supportsAllDrives: "true",
+    pageSize: "10",
+  });
+  const result = await googleJson<{ files: GoogleDriveFolder[] }>(
+    `https://www.googleapis.com/drive/v3/files?${params}`,
+  );
+  const existing = result.files?.[0];
+  if (existing) {
+    return { ...existing, driveId: existing.driveId ?? config.sharedDriveId, parents: existing.parents ?? [config.rootFolderId] };
+  }
+  return createGoogleDriveFolder(name, config.rootFolderId);
+}
+
 export async function getGoogleDriveFolder(fileId: string): Promise<GoogleDriveFolder> {
   const folder = await googleJson<GoogleDriveFolder>(
     `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?supportsAllDrives=true&fields=${driveFolderFields}`,
@@ -165,20 +231,29 @@ export async function getGoogleDriveFolder(fileId: string): Promise<GoogleDriveF
 }
 
 export async function createProjectDriveFolder(projectTitle: string): Promise<GoogleDriveFolder> {
-  const config = googleWorkspaceConfiguration();
-  if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
-  const folder = await googleJson<GoogleDriveFolder>(
-    `https://www.googleapis.com/drive/v3/files?supportsAllDrives=true&fields=${driveFolderFields}`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        name: projectTitle.trim(),
-        mimeType: "application/vnd.google-apps.folder",
-        parents: [config.rootFolderId],
-      }),
-    },
+  const moduleFolder = await ensureGoogleDriveModuleFolder("projects");
+  return createGoogleDriveFolder(projectTitle.trim(), moduleFolder.id);
+}
+
+export async function moveGoogleDriveFolderToModule(folderId: string, module: GoogleDriveModule) {
+  const current = await getGoogleDriveFolder(folderId);
+  const moduleFolder = await ensureGoogleDriveModuleFolder(module);
+  if (current.parents.includes(moduleFolder.id)) return current;
+  const params = new URLSearchParams({
+    addParents: moduleFolder.id,
+    removeParents: current.parents.join(","),
+    supportsAllDrives: "true",
+    fields: driveFolderFields,
+  });
+  const moved = await googleJson<GoogleDriveFolder>(
+    `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(folderId)}?${params}`,
+    { method: "PATCH" },
   );
-  return { ...folder, driveId: folder.driveId ?? config.sharedDriveId, parents: folder.parents ?? [config.rootFolderId] };
+  const verified = await getGoogleDriveFolder(moved.id);
+  if (!verified.parents.includes(moduleFolder.id)) {
+    throw new Error("De projectmap kon niet onder de modulemap Projecten worden geplaatst.");
+  }
+  return verified;
 }
 
 export function googleDriveFileId(input: string) {

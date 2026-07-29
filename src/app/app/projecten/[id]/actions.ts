@@ -8,6 +8,7 @@ import {
   createProjectDriveFolder,
   getGoogleDriveFolder,
   googleDriveFileId,
+  moveGoogleDriveFolderToModule,
 } from "@/lib/google-workspace";
 
 const path = (id: string) => `/app/projecten/${id}`;
@@ -106,6 +107,35 @@ export async function linkProjectFolder(formData: FormData) {
   }
   revalidatePath(path(project.id));
   redirect(`${path(project.id)}?succes=drive-gekoppeld`);
+}
+
+export async function organizeProjectFolder(formData: FormData) {
+  const parsed = z.object({ project_id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) redirect("/app/projecten?fout=drive-velden");
+  const context = await requirePermission("manageProjects", `${path(parsed.data.project_id)}?fout=rechten`);
+  const { data: link } = await context.supabase
+    .from("google_resource_links")
+    .select("google_id")
+    .eq("organization_id", context.membership.organization_id)
+    .eq("entity_type", "project")
+    .eq("entity_id", parsed.data.project_id)
+    .eq("resource_type", "folder")
+    .maybeSingle();
+  if (!link?.google_id) redirect(`${path(parsed.data.project_id)}?fout=drive-ontbreekt`);
+  try {
+    const folder = await moveGoogleDriveFolderToModule(link.google_id, "projects");
+    await saveProjectDriveLink({
+      projectId: parsed.data.project_id,
+      folder,
+      supabase: context.supabase,
+      organizationId: context.membership.organization_id,
+      userId: context.user.id,
+    });
+  } catch {
+    redirect(`${path(parsed.data.project_id)}?fout=drive-verplaatsen`);
+  }
+  revalidatePath(path(parsed.data.project_id));
+  redirect(`${path(parsed.data.project_id)}?succes=drive-geordend`);
 }
 
 export async function updateProject(formData: FormData) {
