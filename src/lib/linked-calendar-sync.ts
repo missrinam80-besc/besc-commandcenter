@@ -1,10 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { syncGoogleCalendarEvent, syncGoogleCalendarMeeting } from "@/lib/google-workspace";
+import {
+  deleteGoogleCalendarEvent,
+  syncGoogleCalendarEvent,
+  syncGoogleCalendarMeeting,
+} from "@/lib/google-workspace";
 
 type SyncContext = {
   supabase: SupabaseClient;
   organizationId: string;
 };
+
+export type CancelledCalendarAction = "keep" | "remove";
 
 async function updateLink(
   context: SyncContext,
@@ -27,7 +33,11 @@ async function updateLink(
   if (error) throw error;
 }
 
-export async function syncLinkedEvent(context: SyncContext, eventId: string) {
+export async function syncLinkedEvent(
+  context: SyncContext,
+  eventId: string,
+  cancelledAction: CancelledCalendarAction = "keep",
+) {
   const [{ data: event }, { data: link }] = await Promise.all([
     context.supabase
       .from("events")
@@ -38,7 +48,7 @@ export async function syncLinkedEvent(context: SyncContext, eventId: string) {
       .maybeSingle(),
     context.supabase
       .from("google_resource_links")
-      .select("google_id")
+      .select("google_id,name")
       .eq("organization_id", context.organizationId)
       .eq("entity_type", "event")
       .eq("entity_id", eventId)
@@ -46,6 +56,22 @@ export async function syncLinkedEvent(context: SyncContext, eventId: string) {
       .maybeSingle(),
   ]);
   if (!event || !link) return false;
+  if (event.status === "cancelled" && cancelledAction === "remove") {
+    await deleteGoogleCalendarEvent(link.google_id);
+    const { error } = await context.supabase
+      .from("google_resource_links")
+      .update({
+        name: `[VERWIJDERD] ${event.title}`,
+        web_url: "https://calendar.google.com/calendar/u/0/r",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("organization_id", context.organizationId)
+      .eq("entity_type", "event")
+      .eq("entity_id", eventId)
+      .eq("resource_type", "calendar_event");
+    if (error) throw error;
+    return true;
+  }
   const result = await syncGoogleCalendarEvent({
     id: event.id,
     organizationId: context.organizationId,
@@ -65,7 +91,11 @@ export async function syncLinkedEvent(context: SyncContext, eventId: string) {
   return true;
 }
 
-export async function syncLinkedMeeting(context: SyncContext, meetingId: string) {
+export async function syncLinkedMeeting(
+  context: SyncContext,
+  meetingId: string,
+  cancelledAction: CancelledCalendarAction = "keep",
+) {
   const [{ data: meeting }, { data: link }] = await Promise.all([
     context.supabase
       .from("meetings")
@@ -76,7 +106,7 @@ export async function syncLinkedMeeting(context: SyncContext, meetingId: string)
       .maybeSingle(),
     context.supabase
       .from("google_resource_links")
-      .select("google_id")
+      .select("google_id,name")
       .eq("organization_id", context.organizationId)
       .eq("entity_type", "meeting")
       .eq("entity_id", meetingId)
@@ -84,6 +114,22 @@ export async function syncLinkedMeeting(context: SyncContext, meetingId: string)
       .maybeSingle(),
   ]);
   if (!meeting || !link) return false;
+  if (meeting.status === "cancelled" && cancelledAction === "remove") {
+    await deleteGoogleCalendarEvent(link.google_id);
+    const { error } = await context.supabase
+      .from("google_resource_links")
+      .update({
+        name: `[VERWIJDERD] ${meeting.title}`,
+        web_url: "https://calendar.google.com/calendar/u/0/r",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("organization_id", context.organizationId)
+      .eq("entity_type", "meeting")
+      .eq("entity_id", meetingId)
+      .eq("resource_type", "calendar_event");
+    if (error) throw error;
+    return true;
+  }
   const result = await syncGoogleCalendarMeeting({
     id: meeting.id,
     organizationId: context.organizationId,

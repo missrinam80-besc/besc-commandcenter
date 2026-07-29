@@ -280,6 +280,23 @@ export async function syncGoogleCalendarEvent(
   };
 }
 
+export async function deleteGoogleCalendarEvent(googleEventId: string) {
+  const config = googleWorkspaceConfiguration();
+  if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
+  const token = await googleAccessToken();
+  const response = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(config.calendarId)}/events/${encodeURIComponent(googleEventId)}?sendUpdates=none`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    },
+  );
+  if (response.ok || response.status === 404 || response.status === 410) return;
+  const result = await response.json().catch(() => null) as { error?: { message?: string } } | null;
+  throw new GoogleApiError(result?.error?.message || `Google API-fout (${response.status})`, response.status);
+}
+
 export type GoogleCalendarSourceMeeting = {
   id: string;
   organizationId: string;

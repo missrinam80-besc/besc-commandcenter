@@ -27,6 +27,7 @@ const schema = z.object({
   decisions: z.string().max(20000).optional(),
   action_points: z.string().max(20000).optional(),
   minutes_url: z.string().url().optional().or(z.literal("")),
+  cancelled_calendar_action: z.enum(["keep", "remove"]).default("keep"),
 });
 
 export async function saveMeeting(formData: FormData) {
@@ -35,7 +36,7 @@ export async function saveMeeting(formData: FormData) {
     redirect(`/app/vergaderingen${formData.get("id") ? `/${formData.get("id")}?bewerken=1&` : "?nieuw=1&"}fout=velden`);
   }
   const { supabase, user, membership } = await manager();
-  const { id, ...data } = parsed.data;
+  const { id, cancelled_calendar_action, ...data } = parsed.data;
   const meetingAt = data.meeting_at ? new Date(data.meeting_at).toISOString() : null;
   const endsAt = data.ends_at ? new Date(data.ends_at).toISOString() : null;
   if (meetingAt && endsAt && new Date(endsAt) <= new Date(meetingAt)) {
@@ -62,7 +63,7 @@ export async function saveMeeting(formData: FormData) {
       await syncLinkedMeeting({
         supabase,
         organizationId: membership.organization_id,
-      }, id);
+      }, id, cancelled_calendar_action);
     } catch {
       calendarWarning = true;
     }

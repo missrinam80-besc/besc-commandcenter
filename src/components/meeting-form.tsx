@@ -27,10 +27,17 @@ export function MeetingForm({ record = {} }: { record?: Data }) {
             <option value="archived">Gearchiveerd</option>
           </select>
         </label>
+        <label>Bij annulering in Google Calendar
+          <select name="cancelled_calendar_action" defaultValue={record.calendar_removed ? "remove" : "keep"}>
+            <option value="keep">Zichtbaar als geannuleerd</option>
+            <option value="remove">Afspraak verwijderen</option>
+          </select>
+        </label>
         <label>Starttijd<input type="datetime-local" name="meeting_at" defaultValue={String(record.meeting_at ?? "").slice(0, 16)}/></label>
         <label>Eindtijd<input type="datetime-local" name="ends_at" defaultValue={String(record.ends_at ?? "").slice(0, 16)}/></label>
         <label>Deelnemers (komma gescheiden)<input name="attendees" defaultValue={Array.isArray(record.attendees) ? record.attendees.join(", ") : ""}/></label>
       </div>
+      <p className="form-hint">Deze keuze geldt alleen bij status Geannuleerd. De vergadering en historiek blijven in BESC bewaard.</p>
       <label>Notities / verslag<textarea name="notes" rows={6} defaultValue={String(record.notes ?? "")}/></label>
       <label>Besluiten<textarea name="decisions" rows={5} defaultValue={String(record.decisions ?? "")}/></label>
       <label>Actiepunten uit het verslag<textarea name="action_points" rows={5} defaultValue={String(record.action_points ?? "")}/></label>

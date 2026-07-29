@@ -52,3 +52,56 @@ export function driveCoverage(documents: DriveDocument[]) {
     percentage: documents.length ? Math.round((linked / documents.length) * 100) : 0,
   };
 }
+
+export type GeneratedDocumentRecord = {
+  id: string;
+  entityId: string;
+  title: string;
+  module: "meetings" | "events" | "sponsors";
+  moduleLabel: string;
+  documentType: "minutes" | "event_dossier" | "sponsor_report";
+  documentTypeLabel: string;
+  status: "available" | "missing";
+  sourceStatus: string;
+  sourceHref: string;
+  driveUrl: string | null;
+  updatedAt: string;
+};
+
+export const documentModuleLabels = {
+  meetings: "Vergaderingen",
+  events: "Events",
+  sponsors: "Sponsors",
+} as const;
+
+export const generatedDocumentTypeLabels = {
+  minutes: "Notulen",
+  event_dossier: "Eventdossier",
+  sponsor_report: "Sponsorrapport",
+} as const;
+
+export function filterGeneratedDocuments(
+  documents: GeneratedDocumentRecord[],
+  filters: {
+    query: string;
+    module: string;
+    documentType: string;
+    status: string;
+  },
+) {
+  const needle = filters.query.trim().toLocaleLowerCase("nl-BE");
+  return documents
+    .filter((document) => filters.module === "all" || document.module === filters.module)
+    .filter((document) => filters.documentType === "all" || document.documentType === filters.documentType)
+    .filter((document) => filters.status === "all" || document.status === filters.status)
+    .filter((document) =>
+      !needle ||
+      `${document.title} ${document.moduleLabel} ${document.documentTypeLabel} ${document.sourceStatus}`
+        .toLocaleLowerCase("nl-BE")
+        .includes(needle),
+    )
+    .sort((left, right) => {
+      if (left.status !== right.status) return left.status === "missing" ? -1 : 1;
+      return right.updatedAt.localeCompare(left.updatedAt);
+    });
+}

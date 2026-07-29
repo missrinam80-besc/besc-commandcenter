@@ -88,7 +88,7 @@ export default async function Event({
         {q.bewerken && (
           <section className="form-card">
             <div className="form-heading"><h2>Event bewerken</h2><Link href="?">Sluiten</Link></div>
-            <EventForm action={saveEvent} event={e} projects={projects ?? []}/>
+            <EventForm action={saveEvent} event={{...e, calendar_removed: calendar?.name.startsWith("[VERWIJDERD]")}} projects={projects ?? []}/>
           </section>
         )}
         <section className="content-summary">
@@ -103,12 +103,12 @@ export default async function Event({
         <section className="form-card">
           <div className="form-heading">
             <div><span className="eyebrow">GOOGLE CALENDAR</span><h2>Kalendersynchronisatie</h2></div>
-            {calendar && <a href={calendar.web_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Open afspraak</a>}
+            {calendar && !calendar.name.startsWith("[VERWIJDERD]") && <a href={calendar.web_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Open afspraak</a>}
           </div>
           {calendar ? (
             <div className="content-meta">
-              <div><span>Status</span><strong>{calendarIsCurrent ? "Gesynchroniseerd" : "Synchronisatie nodig"}</strong></div>
-              <div><span>Kalenderitem</span><strong>{calendar.name}</strong></div>
+              <div><span>Status</span><strong>{calendar.name.startsWith("[VERWIJDERD]") ? "Verwijderd uit Google Calendar" : calendarIsCurrent ? "Gesynchroniseerd" : "Synchronisatie nodig"}</strong></div>
+              <div><span>Kalenderitem</span><strong>{calendar.name.replace("[VERWIJDERD] ", "")}</strong></div>
               <div><span>Laatste synchronisatie</span><strong>{new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(calendar.updated_at))}</strong></div>
             </div>
           ) : (

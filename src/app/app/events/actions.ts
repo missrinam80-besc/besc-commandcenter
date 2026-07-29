@@ -23,6 +23,7 @@ const schema = z.object({
   eventbrite_url: z.string().url().optional().or(z.literal("")),
   stream_url: z.string().url().optional().or(z.literal("")),
   expected_attendees: z.coerce.number().int().min(0).optional(),
+  cancelled_calendar_action: z.enum(["keep", "remove"]).default("keep"),
 });
 
 async function manager() {
@@ -34,18 +35,16 @@ async function manager() {
 }
 
 function values(input: z.infer<typeof schema>) {
+  const { cancelled_calendar_action: _cancelledCalendarAction, ...eventInput } = input;
+  void _cancelledCalendarAction;
   return {
-    title: input.title,
+    ...eventInput,
     description: input.description || null,
-    event_type: input.event_type,
-    status: input.status,
-    priority: input.priority,
     project_id: input.project_id || null,
     start_at: input.start_at ? new Date(input.start_at).toISOString() : null,
     end_at: input.end_at ? new Date(input.end_at).toISOString() : null,
     location: input.location || null,
     is_online: input.is_online === "on",
-    role_besc: input.role_besc,
     drive_url: input.drive_url || null,
     eventbrite_url: input.eventbrite_url || null,
     stream_url: input.stream_url || null,
@@ -72,7 +71,7 @@ export async function saveEvent(formData: FormData) {
       await syncLinkedEvent({
         supabase,
         organizationId: membership.organization_id,
-      }, parsed.data.id);
+      }, parsed.data.id, parsed.data.cancelled_calendar_action);
     } catch {
       calendarWarning = true;
     }

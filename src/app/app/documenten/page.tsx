@@ -5,17 +5,20 @@ import {
   ExternalLink,
   FileText,
   FolderOpen,
-  Link2Off,
   Search,
+  TriangleAlert,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { requireActiveMembership } from "@/lib/auth-context";
 import {
+  documentModuleLabels,
   driveCoverage,
   driveSourceLabels,
-  filterDriveDocuments,
+  filterGeneratedDocuments,
+  generatedDocumentTypeLabels,
   makeDriveDocument,
   type DriveDocument,
+  type GeneratedDocumentRecord,
 } from "@/lib/drive-documents";
 
 type BasicRow = {
@@ -29,6 +32,26 @@ type BasicRow = {
   updated_at: string;
 };
 
+type GoogleDocumentLink = {
+  entity_type: "meeting" | "event" | "partner";
+  entity_id: string;
+  name: string;
+  web_url: string;
+  updated_at: string;
+};
+
+const moduleForEntity = {
+  meeting: "meetings",
+  event: "events",
+  partner: "sponsors",
+} as const;
+
+const documentTypeForEntity = {
+  meeting: "minutes",
+  event: "event_dossier",
+  partner: "sponsor_report",
+} as const;
+
 export default async function DocumentsPage({
   searchParams,
 }: {
@@ -37,9 +60,10 @@ export default async function DocumentsPage({
   const query = await searchParams;
   const { supabase, membership } = await requireActiveMembership();
   const organizationId = membership.organization_id;
-  const source = query.bron && query.bron in driveSourceLabels ? query.bron : "all";
-  const linkState = query.koppeling === "ontbreekt" ? "missing" : query.koppeling === "gekoppeld" ? "linked" : "all";
   const search = query.zoeken ?? "";
+  const moduleFilter = query.module && query.module in documentModuleLabels ? query.module : "all";
+  const typeFilter = query.type && query.type in generatedDocumentTypeLabels ? query.type : "all";
+  const statusFilter = ["available", "missing"].includes(query.status ?? "") ? query.status! : "all";
 
   const [
     projects,
@@ -52,6 +76,7 @@ export default async function DocumentsPage({
     administration,
     meetings,
     launches,
+    generatedLinks,
   ] = await Promise.all([
     supabase.from("projects").select("id,title,status,drive_url,updated_at").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
     supabase.from("content_items").select("id,title,status,drive_url,updated_at").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
@@ -63,7 +88,57 @@ export default async function DocumentsPage({
     supabase.from("administrative_documents").select("id,title,status,drive_url,updated_at").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
     supabase.from("meetings").select("id,title,status,minutes_url,updated_at").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
     supabase.from("merch_launches").select("id,title,status,drive_url,updated_at").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
+    supabase.from("google_resource_links").select("entity_type,entity_id,name,web_url,updated_at").eq("organization_id", organizationId).eq("resource_type", "document").in("entity_type", ["meeting", "event", "partner"]),
   ]);
+
+  const links = new Map(
+    ((generatedLinks.data ?? []) as GoogleDocumentLink[]).map((link) => [`${link.entity_type}:${link.entity_id}`, link]),
+  );
+
+  function expectedDocuments(
+    rows: BasicRow[] | null,
+    entityType: keyof typeof moduleForEntity,
+    sourceHref: (id: string) => string,
+    include: (row: BasicRow) => boolean,
+  ): GeneratedDocumentRecord[] {
+    const moduleKey = moduleForEntity[entityType];
+    const documentType = documentTypeForEntity[entityType];
+    return (rows ?? []).filter(include).map((row) => {
+      const link = links.get(`${entityType}:${row.id}`);
+      const entityTitle = row.title ?? row.name ?? "Naamloos dossier";
+      return {
+        id: `${entityType}:${row.id}`,
+        entityId: row.id,
+        title: link?.name ?? `${generatedDocumentTypeLabels[documentType]} - ${entityTitle}`,
+        module: moduleKey,
+        moduleLabel: documentModuleLabels[moduleKey],
+        documentType,
+        documentTypeLabel: generatedDocumentTypeLabels[documentType],
+        status: link ? "available" : "missing",
+        sourceStatus: row.status,
+        sourceHref: sourceHref(row.id),
+        driveUrl: link?.web_url ?? null,
+        updatedAt: link?.updated_at ?? row.updated_at,
+      };
+    });
+  }
+
+  const generatedDocuments = [
+    ...expectedDocuments(meetings.data, "meeting", (id) => `/app/vergaderingen/${id}`, (row) => !["cancelled", "archived"].includes(row.status)),
+    ...expectedDocuments(events.data, "event", (id) => `/app/events/${id}`, (row) => !["cancelled", "archived"].includes(row.status)),
+    ...expectedDocuments(sponsors.data, "partner", (id) => `/app/sponsors/${id}`, (row) => row.status === "active"),
+  ];
+  const visibleDocuments = filterGeneratedDocuments(generatedDocuments, {
+    query: search,
+    module: moduleFilter,
+    documentType: typeFilter,
+    status: statusFilter,
+  });
+  const availableCount = generatedDocuments.filter((document) => document.status === "available").length;
+  const missingCount = generatedDocuments.length - availableCount;
+  const documentCoverage = generatedDocuments.length
+    ? Math.round((availableCount / generatedDocuments.length) * 100)
+    : 0;
 
   function convert(
     rows: BasicRow[] | null,
@@ -84,7 +159,7 @@ export default async function DocumentsPage({
     );
   }
 
-  const allDocuments: DriveDocument[] = [
+  const allDossiers: DriveDocument[] = [
     ...convert(projects.data, "project", (id) => `/app/projecten/${id}`),
     ...convert(content.data, "content", (id) => `/app/content/${id}`),
     ...convert(events.data, "event", (id) => `/app/events/${id}`),
@@ -96,48 +171,61 @@ export default async function DocumentsPage({
     ...convert(meetings.data, "meeting", (id) => `/app/vergaderingen/${id}`, "minutes_url"),
     ...convert(launches.data, "launch", (id) => `/app/shop/lanceringen/${id}`),
   ];
-  const coverage = driveCoverage(allDocuments);
-  const documents = filterDriveDocuments(allDocuments, search, source, linkState);
+  const dossierCoverage = driveCoverage(allDossiers);
 
   return (
     <AppShell active="Documenten & Drive">
       <header className="topbar module-top">
-        <div><p>GOOGLE WORKSPACE</p><h1>Documenten & Drive</h1></div>
+        <div><p>GOOGLE WORKSPACE</p><h1>Documentregister</h1></div>
         <a className="primary" href="https://drive.google.com/drive/shared-drives" target="_blank" rel="noreferrer"><Cloud size={16}/>Open Google Drive</a>
       </header>
       <div className="module-body">
-        <p className="lead">Het Command Center bewaart context en links; Google Drive blijft de centrale opslagplaats voor bestanden.</p>
+        <p className="lead">Notulen, eventdossiers en sponsorrapporten centraal opgevolgd. Bestanden blijven in Google Drive; Supabase bewaart alleen links en metadata.</p>
         <section className="drive-principle">
           <Cloud size={20}/>
-          <div><strong>Eén bron voor documenten</strong><span>Bestanden worden niet gedupliceerd in Supabase. Alleen de koppeling met het juiste BESC-dossier wordt hier beheerd.</span></div>
+          <div><strong>Google Drive blijft de documentbron</strong><span>Een ontbrekend document is een verwachte output waarvoor nog geen Google-document geregistreerd is.</span></div>
         </section>
         <section className="drive-stats">
-          <article><FolderOpen/><div><span>Dossiers</span><strong>{coverage.total}</strong></div></article>
-          <article className="linked"><CheckCircle2/><div><span>Drive gekoppeld</span><strong>{coverage.linked}</strong></div></article>
-          <article className={coverage.missing ? "missing" : "linked"}><Link2Off/><div><span>Link ontbreekt</span><strong>{coverage.missing}</strong></div></article>
-          <article><FileText/><div><span>Dekking</span><strong>{coverage.percentage}%</strong></div></article>
+          <article><FileText/><div><span>Verwachte documenten</span><strong>{generatedDocuments.length}</strong></div></article>
+          <article className="linked"><CheckCircle2/><div><span>Beschikbaar</span><strong>{availableCount}</strong></div></article>
+          <article className={missingCount ? "missing" : "linked"}><TriangleAlert/><div><span>Ontbrekend</span><strong>{missingCount}</strong></div></article>
+          <article><FolderOpen/><div><span>Dekking</span><strong>{documentCoverage}%</strong></div></article>
         </section>
         <form className="drive-filters">
-          <label className="drive-search"><Search size={15}/><input name="zoeken" defaultValue={search} placeholder="Zoek dossier, bron of status…"/></label>
-          <label>Bron<select name="bron" defaultValue={source}><option value="all">Alle bronnen</option>{Object.entries(driveSourceLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-          <label>Koppeling<select name="koppeling" defaultValue={linkState === "linked" ? "gekoppeld" : linkState === "missing" ? "ontbreekt" : "all"}><option value="all">Alle dossiers</option><option value="gekoppeld">Drive gekoppeld</option><option value="ontbreekt">Link ontbreekt</option></select></label>
+          <label className="drive-search"><Search size={15}/><input name="zoeken" defaultValue={search} placeholder="Zoek document of dossier…"/></label>
+          <label>Module<select name="module" defaultValue={moduleFilter}><option value="all">Alle modules</option>{Object.entries(documentModuleLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+          <label>Documenttype<select name="type" defaultValue={typeFilter}><option value="all">Alle types</option>{Object.entries(generatedDocumentTypeLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+          <label>Status<select name="status" defaultValue={statusFilter}><option value="all">Alle statussen</option><option value="available">Beschikbaar</option><option value="missing">Ontbrekend</option></select></label>
           <button>Filter</button>
-          {(search || source !== "all" || linkState !== "all") && <Link href="/app/documenten">Wissen</Link>}
+          {(search || moduleFilter !== "all" || typeFilter !== "all" || statusFilter !== "all") && <Link href="/app/documenten">Wissen</Link>}
         </form>
-        <section className="drive-register">
-          <div className="drive-register-head"><span>Dossier</span><span>Bron</span><span>Status</span><span>Document</span></div>
-          {documents.map((document) => (
+        <section className="drive-register document-register">
+          <div className="drive-register-head"><span>Document</span><span>Module / type</span><span>Status</span><span>Actie</span></div>
+          {visibleDocuments.map((document) => (
             <article key={document.id}>
-              <div><FileText size={16}/><Link href={document.sourceHref}><strong>{document.title}</strong><small>Bijgewerkt {new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium" }).format(new Date(document.updatedAt))}</small></Link></div>
-              <span className={`drive-source source-${document.source}`}>{document.sourceLabel}</span>
-              <span className="drive-status">{document.status}</span>
+              <div><FileText size={16}/><Link href={document.sourceHref}><strong>{document.title}</strong><small>Bronstatus: {document.sourceStatus} · bijgewerkt {new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium" }).format(new Date(document.updatedAt))}</small></Link></div>
+              <span className={`drive-source source-${document.module === "meetings" ? "meeting" : document.module === "events" ? "event" : "sponsor"}`}>{document.moduleLabel} · {document.documentTypeLabel}</span>
+              <span className={`document-status ${document.status}`}>{document.status === "available" ? "Beschikbaar" : "Ontbreekt"}</span>
               {document.driveUrl
-                ? <a className="drive-open" href={document.driveUrl} target="_blank" rel="noreferrer">Open Drive <ExternalLink size={13}/></a>
-                : <Link className="drive-missing" href={document.sourceHref}>Koppeling toevoegen</Link>}
+                ? <a className="drive-open" href={document.driveUrl} target="_blank" rel="noreferrer">Open document <ExternalLink size={13}/></a>
+                : <Link className="drive-missing" href={document.sourceHref}>Document genereren</Link>}
             </article>
           ))}
-          {!documents.length && <div className="empty">Geen dossiers gevonden voor deze selectie.</div>}
+          {!visibleDocuments.length && <div className="empty">Geen documenten gevonden voor deze selectie.</div>}
         </section>
+        <details className="drive-dossier-summary">
+          <summary>Drive-dossierkoppelingen bekijken <span>{dossierCoverage.linked}/{dossierCoverage.total} gekoppeld</span></summary>
+          <div className="drive-dossier-grid">
+            {allDossiers.map((dossier) => (
+              <article key={dossier.id}>
+                <div><strong>{dossier.title}</strong><span>{driveSourceLabels[dossier.source]} · {dossier.status}</span></div>
+                {dossier.driveUrl
+                  ? <a href={dossier.driveUrl} target="_blank" rel="noreferrer">Open <ExternalLink size={12}/></a>
+                  : <Link href={dossier.sourceHref}>Koppelen</Link>}
+              </article>
+            ))}
+          </div>
+        </details>
       </div>
     </AppShell>
   );
