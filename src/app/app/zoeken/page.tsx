@@ -46,7 +46,7 @@ export default async function SearchPage({
     ] = await Promise.all([
       supabase.from("tasks").select("id,title,status,updated_at,description").eq("organization_id", organizationId).is("deleted_at", null).ilike("title", pattern).limit(12),
       supabase.from("projects").select("id,title,status,updated_at,description").eq("organization_id", organizationId).is("deleted_at", null).ilike("title", pattern).limit(12),
-      manager ? supabase.from("inbox_items").select("id,title,status,updated_at,description").eq("organization_id", organizationId).is("deleted_at", null).ilike("title", pattern).limit(12) : Promise.resolve({ data: [] }),
+      manager ? supabase.from("inbox_items").select("id,title,status,updated_at,description").eq("organization_id", organizationId).is("deleted_at", null).not("status", "in", "(processed,archived)").ilike("title", pattern).limit(12) : Promise.resolve({ data: [] }),
       supabase.from("content_items").select("id,title,status,updated_at,description").eq("organization_id", organizationId).is("deleted_at", null).ilike("title", pattern).limit(12),
       supabase.from("social_posts").select("id,title,status,updated_at,copy").eq("organization_id", organizationId).is("deleted_at", null).ilike("title", pattern).limit(12),
       supabase.from("events").select("id,title,status,updated_at,description").eq("organization_id", organizationId).is("deleted_at", null).ilike("title", pattern).limit(12),

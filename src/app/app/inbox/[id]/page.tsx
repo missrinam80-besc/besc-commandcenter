@@ -1,0 +1,120 @@
+import Link from "next/link";
+import { Archive, ArrowRight, Trash2 } from "lucide-react";
+import { notFound } from "next/navigation";
+import { AppShell } from "@/components/app-shell";
+import { requirePermission } from "@/lib/auth-context";
+import { archiveInboxItem, convertInboxItem, deleteInboxItem, updateInboxItem } from "./actions";
+
+const statusOptions = [
+  ["new", "Nieuw"],
+  ["reviewing", "In beoordeling"],
+  ["waiting", "Wachten"],
+  ["processed", "Verwerkt"],
+  ["rejected", "Afgewezen"],
+  ["archived", "Gearchiveerd"],
+] as const;
+const priorityLabels: Record<string, string> = {
+  low: "Laag", normal: "Normaal", high: "Hoog", urgent: "Urgent",
+};
+const statusLabels = Object.fromEntries(statusOptions);
+
+export default async function InboxItemPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const { id } = await params;
+  const query = await searchParams;
+  const { supabase, membership } = await requirePermission("manageInbox", "/app/inbox?fout=geen-toegang");
+  const { data: item } = await supabase
+    .from("inbox_items")
+    .select("id,title,description,source,status,priority,created_at,updated_at")
+    .eq("id", id)
+    .eq("organization_id", membership.organization_id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!item) notFound();
+
+  return (
+    <AppShell active="Inbox">
+      <header className="project-detail-head">
+        <div>
+          <Link href="/app/inbox">← Terug naar inbox</Link>
+          <span className="eyebrow">INBOXITEM</span>
+          <h1>{item.title}</h1>
+          <p>Ingediend via {item.source} op {new Date(item.created_at).toLocaleDateString("nl-BE")}</p>
+        </div>
+        <div className="project-actions">
+          {item.status === "processed" && (
+            <form action={archiveInboxItem}>
+              <input type="hidden" name="id" value={item.id} />
+              <button type="submit"><Archive size={16} />Archiveren</button>
+            </form>
+          )}
+          {!query.bewerken && <Link className="primary" href="?bewerken=1">Bewerken</Link>}
+        </div>
+      </header>
+      <div className="project-detail-body">
+        {query.fout && <div className="error-note">De actie is mislukt ({query.fout}).</div>}
+        {query.succes && <div className="success">Het inboxitem werd bijgewerkt.</div>}
+
+        {query.bewerken ? (
+          <section className="form-card">
+            <div className="form-heading"><h2>Inboxitem bewerken</h2><Link href="?">Annuleren</Link></div>
+            <form action={updateInboxItem}>
+              <input type="hidden" name="id" value={item.id} />
+              <label>Titel<input name="title" defaultValue={item.title} required minLength={3} /></label>
+              <label>Beschrijving<textarea name="description" rows={6} defaultValue={item.description ?? ""} /></label>
+              <div className="form-row">
+                <label>Bron<input name="source" defaultValue={item.source} required /></label>
+                <label>Status<select name="status" defaultValue={item.status}>{statusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+                <label>Prioriteit<select name="priority" defaultValue={item.priority}><option value="low">Laag</option><option value="normal">Normaal</option><option value="high">Hoog</option><option value="urgent">Urgent</option></select></label>
+              </div>
+              <div className="form-actions"><Link href="?">Annuleren</Link><button className="primary">Opslaan</button></div>
+            </form>
+          </section>
+        ) : (
+          <>
+            <section className="project-summary">
+              <article><span>Status</span><strong>{statusLabels[item.status] ?? item.status}</strong></article>
+              <article><span>Prioriteit</span><strong>{priorityLabels[item.priority] ?? item.priority}</strong></article>
+              <article><span>Bron</span><strong>{item.source}</strong></article>
+              <article><span>Bijgewerkt</span><strong>{new Date(item.updated_at).toLocaleDateString("nl-BE")}</strong></article>
+            </section>
+            <section className="form-card record-notes">
+              <div className="form-heading"><h2>Beschrijving</h2></div>
+              <p>{item.description || "Er werd geen beschrijving toegevoegd."}</p>
+            </section>
+
+            {item.status !== "processed" && (
+              <section className="form-card inbox-conversion">
+                <div className="form-heading"><div><h2>Omzetten naar BESC-werk</h2><p>Titel, beschrijving en prioriteit worden overgenomen.</p></div></div>
+                <div className="conversion-options">
+                  {[["task", "Taak", "Een uitvoerbaar actiepunt"], ["project", "Project", "Een groter werktraject"], ["campaign", "Campagne", "Een marketing- of communitycampagne"]].map(([target, label, help]) => (
+                    <form action={convertInboxItem} key={target}>
+                      <input type="hidden" name="id" value={item.id} />
+                      <input type="hidden" name="target" value={target} />
+                      <div><strong>{label}</strong><span>{help}</span></div>
+                      <button type="submit" aria-label={`Omzetten naar ${label}`}><ArrowRight size={16} /></button>
+                    </form>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <section className="form-card danger-zone">
+              <div><h2>Inboxitem verwijderen</h2><p>Het item verdwijnt uit de inbox, maar blijft technisch bewaard voor auditdoeleinden.</p></div>
+              <form action={deleteInboxItem}>
+                <input type="hidden" name="id" value={item.id} />
+                <label>Typ VERWIJDER om te bevestigen<input name="confirmation" required pattern="VERWIJDER" /></label>
+                <button><Trash2 size={15} />Verwijderen</button>
+              </form>
+            </section>
+          </>
+        )}
+      </div>
+    </AppShell>
+  );
+}

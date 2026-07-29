@@ -1,11 +1,12 @@
 import { AppShell } from "@/components/app-shell";
+import Link from "next/link";
 import { ModulePage } from "@/components/module-page";
 import { EntityForm } from "@/components/entity-form";
 import { SavedViews } from "@/components/saved-views";
 import { demoDashboard } from "@/lib/demo-data";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { requireActiveMembership } from "@/lib/auth-context";
-import { createInboxItem, convertInboxToTask } from "../actions";
+import { createInboxItem } from "../actions";
 
 type InboxRow = {
   id: string;
@@ -19,9 +20,7 @@ const inboxStatuses = [
   { value: "new", label: "Nieuw" },
   { value: "reviewing", label: "In beoordeling" },
   { value: "waiting", label: "Wachten" },
-  { value: "processed", label: "Verwerkt" },
   { value: "rejected", label: "Afgewezen" },
-  { value: "archived", label: "Gearchiveerd" },
 ];
 
 const inboxStatusLabels = Object.fromEntries(
@@ -53,6 +52,7 @@ export default async function InboxPage({
       .select("id,title,source,created_at,status")
       .eq("organization_id", membership.organization_id)
       .is("deleted_at", null)
+      .not("status", "in", "(processed,archived)")
       .order("created_at", { ascending: false });
 
     if (search) query = query.ilike("title", `%${search}%`);
@@ -67,6 +67,7 @@ export default async function InboxPage({
       );
     }
     if (status) items = items.filter((item) => item.status === status);
+    items = items.filter((item) => !["processed", "archived"].includes(item.status));
   }
 
   return (
@@ -121,17 +122,15 @@ export default async function InboxPage({
             <article key={item.id}>
               <span className="source discord">{item.source[0].toUpperCase()}</span>
               <div>
-                <strong>{item.title}</strong>
+                <Link className="task-link" href={`/app/inbox/${item.id}`}>
+                  <strong>{item.title}</strong>
+                </Link>
                 <p>Via {item.source}</p>
               </div>
               <span className="badge purple">
                 {inboxStatusLabels[item.status] ?? item.status}
               </span>
-              <form action={convertInboxToTask}>
-                <input type="hidden" name="id" value={item.id} />
-                <input type="hidden" name="title" value={item.title} />
-                <button type="submit">Maak taak</button>
-              </form>
+              <Link className="row-action" href={`/app/inbox/${item.id}`}>Openen</Link>
             </article>
           ))}
           {!items.length && (
