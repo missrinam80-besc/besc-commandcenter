@@ -36,6 +36,7 @@ export async function syncMeetingToGoogleCalendar(formData: FormData) {
       id: meeting.id,
       organizationId: context.membership.organization_id,
       title: meeting.title,
+      status: meeting.status,
       meetingType: meeting.meeting_type,
       startAt: meeting.meeting_at,
       endAt: meeting.ends_at,

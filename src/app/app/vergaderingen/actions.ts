@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { syncLinkedMeeting } from "@/lib/linked-calendar-sync";
 
 async function manager() {
   const context = await requireActiveMembership();
@@ -55,8 +56,22 @@ export async function saveMeeting(formData: FormData) {
     ? await supabase.from("meetings").update(values).eq("organization_id", membership.organization_id).eq("id", id)
     : await supabase.from("meetings").insert({ ...values, organization_id: membership.organization_id, created_by: user.id }).select("id").single();
   if (result.error) redirect("/app/vergaderingen?fout=opslaan");
+  let calendarWarning = false;
+  if (id) {
+    try {
+      await syncLinkedMeeting({
+        supabase,
+        organizationId: membership.organization_id,
+      }, id);
+    } catch {
+      calendarWarning = true;
+    }
+  }
   revalidatePath("/app/vergaderingen");
-  redirect(id ? `/app/vergaderingen/${id}?succes=bijgewerkt` : `/app/vergaderingen/${result.data?.id}`);
+  if (id) revalidatePath(`/app/vergaderingen/${id}`);
+  redirect(id
+    ? `/app/vergaderingen/${id}?succes=bijgewerkt${calendarWarning ? "&waarschuwing=kalender-sync" : ""}`
+    : `/app/vergaderingen/${result.data?.id}`);
 }
 
 export async function addMeetingAction(formData: FormData) {

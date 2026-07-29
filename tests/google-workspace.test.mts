@@ -24,6 +24,7 @@ test("Google Calendar-payload bewaart exacte tijden en BESC-herkomst", () => {
     id: "event-1",
     organizationId: "org-1",
     title: "BESC Community Night",
+    status: "confirmed",
     description: "Samen gamen.",
     startAt: "2026-08-01T18:00:00.000Z",
     endAt: "2026-08-01T21:00:00.000Z",
@@ -47,6 +48,7 @@ test("Google Calendar-sync weigert ontbrekende of omgekeerde tijden", () => {
     id: "event-1",
     organizationId: "org-1",
     title: "Testevent",
+    status: "planning",
     description: null,
     location: null,
     isOnline: true,
@@ -74,6 +76,7 @@ test("Google Calendar-payload voor vergaderingen bevat geen interne notities", (
     id: "meeting-1",
     organizationId: "org-1",
     title: "Bestuursvergadering",
+    status: "confirmed",
     meetingType: "board",
     startAt: "2026-08-04T17:00:00.000Z",
     endAt: "2026-08-04T19:00:00.000Z",
@@ -91,12 +94,33 @@ test("Google Calendar-sync voor vergaderingen vereist een eindtijd", () => {
     id: "meeting-1",
     organizationId: "org-1",
     title: "Bestuursvergadering",
+    status: "planned",
     meetingType: "board",
     startAt: "2026-08-04T17:00:00.000Z",
     endAt: null,
     attendees: [],
     minutesUrl: null,
   }), /start- als eindtijd/);
+});
+
+test("geannuleerde Calendar-items blijven zichtbaar maar blokkeren geen tijd", () => {
+  const event = googleCalendarEventPayload({
+    id: "event-cancelled",
+    organizationId: "org-1",
+    title: "Community Night",
+    status: "cancelled",
+    description: null,
+    startAt: "2026-08-10T18:00:00.000Z",
+    endAt: "2026-08-10T20:00:00.000Z",
+    location: null,
+    isOnline: true,
+    roleBesc: "organizer",
+    driveUrl: null,
+    eventbriteUrl: null,
+    streamUrl: null,
+  });
+  assert.equal(event.summary, "GEANNULEERD — Community Night");
+  assert.equal(event.transparency, "transparent");
 });
 
 test("Google audience accepteert losse IDs en volledige resourcepaden", () => {

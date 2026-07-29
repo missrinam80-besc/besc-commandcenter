@@ -38,6 +38,7 @@ export async function syncEventToGoogleCalendar(formData: FormData) {
       id: event.id,
       organizationId: context.membership.organization_id,
       title: event.title,
+      status: event.status,
       description: event.description,
       startAt: event.start_at,
       endAt: event.end_at,

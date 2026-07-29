@@ -159,6 +159,7 @@ export type GoogleCalendarSourceEvent = {
   id: string;
   organizationId: string;
   title: string;
+  status: string;
   description: string | null;
   startAt: string | null;
   endAt: string | null;
@@ -208,11 +209,12 @@ export function googleCalendarEventPayload(event: GoogleCalendarSourceEvent) {
     "Beheerd vanuit BESC Command Center.",
   ].filter(Boolean);
   return {
-    summary: event.title.trim(),
+    summary: event.status === "cancelled" ? `GEANNULEERD — ${event.title.trim()}` : event.title.trim(),
     description: context.join("\n\n"),
     location: event.isOnline ? "Online" : event.location?.trim() || undefined,
     start: { dateTime: start.toISOString(), timeZone: "Europe/Brussels" },
     end: { dateTime: end.toISOString(), timeZone: "Europe/Brussels" },
+    transparency: event.status === "cancelled" ? "transparent" : "opaque",
     extendedProperties: {
       private: {
         bescEntityType: "event",
@@ -282,6 +284,7 @@ export type GoogleCalendarSourceMeeting = {
   id: string;
   organizationId: string;
   title: string;
+  status: string;
   meetingType: string;
   startAt: string | null;
   endAt: string | null;
@@ -308,10 +311,11 @@ export function googleCalendarMeetingPayload(meeting: GoogleCalendarSourceMeetin
     "Beheerd vanuit BESC Command Center.",
   ].filter(Boolean).join("\n\n");
   return {
-    summary: meeting.title.trim(),
+    summary: meeting.status === "cancelled" ? `GEANNULEERD — ${meeting.title.trim()}` : meeting.title.trim(),
     description,
     start: { dateTime: start.toISOString(), timeZone: "Europe/Brussels" },
     end: { dateTime: end.toISOString(), timeZone: "Europe/Brussels" },
+    transparency: meeting.status === "cancelled" ? "transparent" : "opaque",
     extendedProperties: {
       private: {
         bescEntityType: "meeting",

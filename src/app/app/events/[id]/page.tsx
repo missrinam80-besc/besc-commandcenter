@@ -83,6 +83,7 @@ export default async function Event({
       </header>
       <div className="project-detail-body">
         {q.succes && <div className="success">{q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : "Event opgeslagen."}</div>}
+        {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
         {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
         {q.bewerken && (
           <section className="form-card">
