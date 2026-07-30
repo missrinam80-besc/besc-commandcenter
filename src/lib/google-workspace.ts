@@ -100,6 +100,7 @@ export async function googleAccessToken() {
       },
       body: JSON.stringify({
         scope: [
+          "https://www.googleapis.com/auth/cloud-platform",
           "https://www.googleapis.com/auth/drive",
           "https://www.googleapis.com/auth/documents",
           "https://www.googleapis.com/auth/calendar",

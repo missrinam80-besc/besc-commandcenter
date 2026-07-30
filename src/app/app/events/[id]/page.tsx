@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarSync, ExternalLink, FilePlus2, FolderInput, FolderPlus, Link2 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { EmailCommunicationPanel } from "@/components/email-communication-panel";
 import { EventForm, eventStatuses, eventTypes } from "@/components/event-form";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { eventDriveSubfolders } from "@/lib/google-workspace";
@@ -164,6 +165,7 @@ export default async function Event({
             </div>
           )}
         </section>
+        <EmailCommunicationPanel entityType="event" entityId={id}/>
       </div>
     </AppShell>
   );

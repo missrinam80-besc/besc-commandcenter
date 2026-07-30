@@ -5,6 +5,7 @@ export const approvalEntityLabels = {
   expense: "Kost",
   partner: "Sponsorafspraak",
   document: "Document",
+  email: "E-mail",
 } as const;
 
 export const approvalModuleLabels = {
@@ -12,6 +13,7 @@ export const approvalModuleLabels = {
   finance: "Financiën",
   sponsors: "Sponsors",
   documents: "Documenten",
+  communication: "Communicatie",
 } as const;
 
 export const approvalStatusLabels = {

@@ -1,0 +1,39 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+
+const migration = readFileSync("supabase/migrations/20260730200000_add_email_communications.sql", "utf8");
+const actions = readFileSync("src/app/app/communicatie/actions.ts", "utf8");
+const gmail = readFileSync("src/lib/google-gmail.ts", "utf8");
+const approvals = readFileSync("src/lib/approvals.ts", "utf8");
+
+test("e-mailcommunicatie ondersteunt dossiers en een gecontroleerde levenscyclus", () => {
+  assert.match(migration, /entity_type in \('partner','event','meeting'\)/);
+  assert.match(migration, /'pending_approval'/);
+  assert.match(migration, /'approved'/);
+  assert.match(migration, /'sent'/);
+});
+
+test("opstellers kunnen geen goedgekeurde of verzonden e-mailstatus schrijven", () => {
+  assert.match(migration, /status in \('draft','pending_approval','changes_requested','failed'\)/);
+  assert.match(migration, /approved_by is null/);
+  assert.match(migration, /sent_by is null/);
+});
+
+test("verzenden vereist bestuurstoegang en een goedgekeurd Gmail-concept", () => {
+  assert.match(actions, /isManager\(context\.membership\)/);
+  assert.match(actions, /message\.status !== "approved"/);
+  assert.match(actions, /sendGmailDraft/);
+  assert.match(actions, /partner_interactions/);
+});
+
+test("Gmail MIME verwijdert regeleinden uit headers en gebruikt base64url", () => {
+  assert.match(gmail, /replace\(\/\[\\r\\n\]\+\/g, " "\)/);
+  assert.match(gmail, /toString\("base64url"\)/);
+  assert.match(gmail, /Content-Type: text\/plain; charset="UTF-8"/);
+});
+
+test("alleen bestuur en beheerders kunnen e-mails beoordelen", () => {
+  assert.match(approvals, /membership\.role === "admin" \|\| membership\.role === "board"/);
+  assert.match(approvals, /return entityType === "expense"/);
+});

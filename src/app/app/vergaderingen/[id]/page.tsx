@@ -5,6 +5,7 @@ import { generateMeetingMinutes } from "@/app/app/google-document-actions";
 import { addMeetingAction, convertMeetingActionToTask, updateMeetingAction } from "@/app/app/vergaderingen/actions";
 import { AppShell } from "@/components/app-shell";
 import { MeetingForm } from "@/components/meeting-form";
+import { EmailCommunicationPanel } from "@/components/email-communication-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { syncMeetingToGoogleCalendar } from "@/app/app/vergaderingen/calendar-actions";
 
@@ -37,6 +38,7 @@ export default async function Page({params,searchParams}:{params:Promise<{id:str
           <section className="form-card record-notes"><div className="form-heading"><h2>Besluiten</h2></div><p>{r.decisions||"Nog geen besluiten geregistreerd."}</p></section>
           <section className="form-card relation-wide"><div className="form-heading"><h2>Actiepunten</h2><span>{actions.filter(x=>x.status!=="done").length} open</span></div><div className="meeting-action-list">{actions.map(x=><article key={x.id}><div><strong>{x.title}</strong><span>{x.assignee_text||"Nog niet toegewezen"}</span></div><form action={updateMeetingAction}><input type="hidden" name="id" value={x.id}/><input type="hidden" name="meeting_id" value={id}/><select name="status" defaultValue={x.status}><option value="todo">Te doen</option><option value="doing">Bezig</option><option value="done">Afgerond</option><option value="cancelled">Geannuleerd</option></select><button>Bijwerken</button></form>{x.task_id?<Link className="row-action" href={`/app/taken/${x.task_id}`}>Open taak</Link>:<form className="task-convert-form" action={convertMeetingActionToTask}><input type="hidden" name="id" value={x.id}/><input type="hidden" name="meeting_id" value={id}/><select name="priority" defaultValue="normal"><option value="low">Laag</option><option value="normal">Normaal</option><option value="high">Hoog</option><option value="urgent">Urgent</option></select><input type="date" name="due_at" aria-label="Deadline"/><select name="project_id" defaultValue=""><option value="">Geen project</option>{projects.map(project=><option key={project.id} value={project.id}>{project.title}</option>)}</select><button className="primary">Maak taak</button></form>}</article>)}</div><form className="milestone-add" action={addMeetingAction}><input type="hidden" name="meeting_id" value={id}/><input name="title" placeholder="Nieuw actiepunt" required/><input name="assignee_text" placeholder="Verantwoordelijke (optioneel)"/><button>Toevoegen</button></form></section>
         </div>
+        <EmailCommunicationPanel entityType="meeting" entityId={id}/>
       </>}
     </div>
   </AppShell>;

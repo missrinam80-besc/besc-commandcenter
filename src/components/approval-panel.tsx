@@ -43,8 +43,12 @@ export async function ApprovalPanel({
     .limit(1)
     .maybeSingle();
   const request = data as unknown as ApprovalRow | null;
-  const canReview = request?.status === "pending" && canReviewApproval(membership, entityType);
-  const canSubmit = !request || ["approved", "changes_requested", "rejected"].includes(request.status);
+  const canReview = request?.status === "pending" &&
+    canReviewApproval(membership, entityType) &&
+    !(entityType === "email" && request.requested_by === user.id);
+  const canSubmit = !request ||
+    request.status === "changes_requested" ||
+    (entityType !== "email" && request.status === "rejected");
 
   return (
     <section className="form-card approval-panel">

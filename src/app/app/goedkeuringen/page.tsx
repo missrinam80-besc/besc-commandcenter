@@ -78,7 +78,9 @@ export default async function ApprovalsPage({
         </form>
         <section className="approval-queue">
           {rows.map((row) => {
-            const canReview = row.status === "pending" && canReviewApproval(membership, row.entity_type);
+            const canReview = row.status === "pending" &&
+              canReviewApproval(membership, row.entity_type) &&
+              !(row.entity_type === "email" && row.requested_by === user.id);
             return (
               <article key={row.id}>
                 <div className={`approval-icon ${row.status}`}>{row.status === "approved" ? <CheckCircle2/> : row.status === "rejected" ? <XCircle/> : row.status === "changes_requested" ? <RotateCcw/> : <Clock3/>}</div>
