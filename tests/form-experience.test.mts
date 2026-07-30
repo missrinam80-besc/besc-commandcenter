@@ -60,3 +60,28 @@ test("primaire dossierformulieren vereisen geen titel in de browser", async () =
     assert.doesNotMatch(file, /name="title"[^>]*\brequired\b/);
   }
 });
+
+test("datumvelden kunnen leeg blijven tot de planning bekend is", async () => {
+  const [administrationPage, administrationActions, reportPage, kpiForm, kpiActions, migration] =
+    await Promise.all([
+      source("src/app/app/administratie/page.tsx"),
+      source("src/app/app/administratie/actions.ts"),
+      source("src/app/app/rapportage/page.tsx"),
+      source("src/components/kpi-form.tsx"),
+      source("src/app/app/rapportage/actions.ts"),
+      source("supabase/migrations/20260730154438_allow_optional_record_dates.sql"),
+    ]);
+
+  assert.doesNotMatch(administrationPage, /name="start_date"[^>]*\brequired\b/);
+  assert.doesNotMatch(administrationPage, /name="due_date"[^>]*\brequired\b/);
+  assert.doesNotMatch(reportPage, /name="period_(?:start|end)"[^>]*\brequired\b/);
+  assert.doesNotMatch(kpiForm, /name="period_(?:start|end)"[^>]*\brequired\b/);
+  assert.match(administrationActions, /start_date: z\.string\(\)\.optional\(\)/);
+  assert.match(administrationActions, /due_date: z\.string\(\)\.optional\(\)/);
+  assert.match(kpiActions, /period_start: values\.period_start \|\| null/);
+  assert.match(kpiActions, /period_end: values\.period_end \|\| null/);
+  assert.match(migration, /alter column start_date drop not null/);
+  assert.match(migration, /alter column due_date drop not null/);
+  assert.match(migration, /alter column period_start drop not null/);
+  assert.match(migration, /alter column period_end drop not null/);
+});
