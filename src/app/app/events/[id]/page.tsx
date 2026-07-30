@@ -5,6 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { EmailCommunicationPanel } from "@/components/email-communication-panel";
 import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { EventForm, eventStatuses, eventTypes } from "@/components/event-form";
+import { FormModal } from "@/components/form-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { eventDriveSubfolders } from "@/lib/google-workspace";
 import { saveEvent } from "../actions";
@@ -90,10 +91,9 @@ export default async function Event({
         {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
         {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
         {q.bewerken && (
-          <section className="form-card">
-            <div className="form-heading"><h2>Event bewerken</h2><Link href="?">Sluiten</Link></div>
+          <FormModal title="Event bewerken">
             <EventForm action={saveEvent} event={{...e, calendar_removed: calendar?.name.startsWith("[VERWIJDERD]")}} projects={projects ?? []}/>
-          </section>
+          </FormModal>
         )}
         <section className="content-summary">
           <article><span>Type</span><strong>{eventTypes[e.event_type as keyof typeof eventTypes]}</strong></article>

@@ -9,9 +9,12 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { submitForApproval } from "@/app/app/goedkeuringen/actions";
+import { deleteDocumentRegistration } from "@/app/app/documenten/actions";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { approvalStatusLabels, type ApprovalStatus } from "@/lib/approvals";
+import { hasPermission } from "@/lib/permissions";
 import {
   documentModuleLabels,
   driveCoverage,
@@ -63,6 +66,7 @@ export default async function DocumentsPage({
   const query = await searchParams;
   const { supabase, membership } = await requireActiveMembership();
   const organizationId = membership.organization_id;
+  const canManage = hasPermission(membership, "manageOrganization");
   const search = query.zoeken ?? "";
   const moduleFilter = query.module && query.module in documentModuleLabels ? query.module : "all";
   const typeFilter = query.type && query.type in generatedDocumentTypeLabels ? query.type : "all";
@@ -194,6 +198,7 @@ export default async function DocumentsPage({
       <div className="module-body">
         <p className="lead">Notulen, eventdossiers en sponsorrapporten centraal opgevolgd. Bestanden blijven in Google Drive; Supabase bewaart alleen links en metadata.</p>
         {query.succes === "goedkeuring-aangevraagd" && <div className="success">Het document is ter goedkeuring voorgelegd.</div>}
+        {query.succes === "document-verwijderd" && <div className="success">De documentregistratie is verwijderd. Het bestand in Google Drive is behouden.</div>}
         {query.fout && <div className="error-note">De goedkeuringsactie is mislukt ({query.fout}).</div>}
         <section className="drive-principle">
           <Cloud size={20}/>
@@ -232,6 +237,18 @@ export default async function DocumentsPage({
                         </form>}
                     {document.documentLinkId && documentApprovalMap.get(document.documentLinkId) && documentApprovalMap.get(document.documentLinkId) !== "pending" &&
                       <small>{approvalStatusLabels[documentApprovalMap.get(document.documentLinkId)!]}</small>}
+                    {document.documentLinkId && canManage && (
+                      <form action={deleteDocumentRegistration}>
+                        <input type="hidden" name="id" value={document.documentLinkId}/>
+                        <input type="hidden" name="confirmation" value="VERWIJDER"/>
+                        <ConfirmSubmitButton
+                          className="document-delete"
+                          message="De registratie verdwijnt uit het Command Center. Het Google Drive-bestand zelf blijft bestaan. Doorgaan?"
+                        >
+                          Verwijderen
+                        </ConfirmSubmitButton>
+                      </form>
+                    )}
                   </div>
                 : <Link className="drive-missing" href={document.sourceHref}>Document genereren</Link>}
             </article>

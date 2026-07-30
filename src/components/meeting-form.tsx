@@ -1,4 +1,5 @@
 import { saveMeeting } from "@/app/app/vergaderingen/actions";
+import { MarkdownField } from "@/components/markdown-field";
 
 type Data = { id?: string; [key: string]: unknown };
 
@@ -6,7 +7,7 @@ export function MeetingForm({ record = {} }: { record?: Data }) {
   return (
     <form action={saveMeeting}>
       {record.id && <input type="hidden" name="id" value={record.id}/>}
-      <label>Titel<input name="title" required defaultValue={String(record.title ?? "")}/></label>
+      <label>Titel<input name="title" defaultValue={String(record.title ?? "")}/></label>
       <div className="form-row">
         <label>Type
           <select name="meeting_type" defaultValue={String(record.meeting_type ?? "board")}>
@@ -38,9 +39,9 @@ export function MeetingForm({ record = {} }: { record?: Data }) {
         <label>Deelnemers (komma gescheiden)<input name="attendees" defaultValue={Array.isArray(record.attendees) ? record.attendees.join(", ") : ""}/></label>
       </div>
       <p className="form-hint">Deze keuze geldt alleen bij status Geannuleerd. De vergadering en historiek blijven in BESC bewaard.</p>
-      <label>Notities / verslag<textarea name="notes" rows={6} defaultValue={String(record.notes ?? "")}/></label>
-      <label>Besluiten<textarea name="decisions" rows={5} defaultValue={String(record.decisions ?? "")}/></label>
-      <label>Actiepunten uit het verslag<textarea name="action_points" rows={5} defaultValue={String(record.action_points ?? "")}/></label>
+      <MarkdownField label="Notities / verslag" name="notes" rows={6} defaultValue={String(record.notes ?? "")}/>
+      <MarkdownField label="Besluiten" name="decisions" rows={5} defaultValue={String(record.decisions ?? "")}/>
+      <MarkdownField label="Actiepunten uit het verslag" name="action_points" rows={5} defaultValue={String(record.action_points ?? "")}/>
       <label>Link naar notulen in Google Drive<input type="url" name="minutes_url" defaultValue={String(record.minutes_url ?? "")}/></label>
       <div className="form-actions"><button className="primary">Opslaan</button></div>
     </form>

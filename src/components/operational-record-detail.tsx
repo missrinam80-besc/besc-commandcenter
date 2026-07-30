@@ -5,6 +5,8 @@ import { updateOperationalRecord } from "@/app/app/operations/actions";
 import { operationalModules, type OperationalModule } from "@/app/app/operations/config";
 import { AppShell } from "@/components/app-shell";
 import { ApprovalPanel } from "@/components/approval-panel";
+import { FormModal } from "@/components/form-modal";
+import { MarkdownContent } from "@/components/markdown-field";
 import { OperationalRecordForm } from "@/components/operational-record-form";
 import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import {
@@ -105,10 +107,9 @@ export async function OperationalRecordDetail({
         {query.fout && <div className="error-note">De wijziging kon niet worden opgeslagen ({query.fout}).</div>}
         {query.succes && <div className="success">De wijziging is opgeslagen.</div>}
         {query.bewerken ? (
-          <section className="form-card">
-            <div className="form-heading"><h2>{title} bewerken</h2><Link href="?">Annuleren</Link></div>
+          <FormModal title={`${title} bewerken`}>
             <OperationalRecordForm action={updateOperationalRecord} module={module} record={record} projects={projectsResult.data ?? []} partners={partnersResult.data ?? []} content={contentResult.data ?? []} campaigns={campaignOptionsResult.data ?? []} events={eventsResult.data ?? []}/>
-          </section>
+          </FormModal>
         ) : (
           <>
             <section className="project-summary">
@@ -117,7 +118,7 @@ export async function OperationalRecordDetail({
               <article><span>Aangemaakt</span><strong>{record.created_at.slice(0, 10)}</strong></article>
               <article><span>Laatst aangepast</span><strong>{record.updated_at.slice(0, 10)}</strong></article>
             </section>
-            {module !== "social" && <section className="form-card record-notes"><div className="form-heading"><h2>Notities en briefing</h2></div><p>{String(record.notes ?? "Nog geen notities toegevoegd.")}</p></section>}
+            {module !== "social" && <section className="form-card record-notes"><div className="form-heading"><h2>Notities en briefing</h2></div>{record.notes ? <MarkdownContent>{String(record.notes)}</MarkdownContent> : <p>Nog geen notities toegevoegd.</p>}</section>}
             {module === "sponsors" && <ApprovalPanel entityType="partner" entityId={id} sourceHref={`/app/sponsors/${id}`} title="Sponsorafspraak goedkeuren"/>}
             {module === "sponsors" && <PartnerSections id={id} contacts={(contactsResult.data ?? []) as unknown as RelatedRow[]} interactions={(interactionsResult.data ?? []) as unknown as RelatedRow[]} campaigns={(partnerCampaignsResult.data ?? []) as unknown as RelatedRow[]} events={[]} content={[]}/>}
             {module === "campagnes" && <CampaignSections id={id} deliverables={(deliverablesResult.data ?? []) as unknown as RelatedRow[]} social={(socialResult.data ?? []) as unknown as RelatedRow[]} content={[]}/>}

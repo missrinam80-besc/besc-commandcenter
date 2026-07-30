@@ -6,6 +6,7 @@ import {
   type OperationalModule,
 } from "@/app/app/operations/config";
 import { AppShell } from "@/components/app-shell";
+import { FormModal } from "@/components/form-modal";
 import { OperationalRecordForm } from "@/components/operational-record-form";
 import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
@@ -208,11 +209,7 @@ export async function OperationalModulePage({
         {params.fout && <div className="error-note">Opslaan is mislukt ({params.fout}).</div>}
         {params.succes && <div className="success">Wijziging opgeslagen.</div>}
         {params.nieuw && canManage && (
-          <section className="form-card">
-            <div className="form-heading">
-              <h2>Nieuwe {config.singular}</h2>
-              <Link href="?">Sluiten</Link>
-            </div>
+          <FormModal title={`Nieuwe ${config.singular}`}>
             <OperationalRecordForm
               action={createOperationalRecord}
               module={module}
@@ -222,7 +219,7 @@ export async function OperationalModulePage({
               campaigns={campaignsResult.data ?? []}
               events={eventsResult.data ?? []}
             />
-          </section>
+          </FormModal>
         )}
         <div className="view-toolbar">
           <form className="history-filters extended-filters" method="get">

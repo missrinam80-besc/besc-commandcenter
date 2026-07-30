@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ApprovalPanel } from "@/components/approval-panel";
 import { ContentForm } from "@/components/content-form";
+import { FormModal } from "@/components/form-modal";
 import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { updateContent } from "../actions";
@@ -61,7 +62,7 @@ export default async function ContentDetail({
       <div className="project-detail-body">
         {query.fout && <div className="error-note">Wijziging mislukt ({query.fout}).</div>}
         {query.succes && <div className="success">{query.succes === "goedkeuring-aangevraagd" ? "Ter goedkeuring voorgelegd." : "Contentitem opgeslagen."}</div>}
-        {query.bewerken && <section className="form-card"><div className="form-heading"><h2>Content bewerken</h2><Link href="?">Sluiten</Link></div><ContentForm action={updateContent} content={item} projects={projects ?? []}/></section>}
+        {query.bewerken && <FormModal title="Content bewerken"><ContentForm action={updateContent} content={item} projects={projects ?? []}/></FormModal>}
         <section className="content-summary">
           <article><span>Type</span><strong>{contentTypes[item.content_type as keyof typeof contentTypes] ?? item.content_type}</strong></article>
           <article><span>Status</span><strong>{contentStatuses[item.status as keyof typeof contentStatuses] ?? item.status}</strong></article>

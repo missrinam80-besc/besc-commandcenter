@@ -12,6 +12,23 @@
 @import "tailwindcss";
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.form-modal-backdrop{position:fixed;inset:0;z-index:220;display:grid;place-items:center;padding:24px;background:rgb(18 22 20 / 58%);backdrop-filter:blur(3px)}
+.form-modal{width:min(820px,100%);max-height:calc(100vh - 48px);margin:0!important;overflow:auto;box-shadow:0 24px 80px rgb(0 0 0 / 30%)}
+.form-modal>.form-heading{position:sticky;top:0;z-index:2;margin:-1px -1px 18px;padding:18px 20px;background:#fff;border-bottom:1px solid var(--line)}
+.form-modal>.form-heading p{margin:4px 0 0;color:var(--muted);font-size:11px}
+.form-modal-close{display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--line);border-radius:9px;color:var(--ink)}
+.form-modal-content{padding:0 2px 2px}
+.module-body>.form-card:has(>.form-heading+form),.project-detail-body>.form-card:has(>.form-heading+form):first-of-type{position:fixed;z-index:210;inset:5vh max(16px,calc((100vw - 860px)/2));max-height:90vh;overflow-y:auto;margin:0;box-shadow:0 0 0 100vmax rgb(18 22 20 / 58%),0 24px 80px rgb(0 0 0 / 30%);clip-path:inset(-100vmax)}
+.markdown-field{display:grid!important;gap:0!important}
+.markdown-field-label{margin-bottom:6px}
+.markdown-toolbar{display:flex;align-items:center;gap:4px;padding:6px;border:1px solid var(--line);border-bottom:0;border-radius:9px 9px 0 0;background:#f8f8f6}
+.markdown-toolbar button{display:inline-flex;align-items:center;gap:5px;border:0;border-radius:6px;padding:6px;background:transparent;color:var(--muted);font-size:10px;cursor:pointer}
+.markdown-toolbar button:hover,.markdown-toolbar button.active{background:#fff;color:var(--besc-red);box-shadow:0 1px 4px #0001}
+.markdown-toolbar small{margin-left:auto;padding-right:5px;color:var(--muted);font-size:9px}
+.markdown-field textarea{border-radius:0 0 9px 9px!important}
+.markdown-preview{min-height:130px;padding:13px 15px;border:1px solid var(--line);border-radius:0 0 9px 9px;background:#fff;overflow:auto}
+.markdown-content{font-size:12px;line-height:1.65}.markdown-content>:first-child,.markdown-preview>:first-child{margin-top:0}.markdown-content>:last-child,.markdown-preview>:last-child{margin-bottom:0}
+@media(max-width:700px){.form-modal-backdrop{align-items:end;padding:0}.form-modal{width:100%;max-height:92vh;border-radius:16px 16px 0 0}.markdown-toolbar small{display:none}}
 .history-total{display:flex;align-items:center;gap:8px;background:#f0eee9;border-radius:20px;padding:8px 12px;font-size:11px;color:#626560}
 .history-filters{display:flex;gap:9px;align-items:center;margin-bottom:17px}.history-filters .search{height:39px}
 .history-filters select,.history-filters button{height:39px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:0 12px;color:#626560}.history-filters button{background:#29312d;color:white;border-color:#29312d;font-weight:650}.history-filters>a{color:var(--muted);font-size:11px}
@@ -356,3 +373,4 @@
   }
 }
 .lifecycle-actions{display:grid;gap:1rem}.lifecycle-actions>div{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:start;gap:1rem;padding:1rem;border:1px solid var(--line);border-radius:14px}.lifecycle-actions svg{margin-top:.15rem;color:var(--muted)}.lifecycle-actions strong{display:block;margin-bottom:.25rem}.lifecycle-actions p{margin:0;color:var(--muted);max-width:64ch}.lifecycle-actions form{display:flex;align-items:end;gap:.65rem}.lifecycle-actions label{font-size:.78rem;min-width:150px}.lifecycle-actions input{display:block;width:100%;margin-top:.3rem}.lifecycle-danger{border-color:#ef444455!important;background:#ef444408}.lifecycle-danger>svg{color:#dc2626}.danger-button{border-color:#dc2626!important;color:#b91c1c!important;background:#fff!important}.danger-button:hover{background:#fef2f2!important}.archive-action{white-space:nowrap}@media(max-width:800px){.lifecycle-actions>div{grid-template-columns:auto 1fr}.lifecycle-actions form{grid-column:1/-1;justify-content:flex-end;flex-wrap:wrap}.lifecycle-actions label{flex:1}}
+.document-delete{border:0;background:transparent;color:#b91c1c;font-size:10px;text-decoration:underline;cursor:pointer}

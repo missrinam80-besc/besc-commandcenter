@@ -17,7 +17,7 @@ async function manager() {
 const csv = (value?: string) => (value ?? "").split(",").map((item) => item.trim()).filter(Boolean);
 const schema = z.object({
   id: z.string().uuid().optional(),
-  title: z.string().trim().min(3).max(180),
+  title: z.string().trim().max(180).optional(),
   meeting_type: z.enum(["board", "general_assembly", "workgroup", "project", "partner", "other"]),
   status: z.enum(["planned", "confirmed", "completed", "cancelled", "archived"]),
   meeting_at: z.string().optional(),
@@ -44,6 +44,7 @@ export async function saveMeeting(formData: FormData) {
   }
   const values = {
     ...data,
+    title: data.title || "Naamloze vergadering",
     meeting_at: meetingAt,
     ends_at: endsAt,
     attendees: csv(data.attendees),

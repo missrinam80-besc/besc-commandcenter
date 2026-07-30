@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarDays, Search, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { EventForm, eventStatuses, eventTypes } from "@/components/event-form";
+import { FormModal } from "@/components/form-modal";
 import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { hasPermission } from "@/lib/permissions";
@@ -89,10 +90,9 @@ export default async function Events({
         </p>
         {params.fout && <div className="error-note">Event kon niet worden opgeslagen.</div>}
         {params.nieuw && canManage && (
-          <section className="form-card">
-            <div className="form-heading"><h2>Nieuw event</h2><Link href="?">Sluiten</Link></div>
+          <FormModal title="Nieuw event">
             <EventForm action={saveEvent} projects={projects ?? []} />
-          </section>
+          </FormModal>
         )}
         <form className="history-filters extended-filters" method="get">
           <label className="search">

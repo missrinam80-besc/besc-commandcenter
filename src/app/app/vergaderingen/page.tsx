@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { MeetingForm } from "@/components/meeting-form";
+import { FormModal } from "@/components/form-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
 
 type MeetingAction = {
@@ -55,10 +56,9 @@ export default async function Page({
           <article><span>Afgerond</span><strong>{data.filter((item) => item.status === "completed").length}</strong></article>
         </section>
         {q.nieuw && (
-          <section className="form-card">
-            <div className="form-heading"><h2>Nieuwe vergadering</h2><Link href="?">Sluiten</Link></div>
+          <FormModal title="Nieuwe vergadering">
             <MeetingForm />
-          </section>
+          </FormModal>
         )}
         {openActionsOnly && (
           <section id="open-actiepunten" className="project-task-section administration-wide">

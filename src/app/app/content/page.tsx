@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Clapperboard, Search, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ContentForm } from "@/components/content-form";
+import { FormModal } from "@/components/form-modal";
 import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { hasPermission } from "@/lib/permissions";
@@ -124,13 +125,9 @@ export default async function ContentPage({
           <div className="error-note">Content kon niet worden opgeslagen ({params.fout}).</div>
         )}
         {params.nieuw && canManage && (
-          <section className="form-card">
-            <div className="form-heading">
-              <h2>Nieuw contentitem</h2>
-              <Link href="?">Sluiten</Link>
-            </div>
+          <FormModal title="Nieuw contentitem">
             <ContentForm action={createContent} projects={projects ?? []} />
-          </section>
+          </FormModal>
         )}
         <form className="history-filters extended-filters" method="get">
           <label className="search">

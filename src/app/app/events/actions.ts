@@ -8,7 +8,7 @@ import { syncLinkedEvent } from "@/lib/linked-calendar-sync";
 
 const schema = z.object({
   id: z.string().uuid().optional(),
-  title: z.string().trim().min(3).max(180),
+  title: z.string().trim().max(180).optional(),
   description: z.string().trim().max(10000).optional(),
   event_type: z.enum(["community", "workshop", "livestream", "podcast", "lan", "meetup", "tournament", "partner", "charity", "other"]),
   status: z.enum(["idea", "planning", "confirmed", "production", "live", "aftercare", "completed", "cancelled", "archived"]),
@@ -39,6 +39,7 @@ function values(input: z.infer<typeof schema>) {
   void _cancelledCalendarAction;
   return {
     ...eventInput,
+    title: input.title || "Naamloos event",
     description: input.description || null,
     project_id: input.project_id || null,
     start_at: input.start_at ? new Date(input.start_at).toISOString() : null,
