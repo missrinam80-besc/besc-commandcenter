@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   Bell, CheckCircle2, ExternalLink, KeyRound, Link2, Mail, MapPin,
   ShieldCheck, Unlink, UserRound,
@@ -9,10 +10,13 @@ import { discordIdentityDetails, findIdentity } from "@/lib/profile-identities";
 import { financeRoleLabels, organizationRoleLabels, type FinanceRole, type OrganizationRole } from "@/lib/permissions";
 import {
   linkDiscordIdentity,
+  removeProfileAvatar,
+  requestAccountPasswordLink,
   saveProfile,
   unlinkDiscordIdentity,
   updateAccountEmail,
   updateAccountPassword,
+  uploadProfileAvatar,
   useDiscordProfile,
 } from "./actions";
 
@@ -40,6 +44,9 @@ const successMessages: Record<string, string> = {
   discord: "Je Discord-account is gekoppeld.",
   "discord-ontkoppeld": "Je Discord-account is ontkoppeld.",
   "discord-profiel": "Je Discord-naam en profielfoto zijn overgenomen.",
+  avatar: "Je profielfoto is aangepast.",
+  "avatar-verwijderd": "Je profielfoto is verwijderd.",
+  "wachtwoord-link": "Controleer je mailbox. Via de beveiligde link kun je een eerste of nieuw wachtwoord instellen.",
 };
 
 const errorMessages: Record<string, string> = {
@@ -48,9 +55,15 @@ const errorMessages: Record<string, string> = {
   "email-ongeldig": "Vul een geldig e-mailadres in.",
   "email-ongewijzigd": "Dit is al je huidige e-mailadres.",
   "email-wijzigen": "De e-mailwijziging kon niet worden gestart.",
+  "email-bevestigen": "De bevestigingslink is ongeldig, verlopen of al gebruikt. Vraag de e-mailwijziging opnieuw aan.",
   "wachtwoord-eisen": "Gebruik een wachtwoord van minstens acht tekens.",
   "wachtwoorden-verschillen": "De twee wachtwoorden zijn niet gelijk.",
   "wachtwoord-wijzigen": "Je wachtwoord kon niet worden gewijzigd.",
+  "wachtwoord-link": "De beveiligde wachtwoordlink kon niet worden verstuurd.",
+  "wachtwoord-geen-email": "Koppel eerst een e-mailadres aan je account.",
+  "avatar-bestand": "Kies een JPG-, PNG- of WebP-afbeelding van maximaal 5 MB.",
+  "avatar-upload": "De profielfoto kon niet worden geüpload.",
+  "avatar-opslaan": "De profielfoto kon niet aan je profiel worden gekoppeld.",
   "discord-link": "Discord koppelen kon niet worden gestart. Controleer of handmatig koppelen in Supabase Auth is ingeschakeld.",
   "discord-niet-gekoppeld": "Er is geen gekoppeld Discord-account gevonden.",
   "discord-ontkoppelen": "Discord kon niet worden ontkoppeld.",
@@ -114,7 +127,11 @@ export default async function AccountPage({
         {query.fout && <div className="error-note">{errorMessages[query.fout] || "De wijziging is mislukt."}</div>}
 
         <section className="account-hero">
-          <div className="account-avatar">{initials}</div>
+          <div className="account-avatar">
+            {profile.avatar_url
+              ? <Image src={profile.avatar_url} alt={`Profielfoto van ${name}`} width={68} height={68}/>
+              : initials}
+          </div>
           <div>
             <span className="eyebrow">BESC-PROFIEL</span>
             <h2>{name}</h2>
@@ -134,6 +151,24 @@ export default async function AccountPage({
         <div className="account-grid">
           <section className="form-card account-profile-card">
             <div className="form-heading"><div><span className="eyebrow">PROFIEL</span><h2>Persoonlijke gegevens</h2><p>Deze informatie helpt het BESC-team om vlot samen te werken.</p></div><UserRound/></div>
+            <div className="avatar-editor">
+              <div className="avatar-preview">
+                {profile.avatar_url
+                  ? <Image src={profile.avatar_url} alt="" width={64} height={64}/>
+                  : initials}
+              </div>
+              <div>
+                <strong>Profielfoto</strong>
+                <p>Upload een vierkante JPG, PNG of WebP van maximaal 5 MB.</p>
+                <div className="avatar-actions">
+                  <form action={uploadProfileAvatar}>
+                    <input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required/>
+                    <button>Foto uploaden</button>
+                  </form>
+                  {profile.avatar_url && <form action={removeProfileAvatar}><button className="danger-outline">Foto verwijderen</button></form>}
+                </div>
+              </div>
+            </div>
             <form action={saveProfile}>
               <div className="form-row">
                 <label>Weergavenaam<input name="display_name" required minLength={2} defaultValue={profile.display_name ?? ""}/></label>
@@ -196,14 +231,18 @@ export default async function AccountPage({
             </form>
           </article>
           <article className="form-card">
-            <div className="form-heading"><div><span className="eyebrow">BEVEILIGING</span><h2>Wachtwoord wijzigen</h2><p>Gebruik minstens acht tekens en een uniek wachtwoord.</p></div><KeyRound/></div>
+            <div className="form-heading"><div><span className="eyebrow">BEVEILIGING</span><h2>{hasEmailIdentity ? "Wachtwoord wijzigen" : "Wachtwoord instellen"}</h2><p>Ook met een Discord- of magic-linkaccount kun je zonder oud wachtwoord een wachtwoord toevoegen.</p></div><KeyRound/></div>
             <form action={updateAccountPassword}>
               <div className="form-row">
                 <label>Nieuw wachtwoord<input name="password" type="password" required minLength={8} autoComplete="new-password"/></label>
                 <label>Herhaal wachtwoord<input name="confirm_password" type="password" required minLength={8} autoComplete="new-password"/></label>
               </div>
-              <div className="form-actions"><button>Wachtwoord wijzigen</button></div>
+              <div className="form-actions"><button>{hasEmailIdentity ? "Wachtwoord wijzigen" : "Wachtwoord instellen"}</button></div>
             </form>
+            <div className="password-link-option">
+              <span>Geen oud wachtwoord, of lukt rechtstreeks instellen niet?</span>
+              <form action={requestAccountPasswordLink}><button>Stuur beveiligde instellink</button></form>
+            </div>
           </article>
         </section>
       </div>

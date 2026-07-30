@@ -16,6 +16,15 @@ async function getSiteUrl() {
 }
 
 const optionalText = (maximum: number) => z.string().trim().max(maximum).optional();
+const avatarPublicPathMarker = "/storage/v1/object/public/profile-avatars/";
+
+function ownedAvatarPath(avatarUrl: string | null | undefined, userId: string) {
+  if (!avatarUrl) return null;
+  const markerIndex = avatarUrl.indexOf(avatarPublicPathMarker);
+  if (markerIndex < 0) return null;
+  const objectPath = decodeURIComponent(avatarUrl.slice(markerIndex + avatarPublicPathMarker.length));
+  return objectPath.startsWith(`${userId}/`) ? objectPath : null;
+}
 
 export async function saveProfile(formData: FormData) {
   const parsed = z.object({
@@ -57,6 +66,70 @@ export async function saveProfile(formData: FormData) {
   redirect("/app/account?succes=profiel");
 }
 
+export async function uploadProfileAvatar(formData: FormData) {
+  const file = formData.get("avatar");
+  if (!(file instanceof File) || file.size === 0) redirect("/app/account?fout=avatar-bestand");
+  const allowedTypes = new Map([
+    ["image/jpeg", "jpg"],
+    ["image/png", "png"],
+    ["image/webp", "webp"],
+  ]);
+  const extension = allowedTypes.get(file.type);
+  if (!extension || file.size > 5 * 1024 * 1024) redirect("/app/account?fout=avatar-bestand");
+
+  const { supabase, user } = await requireActiveMembership();
+  const { data: currentProfile } = await supabase
+    .from("profiles")
+    .select("avatar_url")
+    .eq("id", user.id)
+    .maybeSingle();
+  const previousObjectPath = ownedAvatarPath(currentProfile?.avatar_url, user.id);
+  const objectPath = `${user.id}/avatar-${Date.now()}.${extension}`;
+  const { error: uploadError } = await supabase.storage
+    .from("profile-avatars")
+    .upload(objectPath, file, { contentType: file.type, upsert: false });
+  if (uploadError) redirect("/app/account?fout=avatar-upload");
+
+  const { data } = supabase.storage.from("profile-avatars").getPublicUrl(objectPath);
+  const { error: profileError } = await supabase.from("profiles").update({
+    avatar_url: data.publicUrl,
+    updated_at: new Date().toISOString(),
+  }).eq("id", user.id);
+  if (profileError) {
+    await supabase.storage.from("profile-avatars").remove([objectPath]);
+    redirect("/app/account?fout=avatar-opslaan");
+  }
+  await supabase.auth.updateUser({ data: { avatar_url: data.publicUrl } });
+  if (previousObjectPath) {
+    await supabase.storage.from("profile-avatars").remove([previousObjectPath]);
+  }
+  revalidatePath("/app/account");
+  revalidatePath("/app");
+  redirect("/app/account?succes=avatar");
+}
+
+export async function removeProfileAvatar() {
+  const { supabase, user } = await requireActiveMembership();
+  const { data: currentProfile } = await supabase
+    .from("profiles")
+    .select("avatar_url")
+    .eq("id", user.id)
+    .maybeSingle();
+  const previousObjectPath = ownedAvatarPath(currentProfile?.avatar_url, user.id);
+  const { error } = await supabase.from("profiles").update({
+    avatar_url: null,
+    updated_at: new Date().toISOString(),
+  }).eq("id", user.id);
+  if (error) redirect("/app/account?fout=avatar-opslaan");
+  await supabase.auth.updateUser({ data: { avatar_url: null } });
+  if (previousObjectPath) {
+    await supabase.storage.from("profile-avatars").remove([previousObjectPath]);
+  }
+  revalidatePath("/app/account");
+  revalidatePath("/app");
+  redirect("/app/account?succes=avatar-verwijderd");
+}
+
 export async function updateAccountEmail(formData: FormData) {
   const parsed = z.object({ email: z.string().trim().email().max(320) }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/account?fout=email-ongeldig");
@@ -78,10 +151,28 @@ export async function updateAccountPassword(formData: FormData) {
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/account?fout=wachtwoord-eisen");
   if (parsed.data.password !== parsed.data.confirm_password) redirect("/app/account?fout=wachtwoorden-verschillen");
-  const { supabase } = await requireActiveMembership();
+  const { supabase, user } = await requireActiveMembership();
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error && user.email) {
+    const siteUrl = await getSiteUrl();
+    const reset = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent("/wachtwoord-instellen")}`,
+    });
+    if (!reset.error) redirect("/app/account?succes=wachtwoord-link");
+  }
   if (error) redirect("/app/account?fout=wachtwoord-wijzigen");
   redirect("/app/account?succes=wachtwoord");
+}
+
+export async function requestAccountPasswordLink() {
+  const { supabase, user } = await requireActiveMembership();
+  if (!user.email) redirect("/app/account?fout=wachtwoord-geen-email");
+  const siteUrl = await getSiteUrl();
+  const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+    redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent("/wachtwoord-instellen")}`,
+  });
+  if (error) redirect("/app/account?fout=wachtwoord-link");
+  redirect("/app/account?succes=wachtwoord-link");
 }
 
 export async function linkDiscordIdentity() {
