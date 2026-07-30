@@ -4,9 +4,11 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ApprovalPanel } from "@/components/approval-panel";
 import { ContentForm } from "@/components/content-form";
+import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { updateContent } from "../actions";
 import { approvalStatuses, contentStatuses, contentTypes } from "../constants";
+import { hasPermission } from "@/lib/permissions";
 
 type Content = {
   id: string;
@@ -37,6 +39,7 @@ export default async function ContentDetail({
   const { id } = await params;
   const query = await searchParams;
   const { supabase, membership } = await requireActiveMembership();
+  const canManage = hasPermission(membership, "manageContent");
   const [{ data }, { data: projects }, { data: source }] = await Promise.all([
     supabase.from("content_items").select("id,title,description,content_type,status,priority,project_id,primary_channel,channels,deadline,publication_at,drive_url,canva_url,publication_url,approval_status,projects(title)").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
@@ -76,6 +79,7 @@ export default async function ContentDetail({
             <div><span>Publicatielink</span>{item.publication_url ? <a href={item.publication_url} target="_blank" rel="noreferrer">Open publicatie</a> : <strong>Nog niet gepubliceerd</strong>}</div>
           </div>
         </section>
+        <RecordLifecyclePanel entity="content" id={id} label="Contentitem" isArchived={item.status === "archived"} canManage={canManage}/>
       </div>
     </AppShell>
   );

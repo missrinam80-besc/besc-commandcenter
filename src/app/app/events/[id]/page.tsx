@@ -3,6 +3,7 @@ import { CalendarSync, ExternalLink, FilePlus2, FolderInput, FolderPlus, Link2 }
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { EmailCommunicationPanel } from "@/components/email-communication-panel";
+import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { EventForm, eventStatuses, eventTypes } from "@/components/event-form";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { eventDriveSubfolders } from "@/lib/google-workspace";
@@ -10,6 +11,7 @@ import { saveEvent } from "../actions";
 import { createEventFolder, linkEventFolder, organizeEventFolder } from "./actions";
 import { generateEventDossier } from "@/app/app/google-document-actions";
 import { syncEventToGoogleCalendar } from "../calendar-actions";
+import { hasPermission } from "@/lib/permissions";
 
 type DriveLink = {
   google_id: string;
@@ -46,6 +48,7 @@ export default async function Event({
   const { id } = await params;
   const q = await searchParams;
   const { supabase, membership } = await requireActiveMembership();
+  const canManage = hasPermission(membership, "manageEvents");
   const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }] = await Promise.all([
     supabase.from("events").select("*").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
@@ -166,6 +169,7 @@ export default async function Event({
           )}
         </section>
         <EmailCommunicationPanel entityType="event" entityId={id}/>
+        <RecordLifecyclePanel entity="event" id={id} label="Event" isArchived={e.status === "archived"} canManage={canManage}/>
       </div>
     </AppShell>
   );

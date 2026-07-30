@@ -6,13 +6,16 @@ import { addMeetingAction, convertMeetingActionToTask, updateMeetingAction } fro
 import { AppShell } from "@/components/app-shell";
 import { MeetingForm } from "@/components/meeting-form";
 import { EmailCommunicationPanel } from "@/components/email-communication-panel";
+import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { syncMeetingToGoogleCalendar } from "@/app/app/vergaderingen/calendar-actions";
+import { hasPermission } from "@/lib/permissions";
 
 export default async function Page({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<Record<string,string|undefined>>}) {
   const {id}=await params;
   const q=await searchParams;
   const{supabase,membership}=await requireActiveMembership();
+  const canManage=hasPermission(membership,"manageOrganization");
   const[m,a,p,d,c]=await Promise.all([
     supabase.from("meetings").select("*").eq("organization_id",membership.organization_id).eq("id",id).is("deleted_at",null).maybeSingle(),
     supabase.from("meeting_action_items").select("*").eq("organization_id",membership.organization_id).eq("meeting_id",id).order("created_at"),
@@ -39,6 +42,7 @@ export default async function Page({params,searchParams}:{params:Promise<{id:str
           <section className="form-card relation-wide"><div className="form-heading"><h2>Actiepunten</h2><span>{actions.filter(x=>x.status!=="done").length} open</span></div><div className="meeting-action-list">{actions.map(x=><article key={x.id}><div><strong>{x.title}</strong><span>{x.assignee_text||"Nog niet toegewezen"}</span></div><form action={updateMeetingAction}><input type="hidden" name="id" value={x.id}/><input type="hidden" name="meeting_id" value={id}/><select name="status" defaultValue={x.status}><option value="todo">Te doen</option><option value="doing">Bezig</option><option value="done">Afgerond</option><option value="cancelled">Geannuleerd</option></select><button>Bijwerken</button></form>{x.task_id?<Link className="row-action" href={`/app/taken/${x.task_id}`}>Open taak</Link>:<form className="task-convert-form" action={convertMeetingActionToTask}><input type="hidden" name="id" value={x.id}/><input type="hidden" name="meeting_id" value={id}/><select name="priority" defaultValue="normal"><option value="low">Laag</option><option value="normal">Normaal</option><option value="high">Hoog</option><option value="urgent">Urgent</option></select><input type="date" name="due_at" aria-label="Deadline"/><select name="project_id" defaultValue=""><option value="">Geen project</option>{projects.map(project=><option key={project.id} value={project.id}>{project.title}</option>)}</select><button className="primary">Maak taak</button></form>}</article>)}</div><form className="milestone-add" action={addMeetingAction}><input type="hidden" name="meeting_id" value={id}/><input name="title" placeholder="Nieuw actiepunt" required/><input name="assignee_text" placeholder="Verantwoordelijke (optioneel)"/><button>Toevoegen</button></form></section>
         </div>
         <EmailCommunicationPanel entityType="meeting" entityId={id}/>
+        <RecordLifecyclePanel entity="meeting" id={id} label="Vergadering" isArchived={r.status==="archived"} canManage={canManage}/>
       </>}
     </div>
   </AppShell>;
