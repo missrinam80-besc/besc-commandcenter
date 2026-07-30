@@ -60,7 +60,7 @@ export default async function ApprovalsPage({
         <div><p>WERKVOORRAAD</p><h1>Goedkeuringen</h1></div>
       </header>
       <div className="module-body">
-        <p className="lead">Eén werkvoorraad voor content, kosten, sponsorafspraken en documenten die een formele beslissing nodig hebben.</p>
+        <p className="lead">Eén werkvoorraad voor content, kosten, sponsorafspraken, documenten, e-mails en nieuwsbrieven die een formele beslissing nodig hebben.</p>
         {query.succes && <div className="success">De beslissing is geregistreerd en de bronstatus is bijgewerkt.</div>}
         {query.fout && <div className="error-note">De goedkeuringsactie is mislukt ({query.fout}).</div>}
         <section className="approval-stats">
@@ -80,7 +80,7 @@ export default async function ApprovalsPage({
           {rows.map((row) => {
             const canReview = row.status === "pending" &&
               canReviewApproval(membership, row.entity_type) &&
-              !(row.entity_type === "email" && row.requested_by === user.id);
+              !((row.entity_type === "email" || row.entity_type === "newsletter") && row.requested_by === user.id);
             return (
               <article key={row.id}>
                 <div className={`approval-icon ${row.status}`}>{row.status === "approved" ? <CheckCircle2/> : row.status === "rejected" ? <XCircle/> : row.status === "changes_requested" ? <RotateCcw/> : <Clock3/>}</div>

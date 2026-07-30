@@ -43,7 +43,7 @@ export default async function EmailDetail({ params, searchParams }: { params: Pr
           <section className="form-card">
             <div className="form-heading"><div><span className="eyebrow">CONCEPT</span><h2>Bericht bewerken</h2></div></div>
             <form action={saveEmailCommunication}>
-              <input type="hidden" name="id" value={item.id}/><input type="hidden" name="entity_type" value={item.entity_type}/><input type="hidden" name="entity_id" value={item.entity_id}/>
+              <input type="hidden" name="id" value={item.id}/><input type="hidden" name="entity_type" value={item.entity_type}/><input type="hidden" name="entity_id" value={item.entity_id}/><input type="hidden" name="email_template_id" value={item.email_template_id || ""}/>
               <div className="form-row">
                 <label>Soort<select name="communication_type" defaultValue={item.communication_type}><option value="sponsor_follow_up">Sponsoropvolging</option><option value="event_communication">Eventcommunicatie</option><option value="invitation">Uitnodiging</option></select></label>
                 <label>Interne titel<input name="title" required defaultValue={item.title}/></label>
@@ -64,7 +64,7 @@ export default async function EmailDetail({ params, searchParams }: { params: Pr
           </section>
         )}
 
-        {item.status !== "sent" && <ApprovalPanel entityType="email" entityId={item.id} sourceHref={`/app/communicatie/${item.id}`} title="Menselijke goedkeuring"/>}
+        {!["sent", "failed"].includes(item.status) && <ApprovalPanel entityType="email" entityId={item.id} sourceHref={`/app/communicatie/${item.id}`} title="Menselijke goedkeuring"/>}
         {canSend && <section className="form-card email-send-card"><div><span className="eyebrow">VERZENDING</span><h2>Klaar om te verzenden</h2><p>Het concept is door een andere bevoegde gebruiker goedgekeurd. Controleer het bericht nog één keer voor verzending.</p></div><form action={sendApprovedEmail}><input type="hidden" name="id" value={item.id}/><button className="primary"><Send size={16}/>Nu via Gmail verzenden</button></form></section>}
       </div>
     </AppShell>

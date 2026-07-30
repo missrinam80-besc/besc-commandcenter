@@ -6,7 +6,7 @@ import { z } from "zod";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { canReviewApproval } from "@/lib/approvals";
 
-const entityType = z.enum(["content", "expense", "partner", "document", "email"]);
+const entityType = z.enum(["content", "expense", "partner", "document", "email", "newsletter"]);
 const safeHref = z.string().startsWith("/app/").max(500);
 
 async function sourceRecord(
@@ -30,11 +30,18 @@ async function sourceRecord(
   if (type === "email") {
     const { data } = await context.supabase
       .from("email_communications")
-      .select("id,title,created_by,status")
+      .select("id,title,created_by,status,gmail_draft_id")
       .eq("organization_id", org)
       .eq("id", id)
       .maybeSingle();
-    if (!data || data.created_by !== context.user.id || !["draft", "changes_requested", "failed"].includes(data.status)) return null;
+    if (!data || !data.gmail_draft_id || !["draft", "changes_requested"].includes(data.status)) return null;
+    return { title: data.title, module: "communication" as const };
+  }
+  if (type === "newsletter") {
+    const { data } = await context.supabase.from("newsletters")
+      .select("id,title,created_by,status,gmail_draft_id")
+      .eq("organization_id", org).eq("id", id).maybeSingle();
+    if (!data || !data.gmail_draft_id || !["draft", "changes_requested"].includes(data.status)) return null;
     return { title: data.title, module: "communication" as const };
   }
   const { data } = await context.supabase
@@ -92,7 +99,15 @@ export async function submitForApproval(formData: FormData) {
       updated_at: new Date().toISOString(),
     }).eq("organization_id", context.membership.organization_id)
       .eq("id", parsed.data.entity_id)
-      .eq("created_by", context.user.id)
+      .in("status", ["draft", "changes_requested", "failed"]);
+  }
+  if (parsed.data.entity_type === "newsletter") {
+    await context.supabase.from("newsletters").update({
+      status: "pending_approval",
+      last_error: null,
+      updated_at: new Date().toISOString(),
+    }).eq("organization_id", context.membership.organization_id)
+      .eq("id", parsed.data.entity_id)
       .in("status", ["draft", "changes_requested", "failed"]);
   }
   revalidatePath("/app/goedkeuringen");
@@ -122,7 +137,7 @@ export async function decideApproval(formData: FormData) {
   if (!canReviewApproval(context.membership, request.entity_type)) {
     redirect(`${parsed.data.return_to}?fout=geen-toegang`);
   }
-  if (request.entity_type === "email" && request.requested_by === context.user.id) {
+  if (["email", "newsletter"].includes(request.entity_type) && request.requested_by === context.user.id) {
     redirect(`${parsed.data.return_to}?fout=eigen-email-goedkeuren`);
   }
   const now = new Date().toISOString();
@@ -157,6 +172,18 @@ export async function decideApproval(formData: FormData) {
       ? "approved"
       : parsed.data.decision === "rejected" ? "rejected" : "changes_requested";
     await context.supabase.from("email_communications").update({
+      status,
+      approved_by: parsed.data.decision === "approved" ? context.user.id : null,
+      approved_at: parsed.data.decision === "approved" ? now : null,
+      updated_at: now,
+    }).eq("organization_id", context.membership.organization_id)
+      .eq("id", request.entity_id)
+      .eq("status", "pending_approval");
+  } else if (request.entity_type === "newsletter") {
+    const status = parsed.data.decision === "approved"
+      ? "approved"
+      : parsed.data.decision === "rejected" ? "rejected" : "changes_requested";
+    await context.supabase.from("newsletters").update({
       status,
       approved_by: parsed.data.decision === "approved" ? context.user.id : null,
       approved_at: parsed.data.decision === "approved" ? now : null,

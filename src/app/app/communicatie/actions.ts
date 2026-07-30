@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { saveGmailDraft, sendGmailDraft } from "@/lib/google-gmail";
 import { isManager } from "@/lib/permissions";
+import { unresolvedEmailVariables } from "@/lib/email-templates";
 
 const entityType = z.enum(["partner", "event", "meeting"]);
 const communicationType = z.enum(["sponsor_follow_up", "event_communication", "invitation"]);
@@ -47,6 +48,7 @@ export async function saveEmailCommunication(formData: FormData) {
     entity_type: entityType,
     entity_id: z.string().uuid(),
     communication_type: communicationType,
+    email_template_id: z.string().uuid().optional().or(z.literal("")),
     title: z.string().trim().min(2).max(240),
     to_addresses: z.string(),
     cc_addresses: z.string().optional(),
@@ -55,6 +57,9 @@ export async function saveEmailCommunication(formData: FormData) {
     follow_up_date: z.string().optional(),
   }).safeParse(raw);
   if (!parsed.success) redirect("/app/communicatie?fout=velden");
+  if (unresolvedEmailVariables(`${parsed.data.subject}\n${parsed.data.body_text}`).length) {
+    redirect("/app/communicatie?fout=niet-ingevulde-variabelen");
+  }
   const to = emails(parsed.data.to_addresses);
   const cc = parsed.data.cc_addresses ? emails(parsed.data.cc_addresses) : [];
   if (!to || cc === null) redirect("/app/communicatie?fout=emailadressen");
@@ -81,6 +86,7 @@ export async function saveEmailCommunication(formData: FormData) {
       entity_type: parsed.data.entity_type,
       entity_id: parsed.data.entity_id,
       communication_type: parsed.data.communication_type,
+      email_template_id: parsed.data.email_template_id || null,
       title: parsed.data.title,
       to_addresses: to,
       cc_addresses: cc,
@@ -100,6 +106,7 @@ export async function saveEmailCommunication(formData: FormData) {
       entity_type: parsed.data.entity_type,
       entity_id: parsed.data.entity_id,
       communication_type: parsed.data.communication_type,
+      email_template_id: parsed.data.email_template_id || null,
       title: parsed.data.title,
       to_addresses: to,
       cc_addresses: cc,

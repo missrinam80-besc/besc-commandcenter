@@ -24,6 +24,7 @@ export function gmailRawMessage(input: {
   sender: string;
   to: string[];
   cc?: string[];
+  bcc?: string[];
   subject: string;
   body: string;
 }) {
@@ -31,6 +32,7 @@ export function gmailRawMessage(input: {
     `From: ${cleanHeader(input.sender)}`,
     `To: ${input.to.map(cleanHeader).join(", ")}`,
     input.cc?.length ? `Cc: ${input.cc.map(cleanHeader).join(", ")}` : null,
+    input.bcc?.length ? `Bcc: ${input.bcc.map(cleanHeader).join(", ")}` : null,
     `Subject: ${cleanHeader(input.subject)}`,
     "MIME-Version: 1.0",
     'Content-Type: text/plain; charset="UTF-8"',
@@ -117,6 +119,7 @@ export async function saveGmailDraft(input: {
   draftId?: string | null;
   to: string[];
   cc?: string[];
+  bcc?: string[];
   subject: string;
   body: string;
 }) {

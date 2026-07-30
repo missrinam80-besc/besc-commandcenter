@@ -6,6 +6,7 @@ export const approvalEntityLabels = {
   partner: "Sponsorafspraak",
   document: "Document",
   email: "E-mail",
+  newsletter: "Nieuwsbrief",
 } as const;
 
 export const approvalModuleLabels = {

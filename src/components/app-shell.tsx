@@ -4,7 +4,7 @@ import {
   Archive, BarChart3, Bell, BookOpen, Bot, CalendarDays, CheckCircle2,
   ChevronDown, CircleDollarSign, Clapperboard, Clock3, CloudCog,
   FileText, FolderKanban, Handshake, Inbox, Landmark, LayoutDashboard, LogOut,
-  Mail, Megaphone, Menu, ShoppingBag, Sparkles, UserRoundSearch, Users,
+  Mail, Megaphone, Menu, Newspaper, ShoppingBag, Sparkles, UserRoundSearch, Users,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
@@ -65,6 +65,7 @@ const navigationGroups: NavigationGroup[] = [
       { label: "Events", href: "/app/events", icon: CalendarDays },
       { label: "Sponsors & CRM", href: "/app/sponsors", icon: Handshake, roles: ["admin", "board", "member"] },
       { label: "Communicatie", href: "/app/communicatie", icon: Mail },
+      { label: "Nieuwsbrieven", href: "/app/nieuwsbrieven", icon: Newspaper, roles: ["admin", "board"] },
       { label: "Shop & merchandise", href: "/app/shop", icon: ShoppingBag, roles: ["admin", "board", "member"] },
     ],
   },
