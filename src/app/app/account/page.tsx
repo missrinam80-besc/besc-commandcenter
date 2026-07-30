@@ -55,6 +55,7 @@ const errorMessages: Record<string, string> = {
   "email-ongeldig": "Vul een geldig e-mailadres in.",
   "email-ongewijzigd": "Dit is al je huidige e-mailadres.",
   "email-wijzigen": "De e-mailwijziging kon niet worden gestart.",
+  "email-limiet": "De mailserver heeft tijdelijk te veel beveiligingsmails verstuurd. Wacht even en probeer later opnieuw; je account is niet gewijzigd.",
   "email-bevestigen": "De bevestigingslink is ongeldig, verlopen of al gebruikt. Vraag de e-mailwijziging opnieuw aan.",
   "wachtwoord-eisen": "Gebruik een wachtwoord van minstens acht tekens.",
   "wachtwoorden-verschillen": "De twee wachtwoorden zijn niet gelijk.",

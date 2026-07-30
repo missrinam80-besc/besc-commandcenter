@@ -18,6 +18,12 @@ async function getSiteUrl() {
 const optionalText = (maximum: number) => z.string().trim().max(maximum).optional();
 const avatarPublicPathMarker = "/storage/v1/object/public/profile-avatars/";
 
+function isEmailRateLimitError(error: { code?: string; status?: number; message?: string } | null) {
+  return error?.code === "over_email_send_rate_limit"
+    || error?.status === 429
+    || error?.message?.toLowerCase().includes("email rate limit exceeded");
+}
+
 function ownedAvatarPath(avatarUrl: string | null | undefined, userId: string) {
   if (!avatarUrl) return null;
   const markerIndex = avatarUrl.indexOf(avatarPublicPathMarker);
@@ -140,6 +146,7 @@ export async function updateAccountEmail(formData: FormData) {
     { email: parsed.data.email },
     { emailRedirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent("/app/account?succes=email-bevestigd")}` },
   );
+  if (isEmailRateLimitError(error)) redirect("/app/account?fout=email-limiet");
   if (error) redirect("/app/account?fout=email-wijzigen");
   redirect("/app/account?succes=email-verstuurd");
 }
@@ -159,6 +166,7 @@ export async function updateAccountPassword(formData: FormData) {
       redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent("/wachtwoord-instellen")}`,
     });
     if (!reset.error) redirect("/app/account?succes=wachtwoord-link");
+    if (isEmailRateLimitError(reset.error)) redirect("/app/account?fout=email-limiet");
   }
   if (error) redirect("/app/account?fout=wachtwoord-wijzigen");
   redirect("/app/account?succes=wachtwoord");
@@ -171,6 +179,7 @@ export async function requestAccountPasswordLink() {
   const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
     redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent("/wachtwoord-instellen")}`,
   });
+  if (isEmailRateLimitError(error)) redirect("/app/account?fout=email-limiet");
   if (error) redirect("/app/account?fout=wachtwoord-link");
   redirect("/app/account?succes=wachtwoord-link");
 }

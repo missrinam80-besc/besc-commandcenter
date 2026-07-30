@@ -25,6 +25,13 @@ test("OAuth- en magic-linkgebruikers kunnen zonder oud wachtwoord een wachtwoord
   assert.match(accountPage, /Stuur beveiligde instellink/);
 });
 
+test("authmail-limieten krijgen een duidelijke melding", () => {
+  assert.match(accountActions, /over_email_send_rate_limit/);
+  assert.match(accountActions, /error\?\.status === 429/);
+  assert.match(accountActions, /fout=email-limiet/);
+  assert.match(accountPage, /mailserver heeft tijdelijk te veel beveiligingsmails verstuurd/);
+});
+
 test("profielfoto's worden gevalideerd, opgeslagen en in het profiel getoond", () => {
   assert.match(accountActions, /image\/jpeg/);
   assert.match(accountActions, /image\/png/);
