@@ -4,7 +4,7 @@ import {
   Archive, BarChart3, Bell, BookOpen, Bot, CalendarDays, CheckCircle2,
   ChevronDown, CircleDollarSign, CircleUserRound, Clapperboard, Clock3, CloudCog,
   FileText, FolderKanban, Handshake, Inbox, Landmark, LayoutDashboard, LogOut,
-  Mail, Megaphone, Menu, Newspaper, ShoppingBag, Sparkles, UserRoundSearch, Users,
+  Mail, Megaphone, Menu, Newspaper, ShoppingBag, Sparkles, UserRoundSearch,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
@@ -35,7 +35,6 @@ const navigationGroups: NavigationGroup[] = [
     label: "Mijn werkplek",
     icon: LayoutDashboard,
     items: [
-      { label: "Home", href: "/app", icon: Sparkles },
       { label: "Mijn werk", href: "/app/taken", icon: CheckCircle2 },
       { label: "Inbox", href: "/app/inbox", icon: Inbox, counter: "inbox" },
       { label: "Kalender", href: "/app/kalender", icon: CalendarDays },
@@ -48,7 +47,8 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Projecten", href: "/app/projecten", icon: FolderKanban },
       { label: "Events", href: "/app/events", icon: CalendarDays },
-      { label: "Vergaderingen & besluiten", href: "/app/vergaderingen", icon: Landmark },
+      { label: "Campagnes", href: "/app/campagnes", icon: Megaphone },
+      { label: "Social planning", href: "/app/social", icon: Megaphone },
     ],
   },
   {
@@ -57,9 +57,7 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Community & vrijwilligers", href: "/app/community", icon: UserRoundSearch },
       { label: "Sponsors & CRM", href: "/app/sponsors", icon: Handshake, roles: ["admin", "board", "member"] },
-      { label: "Campagnes", href: "/app/campagnes", icon: Megaphone },
       { label: "Communicatie", href: "/app/communicatie", icon: Mail },
-      { label: "Nieuwsbrieven", href: "/app/nieuwsbrieven", icon: Newspaper, roles: ["admin", "board"] },
     ],
   },
   {
@@ -67,27 +65,33 @@ const navigationGroups: NavigationGroup[] = [
     icon: Clapperboard,
     items: [
       { label: "Content", href: "/app/content", icon: Clapperboard },
-      { label: "Social planning", href: "/app/social", icon: Megaphone },
       { label: "Shop & merchandise", href: "/app/shop", icon: ShoppingBag, roles: ["admin", "board", "member"] },
+      { label: "Nieuwsbrieven", href: "/app/nieuwsbrieven", icon: Newspaper, roles: ["admin", "board"] },
+      { label: "AI Hub", href: "/app/ai-hub", icon: Bot },
     ],
   },
   {
-    label: "Organisatie & kennis",
+    label: "Organisatie",
     icon: BookOpen,
     items: [
-      { label: "Documenten & Drive", href: "/app/documenten", icon: FileText },
-      { label: "Kennisbank", href: "/app/kennisbank", icon: BookOpen },
-      { label: "Financiën", href: "/app/financien", icon: CircleDollarSign, roles: ["admin", "board"], financeRoles: ["submitter", "approver", "treasurer"] },
+      { label: "Vergaderingen & besluiten", href: "/app/vergaderingen", icon: Landmark },
       { label: "VZW-administratie", href: "/app/administratie", icon: Landmark, roles: ["admin", "board"] },
-      { label: "Gebruikers & toegang", href: "/app/beheer/gebruikers", icon: Users, roles: ["admin"] },
+      { label: "Financiën", href: "/app/financien", icon: CircleDollarSign, roles: ["admin", "board"], financeRoles: ["submitter", "approver", "treasurer"] },
+      { label: "Kennisbank", href: "/app/kennisbank", icon: BookOpen },
     ],
   },
   {
-    label: "Inzicht & automatisering",
+    label: "Inzichten",
     icon: BarChart3,
     items: [
       { label: "Rapportage & KPI", href: "/app/rapportage", icon: BarChart3 },
-      { label: "AI Hub", href: "/app/ai-hub", icon: Bot },
+    ],
+  },
+  {
+    label: "Beheer",
+    icon: CloudCog,
+    items: [
+      { label: "Documenten & Drive", href: "/app/documenten", icon: FileText },
       { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin", "board"] },
       { label: "Historiek", href: "/app/historiek", icon: Archive, roles: ["admin", "board"] },
       { label: "Activiteit", href: "/app/activiteit", icon: Clock3, roles: ["admin", "board"] },
@@ -146,6 +150,27 @@ function Navigation({
   );
 }
 
+function PrimaryNavigation({
+  active,
+  notificationCount,
+}: {
+  active: string;
+  notificationCount: number;
+}) {
+  return (
+    <nav className="sidebar-primary" aria-label="Snelle navigatie">
+      <Link className={active === "Meldingen" ? "active" : ""} href="/app/meldingen">
+        <Bell size={17}/><span>Meldingen</span>
+        {notificationCount > 0 && <b>{notificationCount > 99 ? "99+" : notificationCount}</b>}
+      </Link>
+      <span className="sidebar-divider" aria-hidden="true"/>
+      <Link className={active === "Home" ? "active" : ""} href="/app">
+        <Sparkles size={17}/><span>Home</span>
+      </Link>
+    </nav>
+  );
+}
+
 export async function AppShell({
   children,
   active = "Home",
@@ -187,13 +212,10 @@ export async function AppShell({
           <Image src="/besc-logo.png" width={875} height={286} priority alt="BESC"/>
           <span>Command Center</span>
         </Link>
+        <PrimaryNavigation active={active} notificationCount={notificationCount ?? 0}/>
         <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
         <div className="sidebar-utility">
           <GlobalSearchTrigger active={active === "Zoeken"}/>
-          <Link className={active === "Meldingen" ? "active" : ""} href="/app/meldingen">
-            <Bell size={17}/><span>Meldingen</span>
-            {(notificationCount ?? 0) > 0 && <b>{(notificationCount ?? 0) > 99 ? "99+" : notificationCount}</b>}
-          </Link>
         </div>
         <div className="user">
           <Link className={`user-profile-link ${active === "Account" ? "active" : ""}`} href="/app/account" aria-label="Mijn account openen">
@@ -213,12 +235,13 @@ export async function AppShell({
             <Image src="/besc-logo.png" width={875} height={286} alt="BESC"/>
             <span>{name} · {role}</span>
           </div>
+          <PrimaryNavigation active={active} notificationCount={notificationCount ?? 0}/>
           <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
+          <div className="mobile-navigation-search">
+            <GlobalSearchTrigger active={active === "Zoeken"}/>
+          </div>
           <Link className={active === "Account" ? "active" : ""} href="/app/account">
             <CircleUserRound size={17}/>Mijn account
-          </Link>
-          <Link className={active === "Meldingen" ? "active" : ""} href="/app/meldingen">
-            <Bell size={17}/>Meldingen{(notificationCount ?? 0) > 0 && <b>{notificationCount}</b>}
           </Link>
           <form action={signOut}><button><LogOut size={16}/>Uitloggen</button></form>
         </div>

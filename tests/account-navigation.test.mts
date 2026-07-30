@@ -14,13 +14,27 @@ test("zijnavigatie volgt herkenbare werkstromen", () => {
     "Planning & uitvoering",
     "Relaties & communicatie",
     "Content & publicatie",
-    "Organisatie & kennis",
-    "Inzicht & automatisering",
+    "Organisatie",
+    "Inzichten",
+    "Beheer",
   ]) {
     assert.match(shell, new RegExp(`label: "${group.replace("&", "\\&")}"`));
   }
+  for (const [before, after] of [
+    ['href="/app/meldingen"', 'href="/app"'],
+    ['label: "Projecten"', 'label: "Campagnes"'],
+    ['label: "Campagnes"', 'label: "Social planning"'],
+    ['label: "Shop & merchandise"', 'label: "Nieuwsbrieven"'],
+    ['label: "Nieuwsbrieven"', 'label: "AI Hub"'],
+    ['label: "Vergaderingen & besluiten"', 'label: "VZW-administratie"'],
+    ['label: "Rapportage & KPI"', 'label: "Beheer"'],
+    ['label: "Historiek"', 'label: "Activiteit"'],
+  ]) {
+    assert.ok(shell.indexOf(before) < shell.indexOf(after), `${before} moet voor ${after} staan`);
+  }
   assert.doesNotMatch(shell, /href: "\/app\/financien\/rapportage"/);
   assert.match(shell, /href="\/app\/account"/);
+  assert.ok(shell.indexOf("<Navigation active={active}") < shell.indexOf("<GlobalSearchTrigger active={active"), "Zoeken moet onder de gegroepeerde navigatie staan");
 });
 
 test("accountpagina beheert profiel, beveiliging en voorkeuren", () => {
