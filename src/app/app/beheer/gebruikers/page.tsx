@@ -57,7 +57,7 @@ export default async function UsersPage({
   const members = (data ?? []) as unknown as MemberRow[];
 
   return (
-    <AppShell active="Gebruikers" role="Beheerder">
+    <AppShell active="Gebruikers & toegang" role="Beheerder">
       <header className="topbar module-top">
         <div><p>BEHEER</p><h1>Gebruikers en toegang</h1></div>
         <span className="badge">{members.length} accounts</span>

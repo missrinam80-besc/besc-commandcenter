@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Archive, BarChart3, Bell, BookOpen, Bot, CalendarDays, CheckCircle2,
-  ChevronDown, CircleDollarSign, Clapperboard, Clock3, CloudCog,
+  ChevronDown, CircleDollarSign, CircleUserRound, Clapperboard, Clock3, CloudCog,
   FileText, FolderKanban, Handshake, Inbox, Landmark, LayoutDashboard, LogOut,
   Mail, Megaphone, Menu, Newspaper, ShoppingBag, Sparkles, UserRoundSearch, Users,
 } from "lucide-react";
@@ -32,55 +32,58 @@ type NavigationGroup = {
 
 const navigationGroups: NavigationGroup[] = [
   {
-    label: "Dagelijks werk",
+    label: "Mijn werkplek",
     icon: LayoutDashboard,
     items: [
       { label: "Home", href: "/app", icon: Sparkles },
-      { label: "Inbox", href: "/app/inbox", icon: Inbox, counter: "inbox" },
       { label: "Mijn werk", href: "/app/taken", icon: CheckCircle2 },
-      { label: "Projecten", href: "/app/projecten", icon: FolderKanban },
+      { label: "Inbox", href: "/app/inbox", icon: Inbox, counter: "inbox" },
       { label: "Kalender", href: "/app/kalender", icon: CalendarDays },
       { label: "Goedkeuringen", href: "/app/goedkeuringen", icon: CheckCircle2, counter: "approvals" },
     ],
   },
   {
-    label: "Organisatie",
-    icon: Users,
+    label: "Planning & uitvoering",
+    icon: FolderKanban,
     items: [
-      { label: "Community & vrijwilligers", href: "/app/community", icon: UserRoundSearch },
+      { label: "Projecten", href: "/app/projecten", icon: FolderKanban },
+      { label: "Events", href: "/app/events", icon: CalendarDays },
       { label: "Vergaderingen & besluiten", href: "/app/vergaderingen", icon: Landmark },
-      { label: "Documenten & Drive", href: "/app/documenten", icon: FileText },
-      { label: "Kennisbank", href: "/app/kennisbank", icon: BookOpen },
-      { label: "VZW-administratie", href: "/app/administratie", icon: Landmark, roles: ["admin", "board"] },
-      { label: "Gebruikers", href: "/app/beheer/gebruikers", icon: Users, roles: ["admin"] },
     ],
   },
   {
-    label: "Content & groei",
-    icon: Megaphone,
+    label: "Relaties & communicatie",
+    icon: Handshake,
+    items: [
+      { label: "Community & vrijwilligers", href: "/app/community", icon: UserRoundSearch },
+      { label: "Sponsors & CRM", href: "/app/sponsors", icon: Handshake, roles: ["admin", "board", "member"] },
+      { label: "Campagnes", href: "/app/campagnes", icon: Megaphone },
+      { label: "Communicatie", href: "/app/communicatie", icon: Mail },
+      { label: "Nieuwsbrieven", href: "/app/nieuwsbrieven", icon: Newspaper, roles: ["admin", "board"] },
+    ],
+  },
+  {
+    label: "Content & publicatie",
+    icon: Clapperboard,
     items: [
       { label: "Content", href: "/app/content", icon: Clapperboard },
       { label: "Social planning", href: "/app/social", icon: Megaphone },
-      { label: "Campagnes", href: "/app/campagnes", icon: Megaphone },
-      { label: "Events", href: "/app/events", icon: CalendarDays },
-      { label: "Sponsors & CRM", href: "/app/sponsors", icon: Handshake, roles: ["admin", "board", "member"] },
-      { label: "Communicatie", href: "/app/communicatie", icon: Mail },
-      { label: "Nieuwsbrieven", href: "/app/nieuwsbrieven", icon: Newspaper, roles: ["admin", "board"] },
       { label: "Shop & merchandise", href: "/app/shop", icon: ShoppingBag, roles: ["admin", "board", "member"] },
     ],
   },
   {
-    label: "Financiën",
-    icon: CircleDollarSign,
+    label: "Organisatie & kennis",
+    icon: BookOpen,
     items: [
+      { label: "Documenten & Drive", href: "/app/documenten", icon: FileText },
+      { label: "Kennisbank", href: "/app/kennisbank", icon: BookOpen },
       { label: "Financiën", href: "/app/financien", icon: CircleDollarSign, roles: ["admin", "board"], financeRoles: ["submitter", "approver", "treasurer"] },
-      { label: "Financieel rapport", href: "/app/financien/rapportage", icon: BarChart3, roles: ["admin", "board"], financeRoles: ["approver", "treasurer"] },
-      { label: "Boekhoudstukken", href: "/app/financien/documenten", icon: FolderKanban, roles: ["admin", "board"], financeRoles: ["submitter", "approver", "treasurer"] },
-      { label: "Financiële instellingen", href: "/app/financien/instellingen", icon: CloudCog, roles: ["admin", "board"], financeRoles: ["approver", "treasurer"] },
+      { label: "VZW-administratie", href: "/app/administratie", icon: Landmark, roles: ["admin", "board"] },
+      { label: "Gebruikers & toegang", href: "/app/beheer/gebruikers", icon: Users, roles: ["admin"] },
     ],
   },
   {
-    label: "Inzicht & tools",
+    label: "Inzicht & automatisering",
     icon: BarChart3,
     items: [
       { label: "Rapportage & KPI", href: "/app/rapportage", icon: BarChart3 },
@@ -193,8 +196,11 @@ export async function AppShell({
           </Link>
         </div>
         <div className="user">
-          <div className="avatar">{name.slice(0, 2).toUpperCase()}</div>
-          <div><strong>{name}</strong><span>{role}</span></div>
+          <Link className={`user-profile-link ${active === "Account" ? "active" : ""}`} href="/app/account" aria-label="Mijn account openen">
+            <div className="avatar">{name.slice(0, 2).toUpperCase()}</div>
+            <div><strong>{name}</strong><span>{role}</span></div>
+            <CircleUserRound size={17}/>
+          </Link>
           <form action={signOut}>
             <button className="logout-button" title="Uitloggen" aria-label="Uitloggen"><LogOut size={16}/></button>
           </form>
@@ -208,6 +214,9 @@ export async function AppShell({
             <span>{name} · {role}</span>
           </div>
           <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
+          <Link className={active === "Account" ? "active" : ""} href="/app/account">
+            <CircleUserRound size={17}/>Mijn account
+          </Link>
           <Link className={active === "Meldingen" ? "active" : ""} href="/app/meldingen">
             <Bell size={17}/>Meldingen{(notificationCount ?? 0) > 0 && <b>{notificationCount}</b>}
           </Link>

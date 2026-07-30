@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2, Download, ExternalLink, FileWarning } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { FinanceNavigation } from "@/components/finance-navigation";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { saveFinancialDocument, verifyFinancialDocument } from "./actions";
 
@@ -45,7 +46,7 @@ export default async function Page({
 
   if (!mayManage) {
     return (
-      <AppShell active="Boekhoudstukken">
+      <AppShell active="Financiën">
         <header className="topbar module-top"><div><p>FINANCIËN</p><h1>Boekhoudstukken</h1></div></header>
         <div className="module-body"><div className="permission-note">Alleen bestuur, goedkeurders en de penningmeester hebben toegang tot boekhoudstukken.</div></div>
       </AppShell>
@@ -98,7 +99,7 @@ export default async function Page({
   ].filter((record) => !record.date || String(record.date).startsWith(String(year)));
 
   return (
-    <AppShell active="Boekhoudstukken">
+    <AppShell active="Financiën">
       <header className="topbar module-top">
         <div><p>DOCUMENTBEHEER</p><h1>Boekhoudstukken {year}</h1></div>
         <div className="project-actions">
@@ -107,6 +108,7 @@ export default async function Page({
         </div>
       </header>
       <div className="module-body">
+        <FinanceNavigation active="documents" canManage />
         <p className="lead">Beheer facturen, bewijsstukken, declaraties en andere financiële documenten. De bestanden zelf blijven in Google Drive.</p>
         {query.fout && <div className="error-note">De actie is mislukt ({query.fout}).</div>}
         {query.succes && <div className="success">Het documentenregister is bijgewerkt.</div>}

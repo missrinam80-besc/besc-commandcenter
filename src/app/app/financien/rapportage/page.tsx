@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AlertTriangle, Download } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { FinanceNavigation } from "@/components/finance-navigation";
 import { requireActiveMembership } from "@/lib/auth-context";
 
 const categoryLabels: Record<string, string> = {
@@ -257,7 +258,7 @@ export default async function Page({
   if (status !== "all") exportQuery.set("status", status);
 
   return (
-    <AppShell active="Financieel rapport">
+    <AppShell active="Financiën">
       <header className="topbar module-top">
         <div>
           <p>RAPPORTERING</p>
@@ -272,6 +273,7 @@ export default async function Page({
         </Link>
       </header>
       <div className="module-body">
+        <FinanceNavigation active="reporting" canManage />
         {dataError && (
           <div className="error-note">
             Niet alle financiële gegevens konden worden geladen. Probeer de pagina
