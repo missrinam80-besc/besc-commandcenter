@@ -4,7 +4,7 @@ import {
   Archive, BarChart3, Bell, BookOpen, Bot, CalendarDays, CheckCircle2,
   ChevronDown, CircleDollarSign, CircleUserRound, Clapperboard, Clock3, CloudCog,
   FileText, FolderKanban, Handshake, Inbox, Landmark, LayoutDashboard, LogOut,
-  Mail, Megaphone, Menu, Newspaper, ShoppingBag, Sparkles, UserRoundSearch,
+  Mail, Megaphone, Menu, Newspaper, ShoppingBag, Sparkles, UserRoundSearch, Users,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
@@ -95,6 +95,7 @@ const navigationGroups: NavigationGroup[] = [
       { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin", "board"] },
       { label: "Historiek", href: "/app/historiek", icon: Archive, roles: ["admin", "board"] },
       { label: "Activiteit", href: "/app/activiteit", icon: Clock3, roles: ["admin", "board"] },
+      { label: "Gebruikers & toegang", href: "/app/beheer/gebruikers", icon: Users, roles: ["admin"] },
     ],
   },
 ];

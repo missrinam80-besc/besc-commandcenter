@@ -29,11 +29,13 @@ test("zijnavigatie volgt herkenbare werkstromen", () => {
     ['label: "Vergaderingen & besluiten"', 'label: "VZW-administratie"'],
     ['label: "Rapportage & KPI"', 'label: "Beheer"'],
     ['label: "Historiek"', 'label: "Activiteit"'],
+    ['label: "Activiteit"', 'label: "Gebruikers & toegang"'],
   ]) {
     assert.ok(shell.indexOf(before) < shell.indexOf(after), `${before} moet voor ${after} staan`);
   }
   assert.doesNotMatch(shell, /href: "\/app\/financien\/rapportage"/);
   assert.match(shell, /href="\/app\/account"/);
+  assert.match(shell, /\{ label: "Gebruikers & toegang", href: "\/app\/beheer\/gebruikers", icon: Users, roles: \["admin"\] \}/);
   assert.ok(shell.indexOf("<Navigation active={active}") < shell.indexOf("<GlobalSearchTrigger active={active"), "Zoeken moet onder de gegroepeerde navigatie staan");
 });
 
