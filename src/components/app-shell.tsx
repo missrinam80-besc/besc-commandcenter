@@ -153,7 +153,7 @@ export async function AppShell({
   role?: string;
 }) {
   const { supabase, user, membership } = await requireActiveMembership();
-  await supabase.rpc("generate_my_notifications");
+  await supabase.rpc("refresh_my_notifications");
   let approvalCountQuery = supabase
     .from("approval_requests")
     .select("id", { count: "exact", head: true })
