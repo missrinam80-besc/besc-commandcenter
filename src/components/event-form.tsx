@@ -11,7 +11,8 @@ export function EventForm({ action, event = {}, projects = [] }: {
 }) {
   const value = (key: string) => (event[key] as string | null) ?? "";
   return <form action={action}>
-    {value("id") && <input type="hidden" name="id" value={value("id")}/>}
+    {value("id") && <input type="hidden" name="id" value={value("id")}/>} 
+    {value("drive_url") && <input type="hidden" name="drive_url" value={value("drive_url")}/>} 
     <label>Naam<input name="title" defaultValue={value("title")}/></label>
     <MarkdownField label="Beschrijving" name="description" rows={5} defaultValue={value("description")}/>
     <div className="form-row">
@@ -28,7 +29,6 @@ export function EventForm({ action, event = {}, projects = [] }: {
     <p className="form-hint">Deze keuze wordt alleen toegepast wanneer je de status op Geannuleerd zet. De BESC-historiek blijft altijd bewaard.</p>
     <label className="online-check"><input type="checkbox" name="is_online" defaultChecked={Boolean(event.is_online)}/>Online event</label>
     <label>Locatie<input name="location" defaultValue={value("location")}/></label>
-    <label>Drive-map<input type="url" name="drive_url" defaultValue={value("drive_url")}/></label>
     <label>Eventbrite<input type="url" name="eventbrite_url" defaultValue={value("eventbrite_url")}/></label>
     <label>Streamlink<input type="url" name="stream_url" defaultValue={value("stream_url")}/></label>
     <div className="form-actions"><button className="primary">Opslaan</button></div>

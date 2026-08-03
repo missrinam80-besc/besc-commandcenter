@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requirePermission } from "@/lib/auth-context";
 import {
   createDocumentFromGoogleTemplate,
+  createPresentationFromGoogleTemplate,
   ensureEventDriveStructure,
   ensureGoogleDriveEntityFolder,
   googleDriveFileId,
@@ -28,7 +29,7 @@ async function saveDocumentMetadata(input: {
   document: GeneratedDocument;
 }) {
   const { context, entityType, entityId, document } = input;
-  const { error } = await context.supabase.from("google_resource_links").upsert({
+  const { error } = await context.supabase.from("google_resource_links").insert({
     organization_id: context.membership.organization_id,
     entity_type: entityType,
     entity_id: entityId,
@@ -41,7 +42,7 @@ async function saveDocumentMetadata(input: {
     parent_id: document.parents[0] ?? null,
     created_by: context.user.id,
     updated_at: new Date().toISOString(),
-  }, { onConflict: "organization_id,entity_type,entity_id,resource_type" });
+  });
   if (error) throw error;
 }
 
@@ -152,3 +153,7 @@ export async function generateEventDossier(formData: FormData) {
   revalidatePath(path);
   redirect(`${path}?succes=document`);
 }
+
+export async function generateSponsorPitchdeck(formData:FormData){const parsed=z.object({partner_id:z.string().uuid(),period_start:z.string().date(),period_end:z.string().date(),period_label:z.string().trim().min(2).max(100)}).safeParse(Object.fromEntries(formData));if(!parsed.success)redirect("/app/rapportage?fout=pitchdeck-velden");const path=`/app/rapportage/sponsors/${parsed.data.partner_id}`;const context=await requirePermission("manageOrganization",`${path}?fout=rechten`);const[partnerResult,campaignResult,kpiResult]=await Promise.all([context.supabase.from("partners").select("id,name,collaboration_type,estimated_value").eq("organization_id",context.membership.organization_id).eq("id",parsed.data.partner_id).is("deleted_at",null).maybeSingle(),context.supabase.from("campaigns").select("title,status,start_date,end_date,value,impressions,clicks").eq("organization_id",context.membership.organization_id).eq("partner_id",parsed.data.partner_id).is("deleted_at",null),context.supabase.from("kpi_records").select("metric,value,unit,source").eq("organization_id",context.membership.organization_id).eq("partner_id",parsed.data.partner_id).is("deleted_at",null).gte("period_end",parsed.data.period_start).lt("period_end",parsed.data.period_end)]);const partner=partnerResult.data;if(!partner)redirect(`${path}?fout=pitchdeck`);const campaigns=(campaignResult.data??[]).filter(item=>(!item.start_date||item.start_date<parsed.data.period_end)&&(!item.end_date||item.end_date>=parsed.data.period_start));try{const folder=await ensureGoogleDriveEntityFolder("sponsors",partner.name);const presentation=await createPresentationFromGoogleTemplate({template:"sponsor",name:`Pitchdeck - ${partner.name} - ${parsed.data.period_label}`,parentId:folder.id,replacements:{SPONSOR:partner.name,PERIODE:parsed.data.period_label,SAMENWERKING:partner.collaboration_type,GESCHATTE_WAARDE:partner.estimated_value==null?null:`€ ${Number(partner.estimated_value).toFixed(2)}`,CAMPAGNES:campaigns.map(x=>`${x.title} — ${x.status}`).join("\n"),GEREALISEERDE_WAARDE:`€ ${campaigns.reduce((sum,x)=>sum+Number(x.value??0),0).toFixed(2)}`,IMPRESSIES:campaigns.reduce((sum,x)=>sum+Number(x.impressions??0),0),KLIKS:campaigns.reduce((sum,x)=>sum+Number(x.clicks??0),0),KPI_RESULTATEN:(kpiResult.data??[]).map(x=>`${x.metric}: ${x.value} ${x.unit} (${x.source})`).join("\n")}});await saveDocumentMetadata({context,entityType:"partner",entityId:partner.id,document:presentation})}catch{redirect(`${path}?fout=pitchdeck-genereren`)}revalidatePath(path);redirect(`${path}?succes=pitchdeck`)}
+
+export async function generateEventPitchdeck(formData:FormData){const parsed=z.object({event_id:z.string().uuid()}).safeParse(Object.fromEntries(formData));if(!parsed.success)redirect("/app/rapportage?fout=pitchdeck-velden");const path=`/app/rapportage/events/${parsed.data.event_id}`;const context=await requirePermission("manageEvents",`${path}?fout=rechten`);const[eventResult,campaignResult,kpiResult,expenseResult,incomeResult]=await Promise.all([context.supabase.from("events").select("*").eq("organization_id",context.membership.organization_id).eq("id",parsed.data.event_id).is("deleted_at",null).maybeSingle(),context.supabase.from("campaigns").select("title,status,impressions,clicks").eq("organization_id",context.membership.organization_id).eq("event_id",parsed.data.event_id).is("deleted_at",null),context.supabase.from("kpi_records").select("metric,value,unit,source").eq("organization_id",context.membership.organization_id).eq("event_id",parsed.data.event_id).is("deleted_at",null),context.supabase.from("expenses").select("amount").eq("organization_id",context.membership.organization_id).eq("event_id",parsed.data.event_id).is("deleted_at",null),context.supabase.from("income_entries").select("amount").eq("organization_id",context.membership.organization_id).eq("event_id",parsed.data.event_id).is("deleted_at",null)]);const event=eventResult.data;if(!event)redirect(`${path}?fout=pitchdeck`);try{const{eventFolder}=await ensureEventDriveStructure(event.title,event.drive_url?googleDriveFileId(event.drive_url)??undefined:undefined);const presentation=await createPresentationFromGoogleTemplate({template:"event",name:`Pitchdeck - ${event.title}`,parentId:eventFolder.id,replacements:{EVENT:event.title,DATUM:displayDate(event.start_at,true),LOCATIE:event.is_online?"Online":event.location,ROL_BESC:event.role_besc,VERWACHTE_DEELNEMERS:event.expected_attendees,CAMPAGNES:(campaignResult.data??[]).map(x=>`${x.title} — ${x.status}`).join("\n"),IMPRESSIES:(campaignResult.data??[]).reduce((sum,x)=>sum+Number(x.impressions??0),0),KLIKS:(campaignResult.data??[]).reduce((sum,x)=>sum+Number(x.clicks??0),0),KOSTEN:`€ ${(expenseResult.data??[]).reduce((sum,x)=>sum+Number(x.amount),0).toFixed(2)}`,INKOMSTEN:`€ ${(incomeResult.data??[]).reduce((sum,x)=>sum+Number(x.amount),0).toFixed(2)}`,KPI_RESULTATEN:(kpiResult.data??[]).map(x=>`${x.metric}: ${x.value} ${x.unit} (${x.source})`).join("\n")}});await saveDocumentMetadata({context,entityType:"event",entityId:event.id,document:presentation})}catch{redirect(`${path}?fout=pitchdeck-genereren`)}revalidatePath(path);redirect(`${path}?succes=pitchdeck`)}

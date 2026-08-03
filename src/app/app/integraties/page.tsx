@@ -2,7 +2,11 @@ import Link from "next/link";
 import { CheckCircle2, CloudCog, KeyRound, RefreshCw, TriangleAlert } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { requireActiveMembership } from "@/lib/auth-context";
-import { googleWorkspaceConfiguration, type WorkspaceResource } from "@/lib/google-workspace";
+import {
+  googlePitchdeckConfiguration,
+  googleWorkspaceConfiguration,
+  type WorkspaceResource,
+} from "@/lib/google-workspace";
 import { googleGmailConfiguration } from "@/lib/google-gmail";
 import { saveIntegration, testGoogleWorkspaceConnection } from "./actions";
 
@@ -56,9 +60,12 @@ export default async function Page({
   const google = rows.find((item) => item.provider === "google_workspace");
   const resources = ((google?.configuration as { resources?: WorkspaceResource[] } | null)?.resources ?? []);
   const workspaceConfig = googleWorkspaceConfiguration();
+  const pitchdeckConfig = googlePitchdeckConfiguration();
   const gmailConfig = googleGmailConfiguration();
   const envStatus = [
     { name: "Google Workspace", configured: workspaceConfig.configured, variable: workspaceConfig.missing.join(", ") || "9 variabelen aanwezig" },
+    { name: "Sponsor-pitchdeck", configured: Boolean(pitchdeckConfig.sponsor), variable: "GOOGLE_TEMPLATE_SPONSOR_PITCHDECK_ID" },
+    { name: "Event-pitchdeck", configured: Boolean(pitchdeckConfig.event), variable: "GOOGLE_TEMPLATE_EVENT_PITCHDECK_ID" },
     { name: "Gmail-concepten", configured: gmailConfig.configured, variable: gmailConfig.configured ? gmailConfig.sender : "GOOGLE_GMAIL_SENDER" },
     { name: "Vercel AI Gateway", configured: Boolean(process.env.VERCEL_OIDC_TOKEN || process.env.AI_GATEWAY_API_KEY), variable: "VERCEL_OIDC_TOKEN" },
     { name: "OpenAI", configured: Boolean(process.env.OPENAI_API_KEY), variable: "OPENAI_API_KEY" },
@@ -69,7 +76,7 @@ export default async function Page({
     <AppShell active="Integraties">
       <header className="topbar module-top">
         <div><p>VERBINDINGEN & AUTOMATISERING</p><h1>Integraties</h1></div>
-        <Link className="primary" href="?nieuw=1">Integratie registreren</Link>
+        <div className="project-actions"><Link href="/app/integraties/social">Social accounts</Link><Link className="primary" href="?nieuw=1">Integratie registreren</Link></div>
       </header>
       <div className="module-body">
         <p className="lead">Beheer verbindingsmetadata en controleer serverconfiguratie zonder geheime sleutels in de database op te slaan.</p>

@@ -93,6 +93,7 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Documenten & Drive", href: "/app/documenten", icon: FileText },
       { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin", "board"] },
+      { label: "Archief", href: "/app/archief", icon: Archive, roles: ["admin", "board"] },
       { label: "Historiek", href: "/app/historiek", icon: Archive, roles: ["admin", "board"] },
       { label: "Activiteit", href: "/app/activiteit", icon: Clock3, roles: ["admin", "board"] },
       { label: "Gebruikers & toegang", href: "/app/beheer/gebruikers", icon: Users, roles: ["admin"] },
@@ -195,7 +196,7 @@ export async function AppShell({
     approvalCountQuery = approvalCountQuery.eq("requested_by", user.id).in("status", ["pending", "changes_requested"]);
   }
   const [{ data: profile }, { count: inboxCount }, { count: notificationCount }, { count: approvalCount }] = await Promise.all([
-    supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
+    supabase.from("profiles").select("display_name,theme_preference").eq("id", user.id).maybeSingle(),
     supabase.from("inbox_items").select("id", { count: "exact", head: true }).eq("organization_id", membership.organization_id).is("deleted_at", null).in("status", ["new", "reviewing"]),
     supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("read_at", null),
     approvalCountQuery,
@@ -207,7 +208,7 @@ export async function AppShell({
   const role = providedRole || organizationRoleLabels[membershipRole] || "Teamlid";
 
   return (
-    <main className="app-shell" data-role={membershipRole} data-active={active}>
+    <main className="app-shell" data-role={membershipRole} data-active={active} data-theme={profile?.theme_preference || "system"}>
       <aside className="sidebar">
         <Link className="brand" href="/app" aria-label="BESC Command Center home">
           <Image src="/besc-logo.png" width={875} height={286} priority alt="BESC"/>

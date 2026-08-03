@@ -50,6 +50,8 @@ export const auditEntityGroups = {
       "shop_products",
       "merch_launches",
       "integration_connections",
+      "social_accounts",
+      "social_sync_runs",
       "ai_prompt_templates",
     ],
   },
@@ -84,6 +86,8 @@ export const auditEntityLabels: Record<string, string> = {
   knowledge_categories: "Kenniscategorie",
   kpi_records: "KPI",
   integration_connections: "Integratie",
+  social_accounts: "Social account",
+  social_sync_runs: "Social synchronisatie",
   ai_prompt_templates: "AI-template",
 };
 
@@ -106,6 +110,8 @@ const auditRoutes: Record<string, string> = {
   administrative_documents: "/app/administratie",
   knowledge_articles: "/app/kennisbank",
   kpi_records: "/app/rapportage",
+  social_accounts: "/app/integraties/social",
+  social_sync_runs: "/app/integraties/social",
 };
 
 export function auditEntityHref(
@@ -117,7 +123,9 @@ export function auditEntityHref(
   if (!route || action === "archived" || action === "deleted") return null;
   if (
     entityType === "inbox_items" ||
-    entityType === "administrative_documents"
+    entityType === "administrative_documents" ||
+    entityType === "social_accounts" ||
+    entityType === "social_sync_runs"
   ) {
     return route;
   }

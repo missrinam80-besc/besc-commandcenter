@@ -7,6 +7,7 @@ import { requireActiveMembership } from "@/lib/auth-context";
 import { googleGmailConfiguration, saveGmailDraft, sendGmailDraft } from "@/lib/google-gmail";
 import { isManager } from "@/lib/permissions";
 import { unresolvedEmailVariables } from "@/lib/email-templates";
+import { newsletterHtml, newsletterVariants, safeNewsletterImageUrl } from "@/lib/newsletter-html";
 
 function managerPath(context: Awaited<ReturnType<typeof requireActiveMembership>>, path: string) {
   if (!isManager(context.membership)) redirect(`${path}?fout=geen-toegang`);
@@ -18,6 +19,8 @@ export async function saveMailingList(formData: FormData) {
     name: z.string().trim().min(2).max(180),
     description: z.string().trim().max(4000).optional(),
     status: z.enum(["active", "paused", "archived"]),
+    public_slug: z.string().trim().regex(/^[a-z0-9-]{2,120}$/).optional().or(z.literal("")),
+    public_signup_enabled: z.enum(["on"]).optional(),
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/nieuwsbrieven?fout=lijst-velden");
   const context = await requireActiveMembership();
@@ -26,6 +29,8 @@ export async function saveMailingList(formData: FormData) {
     name: parsed.data.name,
     description: parsed.data.description || null,
     status: parsed.data.status,
+    public_slug: parsed.data.public_slug || null,
+    public_signup_enabled: parsed.data.public_signup_enabled === "on" && Boolean(parsed.data.public_slug),
     updated_at: new Date().toISOString(),
   };
   const result = parsed.data.id
@@ -108,9 +113,17 @@ export async function changeSubscriberStatus(formData: FormData) {
   redirect(`${path}?succes=status`);
 }
 
-function newsletterBody(body: string) {
-  const instruction = "Wil je geen berichten meer ontvangen? Antwoord op deze e-mail met \"uitschrijven\".";
+function newsletterBody(body: string, publicSlug?: string | null) {
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  const instruction = publicSlug && siteUrl
+    ? `Wil je geen berichten meer ontvangen? Schrijf je veilig uit via ${siteUrl}/nieuwsbrief/uitschrijven/${publicSlug}`
+    : "Wil je geen berichten meer ontvangen? Antwoord op deze e-mail met \"uitschrijven\".";
   return body.toLowerCase().includes("uitschrijven") ? body : `${body.trim()}\n\n${instruction}`;
+}
+
+function newsletterUnsubscribeUrl(publicSlug?: string | null) {
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  return publicSlug && siteUrl ? `${siteUrl}/nieuwsbrief/uitschrijven/${publicSlug}` : null;
 }
 
 export async function saveNewsletter(formData: FormData) {
@@ -121,6 +134,10 @@ export async function saveNewsletter(formData: FormData) {
     title: z.string().trim().min(2).max(240),
     subject: z.string().trim().min(2).max(300),
     body_text: z.string().trim().min(2).max(30000),
+    template_variant: z.enum(newsletterVariants).default("besc"),
+    preheader: z.string().trim().max(300).optional(),
+    hero_image_url: z.string().trim().max(2000).optional(),
+    hero_image_alt: z.string().trim().max(300).optional(),
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/nieuwsbrieven?fout=nieuwsbrief-velden");
   if (unresolvedEmailVariables(`${parsed.data.subject}\n${parsed.data.body_text}`).length) {
@@ -128,16 +145,31 @@ export async function saveNewsletter(formData: FormData) {
   }
   const context = await requireActiveMembership();
   managerPath(context, "/app/nieuwsbrieven");
-  const { data: list } = await context.supabase.from("mailing_lists").select("id,status")
+  const { data: list } = await context.supabase.from("mailing_lists").select("id,status,public_slug")
     .eq("organization_id", context.membership.organization_id).eq("id", parsed.data.mailing_list_id).maybeSingle();
   if (!list || list.status !== "active") redirect("/app/nieuwsbrieven?fout=lijst-niet-actief");
+  if (parsed.data.hero_image_url && !safeNewsletterImageUrl(parsed.data.hero_image_url)) {
+    redirect(parsed.data.id ? `/app/nieuwsbrieven/${parsed.data.id}?fout=afbeelding-url` : "/app/nieuwsbrieven?fout=afbeelding-url");
+  }
   const { data: subscribers } = await context.supabase.from("mailing_subscribers").select("email")
     .eq("organization_id", context.membership.organization_id)
     .eq("mailing_list_id", list.id).eq("status", "subscribed").order("email").limit(101);
   const recipients = [...new Set((subscribers ?? []).map((item) => item.email.toLowerCase()))];
   if (!recipients.length) redirect("/app/nieuwsbrieven?fout=geen-ontvangers");
   if (recipients.length > 100) redirect("/app/nieuwsbrieven?fout=max-100-ontvangers");
-  const body = newsletterBody(parsed.data.body_text);
+  const body = newsletterBody(parsed.data.body_text, list.public_slug);
+  const { data: organization } = await context.supabase.from("organizations").select("name")
+    .eq("id", context.membership.organization_id).maybeSingle();
+  const html = newsletterHtml({
+    title: parsed.data.title,
+    preheader: parsed.data.preheader,
+    bodyText: parsed.data.body_text,
+    variant: parsed.data.template_variant,
+    organizationName: organization?.name,
+    heroImageUrl: parsed.data.hero_image_url,
+    heroImageAlt: parsed.data.hero_image_alt,
+    unsubscribeUrl: newsletterUnsubscribeUrl(list.public_slug),
+  });
   const now = new Date().toISOString();
   let id = parsed.data.id || null;
   let currentDraftId: string | null = null;
@@ -152,6 +184,11 @@ export async function saveNewsletter(formData: FormData) {
       title: parsed.data.title,
       subject: parsed.data.subject,
       body_text: body,
+      body_html: html,
+      template_variant: parsed.data.template_variant,
+      preheader: parsed.data.preheader || null,
+      hero_image_url: parsed.data.hero_image_url || null,
+      hero_image_alt: parsed.data.hero_image_alt || null,
       recipient_count: recipients.length,
       recipient_snapshot: recipients,
       status: "draft",
@@ -169,6 +206,11 @@ export async function saveNewsletter(formData: FormData) {
       title: parsed.data.title,
       subject: parsed.data.subject,
       body_text: body,
+      body_html: html,
+      template_variant: parsed.data.template_variant,
+      preheader: parsed.data.preheader || null,
+      hero_image_url: parsed.data.hero_image_url || null,
+      hero_image_alt: parsed.data.hero_image_alt || null,
       recipient_count: recipients.length,
       recipient_snapshot: recipients,
       created_by: context.user.id,
@@ -184,6 +226,7 @@ export async function saveNewsletter(formData: FormData) {
       bcc: recipients,
       subject: parsed.data.subject,
       body,
+      html,
     });
     await context.supabase.from("newsletters").update({
       gmail_draft_id: draft.id,

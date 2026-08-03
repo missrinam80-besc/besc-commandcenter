@@ -6,21 +6,22 @@ import { requireActiveMembership } from "@/lib/auth-context";
 
 const returnTo=(id:string)=>`/app/taken/${id}`;
 export async function updateTaskDetails(formData:FormData){
-  const parsed=z.object({id:z.string().uuid(),title:z.string().trim().max(180).optional(),description:z.string().trim().max(5000).optional(),status:z.enum(["todo","doing","waiting","review","done","cancelled"]),priority:z.enum(["low","normal","high","urgent"]),due_at:z.string().optional(),project_id:z.string().uuid().or(z.literal(""))}).safeParse(Object.fromEntries(formData));
+  const parsed=z.object({id:z.string().uuid(),title:z.string().trim().max(180).optional(),description:z.string().trim().max(5000).optional(),status:z.enum(["todo","doing","waiting","review","done","cancelled"]),priority:z.enum(["low","normal","high","urgent"]),due_at:z.string().optional(),project_id:z.string().uuid().or(z.literal("")),return_to:z.string().optional()}).safeParse(Object.fromEntries(formData));
   if(!parsed.success) redirect(`/app/taken?fout=velden`);
   const{supabase,user,membership}=await requireActiveMembership();
-  const{data:currentTask}=await supabase.from("tasks").select("project_id").eq("id",parsed.data.id).maybeSingle();
+  const{data:currentTask}=await supabase.from("tasks").select("project_id").eq("id",parsed.data.id).eq("organization_id",membership.organization_id).maybeSingle();
   if(parsed.data.project_id){
     const{data:project}=await supabase.from("projects").select("id").eq("id",parsed.data.project_id).eq("organization_id",membership.organization_id).is("deleted_at",null).maybeSingle();
     if(!project)redirect(`${returnTo(parsed.data.id)}?fout=project`);
   }
-  const{error}=await supabase.from("tasks").update({title:parsed.data.title||"Naamloze taak",description:parsed.data.description||null,status:parsed.data.status,priority:parsed.data.priority,due_at:parsed.data.due_at||null,project_id:parsed.data.project_id||null,completed_at:parsed.data.status==="done"?new Date().toISOString():null}).eq("id",parsed.data.id);
+  const{error}=await supabase.from("tasks").update({title:parsed.data.title||"Naamloze taak",description:parsed.data.description||null,status:parsed.data.status,priority:parsed.data.priority,due_at:parsed.data.due_at||null,project_id:parsed.data.project_id||null,completed_at:parsed.data.status==="done"?new Date().toISOString():null}).eq("id",parsed.data.id).eq("organization_id",membership.organization_id);
   if(error) redirect(`${returnTo(parsed.data.id)}?fout=opslaan`);
   await supabase.from("activity_events").insert({organization_id:membership.organization_id,entity_type:"task",entity_id:parsed.data.id,action:"task_updated",actor_id:user.id});
   revalidatePath(returnTo(parsed.data.id));revalidatePath("/app/taken");revalidatePath("/app/projecten");
   if(currentTask?.project_id)revalidatePath(`/app/projecten/${currentTask.project_id}`);
   if(parsed.data.project_id)revalidatePath(`/app/projecten/${parsed.data.project_id}`);
-  redirect(`${returnTo(parsed.data.id)}?succes=taak`);
+  const destination=parsed.data.return_to?.startsWith("/app/projecten/")?parsed.data.return_to:returnTo(parsed.data.id);
+  redirect(`${destination}?succes=taak`);
 }
 export async function addChecklistItem(formData:FormData){
   const parsed=z.object({task_id:z.string().uuid(),title:z.string().trim().max(240).optional()}).safeParse(Object.fromEntries(formData));if(!parsed.success)redirect("/app/taken?fout=velden");

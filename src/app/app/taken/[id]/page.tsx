@@ -1,12 +1,14 @@
-import { Trash2 } from "lucide-react";
+import { ChevronDown, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ActivityTimeline } from "@/components/activity-timeline";
 import { AppShell } from "@/components/app-shell";
 import { Comments } from "@/components/comments";
 import { FormModal } from "@/components/form-modal";
 import { MarkdownContent, MarkdownField } from "@/components/markdown-field";
+import { RecordConnectionsPanel } from "@/components/record-connections-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
+import { hasPermission } from "@/lib/permissions";
 import {
   addChecklistItem,
   deleteTask,
@@ -46,16 +48,18 @@ export default async function TaskDetailPage({
     { data: members },
     { data: projects },
     { data: commentRows },
-    { data: events },
   ] = await Promise.all([
     supabase.from("tasks").select("id,title,description,status,priority,due_at,project_id,projects(id,title),task_assignees(user_id,profiles(display_name))").eq("id", id).eq("organization_id", membership.organization_id).is("deleted_at", null).maybeSingle(),
     supabase.from("task_checklist_items").select("id,title,is_done").eq("task_id", id).order("position").order("created_at"),
     supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", membership.organization_id).eq("status", "active"),
     supabase.from("projects").select("id,title,status").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
     supabase.from("comments").select("id,body,created_at,profiles!comments_author_id_fkey(display_name)").eq("entity_type", "task").eq("entity_id", id).order("created_at"),
-    supabase.from("activity_events").select("id,action,created_at,profiles!activity_events_actor_id_fkey(display_name)").eq("entity_type", "task").eq("entity_id", id).order("created_at", { ascending: false }).limit(20),
   ]);
   if (!taskRow) notFound();
+  const [connections, relationOptions] = await Promise.all([
+    loadDossierConnections(supabase, membership.organization_id, "task", id),
+    loadRelationOptions(supabase, membership.organization_id, "task", id),
+  ]);
 
   const task = taskRow as unknown as TaskDetail;
   const checklist = (checks ?? []) as Checklist[];
@@ -125,19 +129,21 @@ export default async function TaskDetailPage({
             </section>
           </aside>
         </div>
+        <RecordConnectionsPanel entityType="task" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={hasPermission(membership, "manageProjects")} modal={query.koppeling} selectedLinkId={query.link}/>
         <Comments entityType="task" entityId={task.id} returnTo={`/app/taken/${task.id}`} comments={(commentRows ?? []) as never[]}/>
-        <ActivityTimeline events={(events ?? []) as never[]}/>
-        <section className="form-card lifecycle-panel">
-          <div className="form-heading"><div><span className="eyebrow">TAAKBEHEER</span><h2>Taak verwijderen</h2></div></div>
-          <div className="lifecycle-actions">
-            <div className="lifecycle-danger">
-              <Trash2 size={20}/>
-              <div><strong>Taak verwijderen</strong><p>De taak verdwijnt uit de werkvoorraad. De activiteitshistoriek blijft bewaard.</p></div>
-              <form action={deleteTask}>
+        <section className="form-card lifecycle-panel lifecycle-panel-compact">
+          <div className="lifecycle-compact">
+            <div><span className="eyebrow">TAAKBEHEER</span><h2>Taak beheren</h2></div>
+            <div className="lifecycle-compact-actions">
+              <details className="lifecycle-delete">
+                <summary><Trash2 size={15}/>Verwijderen<ChevronDown size={14}/></summary>
+                <form action={deleteTask}>
+                  <p>De taak verdwijnt uit de werkvoorraad. De technische auditregistratie blijft bewaard.</p>
                 <input type="hidden" name="id" value={task.id}/>
                 <label>Typ <b>VERWIJDER</b><input name="confirmation" autoComplete="off" pattern="VERWIJDER"/></label>
                 <button className="danger-button">Verwijderen</button>
-              </form>
+                </form>
+              </details>
             </div>
           </div>
         </section>

@@ -7,6 +7,8 @@ const accountPage = readFileSync("src/app/app/account/page.tsx", "utf8");
 const accountActions = readFileSync("src/app/app/account/actions.ts", "utf8");
 const callback = readFileSync("src/app/auth/callback/route.ts", "utf8");
 const migration = readFileSync("supabase/migrations/20260730103244_expand_user_profiles.sql", "utf8");
+const themeMigration = readFileSync("supabase/migrations/20260803140000_add_profile_theme_preference.sql", "utf8");
+const themeCss = readFileSync("src/app/globals.css", "utf8");
 
 test("zijnavigatie volgt herkenbare werkstromen", () => {
   for (const group of [
@@ -45,6 +47,17 @@ test("accountpagina beheert profiel, beveiliging en voorkeuren", () => {
   assert.match(accountPage, /Wachtwoord wijzigen/);
   assert.match(accountPage, /Meldingsvoorkeuren/);
   assert.match(accountPage, /profile-completeness/);
+});
+
+test("weergavevoorkeur volgt systeem, licht of donker en blijft per gebruiker bewaard", () => {
+  assert.match(themeMigration, /theme_preference in \('system','light','dark'\)/);
+  assert.match(accountPage, /name="theme_preference" value="system"/);
+  assert.match(accountPage, /name="theme_preference" value="light"/);
+  assert.match(accountPage, /name="theme_preference" value="dark"/);
+  assert.match(accountActions, /theme_preference: parsed\.data\.theme_preference/);
+  assert.match(shell, /data-theme=\{profile\?\.theme_preference \|\| "system"\}/);
+  assert.match(themeCss, /prefers-color-scheme:dark/);
+  assert.match(themeCss, /color-scheme:dark/);
 });
 
 test("Discord kan veilig gekoppeld en ontkoppeld worden", () => {

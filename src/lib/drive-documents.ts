@@ -58,9 +58,9 @@ export type GeneratedDocumentRecord = {
   entityId: string;
   documentLinkId: string | null;
   title: string;
-  module: "meetings" | "events" | "sponsors";
+  module: "projects" | "meetings" | "events" | "campaigns" | "sponsors";
   moduleLabel: string;
-  documentType: "minutes" | "event_dossier" | "sponsor_report";
+  documentType: "minutes" | "event_dossier" | "sponsor_report" | "linked_document";
   documentTypeLabel: string;
   status: "available" | "missing";
   sourceStatus: string;
@@ -70,8 +70,10 @@ export type GeneratedDocumentRecord = {
 };
 
 export const documentModuleLabels = {
+  projects: "Projecten",
   meetings: "Vergaderingen",
   events: "Events",
+  campaigns: "Campagnes",
   sponsors: "Sponsors",
 } as const;
 
@@ -79,6 +81,7 @@ export const generatedDocumentTypeLabels = {
   minutes: "Notulen",
   event_dossier: "Eventdossier",
   sponsor_report: "Sponsorrapport",
+  linked_document: "Gekoppeld document",
 } as const;
 
 export function filterGeneratedDocuments(

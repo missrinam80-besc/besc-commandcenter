@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { discordIdentityDetails, findIdentity } from "@/lib/profile-identities";
 import { createClient } from "@/lib/supabase/server";
+import { resolveAuthenticatedHome } from "@/lib/auth-destination";
 
 const emailOtpTypes = new Set<EmailOtpType>([
   "signup",
@@ -46,7 +47,8 @@ export async function GET(request: Request) {
           }).eq("id", user.id);
         }
       }
-      return NextResponse.redirect(new URL(next, origin));
+      const destination = user && next === "/app" ? await resolveAuthenticatedHome(supabase, user.id) : next;
+      return NextResponse.redirect(new URL(destination, origin));
     }
   }
   const failurePath = type === "recovery"

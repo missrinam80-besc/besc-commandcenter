@@ -72,6 +72,20 @@ export async function saveProfile(formData: FormData) {
   redirect("/app/account?succes=profiel");
 }
 
+export async function saveThemePreference(formData: FormData) {
+  const parsed = z.object({ theme_preference: z.enum(["system", "light", "dark"]) })
+    .safeParse(Object.fromEntries(formData));
+  if (!parsed.success) redirect("/app/account?fout=thema");
+  const { supabase, user } = await requireActiveMembership();
+  const { error } = await supabase.from("profiles").update({
+    theme_preference: parsed.data.theme_preference,
+    updated_at: new Date().toISOString(),
+  }).eq("id", user.id);
+  if (error) redirect("/app/account?fout=thema");
+  revalidatePath("/", "layout");
+  redirect("/app/account?succes=thema");
+}
+
 export async function uploadProfileAvatar(formData: FormData) {
   const file = formData.get("avatar");
   if (!(file instanceof File) || file.size === 0) redirect("/app/account?fout=avatar-bestand");
