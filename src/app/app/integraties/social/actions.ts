@@ -19,6 +19,8 @@ const accountSchema = z.object({
   sync_interval_minutes: z.coerce.number().int().min(15).max(43200).optional(),
   retention_days: z.coerce.number().int().min(30).max(3650).optional(),
   token_expires_at: z.string().optional(),
+  quota_daily_limit: z.coerce.number().int().min(1).max(10_000_000).optional(),
+  quota_warning_percent: z.coerce.number().int().min(1).max(100).optional(),
 });
 
 function parseOptionalDate(value?: string) {
@@ -48,6 +50,8 @@ export async function saveSocialAccount(formData: FormData) {
     sync_interval_minutes: values.sync_interval_minutes ?? 1440,
     retention_days: values.retention_days ?? 730,
     token_expires_at: parseOptionalDate(values.token_expires_at),
+    quota_daily_limit: values.quota_daily_limit ?? 10_000,
+    quota_warning_percent: values.quota_warning_percent ?? 80,
     updated_at: new Date().toISOString(),
   };
 

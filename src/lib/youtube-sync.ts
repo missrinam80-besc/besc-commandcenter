@@ -17,7 +17,7 @@ function syncKey(trigger: TriggerType, intervalMinutes: number) {
 export async function syncYouTubeAccountById(accountId: string, trigger: TriggerType, createdBy: string | null = null) {
   const admin = createAdminClient();
   const { data: account, error: accountError } = await admin.from("social_accounts")
-    .select("id,organization_id,platform,status,sync_interval_minutes")
+    .select("id,organization_id,platform,status,sync_interval_minutes,quota_daily_limit,quota_used_estimate,quota_counter_date")
     .eq("id", accountId)
     .eq("platform", "youtube")
     .is("deleted_at", null)
@@ -42,6 +42,16 @@ export async function syncYouTubeAccountById(accountId: string, trigger: Trigger
   if (runError || !run) throw runError ?? new Error("De synchronisatierun kon niet worden gestart.");
 
   try {
+    const today = new Date().toISOString().slice(0, 10);
+    const quotaUsed = account.quota_counter_date === today ? account.quota_used_estimate : 0;
+    const quotaCostEstimate = 2;
+    if (quotaUsed + quotaCostEstimate > account.quota_daily_limit) throw new Error("De interne dagelijkse quotalimiet is bereikt.");
+    const { data: quotaReservation, error: quotaError } = await admin.from("social_accounts").update({
+      quota_used_estimate: quotaUsed + quotaCostEstimate,
+      quota_counter_date: today,
+      updated_at: new Date().toISOString(),
+    }).eq("id", account.id).eq("quota_used_estimate", account.quota_used_estimate).select("id").maybeSingle();
+    if (quotaError || !quotaReservation) throw quotaError ?? new Error("De quota-reservering is door een gelijktijdige synchronisatie gewijzigd.");
     const credentials = await usableYouTubeCredentials(account.id);
     const channel = await fetchYouTubeChannel(credentials.access_token);
     const end = new Date();

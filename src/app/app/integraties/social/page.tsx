@@ -40,6 +40,10 @@ type SocialAccount = {
   token_expires_at: string | null;
   last_sync_at: string | null;
   last_error: string | null;
+  quota_daily_limit: number;
+  quota_used_estimate: number;
+  quota_counter_date: string | null;
+  quota_warning_percent: number;
 };
 
 type SyncRun = {
@@ -117,10 +121,11 @@ export default async function SocialIntegrationsPage({
           <div className="social-account-list">
             {accounts.map((account) => {
               const definition = socialPlatformDefinitions[account.platform];
+              const quotaPercent = Math.round(account.quota_used_estimate / Math.max(account.quota_daily_limit, 1) * 100);
               return <article key={account.id}>
                 <DatabaseZap/>
                 <div><strong>{account.account_name}</strong><span>{definition.label} · {account.external_account_id || "Nog geen extern account-ID"}</span>{account.last_error ? <small>{account.last_error}</small> : null}</div>
-                <div className="social-account-meta"><b className={`integration-status ${account.status}`}>{statusLabels[account.status] ?? account.status}</b><span>{account.sync_enabled ? `Elke ${account.sync_interval_minutes} min.` : "Sync uit"}</span></div>
+                <div className="social-account-meta"><b className={`integration-status ${account.status}`}>{statusLabels[account.status] ?? account.status}</b><span>{account.sync_enabled ? `Elke ${account.sync_interval_minutes} min.` : "Sync uit"}</span><span className={quotaPercent >= account.quota_warning_percent ? "quota-warning" : ""}>Quota: {account.quota_used_estimate}/{account.quota_daily_limit}</span></div>
                 <div className="social-account-actions">
                   {account.platform === "youtube" && account.status === "connected" ? <form action={syncYouTubeAccount}><input type="hidden" name="id" value={account.id}/><button><RefreshCw size={13}/>Nu synchroniseren</button></form> : null}
                   {account.platform === "youtube" && account.status !== "connected" && youtubeConfig.configured ? <Link href={`/app/integraties/social/youtube/start?account=${account.id}`}>Koppel YouTube</Link> : null}
@@ -160,6 +165,8 @@ export default async function SocialIntegrationsPage({
               <label>Scopes<input name="granted_scopes" defaultValue={selected?.granted_scopes.join(", ") ?? ""} placeholder="Wordt na OAuth automatisch ingevuld"/></label>
               <label>Syncinterval in minuten<input name="sync_interval_minutes" type="number" min="15" max="43200" defaultValue={selected?.sync_interval_minutes ?? 1440}/></label>
               <label>Bewaartermijn in dagen<input name="retention_days" type="number" min="30" max="3650" defaultValue={selected?.retention_days ?? 730}/></label>
+              <label>Dagelijkse interne quotalimiet<input name="quota_daily_limit" type="number" min="1" max="10000000" defaultValue={selected?.quota_daily_limit ?? 10000}/></label>
+              <label>Waarschuwen vanaf %<input name="quota_warning_percent" type="number" min="1" max="100" defaultValue={selected?.quota_warning_percent ?? 80}/></label>
               <label>Token vervalt op<input name="token_expires_at" type="datetime-local" defaultValue={localDateTime(selected?.token_expires_at ?? null)}/></label>
               <label className="checkbox-label"><input name="sync_enabled" type="checkbox" defaultChecked={selected?.sync_enabled ?? false}/>Automatische synchronisatie inschakelen</label>
             </div>

@@ -14,6 +14,8 @@ const cronRoute = readFileSync("src/app/api/cron/social-sync/route.ts", "utf8");
 const vercel = readFileSync("vercel.json", "utf8");
 const reportPage = readFileSync("src/app/app/rapportage/social/page.tsx", "utf8");
 const reportExport = readFileSync("src/app/app/rapportage/social/export/route.ts", "utf8");
+const quotaMigration = readFileSync("supabase/migrations/20260803152000_add_social_quota_and_audit.sql", "utf8");
+const audit = readFileSync("src/lib/audit.ts", "utf8");
 
 test("social accountmetadata en OAuth-geheimen blijven strikt gescheiden", () => {
   const publicTable = migration.slice(migration.indexOf("create table public.social_accounts"), migration.indexOf("create table public.social_sync_runs"));
@@ -97,4 +99,17 @@ test("socialrapport en CSV nemen officiële API-metingen op", () => {
   assert.match(reportPage, /Officiële API/);
   assert.match(reportExport, /social_metric_snapshots/);
   assert.match(reportExport, /Officiële API/);
+});
+
+test("social koppelingen hebben auditregistratie en een interne quotarem", () => {
+  assert.match(quotaMigration, /quota_daily_limit/);
+  assert.match(quotaMigration, /quota_warning_percent/);
+  assert.match(quotaMigration, /audit_social_accounts_change/);
+  assert.match(quotaMigration, /audit_social_sync_runs_change/);
+  assert.match(youtubeSync, /quotaCostEstimate = 2/);
+  assert.match(youtubeSync, /dagelijkse quotalimiet is bereikt/);
+  assert.match(page, /Dagelijkse interne quotalimiet/);
+  assert.match(page, /Quota:/);
+  assert.match(audit, /social_accounts: "Social account"/);
+  assert.match(audit, /social_sync_runs: "Social synchronisatie"/);
 });
