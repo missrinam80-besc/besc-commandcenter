@@ -9,6 +9,11 @@ const connectorDefinitions = readFileSync("src/lib/social-connectors.ts", "utf8"
 const youtube = readFileSync("src/lib/youtube-integration.ts", "utf8");
 const youtubeStart = readFileSync("src/app/app/integraties/social/youtube/start/route.ts", "utf8");
 const youtubeCallback = readFileSync("src/app/app/integraties/social/youtube/callback/route.ts", "utf8");
+const youtubeSync = readFileSync("src/lib/youtube-sync.ts", "utf8");
+const cronRoute = readFileSync("src/app/api/cron/social-sync/route.ts", "utf8");
+const vercel = readFileSync("vercel.json", "utf8");
+const reportPage = readFileSync("src/app/app/rapportage/social/page.tsx", "utf8");
+const reportExport = readFileSync("src/app/app/rapportage/social/export/route.ts", "utf8");
 
 test("social accountmetadata en OAuth-geheimen blijven strikt gescheiden", () => {
   const publicTable = migration.slice(migration.indexOf("create table public.social_accounts"), migration.indexOf("create table public.social_sync_runs"));
@@ -68,9 +73,28 @@ test("YouTube-sync ververst tokens en registreert herleidbare kernmetingen", () 
   assert.match(youtube, /grant_type: "refresh_token"/);
   assert.match(youtube, /channels\?part=snippet,statistics&mine=true/);
   assert.match(youtube, /youtubeanalytics\.googleapis\.com\/v2\/reports/);
-  assert.match(actions, /social_sync_runs/);
-  assert.match(actions, /social_metric_snapshots/);
-  assert.match(actions, /last_28_complete_days/);
-  assert.match(actions, /official_api/);
-  assert.match(actions, /status: "failed"/);
+  assert.match(youtubeSync, /social_sync_runs/);
+  assert.match(youtubeSync, /social_metric_snapshots/);
+  assert.match(youtubeSync, /last_28_complete_days/);
+  assert.match(youtubeSync, /official_api/);
+  assert.match(youtubeSync, /status: "failed"/);
+  assert.match(actions, /syncYouTubeAccountById\(account\.id, "manual", user\.id\)/);
+});
+
+test("automatische social sync is afgeschermd, begrensd en idempotent", () => {
+  assert.match(cronRoute, /Bearer \$\{cronSecret\}/);
+  assert.match(cronRoute, /sync_enabled/);
+  assert.match(cronRoute, /\.limit\(8\)/);
+  assert.match(cronRoute, /syncYouTubeAccountById\(account\.id, "scheduled"\)/);
+  assert.match(youtubeSync, /scheduled:\$\{Math\.floor/);
+  assert.match(vercel, /"path": "\/api\/cron\/social-sync"/);
+  assert.match(vercel, /"schedule": "15 4 \* \* \*"/);
+});
+
+test("socialrapport en CSV nemen officiële API-metingen op", () => {
+  assert.match(reportPage, /social_metric_snapshots/);
+  assert.match(reportPage, /Automatische accountmetingen/);
+  assert.match(reportPage, /Officiële API/);
+  assert.match(reportExport, /social_metric_snapshots/);
+  assert.match(reportExport, /Officiële API/);
 });

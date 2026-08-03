@@ -27,6 +27,7 @@ SUPABASE_SECRET_KEY=
 GOOGLE_YOUTUBE_CLIENT_ID=
 GOOGLE_YOUTUBE_CLIENT_SECRET=
 NEXT_PUBLIC_SITE_URL=
+CRON_SECRET=
 ```
 
 `SUPABASE_SECRET_KEY` is de geheime serversleutel van het gekoppelde Supabase-project. Geen van deze waarden mag `NEXT_PUBLIC_` krijgen, behalve de al bestaande publieke site-URL.
@@ -39,5 +40,9 @@ NEXT_PUBLIC_SITE_URL=
 4. Controleer of het kanaal als **Verbonden** verschijnt.
 5. Klik **Nu synchroniseren**.
 6. Controleer de geslaagde run en het aantal verwerkte meetpunten.
+
+## 4. Dagelijkse synchronisatie
+
+Wanneer **Automatische synchronisatie** op het account is ingeschakeld, roept Vercel dagelijks om 04:15 UTC de beveiligde cronroute aan. `CRON_SECRET` moet in Vercel bestaan; Vercel stuurt dit automatisch als Bearer-token mee. Op het Hobby-plan blijft de planning bewust beperkt tot eenmaal per dag.
 
 De eerste sync bewaart drie actuele kanaaltotalen en maximaal acht geaggregeerde kernmetingen voor de laatste 28 volledige dagen. Publiceren is in deze pilot niet toegestaan.
