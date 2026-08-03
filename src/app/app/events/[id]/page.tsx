@@ -107,6 +107,7 @@ export default async function Event({
           </form>
           <Link href="?nieuw=taak">Taak toevoegen</Link>
           {canManageCampaigns && <Link href="?nieuw=campagne">Campagne toevoegen</Link>}
+          {canManageCampaigns && <Link href={`/app/rapportage/events/${id}`}>Eventrapport</Link>}
           <Link className="primary" href="?bewerken=1">Bewerken</Link>
         </div>
       </header>

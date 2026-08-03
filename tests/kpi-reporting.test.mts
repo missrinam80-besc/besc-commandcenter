@@ -36,3 +36,21 @@ test("sponsorrapport is online, afdrukbaar en als CSV beschikbaar", async () => 
   assert.match(exportRoute, /Content-Disposition/);
   assert.match(exportRoute, /collection_method/);
 });
+
+test("event- en creatorrapporten gebruiken dezelfde controleerbare uitvoer", async () => {
+  const [eventPage, eventExport, creatorPage, creatorExport, eventDetail, operationalDetail] = await Promise.all([
+    source("src/app/app/rapportage/events/[id]/page.tsx"),
+    source("src/app/app/rapportage/events/[id]/export/route.ts"),
+    source("src/app/app/rapportage/creators/[id]/page.tsx"),
+    source("src/app/app/rapportage/creators/[id]/export/route.ts"),
+    source("src/app/app/events/[id]/page.tsx"),
+    source("src/components/operational-record-detail.tsx"),
+  ]);
+  for (const page of [eventPage, creatorPage]) {
+    assert.match(page, /ManagementReportActions/);
+    assert.match(page, /collection_method/);
+  }
+  for (const route of [eventExport, creatorExport]) assert.match(route, /Content-Disposition/);
+  assert.match(eventDetail, /Eventrapport/);
+  assert.match(operationalDetail, /Creatorrapport/);
+});
