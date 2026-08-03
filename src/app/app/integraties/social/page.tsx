@@ -5,7 +5,8 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { FormModal } from "@/components/form-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { socialAccountStatuses, socialPlatformDefinitions, socialPlatforms } from "@/lib/social-connectors";
-import { changeSocialAccountState, saveSocialAccount } from "./actions";
+import { youtubeConfiguration } from "@/lib/youtube-integration";
+import { changeSocialAccountState, saveSocialAccount, syncYouTubeAccount } from "./actions";
 
 const statusLabels: Record<string, string> = {
   pending: "Wacht op koppeling",
@@ -78,6 +79,7 @@ export default async function SocialIntegrationsPage({
   ]);
   const accounts = (accountData ?? []) as SocialAccount[];
   const runs = (runData ?? []) as SyncRun[];
+  const youtubeConfig = youtubeConfiguration();
   const selected = accounts.find((item) => item.id === query.account);
   const showForm = query.nieuw === "1" || Boolean(selected);
 
@@ -95,6 +97,7 @@ export default async function SocialIntegrationsPage({
         <section className="integration-security">
           <ShieldCheck/><div><strong>Veilige koppeling voorbereid</strong><span>Alleen de serverrol kan OAuth-geheimen opslaan of lezen. De concrete YouTube-koppeling is de eerstvolgende pilot.</span></div>
         </section>
+        {!youtubeConfig.configured ? <div className="error-note">Voor de YouTube-pilot ontbreken nog servervariabelen: {youtubeConfig.missing.join(", ")}. De OAuth-callback wordt <code>{youtubeConfig.callbackUrl}</code>.</div> : null}
 
         <section className="social-platform-grid">
           {socialPlatforms.map((platform) => {
@@ -118,7 +121,11 @@ export default async function SocialIntegrationsPage({
                 <DatabaseZap/>
                 <div><strong>{account.account_name}</strong><span>{definition.label} · {account.external_account_id || "Nog geen extern account-ID"}</span>{account.last_error ? <small>{account.last_error}</small> : null}</div>
                 <div className="social-account-meta"><b className={`integration-status ${account.status}`}>{statusLabels[account.status] ?? account.status}</b><span>{account.sync_enabled ? `Elke ${account.sync_interval_minutes} min.` : "Sync uit"}</span></div>
-                <Link href={`?account=${account.id}`}>Beheren</Link>
+                <div className="social-account-actions">
+                  {account.platform === "youtube" && account.status === "connected" ? <form action={syncYouTubeAccount}><input type="hidden" name="id" value={account.id}/><button><RefreshCw size={13}/>Nu synchroniseren</button></form> : null}
+                  {account.platform === "youtube" && account.status !== "connected" && youtubeConfig.configured ? <Link href={`/app/integraties/social/youtube/start?account=${account.id}`}>Koppel YouTube</Link> : null}
+                  <Link href={`?account=${account.id}`}>Beheren</Link>
+                </div>
               </article>;
             })}
             {!accounts.length ? <div className="empty">Nog geen social accounts geregistreerd. Begin met het YouTube-kanaal voor de pilot.</div> : null}

@@ -6,6 +6,9 @@ const migration = readFileSync("supabase/migrations/20260803150000_add_social_in
 const page = readFileSync("src/app/app/integraties/social/page.tsx", "utf8");
 const actions = readFileSync("src/app/app/integraties/social/actions.ts", "utf8");
 const connectorDefinitions = readFileSync("src/lib/social-connectors.ts", "utf8");
+const youtube = readFileSync("src/lib/youtube-integration.ts", "utf8");
+const youtubeStart = readFileSync("src/app/app/integraties/social/youtube/start/route.ts", "utf8");
+const youtubeCallback = readFileSync("src/app/app/integraties/social/youtube/callback/route.ts", "utf8");
 
 test("social accountmetadata en OAuth-geheimen blijven strikt gescheiden", () => {
   const publicTable = migration.slice(migration.indexOf("create table public.social_accounts"), migration.indexOf("create table public.social_sync_runs"));
@@ -47,4 +50,27 @@ test("beheer toont platformfasering, accountstatus en syncgeschiedenis", () => {
   assert.match(page, /Recente synchronisaties/);
   assert.match(page, /OAuth-tokens staan versleuteld in Vault/);
   assert.match(page, /changeSocialAccountState/);
+});
+
+test("YouTube OAuth gebruikt minimale scopes, statecontrole en servergeheimen", () => {
+  assert.match(youtube, /youtube\.readonly/);
+  assert.match(youtube, /yt-analytics\.readonly/);
+  assert.match(youtube, /SUPABASE_SECRET_KEY/);
+  assert.match(youtubeStart, /randomBytes\(32\)/);
+  assert.match(youtubeStart, /httpOnly: true/);
+  assert.match(youtubeStart, /sameSite: "lax"/);
+  assert.match(youtubeCallback, /state !== expectedState/);
+  assert.match(youtubeCallback, /store_social_account_credentials/);
+  assert.doesNotMatch(youtubeCallback, /from\("social_account_credentials"\)/);
+});
+
+test("YouTube-sync ververst tokens en registreert herleidbare kernmetingen", () => {
+  assert.match(youtube, /grant_type: "refresh_token"/);
+  assert.match(youtube, /channels\?part=snippet,statistics&mine=true/);
+  assert.match(youtube, /youtubeanalytics\.googleapis\.com\/v2\/reports/);
+  assert.match(actions, /social_sync_runs/);
+  assert.match(actions, /social_metric_snapshots/);
+  assert.match(actions, /last_28_complete_days/);
+  assert.match(actions, /official_api/);
+  assert.match(actions, /status: "failed"/);
 });
