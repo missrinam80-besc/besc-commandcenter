@@ -160,6 +160,7 @@ export async function OperationalRecordDetail({
         <div className="project-actions">
           {externalUrl && <a href={externalUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Open gekoppeld bestand</a>}
           {connectionEntity && <Link href="?nieuw=taak">Taak toevoegen</Link>}
+          {module === "sponsors" && <Link href={`/app/rapportage/sponsors/${id}`}>Sponsorrapport</Link>}
           {module === "campagnes" && <Link href="?nieuw=content">Content toevoegen</Link>}
           {module === "campagnes" && <Link href="?nieuw=social">Social post toevoegen</Link>}
           {!query.bewerken && <Link className="primary" href="?bewerken=1">Bewerken</Link>}
