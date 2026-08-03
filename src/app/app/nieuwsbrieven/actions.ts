@@ -18,6 +18,8 @@ export async function saveMailingList(formData: FormData) {
     name: z.string().trim().min(2).max(180),
     description: z.string().trim().max(4000).optional(),
     status: z.enum(["active", "paused", "archived"]),
+    public_slug: z.string().trim().regex(/^[a-z0-9-]{2,120}$/).optional().or(z.literal("")),
+    public_signup_enabled: z.enum(["on"]).optional(),
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/nieuwsbrieven?fout=lijst-velden");
   const context = await requireActiveMembership();
@@ -26,6 +28,8 @@ export async function saveMailingList(formData: FormData) {
     name: parsed.data.name,
     description: parsed.data.description || null,
     status: parsed.data.status,
+    public_slug: parsed.data.public_slug || null,
+    public_signup_enabled: parsed.data.public_signup_enabled === "on" && Boolean(parsed.data.public_slug),
     updated_at: new Date().toISOString(),
   };
   const result = parsed.data.id

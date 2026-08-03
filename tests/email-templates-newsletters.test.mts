@@ -41,3 +41,22 @@ test("nieuwsbriefverzending vereist goedkeuring en registreert Gmail IDs", () =>
 test("iedere nieuwsbrief krijgt een uitschrijfinstructie", () => {
   assert.match(newsletterActions, /Antwoord op deze e-mail met \\"uitschrijven\\"/);
 });
+
+test("publieke inschrijving gebruikt dubbele bevestiging zonder mailinglijsten openbaar te maken", () => {
+  const publicMigration = readFileSync("supabase/migrations/20260803203000_add_public_newsletter_signup.sql", "utf8");
+  const hardening = readFileSync("supabase/migrations/20260803204500_harden_public_newsletter_signup.sql", "utf8");
+  const publicActions = readFileSync("src/app/nieuwsbrief/actions.ts", "utf8");
+  const publicPage = readFileSync("src/app/nieuwsbrief/[slug]/page.tsx", "utf8");
+  assert.match(publicMigration, /newsletter_subscription_requests enable row level security/);
+  assert.match(publicMigration, /revoke all on public\.newsletter_subscription_requests from anon, authenticated/);
+  assert.match(publicMigration, /request_newsletter_subscription/);
+  assert.match(publicMigration, /confirm_newsletter_subscription/);
+  assert.match(publicMigration, /public_double_opt_in/);
+  assert.match(hardening, /set schema private/);
+  assert.match(hardening, /security invoker/);
+  assert.match(hardening, /revoke all on table private\.newsletter_subscription_requests/);
+  assert.match(publicActions, /randomBytes\(32\)/);
+  assert.match(publicActions, /Als dit adres kan worden ingeschreven|aangevraagd=1/);
+  assert.match(publicPage, /name="consent"/);
+  assert.doesNotMatch(publicPage, /supabase\.from\("mailing_/);
+});

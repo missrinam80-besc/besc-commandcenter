@@ -305,6 +305,8 @@ Indicatie: meerdere sprints; per rapportsoort afzonderlijk opleveren.
 
 ### Fase 8 — Onderzoek en latere uitbreidingen
 
+Haalbaarheidsaudit uitgevoerd op 3 augustus 2026. Zie `docs/phase-8-feasibility-2026-08-03.md` voor de platformvolgorde, privacyvoorwaarden, kostenbesluiten en technische randvoorwaarden.
+
 - officiële platform-API's voor social analytics en publicatie;
 - HTML-nieuwsbrieven met afbeeldingen en meerdere templates;
 - publieke nieuwsbriefinschrijving en betrouwbaar uitschrijfsysteem;
@@ -388,4 +390,3 @@ Start niet meteen met alle modulewensen. De eerstvolgende ronde wordt één afge
 6. hetzelfde patroon pas na goedkeuring uitrollen naar Events en Campagnes.
 
 Daarna volgt de sprint voor gelabelde links, relationele koppelingen en de zoekbare persoonskiezer. Zo ontstaat eerst een stabiel fundament en worden de 90 punten daarna sneller en consistenter afgewerkt.
-
