@@ -12,6 +12,7 @@ import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { RecordConnectionsPanel } from "@/components/record-connections-panel";
 import { RecordMetadata, type MetadataItem } from "@/components/record-metadata";
 import { TaskCreateModal } from "@/components/task-create-modal";
+import { FinancialSummaryPanel } from "@/components/financial-summary-panel";
 import {
   CampaignSections,
   CommunitySections,
@@ -73,6 +74,9 @@ export async function OperationalRecordDetail({
     variantsResult,
     personRolesResult,
     accountOptionsResult,
+    budgetResult,
+    expenseResult,
+    incomeResult,
   ] = await Promise.all([
     supabase.from(config.table).select("*").eq("organization_id", org).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", org).is("deleted_at", null).order("title"),
@@ -90,6 +94,9 @@ export async function OperationalRecordDetail({
     module === "social" ? supabase.from("social_post_variants").select("*").eq("organization_id", org).eq("social_post_id", id).order("platform") : Promise.resolve({ data: [] }),
     module === "community" ? supabase.from("community_person_roles").select("role").eq("organization_id", org).eq("person_id", id).order("role") : Promise.resolve({ data: [] }),
     supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", org).eq("status", "active"),
+    module === "campagnes" ? supabase.from("budget_envelopes").select("id,name,planned_amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("created_at") : Promise.resolve({ data: [] }),
+    module === "campagnes" ? supabase.from("expenses").select("id,title,amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("expense_date", { ascending: false }) : Promise.resolve({ data: [] }),
+    module === "campagnes" ? supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("expected_date", { ascending: false }) : Promise.resolve({ data: [] }),
   ]);
 
   if (!recordResult.data) notFound();
@@ -161,6 +168,7 @@ export async function OperationalRecordDetail({
           <>
             <section className="form-card record-overview"><div className="form-heading"><div><span className="eyebrow">OVERZICHT</span><h2>{config.singular[0].toUpperCase() + config.singular.slice(1)}gegevens</h2></div></div><RecordMetadata items={[...baseMetadata, ...campaignMetadata, ...communityMetadata]}/></section>
             {connectionEntity && <RecordConnectionsPanel entityType={connectionEntity} entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={hasPermission(membership, "manageOrganization")} modal={query.koppeling} selectedLinkId={query.link}/>} 
+            {module === "campagnes" && <FinancialSummaryPanel budgets={budgetResult.data ?? []} expenses={expenseResult.data ?? []} income={incomeResult.data ?? []}/>} 
             {module !== "social" && <section className="form-card record-notes"><div className="form-heading"><h2>Notities en briefing</h2></div>{record.notes ? <MarkdownContent>{String(record.notes)}</MarkdownContent> : <p>Nog geen notities toegevoegd.</p>}</section>}
             {module === "sponsors" && <ApprovalPanel entityType="partner" entityId={id} sourceHref={`/app/sponsors/${id}`} title="Sponsorafspraak goedkeuren"/>}
             {module === "sponsors" && <PartnerSections id={id} contacts={(contactsResult.data ?? []) as unknown as RelatedRow[]} interactions={(interactionsResult.data ?? []) as unknown as RelatedRow[]} campaigns={(partnerCampaignsResult.data ?? []) as unknown as RelatedRow[]} events={[]} content={[]}/>}

@@ -11,6 +11,7 @@ import { RecordConnectionsPanel } from "@/components/record-connections-panel";
 import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { RecordMetadata } from "@/components/record-metadata";
 import { TaskCreateModal } from "@/components/task-create-modal";
+import { FinancialSummaryPanel } from "@/components/financial-summary-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
@@ -96,6 +97,9 @@ export default async function ProjectPage({ params, searchParams }: {
     { data: commentRows },
     { data: activityRows },
     { data: driveRow },
+    { data: budgetRows },
+    { data: expenseRows },
+    { data: incomeRows },
   ] = await Promise.all([
     supabase.from("projects").select("id,title,description,status,priority,owner_id,start_date,due_date,drive_url,organization_id").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("tasks").select("id,title,description,status,priority,due_at").eq("project_id", id).is("deleted_at", null).order("due_at", { ascending: true, nullsFirst: false }).order("created_at", { ascending: true }),
@@ -105,6 +109,9 @@ export default async function ProjectPage({ params, searchParams }: {
     supabase.from("comments").select("id,body,created_at,profiles!comments_author_id_fkey(display_name)").eq("entity_type", "project").eq("entity_id", id).order("created_at"),
     supabase.from("activity_events").select("id,action,created_at,profiles!activity_events_actor_id_fkey(display_name)").eq("entity_type", "project").eq("entity_id", id).order("created_at", { ascending: false }).limit(20),
     supabase.from("google_resource_links").select("web_url,parent_id").eq("organization_id", membership.organization_id).eq("entity_type", "project").eq("entity_id", id).eq("resource_type", "folder").maybeSingle(),
+    supabase.from("budget_envelopes").select("id,name,planned_amount,status").eq("organization_id", membership.organization_id).eq("project_id", id).is("deleted_at", null).order("created_at"),
+    supabase.from("expenses").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("project_id", id).is("deleted_at", null).order("expense_date", { ascending: false }),
+    supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("project_id", id).is("deleted_at", null).order("expected_date", { ascending: false }),
   ]);
   if (!projectRow) notFound();
 
@@ -216,6 +223,7 @@ export default async function ProjectPage({ params, searchParams }: {
         </section>
 
         <RecordConnectionsPanel entityType="project" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} modal={query.koppeling} selectedLinkId={query.link}/>
+        <FinancialSummaryPanel budgets={budgetRows ?? []} expenses={expenseRows ?? []} income={incomeRows ?? []}/>
 
         <section className="form-card drive-card">
           <div className="form-heading"><div><span className="eyebrow">GOOGLE WORKSPACE</span><h2>Projectmap</h2></div>{driveUrl ? <a className="row-action" href={driveUrl} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Open map</a> : null}</div>

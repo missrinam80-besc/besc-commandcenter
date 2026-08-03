@@ -10,6 +10,7 @@ import { FormModal } from "@/components/form-modal";
 import { MarkdownContent } from "@/components/markdown-field";
 import { RecordMetadata } from "@/components/record-metadata";
 import { TaskCreateModal } from "@/components/task-create-modal";
+import { FinancialSummaryPanel } from "@/components/financial-summary-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatDateTime } from "@/lib/format";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
@@ -53,7 +54,7 @@ export default async function Event({
   const q = await searchParams;
   const { supabase, membership } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageEvents");
-  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }, { data: memberRows }] = await Promise.all([
+  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }, { data: memberRows }, { data: budgetRows }, { data: expenseRows }, { data: incomeRows }] = await Promise.all([
     supabase.from("events").select("*").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
     supabase.from("migration_source_links").select("source_url").eq("target_table", "events").eq("target_id", id).limit(1).maybeSingle(),
@@ -61,6 +62,9 @@ export default async function Event({
     supabase.from("google_resource_links").select("name,web_url").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "document").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("google_resource_links").select("google_id,name,web_url,updated_at").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "calendar_event").maybeSingle(),
     supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", membership.organization_id).eq("status", "active"),
+    supabase.from("budget_envelopes").select("id,name,planned_amount,status").eq("organization_id", membership.organization_id).eq("event_id", id).is("deleted_at", null).order("created_at"),
+    supabase.from("expenses").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("event_id", id).is("deleted_at", null).order("expense_date", { ascending: false }),
+    supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("event_id", id).is("deleted_at", null).order("expected_date", { ascending: false }),
   ]);
   if (!e) notFound();
   const [connections, relationOptions] = await Promise.all([
@@ -124,6 +128,7 @@ export default async function Event({
           ]}/>
         </section>
         <RecordConnectionsPanel entityType="event" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} modal={q.koppeling} selectedLinkId={q.link}/>
+        <FinancialSummaryPanel budgets={budgetRows ?? []} expenses={expenseRows ?? []} income={incomeRows ?? []}/>
         <section className="form-card">
           <div className="form-heading">
             <div><span className="eyebrow">GOOGLE CALENDAR</span><h2>Kalendersynchronisatie</h2></div>
