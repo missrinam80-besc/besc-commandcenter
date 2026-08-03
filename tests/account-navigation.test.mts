@@ -58,6 +58,10 @@ test("weergavevoorkeur volgt systeem, licht of donker en blijft per gebruiker be
   assert.match(shell, /data-theme=\{profile\?\.theme_preference \|\| "system"\}/);
   assert.match(themeCss, /prefers-color-scheme:dark/);
   assert.match(themeCss, /color-scheme:dark/);
+  assert.match(themeCss, /--theme-field:#1a1e1c/);
+  assert.match(themeCss, /--theme-control:#292f2b/);
+  assert.match(themeCss, /input\[type="file"\]::file-selector-button/);
+  assert.match(themeCss, /outline:3px solid var\(--theme-focus\)/);
 });
 
 test("Discord kan veilig gekoppeld en ontkoppeld worden", () => {
