@@ -76,7 +76,7 @@ export default async function Page({
     <AppShell active="Integraties">
       <header className="topbar module-top">
         <div><p>VERBINDINGEN & AUTOMATISERING</p><h1>Integraties</h1></div>
-        <Link className="primary" href="?nieuw=1">Integratie registreren</Link>
+        <div className="project-actions"><Link href="/app/integraties/social">Social accounts</Link><Link className="primary" href="?nieuw=1">Integratie registreren</Link></div>
       </header>
       <div className="module-body">
         <p className="lead">Beheer verbindingsmetadata en controleer serverconfiguratie zonder geheime sleutels in de database op te slaan.</p>
