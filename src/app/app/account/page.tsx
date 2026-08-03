@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   Bell, CheckCircle2, ExternalLink, KeyRound, Link2, Mail, MapPin,
-  ShieldCheck, Unlink, UserRound,
+  Monitor, Moon, ShieldCheck, Sun, Unlink, UserRound,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { requireActiveMembership } from "@/lib/auth-context";
@@ -13,6 +13,7 @@ import {
   removeProfileAvatar,
   requestAccountPasswordLink,
   saveProfile,
+  saveThemePreference,
   unlinkDiscordIdentity,
   updateAccountEmail,
   updateAccountPassword,
@@ -34,6 +35,7 @@ type Profile = {
   discord_user_id: string | null;
   discord_username: string | null;
   discord_avatar_url: string | null;
+  theme_preference: "system" | "light" | "dark";
 };
 
 const successMessages: Record<string, string> = {
@@ -45,6 +47,7 @@ const successMessages: Record<string, string> = {
   "discord-ontkoppeld": "Je Discord-account is ontkoppeld.",
   "discord-profiel": "Je Discord-naam en profielfoto zijn overgenomen.",
   avatar: "Je profielfoto is aangepast.",
+  thema: "Je weergavevoorkeur is opgeslagen.",
   "avatar-verwijderd": "Je profielfoto is verwijderd.",
   "wachtwoord-link": "Controleer je mailbox. Via de beveiligde link kun je een eerste of nieuw wachtwoord instellen.",
 };
@@ -71,6 +74,7 @@ const errorMessages: Record<string, string> = {
   "identiteiten-ophalen": "Je gekoppelde inlogmethoden konden niet worden opgehaald.",
   "laatste-inlogmethode": "Je laatste inlogmethode kan niet worden verwijderd. Voeg eerst e-mail/wachtwoord toe.",
   "discord-profiel": "De Discord-profielgegevens konden niet worden overgenomen.",
+  thema: "Je weergavevoorkeur kon niet worden opgeslagen.",
 };
 
 const languages = { nl: "Nederlands", fr: "Français", en: "English" };
@@ -83,7 +87,7 @@ export default async function AccountPage({
   const query = await searchParams;
   const { supabase, user, membership } = await requireActiveMembership();
   const [{ data: profileData }, { data: memberData }, identitiesResult] = await Promise.all([
-    supabase.from("profiles").select("display_name,avatar_url,first_name,last_name,pronouns,bio,location,preferred_language,timezone,website_url,discord_user_id,discord_username,discord_avatar_url").eq("id", user.id).maybeSingle(),
+    supabase.from("profiles").select("display_name,avatar_url,first_name,last_name,pronouns,bio,location,preferred_language,timezone,website_url,discord_user_id,discord_username,discord_avatar_url,theme_preference").eq("id", user.id).maybeSingle(),
     supabase.from("organization_members").select("role,finance_role,status,joined_at").eq("organization_id", membership.organization_id).eq("user_id", user.id).maybeSingle(),
     supabase.auth.getUserIdentities(),
   ]);
@@ -101,6 +105,7 @@ export default async function AccountPage({
     discord_user_id: null,
     discord_username: null,
     discord_avatar_url: null,
+    theme_preference: "system",
   }) as Profile;
   const identities = identitiesResult.data?.identities ?? user.identities ?? [];
   const discordIdentity = findIdentity(identities, "discord");
@@ -220,6 +225,15 @@ export default async function AccountPage({
             <Link className="account-preference-link" href="/app/meldingen?instellingen=1">
               <Bell size={19}/><div><strong>Meldingsvoorkeuren</strong><span>Bepaal welke opvolging je ontvangt.</span></div><ExternalLink size={15}/>
             </Link>
+            <section className="form-card theme-preference-card">
+              <div><strong>Weergave</strong><span>Kies licht, donker of volg je toestel.</span></div>
+              <form action={saveThemePreference}>
+                <label><input type="radio" name="theme_preference" value="system" defaultChecked={profile.theme_preference === "system"}/><Monitor size={15}/><span>Systeem</span></label>
+                <label><input type="radio" name="theme_preference" value="light" defaultChecked={profile.theme_preference === "light"}/><Sun size={15}/><span>Licht</span></label>
+                <label><input type="radio" name="theme_preference" value="dark" defaultChecked={profile.theme_preference === "dark"}/><Moon size={15}/><span>Donker</span></label>
+                <button>Toepassen</button>
+              </form>
+            </section>
           </aside>
         </div>
 
