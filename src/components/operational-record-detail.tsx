@@ -8,6 +8,7 @@ import { ApprovalPanel } from "@/components/approval-panel";
 import { FormModal } from "@/components/form-modal";
 import { MarkdownContent } from "@/components/markdown-field";
 import { OperationalRecordForm } from "@/components/operational-record-form";
+import { ContentForm } from "@/components/content-form";
 import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { RecordConnectionsPanel } from "@/components/record-connections-panel";
 import { RecordMetadata, type MetadataItem } from "@/components/record-metadata";
@@ -24,6 +25,8 @@ import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
 import { hasPermission } from "@/lib/permissions";
 import { communityRoleLabels } from "@/lib/community-people";
+import { createContent } from "@/app/app/content/actions";
+import { createOperationalRecord } from "@/app/app/operations/actions";
 
 type Row = {
   id: string;
@@ -112,6 +115,7 @@ export async function OperationalRecordDetail({
   const externalUrl = String(record[config.urlColumn] ?? "");
   const project = projectsResult.data?.find((item) => item.id === record.project_id);
   const partner = partnersResult.data?.find((item) => item.id === record.partner_id);
+  const event = eventsResult.data?.find((item) => item.id === record.event_id);
   const personRoles = (personRolesResult.data ?? []).map((item) => String(item.role));
   const accountOptions = (accountOptionsResult.data ?? []).map((item) => ({ id: item.user_id, label: (item.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account" }));
   const linkedAccount = accountOptions.find((account) => account.id === record.account_user_id);
@@ -126,7 +130,9 @@ export async function OperationalRecordDetail({
     { label: "Startdatum", value: formatDate(record.start_date as string | null) },
     { label: "Einddatum", value: formatDate(record.end_date as string | null) },
     { label: "Project", value: project ? <Link href={`/app/projecten/${project.id}`}>{project.title}</Link> : "Geen project" },
+    { label: "Event", value: event ? <Link href={`/app/events/${event.id}`}>{event.title}</Link> : "Geen event" },
     { label: "Partner", value: partner ? <Link href={`/app/sponsors/${partner.id}`}>{partner.name}</Link> : "Geen partner" },
+    { label: "Kanalen", value: Array.isArray(record.channels) && record.channels.length ? record.channels.join(", ") : "Geen kanalen gekozen" },
     { label: "Budget", value: formatCurrency(record.budget as string | number | null) },
     { label: "Waarde", value: formatCurrency(record.value as string | number | null) },
     { label: "Rapportage", value: ({ not_required: "Niet nodig", todo: "Te maken", draft: "In opmaak", sent: "Verstuurd", approved: "Goedgekeurd" } as Record<string, string>)[String(record.reporting_status)] ?? String(record.reporting_status ?? "Niet bepaald") },
@@ -154,6 +160,8 @@ export async function OperationalRecordDetail({
         <div className="project-actions">
           {externalUrl && <a href={externalUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Open gekoppeld bestand</a>}
           {connectionEntity && <Link href="?nieuw=taak">Taak toevoegen</Link>}
+          {module === "campagnes" && <Link href="?nieuw=content">Content toevoegen</Link>}
+          {module === "campagnes" && <Link href="?nieuw=social">Social post toevoegen</Link>}
           {!query.bewerken && <Link className="primary" href="?bewerken=1">Bewerken</Link>}
         </div>
       </header>
@@ -170,6 +178,7 @@ export async function OperationalRecordDetail({
             {connectionEntity && <RecordConnectionsPanel entityType={connectionEntity} entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={hasPermission(membership, "manageOrganization")} modal={query.koppeling} selectedLinkId={query.link}/>} 
             {module === "campagnes" && <FinancialSummaryPanel budgets={budgetResult.data ?? []} expenses={expenseResult.data ?? []} income={incomeResult.data ?? []}/>} 
             {module !== "social" && <section className="form-card record-notes"><div className="form-heading"><h2>Notities en briefing</h2></div>{record.notes ? <MarkdownContent>{String(record.notes)}</MarkdownContent> : <p>Nog geen notities toegevoegd.</p>}</section>}
+            {module === "campagnes" && <section className="form-card record-notes"><div className="form-heading"><h2>Resultaten en evaluatie</h2></div>{record.results_summary ? <MarkdownContent>{String(record.results_summary)}</MarkdownContent> : <p>Nog geen evaluatie toegevoegd.</p>}</section>}
             {module === "sponsors" && <ApprovalPanel entityType="partner" entityId={id} sourceHref={`/app/sponsors/${id}`} title="Sponsorafspraak goedkeuren"/>}
             {module === "sponsors" && <PartnerSections id={id} contacts={(contactsResult.data ?? []) as unknown as RelatedRow[]} interactions={(interactionsResult.data ?? []) as unknown as RelatedRow[]} campaigns={(partnerCampaignsResult.data ?? []) as unknown as RelatedRow[]} events={[]} content={[]}/>}
             {module === "campagnes" && <CampaignSections id={id} deliverables={(deliverablesResult.data ?? []) as unknown as RelatedRow[]} social={(socialResult.data ?? []) as unknown as RelatedRow[]} content={((contentResult.data ?? []).filter((item) => item.campaign_id === id)) as unknown as RelatedRow[]}/>} 
@@ -185,6 +194,8 @@ export async function OperationalRecordDetail({
           </>
         )}
         {query.nieuw === "taak" && connectionEntity ? <TaskCreateModal returnTo={`/app/${module}/${id}`} projects={projectsResult.data ?? []} people={accountOptions} defaultProjectId={String(record.project_id ?? "") || null} contextEntityType={connectionEntity} contextEntityId={id}/> : null}
+        {module === "campagnes" && query.nieuw === "content" ? <FormModal title="Content voor deze campagne"><ContentForm action={createContent} content={{ campaign_id: id, project_id: String(record.project_id ?? "") || null, partner_id: String(record.partner_id ?? "") || null }} projects={projectsResult.data ?? []} campaigns={[{ id, title }]} partners={partnersResult.data ?? []}/></FormModal> : null}
+        {module === "campagnes" && query.nieuw === "social" ? <FormModal title="Social post voor deze campagne"><OperationalRecordForm action={createOperationalRecord} module="social" record={{ campaign_id: id, event_id: record.event_id, partner_id: record.partner_id }} content={contentResult.data ?? []} campaigns={[{ id, title }]} events={eventsResult.data ?? []} partners={partnersResult.data ?? []}/></FormModal> : null}
       </div>
     </AppShell>
   );

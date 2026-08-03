@@ -12,11 +12,13 @@ import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { RecordMetadata } from "@/components/record-metadata";
 import { TaskCreateModal } from "@/components/task-create-modal";
 import { FinancialSummaryPanel } from "@/components/financial-summary-panel";
+import { OperationalRecordForm } from "@/components/operational-record-form";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
 import { hasPermission } from "@/lib/permissions";
 import { updateTaskStatus } from "../../actions";
+import { createOperationalRecord } from "../../operations/actions";
 import { updateTaskDetails } from "../../taken/[id]/actions";
 import {
   addMilestone,
@@ -88,6 +90,7 @@ export default async function ProjectPage({ params, searchParams }: {
   const query = await searchParams;
   const { supabase, membership } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageProjects");
+  const canManageCampaigns = hasPermission(membership, "manageOrganization");
   const [
     { data: projectRow },
     { data: taskRows },
@@ -100,6 +103,8 @@ export default async function ProjectPage({ params, searchParams }: {
     { data: budgetRows },
     { data: expenseRows },
     { data: incomeRows },
+    { data: partnerRows },
+    { data: eventRows },
   ] = await Promise.all([
     supabase.from("projects").select("id,title,description,status,priority,owner_id,start_date,due_date,drive_url,organization_id").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("tasks").select("id,title,description,status,priority,due_at").eq("project_id", id).is("deleted_at", null).order("due_at", { ascending: true, nullsFirst: false }).order("created_at", { ascending: true }),
@@ -112,6 +117,8 @@ export default async function ProjectPage({ params, searchParams }: {
     supabase.from("budget_envelopes").select("id,name,planned_amount,status").eq("organization_id", membership.organization_id).eq("project_id", id).is("deleted_at", null).order("created_at"),
     supabase.from("expenses").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("project_id", id).is("deleted_at", null).order("expense_date", { ascending: false }),
     supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("project_id", id).is("deleted_at", null).order("expected_date", { ascending: false }),
+    supabase.from("partners").select("id,name").eq("organization_id", membership.organization_id).is("deleted_at", null).order("name"),
+    supabase.from("events").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
   ]);
   if (!projectRow) notFound();
 
@@ -146,6 +153,7 @@ export default async function ProjectPage({ params, searchParams }: {
         <div className="project-actions">
           {driveUrl ? <a href={driveUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Drive-map</a> : null}
           {canManage ? <Link href="?bewerken=1">Bewerken</Link> : null}
+          {canManageCampaigns ? <Link href="?nieuw=campagne"><Plus size={16}/>Campagne</Link> : null}
           <Link className="primary" href="?nieuw=taak"><Plus size={16}/>Taak</Link>
         </div>
       </header>
@@ -174,6 +182,12 @@ export default async function ProjectPage({ params, searchParams }: {
 
         {query.nieuw === "taak" ? (
           <TaskCreateModal returnTo={`/app/projecten/${id}`} defaultProjectId={id} projects={[{ id, title: project.title }]} people={people.map((person) => ({ id: person.user_id, label: person.profiles?.display_name || "Naamloos account" }))}/>
+        ) : null}
+
+        {query.nieuw === "campagne" && canManageCampaigns ? (
+          <FormModal title="Nieuwe campagne voor dit project">
+            <OperationalRecordForm action={createOperationalRecord} module="campagnes" record={{ project_id: id }} projects={[{ id, title: project.title }]} partners={partnerRows ?? []} events={eventRows ?? []} returnTo={`/app/projecten/${id}`}/>
+          </FormModal>
         ) : null}
 
         {selectedTask ? (

@@ -11,11 +11,13 @@ import { MarkdownContent } from "@/components/markdown-field";
 import { RecordMetadata } from "@/components/record-metadata";
 import { TaskCreateModal } from "@/components/task-create-modal";
 import { FinancialSummaryPanel } from "@/components/financial-summary-panel";
+import { OperationalRecordForm } from "@/components/operational-record-form";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatDateTime } from "@/lib/format";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
 import { eventDriveSubfolders } from "@/lib/google-workspace";
 import { saveEvent } from "../actions";
+import { createOperationalRecord } from "../../operations/actions";
 import { createEventFolder, linkEventFolder, organizeEventFolder } from "./actions";
 import { generateEventDossier } from "@/app/app/google-document-actions";
 import { syncEventToGoogleCalendar } from "../calendar-actions";
@@ -54,7 +56,8 @@ export default async function Event({
   const q = await searchParams;
   const { supabase, membership } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageEvents");
-  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }, { data: memberRows }, { data: budgetRows }, { data: expenseRows }, { data: incomeRows }] = await Promise.all([
+  const canManageCampaigns = hasPermission(membership, "manageOrganization");
+  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }, { data: memberRows }, { data: budgetRows }, { data: expenseRows }, { data: incomeRows }, { data: partners }] = await Promise.all([
     supabase.from("events").select("*").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
     supabase.from("migration_source_links").select("source_url").eq("target_table", "events").eq("target_id", id).limit(1).maybeSingle(),
@@ -65,6 +68,7 @@ export default async function Event({
     supabase.from("budget_envelopes").select("id,name,planned_amount,status").eq("organization_id", membership.organization_id).eq("event_id", id).is("deleted_at", null).order("created_at"),
     supabase.from("expenses").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("event_id", id).is("deleted_at", null).order("expense_date", { ascending: false }),
     supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("event_id", id).is("deleted_at", null).order("expected_date", { ascending: false }),
+    supabase.from("partners").select("id,name").eq("organization_id", membership.organization_id).is("deleted_at", null).order("name"),
   ]);
   if (!e) notFound();
   const [connections, relationOptions] = await Promise.all([
@@ -99,6 +103,7 @@ export default async function Event({
             <button><CalendarSync size={16}/>{calendar ? "Kalender bijwerken" : "Naar Google Calendar"}</button>
           </form>
           <Link href="?nieuw=taak">Taak toevoegen</Link>
+          {canManageCampaigns && <Link href="?nieuw=campagne">Campagne toevoegen</Link>}
           <Link className="primary" href="?bewerken=1">Bewerken</Link>
         </div>
       </header>
@@ -112,6 +117,7 @@ export default async function Event({
           </FormModal>
         )}
         {q.nieuw === "taak" ? <TaskCreateModal returnTo={`/app/events/${id}`} projects={projects ?? []} people={people} defaultProjectId={e.project_id} contextEntityType="event" contextEntityId={id}/> : null}
+        {q.nieuw === "campagne" && canManageCampaigns ? <FormModal title="Nieuwe campagne voor dit event"><OperationalRecordForm action={createOperationalRecord} module="campagnes" record={{ event_id: id, project_id: e.project_id }} projects={projects ?? []} partners={partners ?? []} events={[{ id, title: e.title }]} returnTo={`/app/events/${id}`}/></FormModal> : null}
         <section className="form-card record-overview">
           <div className="form-heading"><div><span className="eyebrow">OVERZICHT</span><h2>Eventgegevens</h2></div></div>
           {e.description ? <MarkdownContent>{e.description}</MarkdownContent> : <p>Nog geen eventbeschrijving.</p>}
