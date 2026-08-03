@@ -51,3 +51,39 @@ export async function requestNewsletterSubscription(formData: FormData) {
   }
   redirect(`/nieuwsbrief/${slug}?aangevraagd=1`);
 }
+
+export async function requestNewsletterUnsubscription(formData: FormData) {
+  const parsed = z.object({
+    list_slug: z.string().trim().min(2).max(120),
+    email: z.string().trim().email().max(320),
+    website: z.string().max(0).optional(),
+  }).safeParse(Object.fromEntries(formData));
+  const slug = String(formData.get("list_slug") ?? "nieuws").replace(/[^a-z0-9-]/gi, "").slice(0, 120) || "nieuws";
+  if (!parsed.success) redirect(`/nieuwsbrief/uitschrijven/${slug}?fout=velden`);
+  const rawToken = randomBytes(32).toString("base64url");
+  const requestHeaders = await headers();
+  const forwarded = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const supabase = await createClient();
+  const { data: accepted } = await supabase.rpc("request_newsletter_unsubscription", {
+    p_list_slug: parsed.data.list_slug,
+    p_email: parsed.data.email.toLowerCase(),
+    p_token_hash: hash(rawToken),
+    p_ip_hash: hash(forwarded),
+  });
+  if (accepted && googleGmailConfiguration().configured) {
+    try {
+      const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+      if (!siteUrl) throw new Error("NEXT_PUBLIC_SITE_URL ontbreekt");
+      const confirmationUrl = `${siteUrl}/nieuwsbrief/uitschrijven/bevestigen?token=${encodeURIComponent(rawToken)}`;
+      const draft = await saveGmailDraft({
+        to: [parsed.data.email.toLowerCase()],
+        subject: "Bevestig je uitschrijving voor de BESC-nieuwsbrief",
+        body: `Bevestig je uitschrijving via deze eenmalige link:\n${confirmationUrl}\n\nDe link blijft 24 uur geldig. Heb je dit niet aangevraagd? Dan hoef je niets te doen.`,
+      });
+      await sendGmailDraft(draft.id);
+    } catch {
+      // De respons verraadt niet of het adres op de lijst staat.
+    }
+  }
+  redirect(`/nieuwsbrief/uitschrijven/${slug}?aangevraagd=1`);
+}

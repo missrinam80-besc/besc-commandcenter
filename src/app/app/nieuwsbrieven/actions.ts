@@ -112,8 +112,11 @@ export async function changeSubscriberStatus(formData: FormData) {
   redirect(`${path}?succes=status`);
 }
 
-function newsletterBody(body: string) {
-  const instruction = "Wil je geen berichten meer ontvangen? Antwoord op deze e-mail met \"uitschrijven\".";
+function newsletterBody(body: string, publicSlug?: string | null) {
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  const instruction = publicSlug && siteUrl
+    ? `Wil je geen berichten meer ontvangen? Schrijf je veilig uit via ${siteUrl}/nieuwsbrief/uitschrijven/${publicSlug}`
+    : "Wil je geen berichten meer ontvangen? Antwoord op deze e-mail met \"uitschrijven\".";
   return body.toLowerCase().includes("uitschrijven") ? body : `${body.trim()}\n\n${instruction}`;
 }
 
@@ -132,7 +135,7 @@ export async function saveNewsletter(formData: FormData) {
   }
   const context = await requireActiveMembership();
   managerPath(context, "/app/nieuwsbrieven");
-  const { data: list } = await context.supabase.from("mailing_lists").select("id,status")
+  const { data: list } = await context.supabase.from("mailing_lists").select("id,status,public_slug")
     .eq("organization_id", context.membership.organization_id).eq("id", parsed.data.mailing_list_id).maybeSingle();
   if (!list || list.status !== "active") redirect("/app/nieuwsbrieven?fout=lijst-niet-actief");
   const { data: subscribers } = await context.supabase.from("mailing_subscribers").select("email")
@@ -141,7 +144,7 @@ export async function saveNewsletter(formData: FormData) {
   const recipients = [...new Set((subscribers ?? []).map((item) => item.email.toLowerCase()))];
   if (!recipients.length) redirect("/app/nieuwsbrieven?fout=geen-ontvangers");
   if (recipients.length > 100) redirect("/app/nieuwsbrieven?fout=max-100-ontvangers");
-  const body = newsletterBody(parsed.data.body_text);
+  const body = newsletterBody(parsed.data.body_text, list.public_slug);
   const now = new Date().toISOString();
   let id = parsed.data.id || null;
   let currentDraftId: string | null = null;
