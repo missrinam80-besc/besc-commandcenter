@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ModulePage } from "@/components/module-page";
-import { EntityForm } from "@/components/entity-form";
+import { TaskCreateModal } from "@/components/task-create-modal";
 import { SavedViews } from "@/components/saved-views";
 import { demoDashboard } from "@/lib/demo-data";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { requireActiveMembership } from "@/lib/auth-context";
-import { createTask, updateTaskStatus } from "../actions";
+import { updateTaskStatus } from "../actions";
 
 type TaskRow = {
   id: string;
@@ -92,6 +92,7 @@ export default async function TasksPage({
     projects: { title: task.project },
   }));
   let projects: { id: string; title: string }[] = [];
+  let people: { id: string; label: string }[] = [];
 
   if (isSupabaseConfigured()) {
     const { supabase, user, membership } = await requireActiveMembership();
@@ -123,7 +124,7 @@ export default async function TasksPage({
           : taskQuery.in("id", ["00000000-0000-0000-0000-000000000000"]);
     }
 
-    const [{ data: taskData }, { data: projectData }] = await Promise.all([
+    const [{ data: taskData }, { data: projectData }, { data: memberData }] = await Promise.all([
       taskQuery,
       supabase
         .from("projects")
@@ -132,9 +133,11 @@ export default async function TasksPage({
         .is("deleted_at", null)
         .in("status", ["planned", "active"])
         .order("title"),
+      supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", membership.organization_id).eq("status", "active"),
     ]);
     allTasks = (taskData ?? []) as unknown as TaskRow[];
     projects = projectData ?? [];
+    people = (memberData ?? []).map((member) => ({ id: member.user_id, label: (member.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account" }));
   } else {
     if (search) {
       allTasks = allTasks.filter((task) =>
@@ -175,34 +178,7 @@ export default async function TasksPage({
         {overdue && <div className="permission-note">Je ziet nu alleen taken waarvan de deadline verstreken is. <Link href="/app/taken?van_mij=1">Toon al mijn taken</Link></div>}
         {openOnly && <div className="permission-note">Je ziet nu alleen open taken. <Link href="/app/taken">Toon ook de historiek</Link></div>}
         {params.nieuw && (
-          <EntityForm title="Nieuwe taak" action={createTask}>
-            <div className="form-row">
-              <label>
-                Project
-                <select name="project_id" defaultValue="">
-                  <option value="">Geen project</option>
-                  {projects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Deadline
-                <input type="datetime-local" name="due_at" />
-              </label>
-            </div>
-            <label>
-              Prioriteit
-              <select name="priority" defaultValue="normal">
-                <option value="low">Laag</option>
-                <option value="normal">Normaal</option>
-                <option value="high">Hoog</option>
-                <option value="urgent">Urgent</option>
-              </select>
-            </label>
-          </EntityForm>
+          <TaskCreateModal returnTo="/app/taken" projects={projects} people={people}/>
         )}
         <SavedViews
           module="tasks"

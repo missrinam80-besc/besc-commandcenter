@@ -4,9 +4,15 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { EmailCommunicationPanel } from "@/components/email-communication-panel";
 import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
+import { RecordConnectionsPanel } from "@/components/record-connections-panel";
 import { EventForm, eventStatuses, eventTypes } from "@/components/event-form";
 import { FormModal } from "@/components/form-modal";
+import { MarkdownContent } from "@/components/markdown-field";
+import { RecordMetadata } from "@/components/record-metadata";
+import { TaskCreateModal } from "@/components/task-create-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { formatDateTime } from "@/lib/format";
+import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
 import { eventDriveSubfolders } from "@/lib/google-workspace";
 import { saveEvent } from "../actions";
 import { createEventFolder, linkEventFolder, organizeEventFolder } from "./actions";
@@ -15,10 +21,7 @@ import { syncEventToGoogleCalendar } from "../calendar-actions";
 import { hasPermission } from "@/lib/permissions";
 
 type DriveLink = {
-  google_id: string;
-  name: string;
   web_url: string;
-  drive_id: string | null;
 };
 
 type CalendarLink = {
@@ -50,17 +53,25 @@ export default async function Event({
   const q = await searchParams;
   const { supabase, membership } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageEvents");
-  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }] = await Promise.all([
+  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }, { data: memberRows }] = await Promise.all([
     supabase.from("events").select("*").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
     supabase.from("migration_source_links").select("source_url").eq("target_table", "events").eq("target_id", id).limit(1).maybeSingle(),
     supabase.from("google_resource_links").select("google_id,name,web_url,drive_id").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "folder").maybeSingle(),
-    supabase.from("google_resource_links").select("name,web_url").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "document").maybeSingle(),
+    supabase.from("google_resource_links").select("name,web_url").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "document").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("google_resource_links").select("google_id,name,web_url,updated_at").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "calendar_event").maybeSingle(),
+    supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", membership.organization_id).eq("status", "active"),
   ]);
   if (!e) notFound();
+  const [connections, relationOptions] = await Promise.all([
+    loadDossierConnections(supabase, membership.organization_id, "event", id),
+    loadRelationOptions(supabase, membership.organization_id, "event", id),
+  ]);
   const drive = driveRow as DriveLink | null;
+  const project = (projects ?? []).find((item) => item.id === e.project_id);
+  const driveUrl = drive?.web_url || e.drive_url;
   const calendar = calendarRow as CalendarLink | null;
+  const people = (memberRows ?? []).map((member) => ({ id: member.user_id, label: (member.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account" }));
   const calendarIsCurrent = calendar
     ? new Date(calendar.updated_at).getTime() >= new Date(e.updated_at).getTime()
     : false;
@@ -72,10 +83,10 @@ export default async function Event({
           <Link href="/app/events">← Alle events</Link>
           <span className="eyebrow">EVENTDOSSIER</span>
           <h1>{e.title}</h1>
-          <p>{e.description || "Nog geen eventbeschrijving."}</p>
+          <p>{eventTypes[e.event_type as keyof typeof eventTypes]} · {eventStatuses[e.status as keyof typeof eventStatuses]}</p>
         </div>
         <div className="project-actions">
-          {e.drive_url && <a href={e.drive_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Drive</a>}
+          {driveUrl && <a href={driveUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Drive</a>}
           {e.eventbrite_url && <a href={e.eventbrite_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Eventbrite</a>}
           {source?.source_url && <a href={source.source_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>monday</a>}
           {!documentRow && <form action={generateEventDossier}><input type="hidden" name="event_id" value={id}/><button><FilePlus2 size={16}/>Genereer eventdossier</button></form>}
@@ -83,6 +94,7 @@ export default async function Event({
             <input type="hidden" name="event_id" value={id}/>
             <button><CalendarSync size={16}/>{calendar ? "Kalender bijwerken" : "Naar Google Calendar"}</button>
           </form>
+          <Link href="?nieuw=taak">Taak toevoegen</Link>
           <Link className="primary" href="?bewerken=1">Bewerken</Link>
         </div>
       </header>
@@ -95,26 +107,34 @@ export default async function Event({
             <EventForm action={saveEvent} event={{...e, calendar_removed: calendar?.name.startsWith("[VERWIJDERD]")}} projects={projects ?? []}/>
           </FormModal>
         )}
-        <section className="content-summary">
-          <article><span>Type</span><strong>{eventTypes[e.event_type as keyof typeof eventTypes]}</strong></article>
-          <article><span>Status</span><strong>{eventStatuses[e.status as keyof typeof eventStatuses]}</strong></article>
-          <article><span>Rol BESC</span><strong>{e.role_besc}</strong></article>
-          <article><span>Start</span><strong>{e.start_at ? new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(e.start_at)) : "Niet gepland"}</strong></article>
-          <article><span>Locatie</span><strong>{e.is_online ? "Online" : e.location ?? "Niet bepaald"}</strong></article>
-          <article><span>Deelnemers</span><strong>{e.expected_attendees ?? "Niet bepaald"}</strong></article>
+        {q.nieuw === "taak" ? <TaskCreateModal returnTo={`/app/events/${id}`} projects={projects ?? []} people={people} defaultProjectId={e.project_id} contextEntityType="event" contextEntityId={id}/> : null}
+        <section className="form-card record-overview">
+          <div className="form-heading"><div><span className="eyebrow">OVERZICHT</span><h2>Eventgegevens</h2></div></div>
+          {e.description ? <MarkdownContent>{e.description}</MarkdownContent> : <p>Nog geen eventbeschrijving.</p>}
+          <RecordMetadata items={[
+            { label: "Type", value: eventTypes[e.event_type as keyof typeof eventTypes] },
+            { label: "Status", value: eventStatuses[e.status as keyof typeof eventStatuses] },
+            { label: "Prioriteit", value: ({ low: "Laag", normal: "Normaal", high: "Hoog", urgent: "Urgent" } as Record<string, string>)[e.priority] ?? e.priority },
+            { label: "Rol BESC", value: ({ organizer: "Organisator", partner: "Partner", promoter: "Promotor", participant: "Deelnemer" } as Record<string, string>)[e.role_besc] ?? e.role_besc },
+            { label: "Start", value: formatDateTime(e.start_at, "Niet gepland") },
+            { label: "Einde", value: formatDateTime(e.end_at, "Niet gepland") },
+            { label: "Locatie", value: e.is_online ? (e.location ? `Online · ${e.location}` : "Online") : e.location ?? "Niet bepaald" },
+            { label: "Verwachte deelnemers", value: e.expected_attendees ?? "Niet bepaald" },
+            { label: "Project", value: project ? <Link href={`/app/projecten/${project.id}`}>{project.title}</Link> : "Geen project" },
+          ]}/>
         </section>
-        {documentRow && <section className="form-card"><div className="form-heading"><h2>Google-document</h2><a href={documentRow.web_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/> {documentRow.name}</a></div><p>Gegenereerd vanuit het eventtemplate. Alleen de link en metadata staan in het Command Center.</p></section>}
+        <RecordConnectionsPanel entityType="event" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} modal={q.koppeling} selectedLinkId={q.link}/>
         <section className="form-card">
           <div className="form-heading">
             <div><span className="eyebrow">GOOGLE CALENDAR</span><h2>Kalendersynchronisatie</h2></div>
             {calendar && !calendar.name.startsWith("[VERWIJDERD]") && <a href={calendar.web_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Open afspraak</a>}
           </div>
           {calendar ? (
-            <div className="content-meta">
-              <div><span>Status</span><strong>{calendar.name.startsWith("[VERWIJDERD]") ? "Verwijderd uit Google Calendar" : calendarIsCurrent ? "Gesynchroniseerd" : "Synchronisatie nodig"}</strong></div>
-              <div><span>Kalenderitem</span><strong>{calendar.name.replace("[VERWIJDERD] ", "")}</strong></div>
-              <div><span>Laatste synchronisatie</span><strong>{new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(calendar.updated_at))}</strong></div>
-            </div>
+              <RecordMetadata items={[
+                { label: "Status", value: calendar.name.startsWith("[VERWIJDERD]") ? "Verwijderd uit Google Calendar" : calendarIsCurrent ? "Gesynchroniseerd" : "Synchronisatie nodig" },
+                { label: "Kalenderitem", value: calendar.name.replace("[VERWIJDERD] ", "") },
+                { label: "Laatste synchronisatie", value: formatDateTime(calendar.updated_at) },
+              ]}/>
           ) : (
             <p>Dit event staat nog niet in de gedeelde BESC-kalender. Start- en eindtijd zijn verplicht.</p>
           )}
@@ -126,20 +146,10 @@ export default async function Event({
         <section className="form-card">
           <div className="form-heading">
             <div><span className="eyebrow">GOOGLE WORKSPACE</span><h2>Eventmap</h2></div>
-            {e.drive_url && <a className="row-action" href={e.drive_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Open map</a>}
+             {driveUrl && <a className="row-action" href={driveUrl} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Open map</a>}
           </div>
           {drive ? (
-            <>
-              <div className="content-meta">
-                <div><span>Mapnaam</span><strong>{drive.name}</strong></div>
-                <div><span>Opslagstructuur</span><strong>BESC-hoofdmap / Events / {drive.name}</strong></div>
-                <div><span>Basismappen</span><strong>{eventDriveSubfolders.join(", ")}</strong></div>
-              </div>
-              <form className="drive-organize-action" action={organizeEventFolder}>
-                <input type="hidden" name="event_id" value={id}/>
-                <button><FolderInput size={15}/>Controleer structuur en plaats onder Events</button>
-              </form>
-            </>
+            <div className="drive-connected-row"><div><strong>Drive-map gekoppeld</strong><p>Basismappen: {eventDriveSubfolders.join(", ")}.</p></div><form action={organizeEventFolder}><input type="hidden" name="event_id" value={id}/><button><FolderInput size={15}/>Mapstructuur controleren</button></form></div>
           ) : (
             <div className="drive-link-options">
               <div>

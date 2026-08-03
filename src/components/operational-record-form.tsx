@@ -1,5 +1,6 @@
 import { operationalModules, type OperationalModule } from "@/app/app/operations/config";
 import { MarkdownField } from "@/components/markdown-field";
+import { communityRoleLabels } from "@/lib/community-people";
 
 const platforms = ["Discord", "Twitch", "YouTube", "TikTok", "Instagram", "Facebook", "X", "Threads", "LinkedIn", "Blogger", "Website", "Nieuwsbrief"];
 type RecordData = { id?: string; [key: string]: unknown };
@@ -14,6 +15,8 @@ export function OperationalRecordForm({
   content = [],
   campaigns = [],
   events = [],
+  accountOptions = [],
+  personRoles = [],
 }: {
   action: (formData: FormData) => void | Promise<void>;
   module: OperationalModule;
@@ -23,6 +26,8 @@ export function OperationalRecordForm({
   content?: Option[];
   campaigns?: Option[];
   events?: Option[];
+  accountOptions?: { id: string; label: string }[];
+  personRoles?: string[];
 }) {
   const config = operationalModules[module];
   const dateValue = record[config.dateColumn ?? ""]
@@ -70,6 +75,7 @@ export function OperationalRecordForm({
       {module === "community" && <>
         <h3 className="form-subtitle">Profiel en inzetbaarheid</h3>
         <div className="form-row">
+          <label>Command Center-account<select name="account_user_id" defaultValue={String(record.account_user_id ?? "")}><option value="">Geen account gekoppeld</option>{accountOptions.map((account) => <option key={account.id} value={account.id}>{account.label}</option>)}</select></label>
           <label>Handle<input name="handle" defaultValue={String(record.handle ?? "")}/></label>
           <label>Discord<input name="discord_handle" defaultValue={String(record.discord_handle ?? "")}/></label>
           <label>E-mail<input type="email" name="email" defaultValue={String(record.email ?? "")}/></label>
@@ -78,6 +84,7 @@ export function OperationalRecordForm({
           <label>Streamteamniveau<input name="streamteam_level" defaultValue={String(record.streamteam_level ?? "")}/></label>
           <label>Onboarding<select name="onboarding_status" defaultValue={String(record.onboarding_status ?? "not_started")}><option value="not_started">Niet gestart</option><option value="in_progress">Bezig</option><option value="completed">Afgerond</option><option value="not_required">Niet nodig</option></select></label>
         </div>
+        <fieldset className="role-picker"><legend>Rollen</legend>{Object.entries(communityRoleLabels).map(([role, label]) => <label className="inline-check" key={role}><input type="checkbox" name="roles" value={role} defaultChecked={personRoles.includes(role)}/>{label}</label>)}</fieldset>
         <label>Vaardigheden (komma gescheiden)<input name="skills" defaultValue={Array.isArray(record.skills) ? record.skills.join(", ") : ""}/></label>
         <label>Interesses (komma gescheiden)<input name="interests" defaultValue={Array.isArray(record.interests) ? record.interests.join(", ") : ""}/></label>
         <label>Platformen (komma gescheiden)<input name="platforms" defaultValue={Array.isArray(record.platforms) ? record.platforms.join(", ") : ""}/></label>

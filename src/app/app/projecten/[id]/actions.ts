@@ -153,9 +153,9 @@ export async function updateProject(formData: FormData) {
     description: z.string().trim().max(5000).optional(),
     status: z.enum(["idea", "planned", "active", "blocked", "done", "archived"]),
     priority: z.enum(["low", "normal", "high", "urgent"]),
+    owner_id: z.string().uuid().optional().or(z.literal("")),
     start_date: z.string().optional(),
     due_date: z.string().optional(),
-    drive_url: z.string().url().optional().or(z.literal("")),
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/projecten?fout=velden");
 
@@ -168,9 +168,9 @@ export async function updateProject(formData: FormData) {
     .update({
       ...parsed.data,
       description: parsed.data.description || null,
+      owner_id: parsed.data.owner_id || null,
       start_date: parsed.data.start_date || null,
       due_date: parsed.data.due_date || null,
-      drive_url: parsed.data.drive_url || null,
     })
     .eq("organization_id", membership.organization_id)
     .eq("id", parsed.data.id);
@@ -224,6 +224,48 @@ export async function toggleMilestone(formData: FormData) {
     .eq("project_id", parsed.data.project_id)
     .eq("id", parsed.data.id);
   revalidatePath(path(parsed.data.project_id));
+}
+
+export async function updateMilestone(formData: FormData) {
+  const parsed = z.object({
+    project_id: z.string().uuid(),
+    id: z.string().uuid(),
+    title: z.string().trim().min(1).max(180),
+    due_date: z.string().optional(),
+  }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) redirect("/app/projecten?fout=mijlpaal");
+  const { supabase } = await requirePermission(
+    "manageProjects",
+    `${path(parsed.data.project_id)}?fout=rechten`,
+  );
+  const { error } = await supabase
+    .from("project_milestones")
+    .update({ title: parsed.data.title, due_date: parsed.data.due_date || null })
+    .eq("project_id", parsed.data.project_id)
+    .eq("id", parsed.data.id);
+  if (error) redirect(`${path(parsed.data.project_id)}?fout=mijlpaal-opslaan`);
+  revalidatePath(path(parsed.data.project_id));
+  redirect(`${path(parsed.data.project_id)}?succes=mijlpaal`);
+}
+
+export async function deleteMilestone(formData: FormData) {
+  const parsed = z.object({
+    project_id: z.string().uuid(),
+    id: z.string().uuid(),
+  }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) redirect("/app/projecten?fout=mijlpaal");
+  const { supabase } = await requirePermission(
+    "manageProjects",
+    `${path(parsed.data.project_id)}?fout=rechten`,
+  );
+  const { error } = await supabase
+    .from("project_milestones")
+    .delete()
+    .eq("project_id", parsed.data.project_id)
+    .eq("id", parsed.data.id);
+  if (error) redirect(`${path(parsed.data.project_id)}?fout=mijlpaal-verwijderen`);
+  revalidatePath(path(parsed.data.project_id));
+  redirect(`${path(parsed.data.project_id)}?succes=mijlpaal-verwijderd`);
 }
 
 export async function setProjectMember(formData: FormData) {

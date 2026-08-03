@@ -106,6 +106,7 @@ export async function OperationalModulePage({
     contentResult,
     campaignsResult,
     eventsResult,
+    accountOptionsResult,
   ] = await Promise.all([
     query.range(from, from + PAGE_SIZE - 1),
     supabase
@@ -143,7 +144,9 @@ export async function OperationalModulePage({
       .eq("organization_id", org)
       .is("deleted_at", null)
       .order("title"),
+    module === "community" ? supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", org).eq("status", "active") : Promise.resolve({ data: [] }),
   ]);
+  const accountOptions = (accountOptionsResult.data ?? []).map((item) => ({ id: item.user_id, label: (item.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account" }));
 
   const rows = (rowsResult.data ?? []) as unknown as Row[];
   const all = allResult.data ?? [];
@@ -218,6 +221,7 @@ export async function OperationalModulePage({
               content={contentResult.data ?? []}
               campaigns={campaignsResult.data ?? []}
               events={eventsResult.data ?? []}
+              accountOptions={accountOptions}
             />
           </FormModal>
         )}

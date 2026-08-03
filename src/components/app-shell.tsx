@@ -93,6 +93,7 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Documenten & Drive", href: "/app/documenten", icon: FileText },
       { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin", "board"] },
+      { label: "Archief", href: "/app/archief", icon: Archive, roles: ["admin", "board"] },
       { label: "Historiek", href: "/app/historiek", icon: Archive, roles: ["admin", "board"] },
       { label: "Activiteit", href: "/app/activiteit", icon: Clock3, roles: ["admin", "board"] },
       { label: "Gebruikers & toegang", href: "/app/beheer/gebruikers", icon: Users, roles: ["admin"] },

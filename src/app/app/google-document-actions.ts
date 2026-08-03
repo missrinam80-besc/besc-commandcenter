@@ -28,7 +28,7 @@ async function saveDocumentMetadata(input: {
   document: GeneratedDocument;
 }) {
   const { context, entityType, entityId, document } = input;
-  const { error } = await context.supabase.from("google_resource_links").upsert({
+  const { error } = await context.supabase.from("google_resource_links").insert({
     organization_id: context.membership.organization_id,
     entity_type: entityType,
     entity_id: entityId,
@@ -41,7 +41,7 @@ async function saveDocumentMetadata(input: {
     parent_id: document.parents[0] ?? null,
     created_by: context.user.id,
     updated_at: new Date().toISOString(),
-  }, { onConflict: "organization_id,entity_type,entity_id,resource_type" });
+  });
   if (error) throw error;
 }
 

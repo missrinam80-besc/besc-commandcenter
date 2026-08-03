@@ -6,10 +6,13 @@ import { ApprovalPanel } from "@/components/approval-panel";
 import { ContentForm } from "@/components/content-form";
 import { FormModal } from "@/components/form-modal";
 import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
+import { RecordConnectionsPanel } from "@/components/record-connections-panel";
+import { TaskCreateModal } from "@/components/task-create-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { updateContent } from "../actions";
 import { approvalStatuses, contentStatuses, contentTypes } from "../constants";
 import { hasPermission } from "@/lib/permissions";
+import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
 
 type Content = {
   id: string;
@@ -41,13 +44,19 @@ export default async function ContentDetail({
   const query = await searchParams;
   const { supabase, membership } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageContent");
-  const [{ data }, { data: projects }, { data: source }] = await Promise.all([
+  const [{ data }, { data: projects }, { data: source }, { data: memberRows }] = await Promise.all([
     supabase.from("content_items").select("id,title,description,content_type,status,priority,project_id,primary_channel,channels,deadline,publication_at,drive_url,canva_url,publication_url,approval_status,projects(title)").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
     supabase.from("migration_source_links").select("source_url").eq("target_table", "content_items").eq("target_id", id).limit(1).maybeSingle(),
+    supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", membership.organization_id).eq("status", "active"),
   ]);
   if (!data) notFound();
   const item = data as unknown as Content;
+  const people = (memberRows ?? []).map((member) => ({ id: member.user_id, label: (member.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account" }));
+  const [connections, relationOptions] = await Promise.all([
+    loadDossierConnections(supabase, membership.organization_id, "content", id),
+    loadRelationOptions(supabase, membership.organization_id, "content", id),
+  ]);
   return (
     <AppShell active="Content">
       <header className="project-detail-head">
@@ -56,6 +65,7 @@ export default async function ContentDetail({
           {item.drive_url && <a href={item.drive_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Drive</a>}
           {item.canva_url && <a href={item.canva_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Canva</a>}
           {source?.source_url && <a href={source.source_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>monday</a>}
+          <Link href="?nieuw=taak">Taak toevoegen</Link>
           <Link className="primary" href="?bewerken=1">Bewerken</Link>
         </div>
       </header>
@@ -63,6 +73,7 @@ export default async function ContentDetail({
         {query.fout && <div className="error-note">Wijziging mislukt ({query.fout}).</div>}
         {query.succes && <div className="success">{query.succes === "goedkeuring-aangevraagd" ? "Ter goedkeuring voorgelegd." : "Contentitem opgeslagen."}</div>}
         {query.bewerken && <FormModal title="Content bewerken"><ContentForm action={updateContent} content={item} projects={projects ?? []}/></FormModal>}
+        {query.nieuw === "taak" ? <TaskCreateModal returnTo={`/app/content/${id}`} projects={projects ?? []} people={people} defaultProjectId={item.project_id} contextEntityType="content" contextEntityId={id}/> : null}
         <section className="content-summary">
           <article><span>Type</span><strong>{contentTypes[item.content_type as keyof typeof contentTypes] ?? item.content_type}</strong></article>
           <article><span>Status</span><strong>{contentStatuses[item.status as keyof typeof contentStatuses] ?? item.status}</strong></article>
@@ -80,6 +91,7 @@ export default async function ContentDetail({
             <div><span>Publicatielink</span>{item.publication_url ? <a href={item.publication_url} target="_blank" rel="noreferrer">Open publicatie</a> : <strong>Nog niet gepubliceerd</strong>}</div>
           </div>
         </section>
+        <RecordConnectionsPanel entityType="content" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} modal={query.koppeling} selectedLinkId={query.link}/>
         <RecordLifecyclePanel entity="content" id={id} label="Contentitem" isArchived={item.status === "archived"} canManage={canManage}/>
       </div>
     </AppShell>
