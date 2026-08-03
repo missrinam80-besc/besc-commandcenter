@@ -13,6 +13,7 @@ import { RecordMetadata } from "@/components/record-metadata";
 import { TaskCreateModal } from "@/components/task-create-modal";
 import { FinancialSummaryPanel } from "@/components/financial-summary-panel";
 import { OperationalRecordForm } from "@/components/operational-record-form";
+import { PeopleAssignmentsPanel } from "@/components/people-assignments-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
@@ -105,6 +106,8 @@ export default async function ProjectPage({ params, searchParams }: {
     { data: incomeRows },
     { data: partnerRows },
     { data: eventRows },
+    { data: assignmentRows },
+    { data: centralPeopleRows },
   ] = await Promise.all([
     supabase.from("projects").select("id,title,description,status,priority,owner_id,start_date,due_date,drive_url,organization_id").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("tasks").select("id,title,description,status,priority,due_at").eq("project_id", id).is("deleted_at", null).order("due_at", { ascending: true, nullsFirst: false }).order("created_at", { ascending: true }),
@@ -119,6 +122,8 @@ export default async function ProjectPage({ params, searchParams }: {
     supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("project_id", id).is("deleted_at", null).order("expected_date", { ascending: false }),
     supabase.from("partners").select("id,name").eq("organization_id", membership.organization_id).is("deleted_at", null).order("name"),
     supabase.from("events").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
+    supabase.from("community_assignments").select("id,person_id,role_name,status,starts_at,notes,community_people(display_name)").eq("organization_id", membership.organization_id).eq("project_id", id).order("starts_at", { ascending: true, nullsFirst: false }),
+    supabase.from("community_people").select("id,display_name").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name"),
   ]);
   if (!projectRow) notFound();
 
@@ -237,6 +242,7 @@ export default async function ProjectPage({ params, searchParams }: {
         </section>
 
         <RecordConnectionsPanel entityType="project" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} modal={query.koppeling} selectedLinkId={query.link}/>
+        <PeopleAssignmentsPanel entityType="project" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={(centralPeopleRows ?? []).map((person) => ({ id: person.id, label: person.display_name }))} canManage={canManage} selected={query.betrokkene}/>
         <FinancialSummaryPanel budgets={budgetRows ?? []} expenses={expenseRows ?? []} income={incomeRows ?? []}/>
 
         <section className="form-card drive-card">
@@ -260,7 +266,7 @@ export default async function ProjectPage({ params, searchParams }: {
               {canManage ? <form className="milestone-add" action={addMilestone}><input type="hidden" name="project_id" value={id}/><input name="title" placeholder="Nieuwe mijlpaal"/><input type="date" name="due_date"/><button>Toevoegen</button></form> : null}
             </section>
             <section className="form-card">
-              <div className="form-heading"><h2>Projectteam</h2></div>
+              <div className="form-heading"><h2>Projectaccounts</h2></div>
               <div className="team-list">{people.map((person) => { const enabled = teamIds.has(person.user_id); return <form action={setProjectMember} key={person.user_id}><input type="hidden" name="project_id" value={id}/><input type="hidden" name="user_id" value={person.user_id}/><input type="hidden" name="enabled" value={String(!enabled)}/><span>{person.profiles?.display_name || "Naamloos"}</span><button className={enabled ? "member-on" : ""}>{enabled ? "In team" : "Toevoegen"}</button></form>; })}</div>
             </section>
           </aside>

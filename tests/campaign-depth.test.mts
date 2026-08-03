@@ -52,3 +52,19 @@ test("de campagnefiche toont kanalen, event en een aparte evaluatie", async () =
   assert.match(detail, /Resultaten en evaluatie/);
   assert.match(detail, /CampaignSections/);
 });
+
+test("projecten en events beheren centrale personen met rollen via dezelfde component", async () => {
+  const [project, event, panel, actions, picker] = await Promise.all([
+    source("src/app/app/projecten/[id]/page.tsx"),
+    source("src/app/app/events/[id]/page.tsx"),
+    source("src/components/people-assignments-panel.tsx"),
+    source("src/app/app/assignment-actions.ts"),
+    source("src/components/searchable-person-picker.tsx"),
+  ]);
+  assert.match(project, /PeopleAssignmentsPanel entityType="project"/);
+  assert.match(event, /PeopleAssignmentsPanel entityType="event"/);
+  assert.match(panel, /Betrokkenen en rollen/);
+  assert.match(panel, /deletePersonAssignment/);
+  assert.match(actions, /community_assignments/);
+  assert.match(picker, /name="person_id"/);
+});

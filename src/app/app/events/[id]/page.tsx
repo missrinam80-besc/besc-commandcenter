@@ -12,6 +12,7 @@ import { RecordMetadata } from "@/components/record-metadata";
 import { TaskCreateModal } from "@/components/task-create-modal";
 import { FinancialSummaryPanel } from "@/components/financial-summary-panel";
 import { OperationalRecordForm } from "@/components/operational-record-form";
+import { PeopleAssignmentsPanel } from "@/components/people-assignments-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatDateTime } from "@/lib/format";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
@@ -57,7 +58,7 @@ export default async function Event({
   const { supabase, membership } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageEvents");
   const canManageCampaigns = hasPermission(membership, "manageOrganization");
-  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }, { data: memberRows }, { data: budgetRows }, { data: expenseRows }, { data: incomeRows }, { data: partners }] = await Promise.all([
+  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }, { data: memberRows }, { data: budgetRows }, { data: expenseRows }, { data: incomeRows }, { data: partners }, { data: assignmentRows }, { data: centralPeopleRows }] = await Promise.all([
     supabase.from("events").select("*").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
     supabase.from("migration_source_links").select("source_url").eq("target_table", "events").eq("target_id", id).limit(1).maybeSingle(),
@@ -69,6 +70,8 @@ export default async function Event({
     supabase.from("expenses").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("event_id", id).is("deleted_at", null).order("expense_date", { ascending: false }),
     supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("event_id", id).is("deleted_at", null).order("expected_date", { ascending: false }),
     supabase.from("partners").select("id,name").eq("organization_id", membership.organization_id).is("deleted_at", null).order("name"),
+    supabase.from("community_assignments").select("id,person_id,role_name,status,starts_at,notes,community_people(display_name)").eq("organization_id", membership.organization_id).eq("event_id", id).order("starts_at", { ascending: true, nullsFirst: false }),
+    supabase.from("community_people").select("id,display_name").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name"),
   ]);
   if (!e) notFound();
   const [connections, relationOptions] = await Promise.all([
@@ -134,6 +137,7 @@ export default async function Event({
           ]}/>
         </section>
         <RecordConnectionsPanel entityType="event" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} modal={q.koppeling} selectedLinkId={q.link}/>
+        <PeopleAssignmentsPanel entityType="event" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={(centralPeopleRows ?? []).map((person) => ({ id: person.id, label: person.display_name }))} canManage={canManage} selected={q.betrokkene}/>
         <FinancialSummaryPanel budgets={budgetRows ?? []} expenses={expenseRows ?? []} income={incomeRows ?? []}/>
         <section className="form-card">
           <div className="form-heading">
