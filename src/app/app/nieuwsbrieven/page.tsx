@@ -5,6 +5,7 @@ import { renderEmailTemplate } from "@/lib/email-templates";
 import { googleGmailConfiguration } from "@/lib/google-gmail";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { isManager } from "@/lib/permissions";
+import { newsletterVariantLabels } from "@/lib/newsletter-html";
 import { saveMailingList, saveNewsletter } from "./actions";
 
 const newsletterStatuses: Record<string,string> = {
@@ -57,8 +58,14 @@ export default async function NewsletterPage({ searchParams }: { searchParams: P
             <label>Interne titel<input name="title" required defaultValue={title}/></label>
             <label>Onderwerp<input name="subject" required defaultValue={subject}/></label>
           </div>
+          <div className="form-row">
+            <label>Opmaak<select name="template_variant" defaultValue={selectedTemplate?.newsletter_variant ?? "besc"}>{Object.entries(newsletterVariantLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+            <label>Voorbeeldtekst inbox<input name="preheader" maxLength={300} placeholder="Korte samenvatting naast het onderwerp"/></label>
+            <label>Afbeelding (HTTPS)<input name="hero_image_url" type="url" defaultValue={selectedTemplate?.default_hero_image_url ?? ""} placeholder="https://..."/></label>
+          </div>
+          <label>Beschrijving afbeelding<input name="hero_image_alt" maxLength={300} defaultValue={selectedTemplate?.default_hero_image_alt ?? ""} placeholder="Beschrijf wat er op de afbeelding staat"/></label>
           <label>Nieuwsbrieftekst<textarea name="body_text" rows={16} required defaultValue={body}/></label>
-          <p className="form-hint">De uitschrijfinstructie wordt automatisch toegevoegd. Maximaal 100 actieve ontvangers per Gmail-verzending.</p>
+          <p className="form-hint">De applicatie maakt automatisch veilige HTML én een tekstversie. Afbeeldingen moeten publiek bereikbaar zijn via HTTPS. De uitschrijfinstructie wordt automatisch toegevoegd.</p>
           <div className="form-actions"><button className="primary" disabled={!gmail.configured || !activeLists.length}><Newspaper size={16}/>Gmail-concept aanmaken</button></div>
         </form>
       </section>}

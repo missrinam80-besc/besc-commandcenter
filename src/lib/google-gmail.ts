@@ -27,6 +27,7 @@ export function gmailRawMessage(input: {
   bcc?: string[];
   subject: string;
   body: string;
+  html?: string;
 }) {
   const headers = [
     `From: ${cleanHeader(input.sender)}`,
@@ -35,10 +36,19 @@ export function gmailRawMessage(input: {
     input.bcc?.length ? `Bcc: ${input.bcc.map(cleanHeader).join(", ")}` : null,
     `Subject: ${cleanHeader(input.subject)}`,
     "MIME-Version: 1.0",
-    'Content-Type: text/plain; charset="UTF-8"',
-    "Content-Transfer-Encoding: 8bit",
   ].filter(Boolean);
-  return Buffer.from(`${headers.join("\r\n")}\r\n\r\n${input.body.replace(/\r?\n/g, "\r\n")}`, "utf8")
+  const plainBody = input.body.replace(/\r?\n/g, "\r\n");
+  let message: string;
+  if (input.html) {
+    const boundary = `besc-${Buffer.from(input.subject).toString("base64url").slice(0, 24)}`;
+    message = `${headers.join("\r\n")}\r\nContent-Type: multipart/alternative; boundary="${boundary}"\r\n\r\n`
+      + `--${boundary}\r\nContent-Type: text/plain; charset="UTF-8"\r\nContent-Transfer-Encoding: 8bit\r\n\r\n${plainBody}\r\n`
+      + `--${boundary}\r\nContent-Type: text/html; charset="UTF-8"\r\nContent-Transfer-Encoding: 8bit\r\n\r\n${input.html.replace(/\r?\n/g, "\r\n")}\r\n`
+      + `--${boundary}--`;
+  } else {
+    message = `${headers.join("\r\n")}\r\nContent-Type: text/plain; charset="UTF-8"\r\nContent-Transfer-Encoding: 8bit\r\n\r\n${plainBody}`;
+  }
+  return Buffer.from(message, "utf8")
     .toString("base64url");
 }
 
@@ -122,6 +132,7 @@ export async function saveGmailDraft(input: {
   bcc?: string[];
   subject: string;
   body: string;
+  html?: string;
 }) {
   const sender = googleGmailConfiguration().sender;
   const payload = { message: { raw: gmailRawMessage({ ...input, sender }) } };

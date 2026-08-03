@@ -5,6 +5,7 @@ import { emailTemplateVariables } from "@/lib/email-templates";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { isManager } from "@/lib/permissions";
 import { saveEmailTemplate, toggleEmailTemplate } from "./actions";
+import { newsletterVariantLabels } from "@/lib/newsletter-html";
 
 const categoryLabels: Record<string, string> = {
   sponsor_follow_up: "Sponsoropvolging", event_communication: "Eventcommunicatie",
@@ -37,6 +38,12 @@ export default async function TemplatePage({ searchParams }: { searchParams: Pro
           </div>
           <label>Onderwerp<input name="subject_template" required defaultValue={editing?.subject_template ?? ""}/></label>
           <label>Bericht<textarea name="body_template" rows={14} required defaultValue={editing?.body_template ?? ""}/></label>
+          <div className="form-row">
+            <label>Nieuwsbriefopmaak<select name="newsletter_variant" defaultValue={editing?.newsletter_variant ?? "besc"}>{Object.entries(newsletterVariantLabels).map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+            <label>Standaardafbeelding (HTTPS)<input type="url" name="default_hero_image_url" defaultValue={editing?.default_hero_image_url ?? ""}/></label>
+            <label>Beschrijving afbeelding<input name="default_hero_image_alt" maxLength={300} defaultValue={editing?.default_hero_image_alt ?? ""}/></label>
+          </div>
+          <p className="form-hint">Deze opmaakvelden worden alleen gebruikt wanneer het sjabloon voor een nieuwsbrief wordt gekozen.</p>
           <div className="form-actions"><button className="primary">Sjabloon opslaan</button></div>
         </form>
       </section>}

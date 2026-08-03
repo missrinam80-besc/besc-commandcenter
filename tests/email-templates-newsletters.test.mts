@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { renderEmailTemplate, unresolvedEmailVariables } from "../src/lib/email-templates.ts";
+import { newsletterHtml, safeNewsletterImageUrl } from "../src/lib/newsletter-html.ts";
 
 const migration = readFileSync("supabase/migrations/20260731100000_add_email_templates_and_newsletters.sql", "utf8");
 const newsletterActions = readFileSync("src/app/app/nieuwsbrieven/actions.ts", "utf8");
@@ -29,6 +30,34 @@ test("nieuwsbrieven beperken Gmail-ontvangers en gebruiken BCC", () => {
   assert.match(newsletterActions, /recipients\.length > 100/);
   assert.match(newsletterActions, /bcc: recipients/);
   assert.match(gmail, /`Bcc:/);
+});
+
+test("HTML-nieuwsbrieven blijven veilig en behouden een tekstfallback", () => {
+  const html = newsletterHtml({
+    title: "BESC <update>",
+    bodyText: "Welkom <script>alert(1)</script>",
+    heroImageUrl: "https://example.com/header.png",
+    unsubscribeUrl: "https://example.com/uitschrijven",
+  });
+  assert.match(html, /BESC &lt;update&gt;/);
+  assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+  assert.doesNotMatch(html, /<script>/);
+  assert.equal(safeNewsletterImageUrl("http://example.com/onveilig.png"), null);
+  assert.match(gmail, /Content-Type: multipart\/alternative/);
+  assert.match(gmail, /Content-Type: text\/plain/);
+  assert.match(gmail, /Content-Type: text\/html/);
+});
+
+test("nieuwsbriefopmaak wordt additief in templates en verzendingen opgeslagen", () => {
+  const htmlMigration = readFileSync("supabase/migrations/20260803130000_add_html_newsletters.sql", "utf8");
+  const layouts = readFileSync("supabase/migrations/20260803132000_seed_newsletter_layouts.sql", "utf8");
+  assert.match(htmlMigration, /newsletter_variant/);
+  assert.match(htmlMigration, /body_html/);
+  assert.match(layouts, /'event',true/);
+  assert.match(layouts, /'partner',true/);
+  assert.match(layouts, /'compact',true/);
+  assert.match(newsletterActions, /body_html: html/);
+  assert.match(newsletterActions, /html,/);
 });
 
 test("nieuwsbriefverzending vereist goedkeuring en registreert Gmail IDs", () => {
