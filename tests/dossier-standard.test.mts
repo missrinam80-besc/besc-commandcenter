@@ -158,3 +158,10 @@ test("de gedeelde taakmodal ondersteunt project, verantwoordelijke, checklist en
   assert.match(operational, /TaskCreateModal/);
   assert.match(task, /RecordConnectionsPanel entityType="task"/);
 });
+
+test("vergadernotulen blijven Drive-documenten en zijn als PDF exporteerbaar", async () => {
+  const meeting = await source("src/app/app/vergaderingen/[id]/page.tsx");
+  assert.match(meeting, /google_id,name,web_url/);
+  assert.match(meeting, /export\?format=pdf/);
+  assert.match(meeting, /PDF downloaden/);
+});

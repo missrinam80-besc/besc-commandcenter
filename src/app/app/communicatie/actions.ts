@@ -52,6 +52,7 @@ export async function saveEmailCommunication(formData: FormData) {
     title: z.string().trim().min(2).max(240),
     to_addresses: z.string(),
     cc_addresses: z.string().optional(),
+    bcc_addresses: z.string().optional(),
     subject: z.string().trim().min(2).max(300),
     body_text: z.string().trim().min(2).max(20000),
     follow_up_date: z.string().optional(),
@@ -62,7 +63,8 @@ export async function saveEmailCommunication(formData: FormData) {
   }
   const to = emails(parsed.data.to_addresses);
   const cc = parsed.data.cc_addresses ? emails(parsed.data.cc_addresses) : [];
-  if (!to || cc === null) redirect("/app/communicatie?fout=emailadressen");
+  const bcc = parsed.data.bcc_addresses ? emails(parsed.data.bcc_addresses) : [];
+  if (!to || cc === null || bcc === null) redirect("/app/communicatie?fout=emailadressen");
 
   const context = await requireActiveMembership();
   const source = await dossier(context, parsed.data.entity_type, parsed.data.entity_id);
@@ -90,6 +92,7 @@ export async function saveEmailCommunication(formData: FormData) {
       title: parsed.data.title,
       to_addresses: to,
       cc_addresses: cc,
+      bcc_addresses: bcc,
       subject: parsed.data.subject,
       body_text: parsed.data.body_text,
       follow_up_date: parsed.data.follow_up_date || null,
@@ -110,6 +113,7 @@ export async function saveEmailCommunication(formData: FormData) {
       title: parsed.data.title,
       to_addresses: to,
       cc_addresses: cc,
+      bcc_addresses: bcc,
       subject: parsed.data.subject,
       body_text: parsed.data.body_text,
       follow_up_date: parsed.data.follow_up_date || null,
@@ -124,6 +128,7 @@ export async function saveEmailCommunication(formData: FormData) {
       draftId: currentDraftId,
       to,
       cc,
+      bcc,
       subject: parsed.data.subject,
       body: parsed.data.body_text,
     });

@@ -49,6 +49,7 @@ export default async function EmailDetail({ params, searchParams }: { params: Pr
                 <label>Interne titel<input name="title" required defaultValue={item.title}/></label>
                 <label>Aan<input name="to_addresses" required defaultValue={item.to_addresses.join("; ")}/></label>
                 <label>CC<input name="cc_addresses" defaultValue={item.cc_addresses.join("; ")}/></label>
+                <label>BCC<input name="bcc_addresses" defaultValue={(item.bcc_addresses ?? []).join("; ")}/></label>
                 <label>Onderwerp<input name="subject" required defaultValue={item.subject}/></label>
                 <label>Opvolgdatum<input name="follow_up_date" type="date" defaultValue={item.follow_up_date || ""}/></label>
               </div>
@@ -59,7 +60,7 @@ export default async function EmailDetail({ params, searchParams }: { params: Pr
         ) : (
           <section className="form-card email-preview">
             <div className="form-heading"><div><span className="eyebrow">BERICHT</span><h2>{item.subject}</h2></div></div>
-            <dl><div><dt>Aan</dt><dd>{item.to_addresses.join(", ")}</dd></div>{item.cc_addresses.length > 0 && <div><dt>CC</dt><dd>{item.cc_addresses.join(", ")}</dd></div>}</dl>
+            <dl><div><dt>Aan</dt><dd>{item.to_addresses.join(", ")}</dd></div>{item.cc_addresses.length > 0 && <div><dt>CC</dt><dd>{item.cc_addresses.join(", ")}</dd></div>}{(item.bcc_addresses ?? []).length > 0 && <div><dt>BCC</dt><dd>{item.bcc_addresses.join(", ")}</dd></div>}</dl>
             <pre>{item.body_text}</pre>
           </section>
         )}
