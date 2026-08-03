@@ -2,6 +2,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { resolveAuthenticatedHome } from "@/lib/auth-destination";
 
 async function getSiteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
@@ -22,9 +23,9 @@ export async function signInWithPassword(formData: FormData) {
   const password = String(formData.get("password") || "");
   if (!email || !password) redirect("/login?error=velden");
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) redirect("/login?error=inloggegevens");
-  redirect("/app");
+  redirect(await resolveAuthenticatedHome(supabase, data.user.id));
 }
 
 export async function registerWithPassword(formData: FormData) {
