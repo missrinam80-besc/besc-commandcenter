@@ -10,6 +10,7 @@ export type KpiOptions = {
   partners: Option[];
   tasks: Option[];
   people: Option[];
+  social: Option[];
 };
 
 const domains: Record<string, string> = {
@@ -53,6 +54,7 @@ export function KpiForm({ record = {}, options }: { record?: Record<string, unkn
       <RelationSelect name="partner_id" label="Sponsor / partner" value={record.partner_id} options={options.partners}/>
       <RelationSelect name="task_id" label="Actie / taak" value={record.task_id} options={options.tasks}/>
       <RelationSelect name="community_person_id" label="Creator / streamer" value={record.community_person_id} options={options.people}/>
+      <RelationSelect name="social_post_id" label="Social post" value={record.social_post_id} options={options.social}/>
     </div></fieldset>
     <MarkdownField label="Metricdefinitie" name="metric_definition" rows={3} defaultValue={String(record.metric_definition ?? "")} placeholder="Wat meet deze KPI precies en hoe wordt ze berekend?"/>
     <MarkdownField label="Notities" name="notes" rows={4} defaultValue={String(record.notes ?? "")}/>

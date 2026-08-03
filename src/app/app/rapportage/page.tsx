@@ -18,7 +18,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   const year = Number(q.jaar) || new Date().getFullYear();
   let request = supabase.from("kpi_records").select("*").eq("organization_id", org).is("deleted_at", null).gte("period_end", `${year}-01-01`).lte("period_end", `${year}-12-31`).order("period_end", { ascending: false });
   if (q.domein) request = request.eq("domain", q.domein);
-  const [records, projects, campaigns, events, content, partners, tasks, people] = await Promise.all([
+  const [records, projects, campaigns, events, content, partners, tasks, people, social] = await Promise.all([
     request,
     supabase.from("projects").select("id,title").eq("organization_id", org).is("deleted_at", null).order("title"),
     supabase.from("campaigns").select("id,title").eq("organization_id", org).is("deleted_at", null).order("title"),
@@ -27,15 +27,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
     supabase.from("partners").select("id,name").eq("organization_id", org).is("deleted_at", null).order("name"),
     supabase.from("tasks").select("id,title").eq("organization_id", org).is("deleted_at", null).order("title"),
     supabase.from("community_people").select("id,name:display_name").eq("organization_id", org).is("deleted_at", null).order("display_name"),
+    supabase.from("social_posts").select("id,title").eq("organization_id", org).is("deleted_at", null).order("title"),
   ]);
-  const options: KpiOptions = { projects: projects.data ?? [], campaigns: campaigns.data ?? [], events: events.data ?? [], content: content.data ?? [], partners: partners.data ?? [], tasks: tasks.data ?? [], people: people.data ?? [] };
+  const options: KpiOptions = { projects: projects.data ?? [], campaigns: campaigns.data ?? [], events: events.data ?? [], content: content.data ?? [], partners: partners.data ?? [], tasks: tasks.data ?? [], people: people.data ?? [], social: social.data ?? [] };
   const rows = records.data ?? [];
   const targets = rows.filter((item) => item.target !== null && Number(item.target) !== 0);
   const reached = targets.filter((item) => Number(item.value) >= Number(item.target)).length;
   const exportQuery = new URLSearchParams({ jaar: String(year) });
   if (q.domein) exportQuery.set("domein", q.domein);
   return <AppShell active="Rapportage & KPI">
-    <header className="topbar module-top"><div><p>RESULTATEN & INZICHT</p><h1>Rapportage & KPI</h1></div><div className="module-head-actions"><Link className="row-action" href={`/app/rapportage/export?${exportQuery}`}>CSV exporteren</Link>{manager && <Link className="row-action" href="/app/rapportage/management">Managementoverzicht</Link>}{manager && <Link className="primary" href="?nieuw=1">Nieuwe KPI</Link>}</div></header>
+    <header className="topbar module-top"><div><p>RESULTATEN & INZICHT</p><h1>Rapportage & KPI</h1></div><div className="module-head-actions"><Link className="row-action" href={`/app/rapportage/export?${exportQuery}`}>CSV exporteren</Link>{manager && <Link className="row-action" href="/app/rapportage/social">Social inzichten</Link>}{manager && <Link className="row-action" href="/app/rapportage/management">Managementoverzicht</Link>}{manager && <Link className="primary" href="?nieuw=1">Nieuwe KPI</Link>}</div></header>
     <div className="module-body">
       <p className="lead">Volg resultaten over alle BESC-domeinen. Elke registratie vermeldt bron, periode, definitie en gekoppelde dossiers.</p>
       {q.fout && <div className="error-note">Opslaan is mislukt ({q.fout}).</div>}{q.succes && <div className="success">KPI geregistreerd.</div>}

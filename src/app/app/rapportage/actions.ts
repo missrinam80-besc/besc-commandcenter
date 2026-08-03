@@ -37,6 +37,7 @@ const kpiSchema = z.object({
   partner_id: z.string().uuid().optional().or(z.literal("")),
   task_id: z.string().uuid().optional().or(z.literal("")),
   community_person_id: z.string().uuid().optional().or(z.literal("")),
+  social_post_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 const optionalValues = (values: z.infer<typeof kpiSchema>) => ({
@@ -54,6 +55,7 @@ const optionalValues = (values: z.infer<typeof kpiSchema>) => ({
   partner_id: values.partner_id || null,
   task_id: values.task_id || null,
   community_person_id: values.community_person_id || null,
+  social_post_id: values.social_post_id || null,
 });
 
 export async function saveKpi(formData: FormData) {

@@ -14,7 +14,7 @@ test("KPI-registraties koppelen bron, definitie en alle relevante dossiers", asy
   ]);
   assert.match(migration, /task_id uuid references public\.tasks/);
   assert.match(migration, /collection_method in \('manual', 'imported', 'api'\)/);
-  for (const field of ["project_id", "campaign_id", "event_id", "content_id", "partner_id", "task_id", "community_person_id"]) {
+  for (const field of ["project_id", "campaign_id", "event_id", "content_id", "partner_id", "task_id", "community_person_id", "social_post_id"]) {
     assert.match(form, new RegExp(`name=["']${field}["']`));
     assert.match(actions, new RegExp(`${field}: values\\.${field} \\|\\| null`));
   }
@@ -22,6 +22,8 @@ test("KPI-registraties koppelen bron, definitie en alle relevante dossiers", asy
   assert.match(form, /name="metric_definition"/);
   assert.match(detail, /Verzamelmethode/);
 });
+
+test("social inzichten koppelen publicaties aan controleerbare KPI-metingen",async()=>{const[page,route,migration]=await Promise.all([source("src/app/app/rapportage/social/page.tsx"),source("src/app/app/rapportage/social/export/route.ts"),source("supabase/migrations/20260803193000_link_kpis_to_social_posts.sql")]);assert.match(migration,/social_post_id uuid references public\.social_posts/);assert.match(page,/PLATFORMOVERZICHT/);assert.match(page,/collection_method/);assert.match(page,/ManagementReportActions/);assert.match(route,/Content-Disposition/)});
 
 test("sponsorrapport is online, afdrukbaar en als CSV beschikbaar", async () => {
   const [page, detail, exportRoute] = await Promise.all([
