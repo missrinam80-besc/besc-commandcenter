@@ -5,8 +5,11 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { FormModal } from "@/components/form-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { socialAccountStatuses, socialPlatformDefinitions, socialPlatforms } from "@/lib/social-connectors";
+import { metaConfiguration } from "@/lib/meta-integration";
+import { threadsConfiguration } from "@/lib/threads-integration";
+import { twitchConfiguration } from "@/lib/twitch-integration";
 import { youtubeConfiguration } from "@/lib/youtube-integration";
-import { changeSocialAccountState, saveSocialAccount, syncYouTubeAccount } from "./actions";
+import { changeSocialAccountState, saveSocialAccount, syncMetaAccount, syncThreadsAccount, syncTwitchAccount, syncYouTubeAccount } from "./actions";
 
 const statusLabels: Record<string, string> = {
   pending: "Wacht op koppeling",
@@ -84,6 +87,9 @@ export default async function SocialIntegrationsPage({
   const accounts = (accountData ?? []) as SocialAccount[];
   const runs = (runData ?? []) as SyncRun[];
   const youtubeConfig = youtubeConfiguration();
+  const metaConfig = metaConfiguration();
+  const threadsConfig = threadsConfiguration();
+  const twitchConfig = twitchConfiguration();
   const selected = accounts.find((item) => item.id === query.account);
   const showForm = query.nieuw === "1" || Boolean(selected);
 
@@ -99,9 +105,12 @@ export default async function SocialIntegrationsPage({
         {query.succes ? <div className="success">Het social account is bijgewerkt.</div> : null}
 
         <section className="integration-security">
-          <ShieldCheck/><div><strong>Veilige koppeling voorbereid</strong><span>Alleen de serverrol kan OAuth-geheimen opslaan of lezen. De concrete YouTube-koppeling is de eerstvolgende pilot.</span></div>
+          <ShieldCheck/><div><strong>Veilige koppelingen</strong><span>Alleen de serverrol kan OAuth-geheimen opslaan of lezen. YouTube, Facebook en Instagram gebruiken officiële OAuth- en analytics-API&apos;s.</span></div>
         </section>
         {!youtubeConfig.configured ? <div className="error-note">Voor de YouTube-pilot ontbreken nog servervariabelen: {youtubeConfig.missing.join(", ")}. De OAuth-callback wordt <code>{youtubeConfig.callbackUrl}</code>.</div> : null}
+        {!metaConfig.configured ? <div className="error-note">Voor de Meta-pilot ontbreken nog servervariabelen: {metaConfig.missing.join(", ")}. De OAuth-callback wordt <code>{metaConfig.callbackUrl}</code>.</div> : null}
+        {!threadsConfig.configured ? <div className="error-note">Voor Threads ontbreken nog servervariabelen: {threadsConfig.missing.join(", ")}. De OAuth-callback wordt <code>{threadsConfig.callbackUrl}</code>.</div> : null}
+        {!twitchConfig.configured ? <div className="error-note">Voor Twitch ontbreken nog servervariabelen: {twitchConfig.missing.join(", ")}. De OAuth-callback wordt <code>{twitchConfig.callbackUrl}</code>.</div> : null}
 
         <section className="social-platform-grid">
           {socialPlatforms.map((platform) => {
@@ -111,6 +120,7 @@ export default async function SocialIntegrationsPage({
               <div><strong>{definition.label}</strong><span>{definition.phase}</span></div>
               <b>{definition.state === "ready_for_pilot" ? "Pilot gereed" : definition.state === "planned" ? "Gepland" : "Voorwaardelijk"}</b>
               <p>{definition.capabilities.join(" · ")}</p>
+              {definition.requirement ? <small>Voorwaarde: {definition.requirement}</small> : null}
               <small>{count} account{count === 1 ? "" : "s"} geregistreerd</small>
             </article>;
           })}
@@ -129,6 +139,12 @@ export default async function SocialIntegrationsPage({
                 <div className="social-account-actions">
                   {account.platform === "youtube" && account.status === "connected" ? <form action={syncYouTubeAccount}><input type="hidden" name="id" value={account.id}/><button><RefreshCw size={13}/>Nu synchroniseren</button></form> : null}
                   {account.platform === "youtube" && account.status !== "connected" && youtubeConfig.configured ? <Link href={`/app/integraties/social/youtube/start?account=${account.id}`}>Koppel YouTube</Link> : null}
+                  {["facebook", "instagram"].includes(account.platform) && account.status === "connected" ? <form action={syncMetaAccount}><input type="hidden" name="id" value={account.id}/><button><RefreshCw size={13}/>Nu synchroniseren</button></form> : null}
+                  {["facebook", "instagram"].includes(account.platform) && account.status !== "connected" && metaConfig.configured ? <Link href={`/app/integraties/social/meta/start?account=${account.id}`}>Koppel via Meta</Link> : null}
+                  {account.platform === "threads" && account.status === "connected" ? <form action={syncThreadsAccount}><input type="hidden" name="id" value={account.id}/><button><RefreshCw size={13}/>Nu synchroniseren</button></form> : null}
+                  {account.platform === "threads" && account.status !== "connected" && threadsConfig.configured ? <Link href={`/app/integraties/social/threads/start?account=${account.id}`}>Koppel Threads</Link> : null}
+                  {account.platform === "twitch" && account.status === "connected" ? <form action={syncTwitchAccount}><input type="hidden" name="id" value={account.id}/><button><RefreshCw size={13}/>Nu synchroniseren</button></form> : null}
+                  {account.platform === "twitch" && account.status !== "connected" && twitchConfig.configured ? <Link href={`/app/integraties/social/twitch/start?account=${account.id}`}>Koppel Twitch</Link> : null}
                   <Link href={`?account=${account.id}`}>Beheren</Link>
                 </div>
               </article>;

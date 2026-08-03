@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { socialAccountStatuses, socialPlatforms } from "@/lib/social-connectors";
+import { syncMetaAccountById } from "@/lib/meta-sync";
+import { syncThreadsAccountById } from "@/lib/threads-sync";
+import { syncTwitchAccountById } from "@/lib/twitch-sync";
 import { syncYouTubeAccountById } from "@/lib/youtube-sync";
 
 const accountSchema = z.object({
@@ -98,4 +101,51 @@ export async function syncYouTubeAccount(formData: FormData) {
   revalidatePath("/app/integraties/social");
   revalidatePath("/app/rapportage/social");
   redirect("/app/integraties/social?succes=youtube-sync");
+}
+
+export async function syncMetaAccount(formData: FormData) {
+  const id = z.string().uuid().safeParse(formData.get("id"));
+  if (!id.success) redirect("/app/integraties/social?fout=account");
+  const { supabase, user, membership } = await requireActiveMembership();
+  if (!["admin", "board"].includes(membership.role)) redirect("/app?fout=rechten");
+  const { data: account } = await supabase.from("social_accounts").select("id,platform,status").eq("id", id.data).eq("organization_id", membership.organization_id).in("platform", ["facebook", "instagram"]).is("deleted_at", null).maybeSingle();
+  if (!account || account.status !== "connected") redirect("/app/integraties/social?fout=niet-verbonden");
+  try {
+    await syncMetaAccountById(account.id, "manual", user.id);
+  } catch {
+    redirect("/app/integraties/social?fout=meta-sync");
+  }
+  revalidatePath("/app/integraties/social");
+  revalidatePath("/app/rapportage/social");
+  redirect("/app/integraties/social?succes=meta-sync");
+}
+
+export async function syncThreadsAccount(formData: FormData) {
+  const id = z.string().uuid().safeParse(formData.get("id"));
+  if (!id.success) redirect("/app/integraties/social?fout=account");
+  const { supabase, user, membership } = await requireActiveMembership();
+  if (!["admin", "board"].includes(membership.role)) redirect("/app?fout=rechten");
+  const { data: account } = await supabase.from("social_accounts").select("id,status").eq("id", id.data).eq("organization_id", membership.organization_id).eq("platform", "threads").is("deleted_at", null).maybeSingle();
+  if (!account || account.status !== "connected") redirect("/app/integraties/social?fout=niet-verbonden");
+  try {
+    await syncThreadsAccountById(account.id, "manual", user.id);
+  } catch {
+    redirect("/app/integraties/social?fout=threads-sync");
+  }
+  revalidatePath("/app/integraties/social");
+  revalidatePath("/app/rapportage/social");
+  redirect("/app/integraties/social?succes=threads-sync");
+}
+
+export async function syncTwitchAccount(formData: FormData) {
+  const id = z.string().uuid().safeParse(formData.get("id"));
+  if (!id.success) redirect("/app/integraties/social?fout=account");
+  const { supabase, user, membership } = await requireActiveMembership();
+  if (!["admin", "board"].includes(membership.role)) redirect("/app?fout=rechten");
+  const { data: account } = await supabase.from("social_accounts").select("id,status").eq("id", id.data).eq("organization_id", membership.organization_id).eq("platform", "twitch").is("deleted_at", null).maybeSingle();
+  if (!account || account.status !== "connected") redirect("/app/integraties/social?fout=niet-verbonden");
+  try { await syncTwitchAccountById(account.id, "manual", user.id); }
+  catch { redirect("/app/integraties/social?fout=twitch-sync"); }
+  revalidatePath("/app/integraties/social"); revalidatePath("/app/rapportage/social");
+  redirect("/app/integraties/social?succes=twitch-sync");
 }

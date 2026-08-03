@@ -1,4 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { syncMetaAccountById } from "@/lib/meta-sync";
+import { syncThreadsAccountById } from "@/lib/threads-sync";
+import { syncTwitchAccountById } from "@/lib/twitch-sync";
 import { syncYouTubeAccountById } from "@/lib/youtube-sync";
 
 export const maxDuration = 60;
@@ -10,8 +13,8 @@ export async function GET(request: Request) {
 
   const admin = createAdminClient();
   const { data: accounts, error } = await admin.from("social_accounts")
-    .select("id,last_sync_at,sync_interval_minutes")
-    .eq("platform", "youtube")
+    .select("id,platform,last_sync_at,sync_interval_minutes")
+    .in("platform", ["youtube", "facebook", "instagram", "threads", "twitch"])
     .eq("status", "connected")
     .eq("sync_enabled", true)
     .is("deleted_at", null)
@@ -29,7 +32,13 @@ export async function GET(request: Request) {
   let skipped = 0;
   for (const account of due) {
     try {
-      const result = await syncYouTubeAccountById(account.id, "scheduled");
+      const result = account.platform === "youtube"
+        ? await syncYouTubeAccountById(account.id, "scheduled")
+        : account.platform === "threads"
+          ? await syncThreadsAccountById(account.id, "scheduled")
+          : account.platform === "twitch"
+            ? await syncTwitchAccountById(account.id, "scheduled")
+            : await syncMetaAccountById(account.id, "scheduled");
       if (result.status === "skipped") skipped += 1;
       else succeeded += 1;
     } catch {

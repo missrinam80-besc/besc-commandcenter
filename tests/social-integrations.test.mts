@@ -10,6 +10,18 @@ const youtube = readFileSync("src/lib/youtube-integration.ts", "utf8");
 const youtubeStart = readFileSync("src/app/app/integraties/social/youtube/start/route.ts", "utf8");
 const youtubeCallback = readFileSync("src/app/app/integraties/social/youtube/callback/route.ts", "utf8");
 const youtubeSync = readFileSync("src/lib/youtube-sync.ts", "utf8");
+const meta = readFileSync("src/lib/meta-integration.ts", "utf8");
+const metaStart = readFileSync("src/app/app/integraties/social/meta/start/route.ts", "utf8");
+const metaCallback = readFileSync("src/app/app/integraties/social/meta/callback/route.ts", "utf8");
+const metaSync = readFileSync("src/lib/meta-sync.ts", "utf8");
+const threads = readFileSync("src/lib/threads-integration.ts", "utf8");
+const threadsStart = readFileSync("src/app/app/integraties/social/threads/start/route.ts", "utf8");
+const threadsCallback = readFileSync("src/app/app/integraties/social/threads/callback/route.ts", "utf8");
+const threadsSync = readFileSync("src/lib/threads-sync.ts", "utf8");
+const twitch = readFileSync("src/lib/twitch-integration.ts", "utf8");
+const twitchStart = readFileSync("src/app/app/integraties/social/twitch/start/route.ts", "utf8");
+const twitchCallback = readFileSync("src/app/app/integraties/social/twitch/callback/route.ts", "utf8");
+const twitchSync = readFileSync("src/lib/twitch-sync.ts", "utf8");
 const cronRoute = readFileSync("src/app/api/cron/social-sync/route.ts", "utf8");
 const vercel = readFileSync("vercel.json", "utf8");
 const reportPage = readFileSync("src/app/app/rapportage/social/page.tsx", "utf8");
@@ -53,10 +65,84 @@ test("beheer toont platformfasering, accountstatus en syncgeschiedenis", () => {
     assert.match(connectorDefinitions, new RegExp(`${platform}:`));
   }
   assert.match(connectorDefinitions, /youtube: \{[^\n]+state: "ready_for_pilot"/);
+  assert.match(connectorDefinitions, /facebook: \{[^\n]+state: "ready_for_pilot"/);
+  assert.match(connectorDefinitions, /instagram: \{[^\n]+state: "ready_for_pilot"/);
+  assert.match(connectorDefinitions, /threads: \{[^\n]+state: "ready_for_pilot"/);
+  assert.match(connectorDefinitions, /twitch: \{[^\n]+state: "ready_for_pilot"/);
+  assert.match(connectorDefinitions, /linkedin: \{[^\n]+state: "blocked"[^\n]+Community Management/);
+  assert.match(connectorDefinitions, /tiktok: \{[^\n]+state: "blocked"[^\n]+audit/);
+  assert.match(connectorDefinitions, /x: \{[^\n]+state: "blocked"[^\n]+API-budget/);
   assert.match(page, /Geregistreerde kanalen/);
   assert.match(page, /Recente synchronisaties/);
   assert.match(page, /OAuth-tokens staan versleuteld in Vault/);
   assert.match(page, /changeSocialAccountState/);
+});
+
+test("Twitch gebruikt authorization code, tokenvalidatie en refresh", () => {
+  assert.match(twitch, /grant_type: "authorization_code"/);
+  assert.match(twitch, /grant_type: "refresh_token"/);
+  assert.match(twitch, /oauth2\/validate/);
+  assert.match(twitchStart, /randomBytes\(32\)/);
+  assert.match(twitchStart, /httpOnly: true/);
+  assert.match(twitchCallback, /state !== expectedState/);
+  assert.match(twitchCallback, /store_social_account_credentials/);
+});
+
+test("Twitch-sync beperkt zich tot operationele kanaaldata", () => {
+  assert.match(twitch, /api\.twitch\.tv\/helix/);
+  assert.match(twitch, /channels\?broadcaster_id/);
+  assert.match(twitch, /streams\?user_id/);
+  assert.match(twitch, /schedule\?broadcaster_id/);
+  assert.match(twitchSync, /current_viewers/);
+  assert.match(twitchSync, /scheduled_streams/);
+  assert.match(twitchSync, /current_operational_state/);
+  assert.doesNotMatch(twitch, /followers\?/);
+  assert.match(actions, /syncTwitchAccountById\(account\.id, "manual", user\.id\)/);
+});
+
+test("Threads gebruikt een afzonderlijke OAuth-flow met verlengbare tokens", () => {
+  assert.match(threads, /threads_basic/);
+  assert.match(threads, /threads_manage_insights/);
+  assert.match(threads, /th_exchange_token/);
+  assert.match(threads, /th_refresh_token/);
+  assert.match(threads, /Authorization: `Bearer \$\{accessToken\}`/);
+  assert.match(threadsStart, /randomBytes\(32\)/);
+  assert.match(threadsStart, /httpOnly: true/);
+  assert.match(threadsCallback, /state !== expectedState/);
+  assert.match(threadsCallback, /store_social_account_credentials/);
+});
+
+test("Threads-sync schrijft officiële accountinzichten en vernieuwt tokens", () => {
+  assert.match(threads, /threads_insights/);
+  assert.match(threads, /followers_count/);
+  assert.match(threadsSync, /social_metric_snapshots/);
+  assert.match(threadsSync, /last_28_complete_days/);
+  assert.match(threadsSync, /official_api/);
+  assert.match(actions, /syncThreadsAccountById\(account\.id, "manual", user\.id\)/);
+});
+
+test("Meta OAuth gebruikt minimale platformspecifieke scopes en statecontrole", () => {
+  assert.match(meta, /pages_show_list/);
+  assert.match(meta, /pages_read_engagement/);
+  assert.match(meta, /instagram_manage_insights/);
+  assert.match(meta, /fb_exchange_token/);
+  assert.match(metaStart, /randomBytes\(32\)/);
+  assert.match(metaStart, /httpOnly: true/);
+  assert.match(metaStart, /sameSite: "lax"/);
+  assert.match(metaCallback, /state !== expectedState/);
+  assert.match(metaCallback, /store_social_account_credentials/);
+  assert.doesNotMatch(metaCallback, /from\("social_account_credentials"\)/);
+});
+
+test("Meta-sync schrijft herleidbare Facebook- en Instagram-metingen", () => {
+  assert.match(meta, /fan_count,followers_count/);
+  assert.match(meta, /reach,profile_views/);
+  assert.match(metaSync, /social_sync_runs/);
+  assert.match(metaSync, /social_metric_snapshots/);
+  assert.match(metaSync, /last_28_complete_days/);
+  assert.match(metaSync, /official_api/);
+  assert.match(metaSync, /status: "failed"/);
+  assert.match(actions, /syncMetaAccountById\(account\.id, "manual", user\.id\)/);
 });
 
 test("YouTube OAuth gebruikt minimale scopes, statecontrole en servergeheimen", () => {
@@ -88,6 +174,9 @@ test("automatische social sync is afgeschermd, begrensd en idempotent", () => {
   assert.match(cronRoute, /sync_enabled/);
   assert.match(cronRoute, /\.limit\(8\)/);
   assert.match(cronRoute, /syncYouTubeAccountById\(account\.id, "scheduled"\)/);
+  assert.match(cronRoute, /syncMetaAccountById\(account\.id, "scheduled"\)/);
+  assert.match(cronRoute, /syncThreadsAccountById\(account\.id, "scheduled"\)/);
+  assert.match(cronRoute, /syncTwitchAccountById\(account\.id, "scheduled"\)/);
   assert.match(youtubeSync, /scheduled:\$\{Math\.floor/);
   assert.match(vercel, /"path": "\/api\/cron\/social-sync"/);
   assert.match(vercel, /"schedule": "15 4 \* \* \*"/);
