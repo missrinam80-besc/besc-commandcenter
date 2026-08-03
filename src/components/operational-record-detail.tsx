@@ -80,6 +80,7 @@ export async function OperationalRecordDetail({
     budgetResult,
     expenseResult,
     incomeResult,
+    communityOptionsResult,
   ] = await Promise.all([
     supabase.from(config.table).select("*").eq("organization_id", org).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", org).is("deleted_at", null).order("title"),
@@ -100,6 +101,7 @@ export async function OperationalRecordDetail({
     module === "campagnes" ? supabase.from("budget_envelopes").select("id,name,planned_amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("created_at") : Promise.resolve({ data: [] }),
     module === "campagnes" ? supabase.from("expenses").select("id,title,amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("expense_date", { ascending: false }) : Promise.resolve({ data: [] }),
     module === "campagnes" ? supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("expected_date", { ascending: false }) : Promise.resolve({ data: [] }),
+    module === "campagnes" ? supabase.from("community_people").select("id,display_name,handle").eq("organization_id", org).is("deleted_at", null).order("display_name") : Promise.resolve({ data: [] }),
   ]);
 
   if (!recordResult.data) notFound();
@@ -183,7 +185,7 @@ export async function OperationalRecordDetail({
             {module === "campagnes" && <section className="form-card record-notes"><div className="form-heading"><h2>Resultaten en evaluatie</h2></div>{record.results_summary ? <MarkdownContent>{String(record.results_summary)}</MarkdownContent> : <p>Nog geen evaluatie toegevoegd.</p>}</section>}
             {module === "sponsors" && <ApprovalPanel entityType="partner" entityId={id} sourceHref={`/app/sponsors/${id}`} title="Sponsorafspraak goedkeuren"/>}
             {module === "sponsors" && <PartnerSections id={id} contacts={(contactsResult.data ?? []) as unknown as RelatedRow[]} interactions={(interactionsResult.data ?? []) as unknown as RelatedRow[]} campaigns={(partnerCampaignsResult.data ?? []) as unknown as RelatedRow[]} events={[]} content={[]}/>}
-            {module === "campagnes" && <CampaignSections id={id} deliverables={(deliverablesResult.data ?? []) as unknown as RelatedRow[]} social={(socialResult.data ?? []) as unknown as RelatedRow[]} content={((contentResult.data ?? []).filter((item) => item.campaign_id === id)) as unknown as RelatedRow[]}/>} 
+            {module === "campagnes" && <CampaignSections id={id} deliverables={(deliverablesResult.data ?? []) as unknown as RelatedRow[]} social={(socialResult.data ?? []) as unknown as RelatedRow[]} content={((contentResult.data ?? []).filter((item) => item.campaign_id === id)) as unknown as RelatedRow[]} people={(communityOptionsResult.data ?? []) as unknown as RelatedRow[]}/>}
             {module === "community" && <CommunitySections id={id} onboarding={(onboardingResult.data ?? []) as unknown as RelatedRow[]} assignments={(assignmentsResult.data ?? []) as unknown as RelatedRow[]} events={(eventsResult.data ?? []) as unknown as RelatedRow[]} projects={(projectsResult.data ?? []) as unknown as RelatedRow[]}/>}
             {module === "social" && <SocialRelations record={record} variants={(variantsResult.data ?? []) as unknown as RelatedRow[]}/>}
             <RecordLifecyclePanel
