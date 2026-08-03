@@ -56,3 +56,24 @@ test("event- en creatorrapporten gebruiken dezelfde controleerbare uitvoer", asy
   assert.match(eventDetail, /Eventrapport/);
   assert.match(operationalDetail, /Creatorrapport/);
 });
+
+test("sponsor- en eventrapporten kunnen optioneel een Google Slides-pitchdeck maken", async () => {
+  const [workspace, actions, sponsorPage, eventPage, environment] = await Promise.all([
+    source("src/lib/google-workspace.ts"),
+    source("src/app/app/google-document-actions.ts"),
+    source("src/app/app/rapportage/sponsors/[id]/page.tsx"),
+    source("src/app/app/rapportage/events/[id]/page.tsx"),
+    source(".env.example"),
+  ]);
+  assert.match(workspace, /https:\/\/www\.googleapis\.com\/auth\/presentations/);
+  assert.match(workspace, /slides\.googleapis\.com\/v1\/presentations/);
+  assert.match(workspace, /replaceAllText/);
+  assert.match(workspace, /googlePitchdeckConfiguration/);
+  assert.match(environment, /GOOGLE_TEMPLATE_SPONSOR_PITCHDECK_ID=/);
+  assert.match(environment, /GOOGLE_TEMPLATE_EVENT_PITCHDECK_ID=/);
+  assert.match(actions, /generateSponsorPitchdeck/);
+  assert.match(actions, /generateEventPitchdeck/);
+  assert.match(actions, /saveDocumentMetadata/);
+  assert.match(sponsorPage, /Google Slides-pitchdeck/);
+  assert.match(eventPage, /Google Slides-pitchdeck/);
+});
