@@ -4,7 +4,7 @@ import {
   Archive, BarChart3, Bell, BookOpen, Bot, CalendarDays, CheckCircle2,
   ChevronDown, CircleDollarSign, CircleUserRound, Clapperboard, Clock3, CloudCog,
   FileText, FolderKanban, Handshake, Inbox, Landmark, LayoutDashboard, LogOut,
-  Mail, Megaphone, Menu, Newspaper, CircleHelp, ShoppingBag, Sparkles, UserRoundSearch, Users,
+  Mail, Megaphone, Menu, Newspaper, CircleHelp, Rocket, ShoppingBag, Sparkles, UserRoundSearch, Users,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
@@ -93,6 +93,7 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Documenten & Drive", href: "/app/documenten", icon: FileText },
       { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin", "board"] },
+      { label: "Productieacceptatie", href: "/app/acceptatie", icon: Rocket, roles: ["admin", "board"] },
       { label: "Archief", href: "/app/archief", icon: Archive, roles: ["admin", "board"] },
       { label: "Historiek", href: "/app/historiek", icon: Archive, roles: ["admin", "board"] },
       { label: "Activiteit", href: "/app/activiteit", icon: Clock3, roles: ["admin", "board"] },
@@ -126,6 +127,7 @@ const helpSearchByActive: Record<string, string> = {
   "Rapportage & KPI": "Rapportage",
   "Documenten & Drive": "Drive",
   Integraties: "Integraties",
+  Productieacceptatie: "Productie acceptatie",
   Archief: "Archiveren",
   Historiek: "Historiek",
   Activiteit: "Activiteit",
