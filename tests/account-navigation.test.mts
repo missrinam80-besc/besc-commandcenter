@@ -30,6 +30,8 @@ test("zijnavigatie volgt herkenbare werkstromen", () => {
     ['label: "Nieuwsbrieven"', 'label: "AI Hub"'],
     ['label: "Vergaderingen & besluiten"', 'label: "VZW-administratie"'],
     ['label: "Rapportage & KPI"', 'label: "Beheer"'],
+    ['label: "Integraties"', 'label: "Productieacceptatie"'],
+    ['label: "Productieacceptatie"', 'label: "Historiek"'],
     ['label: "Historiek"', 'label: "Activiteit"'],
     ['label: "Activiteit"', 'label: "Gebruikers & toegang"'],
   ]) {
@@ -37,6 +39,10 @@ test("zijnavigatie volgt herkenbare werkstromen", () => {
   }
   assert.doesNotMatch(shell, /href: "\/app\/financien\/rapportage"/);
   assert.match(shell, /href="\/app\/account"/);
+  assert.match(shell, /helpHref\(active\)/);
+  assert.match(shell, /Help bij deze pagina/);
+  assert.match(shell, /context-help-link/);
+  assert.match(shell, /\{ label: "Productieacceptatie", href: "\/app\/acceptatie", icon: Rocket, roles: \["admin", "board"\] \}/);
   assert.match(shell, /\{ label: "Gebruikers & toegang", href: "\/app\/beheer\/gebruikers", icon: Users, roles: \["admin"\] \}/);
   assert.ok(shell.indexOf("<Navigation active={active}") < shell.indexOf("<GlobalSearchTrigger active={active"), "Zoeken moet onder de gegroepeerde navigatie staan");
 });

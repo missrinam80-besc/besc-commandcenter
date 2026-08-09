@@ -4,7 +4,7 @@ import {
   Archive, BarChart3, Bell, BookOpen, Bot, CalendarDays, CheckCircle2,
   ChevronDown, CircleDollarSign, CircleUserRound, Clapperboard, Clock3, CloudCog,
   FileText, FolderKanban, Handshake, Inbox, Landmark, LayoutDashboard, LogOut,
-  Mail, Megaphone, Menu, Newspaper, ShoppingBag, Sparkles, UserRoundSearch, Users,
+  Mail, Megaphone, Menu, Newspaper, CircleHelp, Rocket, ShoppingBag, Sparkles, UserRoundSearch, Users,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
@@ -93,6 +93,7 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Documenten & Drive", href: "/app/documenten", icon: FileText },
       { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin", "board"] },
+      { label: "Productieacceptatie", href: "/app/acceptatie", icon: Rocket, roles: ["admin", "board"] },
       { label: "Archief", href: "/app/archief", icon: Archive, roles: ["admin", "board"] },
       { label: "Historiek", href: "/app/historiek", icon: Archive, roles: ["admin", "board"] },
       { label: "Activiteit", href: "/app/activiteit", icon: Clock3, roles: ["admin", "board"] },
@@ -100,6 +101,44 @@ const navigationGroups: NavigationGroup[] = [
     ],
   },
 ];
+
+const helpSearchByActive: Record<string, string> = {
+  Home: "Start hier",
+  Meldingen: "Meldingen",
+  "Mijn werk": "Taken",
+  Inbox: "Inbox",
+  Kalender: "Calendar",
+  Goedkeuringen: "Goedkeuringen",
+  Projecten: "Projecten",
+  Events: "Events",
+  Campagnes: "Campagnes",
+  "Social planning": "Social planning",
+  "Community & vrijwilligers": "Community",
+  "Sponsors & CRM": "Sponsors",
+  Communicatie: "E-mail",
+  Content: "Content",
+  "Shop & merchandise": "Shop",
+  Nieuwsbrieven: "Nieuwsbrieven",
+  "AI Hub": "AI Hub",
+  "Vergaderingen & besluiten": "Vergaderingen",
+  "VZW-administratie": "VZW-administratie",
+  "Financiën": "Financien",
+  Kennisbank: "Start hier",
+  "Rapportage & KPI": "Rapportage",
+  "Documenten & Drive": "Drive",
+  Integraties: "Integraties",
+  Productieacceptatie: "Productie acceptatie",
+  Archief: "Archiveren",
+  Historiek: "Historiek",
+  Activiteit: "Activiteit",
+  "Gebruikers & toegang": "Rollen rechten",
+  Account: "Account",
+};
+
+function helpHref(active: string) {
+  const query = helpSearchByActive[active] || active || "Start hier";
+  return `/app/kennisbank?zoeken=${encodeURIComponent(query)}`;
+}
 
 function canSeeItem(item: NavigationItem, role: OrganizationRole, financeRole: FinanceRole) {
   if (!item.roles && !item.financeRoles) return true;
@@ -217,6 +256,9 @@ export async function AppShell({
         <PrimaryNavigation active={active} notificationCount={notificationCount ?? 0}/>
         <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
         <div className="sidebar-utility">
+          <Link className="context-help-link" href={helpHref(active)}>
+            <CircleHelp size={17}/><span>Help bij deze pagina</span>
+          </Link>
           <GlobalSearchTrigger active={active === "Zoeken"}/>
         </div>
         <div className="user">
@@ -240,6 +282,9 @@ export async function AppShell({
           <PrimaryNavigation active={active} notificationCount={notificationCount ?? 0}/>
           <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
           <div className="mobile-navigation-search">
+            <Link className="context-help-link" href={helpHref(active)}>
+              <CircleHelp size={17}/>Help bij deze pagina
+            </Link>
             <GlobalSearchTrigger active={active === "Zoeken"}/>
           </div>
           <Link className={active === "Account" ? "active" : ""} href="/app/account">
