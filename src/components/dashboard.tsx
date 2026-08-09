@@ -1,6 +1,6 @@
 import {
   AlertTriangle, ArrowRight, CalendarDays, CheckCircle2, CircleDollarSign,
-  FolderKanban, Landmark, Plus, Sparkles,
+  FolderKanban, Landmark, Plus, Sparkles, BookOpen,
 } from "lucide-react";
 import Link from "next/link";
 import type { DashboardData } from "@/lib/types";
@@ -20,6 +20,18 @@ export function Dashboard({data}:{data:DashboardData}){
   </header><div className="dashboard">
     {(data.notificationCount>0||data.attentionCount>0)&&<div className="attention-bar"><div><strong>{data.attentionCount} werkitems vragen aandacht</strong><span>{data.notificationCount} ongelezen meldingen · achterstanden, blokkades en reviews gebundeld</span></div><Link href="/app/meldingen">Bekijk signalen <ArrowRight size={15}/></Link></div>}
     <section className="hero-card"><div><span className="eyebrow">JOUW FOCUS</span><h2>{data.attention.length?`${data.attention.length} concrete aandachtspunten om eerst op te lossen.`:"Je belangrijkste BESC-werk staat onder controle."}</h2><p>Dit overzicht is persoonlijk samengesteld voor jouw rol als {data.role.toLowerCase()}.</p></div><Link className="hero-action" href="/app/taken?van_mij=1">Open mijn werk <ArrowRight size={17}/></Link></section>
+
+    <section className="panel onboarding-panel">
+      <div className="panel-head">
+        <div><span className="eyebrow">AAN DE SLAG</span><h3>Command Center handleidingen</h3></div>
+        <Link href="/app/kennisbank">Kennisbank <ArrowRight size={15}/></Link>
+      </div>
+      <div className="onboarding-links">
+        <Link href="/app/kennisbank?zoeken=Start%20hier"><BookOpen size={16}/><span><strong>Start hier</strong><small>Basisflow, modules en dagelijkse werkwijze.</small></span></Link>
+        <Link href="/app/kennisbank?zoeken=Processen%20automatisaties"><Sparkles size={16}/><span><strong>Processen en automatisaties</strong><small>Drive, Calendar, Gmail, meldingen en goedkeuringen.</small></span></Link>
+        <Link href="/app/kennisbank?zoeken=Rollen%20rechten"><CheckCircle2 size={16}/><span><strong>Rollen en rechten</strong><small>Toegang, archiveren, verwijderen en databeheer.</small></span></Link>
+      </div>
+    </section>
 
     <section className="dashboard-widgets" aria-label="Persoonlijke kerncijfers">{data.widgets.map(widget=>{const Icon=widgetIcons[widget.tone];return <Link href={widget.href} className={`dashboard-widget tone-${widget.tone}`} key={widget.label}><div className={`stat-icon ${widget.tone}`}><Icon/></div><div><span>{widget.label}</span><strong>{widget.value}</strong><small>{widget.description}</small></div><ArrowRight size={15}/></Link>})}</section>
 
