@@ -65,6 +65,8 @@ test("productieacceptatie heeft eigen responsive styling", () => {
   ]) {
     assert.match(css, new RegExp(`\\.${className}`));
   }
+  assert.match(css, /\.module-body\.acceptance-page>\.form-card:has\(>\.form-heading\+form\)/);
+  assert.match(css, /position:static!important/);
 });
 
 test("acceptatierondes worden per organisatie en managerrechten opgeslagen", () => {
