@@ -8,6 +8,8 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { completeAcceptanceRun, startAcceptanceRun, updateAcceptanceCheck } from "@/app/app/acceptatie/actions";
+import { acceptanceChecks, acceptanceStatusLabel } from "@/lib/acceptance";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { googleGmailConfiguration } from "@/lib/google-gmail";
 import { googlePitchdeckConfiguration, googleWorkspaceConfiguration } from "@/lib/google-workspace";
@@ -21,20 +23,28 @@ type CheckItem = {
   href?: string;
 };
 
-const manualChecks = [
-  "Login testen als beheerder, bestuurslid, vrijwilliger en portaalgebruiker.",
-  "Account aanmaken, goedkeuren, profiel aanpassen, Discord koppelen en uitloggen.",
-  "Inboxitem maken en omzetten naar taak of dossier.",
-  "Project, event, campagne en taak aanmaken, bewerken, koppelen, archiveren en verwijderen.",
-  "Drive-map maken voor project en event; documentregister controleren.",
-  "Event en vergadering synchroniseren naar Google Calendar; geannuleerd item verwijderen.",
-  "Notulen, eventdossier en sponsorrapport genereren en ter goedkeuring voorleggen.",
-  "Gmail-concept maken, laten goedkeuren, versturen en dossiercommunicatie controleren.",
-  "Nieuwsbriefinschrijving, bevestiging, uitschrijving en goedgekeurde verzending testen.",
-  "Rapportage online, CSV/PDF en managementoverzichten vergelijken.",
-  "Social accounts koppelen en handmatige sync per actief platform uitvoeren.",
-  "Productiedeployment uitvoeren en dezelfde rooktest herhalen.",
-];
+type AcceptanceRun = {
+  id: string;
+  title: string;
+  status: string;
+  environment: string;
+  commit_sha: string | null;
+  notes: string | null;
+  started_at: string;
+  completed_at: string | null;
+  starter?: { display_name: string | null } | { display_name: string | null }[] | null;
+};
+
+type AcceptanceCheckResult = {
+  id: string;
+  run_id: string;
+  check_key: string;
+  category: string;
+  title: string;
+  status: string;
+  evidence: string | null;
+  updated_at: string;
+};
 
 const decisionGates = [
   { label: "LinkedIn", detail: "Pas bouwen na Community Management-producttoegang." },
@@ -53,6 +63,24 @@ function statusLabel(status: CheckStatus) {
 
 function StatusIcon({ status }: { status: CheckStatus }) {
   return status === "ready" ? <CheckCircle2/> : <TriangleAlert/>;
+}
+
+function runStatusLabel(status: string) {
+  if (status === "accepted") return "Formeel geaccepteerd";
+  if (status === "passed") return "Geslaagd";
+  if (status === "failed") return "Niet geslaagd";
+  if (status === "archived") return "Gearchiveerd";
+  return "Lopend";
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) return "Nog niet afgerond";
+  return new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+function starterName(starter: AcceptanceRun["starter"]) {
+  const row = Array.isArray(starter) ? starter[0] : starter;
+  return row?.display_name ?? "onbekend";
 }
 
 export default async function AcceptancePage() {
@@ -78,13 +106,33 @@ export default async function AcceptancePage() {
     { count: pendingApprovals },
     { count: missingGeneratedDocuments },
     { data: integrations },
+    { data: runs },
   ] = await Promise.all([
     supabase.from("organization_members").select("user_id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "active"),
     supabase.from("knowledge_articles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "published").is("deleted_at", null),
     supabase.from("approval_requests").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "pending"),
     supabase.from("google_resource_links").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("resource_type", "document").is("web_url", null),
     supabase.from("integration_connections").select("provider,status,last_sync_at,last_error").eq("organization_id", organizationId).is("deleted_at", null),
+    supabase.from("acceptance_runs")
+      .select("id,title,status,environment,commit_sha,notes,started_at,completed_at,starter:profiles!acceptance_runs_started_by_fkey(display_name)")
+      .eq("organization_id", organizationId)
+      .order("started_at", { ascending: false })
+      .limit(8),
   ]);
+
+  const runRows = (runs ?? []) as unknown as AcceptanceRun[];
+  const activeRun = runRows.find((run) => run.status === "in_progress") ?? runRows[0] ?? null;
+  const { data: checkRows } = activeRun
+    ? await supabase.from("acceptance_check_results")
+      .select("id,run_id,check_key,category,title,status,evidence,updated_at")
+      .eq("organization_id", organizationId)
+      .eq("run_id", activeRun.id)
+      .order("category", { ascending: true })
+      .order("created_at", { ascending: true })
+    : { data: [] };
+  const acceptanceResults = (checkRows ?? []) as AcceptanceCheckResult[];
+  const passedManualChecks = acceptanceResults.filter((check) => ["passed", "not_applicable"].includes(check.status)).length;
+  const blockingManualChecks = acceptanceResults.filter((check) => ["failed", "blocked", "pending"].includes(check.status)).length;
 
   const integrationRows = integrations ?? [];
   const connectedSocial = integrationRows.filter((item) =>
@@ -133,8 +181,29 @@ export default async function AcceptancePage() {
           </article>
           <article>
             <ClipboardCheck/>
-            <div><span>Handmatige checks</span><strong>{manualChecks.length}</strong><small>uit te voeren met echte testdata</small></div>
+            <div><span>Actieve testronde</span><strong>{activeRun ? `${passedManualChecks}/${acceptanceChecks.length}` : "Geen"}</strong><small>{activeRun ? `${blockingManualChecks} open/blokkerend` : "start eerst een run"}</small></div>
           </article>
+        </section>
+
+        <section className="form-card acceptance-card">
+          <div className="form-heading">
+            <div><span className="eyebrow">TESTRONDE</span><h2>Releaseacceptatie registreren</h2></div>
+          </div>
+          <form action={startAcceptanceRun} className="acceptance-start-form">
+            <label><span>Titel</span><input name="title" defaultValue={`Acceptatietest ${new Date().toLocaleDateString("nl-BE")}`}/></label>
+            <label><span>Omgeving</span><select name="environment" defaultValue={process.env.VERCEL_ENV === "production" ? "production" : process.env.VERCEL_ENV === "preview" ? "preview" : "local"}><option value="local">Lokaal</option><option value="preview">Preview</option><option value="production">Productie</option></select></label>
+            <label><span>Notities</span><input name="notes" placeholder="Bijvoorbeeld: test met bestuurdersaccount en vrijwilligeraccount"/></label>
+            <button className="primary" type="submit"><Rocket size={15}/>Nieuwe testronde starten</button>
+          </form>
+          {activeRun ? (
+            <div className={`acceptance-run-banner run-${activeRun.status}`}>
+              <div>
+                <strong>{activeRun.title}</strong>
+                <span>{runStatusLabel(activeRun.status)} · {activeRun.environment} · gestart op {formatDateTime(activeRun.started_at)} · {starterName(activeRun.starter)}</span>
+              </div>
+              <small>{activeRun.commit_sha ? activeRun.commit_sha.slice(0, 7) : "geen commit"}</small>
+            </div>
+          ) : <p className="empty-inline">Er is nog geen acceptatieronde geregistreerd.</p>}
         </section>
 
         <div className="acceptance-grid">
@@ -167,8 +236,61 @@ export default async function AcceptancePage() {
 
         <section className="form-card acceptance-card">
           <div className="form-heading"><div><span className="eyebrow">ROOKTEST</span><h2>Handmatige productieacceptatie</h2></div></div>
-          <div className="manual-check-grid">
-            {manualChecks.map((item, index) => <article key={item}><b>{index + 1}</b><span>{item}</span></article>)}
+          {activeRun && acceptanceResults.length ? (
+            <div className="acceptance-check-table">
+              {acceptanceResults.map((check, index) => (
+                <form action={updateAcceptanceCheck} key={check.id} className={`acceptance-check-row check-${check.status}`}>
+                  <input type="hidden" name="id" value={check.id}/>
+                  <input type="hidden" name="run_id" value={check.run_id}/>
+                  <b>{index + 1}</b>
+                  <div>
+                    <strong>{check.title}</strong>
+                    <span>{check.category} · {acceptanceStatusLabel(check.status)}</span>
+                  </div>
+                  <select name="status" defaultValue={check.status}>
+                    <option value="pending">Te testen</option>
+                    <option value="passed">Geslaagd</option>
+                    <option value="failed">Mislukt</option>
+                    <option value="blocked">Geblokkeerd</option>
+                    <option value="not_applicable">Niet van toepassing</option>
+                  </select>
+                  <input name="evidence" defaultValue={check.evidence ?? ""} placeholder="Bewijs, opmerking of link"/>
+                  <button type="submit">Opslaan</button>
+                </form>
+              ))}
+            </div>
+          ) : (
+            <div className="manual-check-grid">
+              {acceptanceChecks.map((item, index) => <article key={item.key}><b>{index + 1}</b><span>{item.title}</span></article>)}
+            </div>
+          )}
+          {activeRun ? (
+            <div className="acceptance-complete-actions">
+              <form action={completeAcceptanceRun}>
+                <input type="hidden" name="id" value={activeRun.id}/>
+                <input type="hidden" name="decision" value="complete"/>
+                <input name="notes" placeholder="Afrondnotitie"/>
+                <button type="submit">Testronde afronden</button>
+              </form>
+              <form action={completeAcceptanceRun}>
+                <input type="hidden" name="id" value={activeRun.id}/>
+                <input type="hidden" name="decision" value="accept"/>
+                <input name="notes" placeholder="Formele acceptatienotitie"/>
+                <button className="primary" type="submit">Formeel accepteren</button>
+              </form>
+            </div>
+          ) : null}
+        </section>
+
+        <section className="form-card acceptance-card">
+          <div className="form-heading"><div><span className="eyebrow">HISTORIEK</span><h2>Laatste acceptatierondes</h2></div></div>
+          <div className="acceptance-run-list">
+            {runRows.length ? runRows.map((run) => (
+              <article key={run.id}>
+                <div><strong>{run.title}</strong><span>{run.environment} · {formatDateTime(run.started_at)} · {runStatusLabel(run.status)}</span></div>
+                <small>{run.completed_at ? `afgerond ${formatDateTime(run.completed_at)}` : "nog lopend"}</small>
+              </article>
+            )) : <p className="empty-inline">Nog geen testrondes.</p>}
           </div>
         </section>
 
