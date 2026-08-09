@@ -201,7 +201,11 @@ export default async function AcceptancePage() {
                 <strong>{activeRun.title}</strong>
                 <span>{runStatusLabel(activeRun.status)} · {activeRun.environment} · gestart op {formatDateTime(activeRun.started_at)} · {starterName(activeRun.starter)}</span>
               </div>
-              <small>{activeRun.commit_sha ? activeRun.commit_sha.slice(0, 7) : "geen commit"}</small>
+              <div className="acceptance-run-actions">
+                <small>{activeRun.commit_sha ? activeRun.commit_sha.slice(0, 7) : "geen commit"}</small>
+                <Link href={`/app/acceptatie/export?run=${activeRun.id}`}>CSV-export</Link>
+                <span>Print/PDF: Ctrl+P</span>
+              </div>
             </div>
           ) : <p className="empty-inline">Er is nog geen acceptatieronde geregistreerd.</p>}
         </section>
@@ -288,7 +292,10 @@ export default async function AcceptancePage() {
             {runRows.length ? runRows.map((run) => (
               <article key={run.id}>
                 <div><strong>{run.title}</strong><span>{run.environment} · {formatDateTime(run.started_at)} · {runStatusLabel(run.status)}</span></div>
-                <small>{run.completed_at ? `afgerond ${formatDateTime(run.completed_at)}` : "nog lopend"}</small>
+                <div className="acceptance-run-actions">
+                  <small>{run.completed_at ? `afgerond ${formatDateTime(run.completed_at)}` : "nog lopend"}</small>
+                  <Link href={`/app/acceptatie/export?run=${run.id}`}>CSV</Link>
+                </div>
               </article>
             )) : <p className="empty-inline">Nog geen testrondes.</p>}
           </div>
