@@ -7,6 +7,7 @@ export type FinanceRole = (typeof financeRoles)[number];
 export type MembershipAccess = {
   role: string;
   finance_role: string;
+  capabilities?: string[] | null;
 };
 
 export const capabilities = [
@@ -50,6 +51,7 @@ export function isManager(membership: MembershipAccess) {
 }
 
 export function hasPermission(membership: MembershipAccess, capability: Capability) {
+  if (membership.capabilities?.includes(capability)) return true;
   switch (capability) {
     case "manageUsers":
       return isAdmin(membership);

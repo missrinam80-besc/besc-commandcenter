@@ -30,7 +30,10 @@ test("kennisbankformulieren gebruiken modal en Markdown", async () => {
 });
 
 test("eerste Command Center-handleidingen worden idempotent geseed", async () => {
-  const migration = await source("supabase/migrations/20260809090000_seed_knowledge_command_center_guides.sql");
+  const [migration, expanded] = await Promise.all([
+    source("supabase/migrations/20260809090000_seed_knowledge_command_center_guides.sql"),
+    source("supabase/migrations/20260812143000_expand_command_center_knowledge_guides.sql"),
+  ]);
 
   for (const title of [
     "Start hier: werken met BESC Command Center",
@@ -43,6 +46,25 @@ test("eerste Command Center-handleidingen worden idempotent geseed", async () =>
   assert.match(migration, /on conflict \(organization_id, name\) do update/);
   assert.match(migration, /if not exists/);
   assert.match(migration, /'published'/);
+  for (const title of [
+    "Handleiding BESC Command Center",
+    "Werken met Inbox",
+    "Werken met Taken",
+    "Projecten beheren",
+    "Events beheren",
+    "Campagnes beheren",
+    "Google Drive-integratie",
+    "Google Calendar-integratie",
+    "Gmail-concepten en goedkeuringen",
+    "Nieuwsbrieven",
+    "Rapportage & KPI",
+    "Acceptatieproces",
+    "Rollen en rechten",
+  ]) {
+    assert.match(expanded, new RegExp(title));
+  }
+  assert.match(expanded, /knowledge_articles_org_title_active_idx/);
+  assert.match(expanded, /on conflict \(organization_id, title\) where deleted_at is null do update/);
 });
 
 test("Home biedt onboardinglinks naar de Command Center-handleidingen", async () => {

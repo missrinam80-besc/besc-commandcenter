@@ -15,8 +15,15 @@ type MemberRow = {
   role: OrganizationRole;
   status: string;
   finance_role: FinanceRole;
+  access_role_id: string | null;
   joined_at: string;
   profiles: { display_name: string | null; avatar_url: string | null } | null;
+};
+
+type AccessRoleRow = {
+  id: string;
+  name: string;
+  description: string | null;
 };
 
 const statusLabels: Record<string, string> = {
@@ -51,13 +58,15 @@ export default async function UsersPage({
 }) {
   const query = await searchParams;
   const { supabase, membership } = await requirePermission("manageUsers");
-  const [{data},{data:accessRows},{data:partners},{data:people}] = await Promise.all([
-    supabase.from("organization_members").select("user_id,role,status,finance_role,joined_at,profiles(display_name,avatar_url)").eq("organization_id", membership.organization_id).order("joined_at", { ascending: false }),
+  const [{data},{data:accessRows},{data:partners},{data:people},{data:customRoles}] = await Promise.all([
+    supabase.from("organization_members").select("user_id,role,status,finance_role,access_role_id,joined_at,profiles(display_name,avatar_url)").eq("organization_id", membership.organization_id).order("joined_at", { ascending: false }),
     supabase.from("portal_access").select("id,user_id,access_type,status,partner_id,community_person_id,partners(name),community_people(display_name)").eq("organization_id",membership.organization_id).neq("status","revoked"),
     supabase.from("partners").select("id,name").eq("organization_id",membership.organization_id).is("deleted_at",null).order("name"),
     supabase.from("community_people").select("id,display_name").eq("organization_id",membership.organization_id).is("deleted_at",null).order("display_name"),
+    supabase.from("organization_access_roles").select("id,name,description").eq("organization_id",membership.organization_id).is("deleted_at",null).order("name"),
   ]);
   const members = (data ?? []) as unknown as MemberRow[];
+  const roleProfiles = (customRoles ?? []) as AccessRoleRow[];
   const portalUser=query.portaal?members.find(member=>member.user_id===query.portaal):null;
 
   return (
@@ -125,6 +134,15 @@ export default async function UsersPage({
                     <option value="submitter">Kostenindiener</option>
                     <option value="approver">Goedkeurder</option>
                     <option value="treasurer">Penningmeester</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Rolprofiel</span>
+                  <select name="access_role_id" defaultValue={member.access_role_id ?? ""}>
+                    <option value="">Geen extra profiel</option>
+                    {roleProfiles.map((role) => (
+                      <option value={role.id} key={role.id}>{role.name}</option>
+                    ))}
                   </select>
                 </label>
                 <label>
