@@ -27,7 +27,7 @@ export async function proxy(request: NextRequest) {
   if (user && capability) {
     const { data: membership } = await supabase
       .from("organization_members")
-      .select("role,finance_role,status")
+      .select("role,finance_role,status,organization_access_roles(capabilities)")
       .eq("user_id", user.id)
       .eq("status", "active")
       .limit(1)
@@ -35,7 +35,8 @@ export async function proxy(request: NextRequest) {
     if (!membership) {
       return redirectWithCookies(new URL("/wachten-op-goedkeuring", request.url), response);
     }
-    if (!hasPermission(membership, capability)) {
+    const customRole = (membership as { organization_access_roles?: { capabilities?: string[] | null } | null }).organization_access_roles;
+    if (!hasPermission({ ...membership, capabilities: customRole?.capabilities ?? null }, capability)) {
       const destination = request.nextUrl.clone();
       destination.searchParams.delete("nieuw");
       destination.searchParams.delete("bewerken");

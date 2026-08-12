@@ -174,6 +174,26 @@ export function accessSummaryForRole(role: AccessRoleKey) {
   };
 }
 
+export function accessMatrixForProfile(profile: MembershipAccess): AccessArea[] {
+  const membership: MembershipAccess = {
+    role: profile.role,
+    finance_role: profile.finance_role,
+    capabilities: profile.capabilities ?? [],
+  };
+  return accessPolicies.map((policy) => ({
+    key: policy.key,
+    label: policy.label,
+    view: canView(policy, membership),
+    create: canCreate(policy, membership),
+    edit: canMutate(policy, membership),
+    archive: canMutate(policy, membership, true),
+    delete: canMutate(policy, membership, true),
+    export: canExport(policy, membership),
+    approve: canApprove(policy, membership),
+    dataScope: policy.dataScope ?? "Organisatiedata binnen BESC.",
+  }));
+}
+
 export function roleKeyFromMembership(role: OrganizationRole, financeRole: FinanceRole): AccessRoleKey {
   if (financeRole === "submitter") return "expense_submitter";
   if (financeRole === "approver") return "approver";
