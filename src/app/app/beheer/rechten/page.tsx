@@ -184,6 +184,17 @@ export default async function AccessControlPage({
             verwijderen, exporteren, goedkeuren en welke data zichtbaar is.
             Portalgebruikers blijven buiten de interne app en zien alleen hun eigen portaal.
           </p>
+          <div className="permission-system-note">
+            <ShieldCheck size={18}/>
+            <div>
+              <strong>Vaste systeemrollen zijn beveiligd</strong>
+              <span>
+                Admin, Bestuur, Member, Vrijwilliger en de finance-baselines blijven vaste basisrollen.
+                Maak een custom rolprofiel aan om rechten toe te voegen, te wijzigen of later te verwijderen.
+              </span>
+            </div>
+            <Link href="/app/beheer/rechten?nieuw=rol">Nieuw rolprofiel</Link>
+          </div>
           <div className="permission-role-tabs">
             {summaries.map((summary) => (
               <a
@@ -193,7 +204,7 @@ export default async function AccessControlPage({
               >
                 <ShieldCheck size={15}/>
                 <strong>{summary.label}</strong>
-                <span>{summary.canView} zichtbaar · {summary.canApprove} goedkeuringen</span>
+                <span>{summary.canView} zichtbaar · systeemrol · niet verwijderbaar</span>
               </a>
             ))}
             {customRoles.map((role) => (
@@ -229,7 +240,7 @@ export default async function AccessControlPage({
                 <Link className="row-action" href={`/app/beheer/rechten?bewerken=${role.id}`}><Pencil size={13}/>Bewerken</Link>
               </article>
             ))}
-            {!customRoles.length && <div className="empty">Nog geen custom rolprofielen. Gebruik “Rolprofiel toevoegen” om een profiel te maken.</div>}
+            {!customRoles.length && <div className="empty">Nog geen custom rolprofielen. De vaste systeemrollen hierboven zijn bewust niet bewerkbaar of verwijderbaar. Maak eerst een custom rolprofiel aan om bewerken en verwijderen te gebruiken.</div>}
           </div>
         </section>
 

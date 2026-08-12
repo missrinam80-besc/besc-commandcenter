@@ -64,6 +64,9 @@ test("rechtencontrolepagina is zichtbaar voor bestuur en beheer en toont de matr
   assert.match(page, /permission-role-tabs/);
   assert.match(page, /permissions-table/);
   assert.match(page, /Rolprofiel toevoegen/);
+  assert.match(page, /systeemrol/);
+  assert.match(page, /niet verwijderbaar/);
+  assert.match(page, /Maak eerst een custom rolprofiel/);
   assert.match(page, /capabilities/);
   assert.match(actions, /saveAccessRole/);
   assert.match(actions, /deleteAccessRole/);
