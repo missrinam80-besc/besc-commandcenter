@@ -26,6 +26,7 @@ const cronRoute = readFileSync("src/app/api/cron/social-sync/route.ts", "utf8");
 const vercel = readFileSync("vercel.json", "utf8");
 const reportPage = readFileSync("src/app/app/rapportage/social/page.tsx", "utf8");
 const reportExport = readFileSync("src/app/app/rapportage/social/export/route.ts", "utf8");
+const socialAcceptance = readFileSync("src/lib/social-acceptance.ts", "utf8");
 const quotaMigration = readFileSync("supabase/migrations/20260803152000_add_social_quota_and_audit.sql", "utf8");
 const audit = readFileSync("src/lib/audit.ts", "utf8");
 
@@ -201,4 +202,22 @@ test("social koppelingen hebben auditregistratie en een interne quotarem", () =>
   assert.match(page, /Quota:/);
   assert.match(audit, /social_accounts: "Social account"/);
   assert.match(audit, /social_sync_runs: "Social synchronisatie"/);
+});
+
+test("social integraties hebben finale acceptatiecontrole en beslispoorten", () => {
+  for (const platform of ["youtube", "facebook", "instagram", "threads", "twitch"]) {
+    assert.match(socialAcceptance, new RegExp(`${platform}: \\[`));
+  }
+  assert.match(socialAcceptance, /OAuth-flow/);
+  assert.match(socialAcceptance, /Handmatige sync uitvoeren/);
+  assert.match(socialAcceptance, /Socialrapportage en CSV-export valideren/);
+  assert.match(socialAcceptance, /platform: "LinkedIn"/);
+  assert.match(socialAcceptance, /platform: "TikTok"/);
+  assert.match(socialAcceptance, /platform: "X"/);
+  assert.match(page, /FINALE ACCEPTATIE/);
+  assert.match(page, /Platformtesten en synccontrole/);
+  assert.match(page, /Klaar voor finale controle/);
+  assert.match(page, /OAuth final test nodig/);
+  assert.match(page, /BESLISPOORTEN/);
+  assert.match(page, /Niet opnemen in v1/);
 });
