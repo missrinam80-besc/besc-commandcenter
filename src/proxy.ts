@@ -25,13 +25,22 @@ export async function proxy(request: NextRequest) {
     ? requiredCapabilityForQuery(request.nextUrl.pathname, request.nextUrl.searchParams)
     : null;
   if (user && capability) {
-    const { data: membership } = await supabase
+    const enriched = await supabase
       .from("organization_members")
       .select("role,finance_role,status,organization_access_roles(capabilities)")
       .eq("user_id", user.id)
       .eq("status", "active")
       .limit(1)
       .maybeSingle();
+    const { data: membership } = enriched.error
+      ? await supabase
+        .from("organization_members")
+        .select("role,finance_role,status")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle()
+      : enriched;
     if (!membership) {
       return redirectWithCookies(new URL("/wachten-op-goedkeuring", request.url), response);
     }

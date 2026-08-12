@@ -4,7 +4,7 @@ create table if not exists public.organization_access_roles (
   name text not null,
   description text,
   base_role public.member_role not null default 'volunteer',
-  finance_role public.finance_role not null default 'none',
+  finance_role text not null default 'none' check (finance_role in ('none','submitter','approver','treasurer')),
   capabilities text[] not null default '{}',
   is_system boolean not null default false,
   created_by uuid references public.profiles(id),

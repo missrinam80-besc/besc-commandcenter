@@ -7,13 +7,22 @@ export const requireActiveMembership = cache(async function requireActiveMembers
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const { data: membership } = await supabase
+  const enriched = await supabase
     .from("organization_members")
     .select("organization_id,role,status,finance_role,access_role_id,organization_access_roles(capabilities)")
     .eq("user_id", user.id)
     .eq("status", "active")
     .limit(1)
     .maybeSingle();
+  const { data: membership } = enriched.error
+    ? await supabase
+      .from("organization_members")
+      .select("organization_id,role,status,finance_role")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .limit(1)
+      .maybeSingle()
+    : enriched;
   if (!membership) redirect("/wachten-op-goedkeuring");
   const customRole = (membership as { organization_access_roles?: { capabilities?: string[] | null } | null }).organization_access_roles;
   return { supabase, user, membership: { ...membership, capabilities: customRole?.capabilities ?? null } };

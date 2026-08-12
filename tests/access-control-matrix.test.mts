@@ -47,12 +47,14 @@ test("rechtenmatrix bewaakt aanmaken, bewerken, archiveren, verwijderen, exporte
 });
 
 test("rechtencontrolepagina is zichtbaar voor bestuur en beheer en toont de matrix", async () => {
-  const [shell, page, actions, migration, users] = await Promise.all([
+  const [shell, page, actions, migration, users, authContext, proxy] = await Promise.all([
     source("src/components/app-shell.tsx"),
     source("src/app/app/beheer/rechten/page.tsx"),
     source("src/app/app/beheer/actions.ts"),
     source("supabase/migrations/20260812110000_add_custom_access_roles.sql"),
     source("src/app/app/beheer/gebruikers/page.tsx"),
+    source("src/lib/auth-context.ts"),
+    source("src/proxy.ts"),
   ]);
 
   assert.match(shell, /Rechtencontrole/);
@@ -69,4 +71,6 @@ test("rechtencontrolepagina is zichtbaar voor bestuur en beheer en toont de matr
   assert.match(migration, /organization_access_roles/);
   assert.match(migration, /enable row level security/);
   assert.match(migration, /grant select, insert, update, delete/);
+  assert.match(authContext, /enriched\.error/);
+  assert.match(proxy, /enriched\.error/);
 });
