@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Ban, CheckCircle2, Clock3, DatabaseZap, Plus, RefreshCw, ShieldCheck, Unplug } from "lucide-react";
+import { AlertTriangle, Ban, CheckCircle2, Clock3, DatabaseZap, Plus, RefreshCw, ShieldCheck, Unplug } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { FormModal } from "@/components/form-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { socialAcceptanceChecklist, socialAcceptancePlatforms, socialDecisionGates } from "@/lib/social-acceptance";
 import { socialAccountStatuses, socialPlatformDefinitions, socialPlatforms } from "@/lib/social-connectors";
 import { metaConfiguration } from "@/lib/meta-integration";
 import { threadsConfiguration } from "@/lib/threads-integration";
@@ -62,6 +63,13 @@ type SyncRun = {
   created_at: string;
 };
 
+type MetricSnapshot = {
+  id: string;
+  social_account_id: string;
+  normalized_metric: string;
+  fetched_at: string;
+};
+
 function localDateTime(value: string | null) {
   if (!value) return "";
   const date = new Date(value);
@@ -80,12 +88,14 @@ export default async function SocialIntegrationsPage({
     return <AppShell active="Integraties"><div className="module-body"><div className="permission-note">Alleen bestuur en beheerders kunnen social accounts beheren.</div></div></AppShell>;
   }
 
-  const [{ data: accountData }, { data: runData }] = await Promise.all([
+  const [{ data: accountData }, { data: runData }, { data: metricData }] = await Promise.all([
     supabase.from("social_accounts").select("*").eq("organization_id", membership.organization_id).is("deleted_at", null).order("platform"),
     supabase.from("social_sync_runs").select("*").eq("organization_id", membership.organization_id).order("created_at", { ascending: false }).limit(20),
+    supabase.from("social_metric_snapshots").select("id,social_account_id,normalized_metric,fetched_at").eq("organization_id", membership.organization_id).order("fetched_at", { ascending: false }).limit(100),
   ]);
   const accounts = (accountData ?? []) as SocialAccount[];
   const runs = (runData ?? []) as SyncRun[];
+  const metrics = (metricData ?? []) as MetricSnapshot[];
   const youtubeConfig = youtubeConfiguration();
   const metaConfig = metaConfiguration();
   const threadsConfig = threadsConfiguration();
@@ -124,6 +134,49 @@ export default async function SocialIntegrationsPage({
               <small>{count} account{count === 1 ? "" : "s"} geregistreerd</small>
             </article>;
           })}
+        </section>
+
+        <section className="form-card social-acceptance-panel">
+          <div className="form-heading">
+            <div><span className="eyebrow">FINALE ACCEPTATIE</span><h2>Platformtesten en synccontrole</h2></div>
+            <Link href="/app/rapportage/social">Socialrapportage openen</Link>
+          </div>
+          <div className="social-acceptance-grid">
+            {socialAcceptancePlatforms.map((platform) => {
+              const definition = socialPlatformDefinitions[platform];
+              const platformAccounts = accounts.filter((item) => item.platform === platform);
+              const connectedAccounts = platformAccounts.filter((item) => item.status === "connected");
+              const platformRuns = runs.filter((run) => platformAccounts.some((account) => account.id === run.social_account_id));
+              const successfulRuns = platformRuns.filter((run) => ["succeeded", "partial"].includes(run.status));
+              const platformMetrics = metrics.filter((metric) => platformAccounts.some((account) => account.id === metric.social_account_id));
+              const finalState = connectedAccounts.length && successfulRuns.length && platformMetrics.length ? "Klaar voor finale controle" : connectedAccounts.length ? "Sync nog valideren" : "OAuth final test nodig";
+              return <article key={platform}>
+                <div className="social-acceptance-head">
+                  <strong>{definition.label}</strong>
+                  <b className={connectedAccounts.length ? "ready" : "pending"}>{finalState}</b>
+                </div>
+                <div className="social-acceptance-stats">
+                  <span>{connectedAccounts.length}/{platformAccounts.length || 1} verbonden</span>
+                  <span>{successfulRuns.length} succesvolle syncs</span>
+                  <span>{platformMetrics.length} meetpunten</span>
+                </div>
+                <ol>
+                  {socialAcceptanceChecklist[platform].map((check) => <li key={check}>{check}</li>)}
+                </ol>
+              </article>;
+            })}
+          </div>
+        </section>
+
+        <section className="form-card">
+          <div className="form-heading"><div><span className="eyebrow">BESLISPOORTEN</span><h2>Niet opnemen in v1</h2></div><AlertTriangle size={16}/></div>
+          <div className="social-decision-gates">
+            {socialDecisionGates.map((gate) => <article key={gate.platform}>
+              <strong>{gate.platform}</strong>
+              <b>{gate.decision}</b>
+              <span>{gate.reason}</span>
+            </article>)}
+          </div>
         </section>
 
         <section className="form-card">
