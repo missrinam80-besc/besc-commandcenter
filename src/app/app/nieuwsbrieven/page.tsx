@@ -5,6 +5,7 @@ import { renderEmailTemplate } from "@/lib/email-templates";
 import { googleGmailConfiguration } from "@/lib/google-gmail";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { isManager } from "@/lib/permissions";
+import { newsletterVariantLabels } from "@/lib/newsletter-html";
 import { saveMailingList, saveNewsletter } from "./actions";
 
 const newsletterStatuses: Record<string,string> = {
@@ -46,7 +47,7 @@ export default async function NewsletterPage({ searchParams }: { searchParams: P
       {query.fout && <div className="error-note">De actie is mislukt ({query.fout}).</div>}
       {query.succes && <div className="success">De wijziging is opgeslagen.</div>}
       {!gmail.configured && <div className="error-note">Gmail is niet geconfigureerd; nieuwsbrieven kunnen nog niet als concept worden aangemaakt.</div>}
-      {query.nieuwe_lijst && <section className="form-card"><div className="form-heading"><h2>Nieuwe mailinglijst</h2><Link href="/app/nieuwsbrieven">Sluiten</Link></div><form action={saveMailingList}><div className="form-row"><label>Naam<input name="name" required/></label><label>Status<select name="status"><option value="active">Actief</option><option value="paused">Gepauzeerd</option><option value="archived">Gearchiveerd</option></select></label></div><label>Beschrijving<textarea name="description" rows={3}/></label><div className="form-actions"><button className="primary">Lijst opslaan</button></div></form></section>}
+      {query.nieuwe_lijst && <section className="form-card"><div className="form-heading"><h2>Nieuwe mailinglijst</h2><Link href="/app/nieuwsbrieven">Sluiten</Link></div><form action={saveMailingList}><div className="form-row"><label>Naam<input name="name" required/></label><label>Status<select name="status"><option value="active">Actief</option><option value="paused">Gepauzeerd</option><option value="archived">Gearchiveerd</option></select></label><label>Publieke URL-code<input name="public_slug" placeholder="besc-nieuws" pattern="[a-z0-9-]{2,120}"/></label></div><label>Beschrijving<textarea name="description" rows={3}/></label><label className="inline-check"><input type="checkbox" name="public_signup_enabled"/><span>Publieke inschrijving na dubbele bevestiging toestaan</span></label><div className="form-actions"><button className="primary">Lijst opslaan</button></div></form></section>}
       {query.nieuw && <section className="form-card">
         <div className="form-heading"><div><span className="eyebrow">NIEUWSBRIEF</span><h2>Nieuw Gmail-concept</h2></div><Link href="/app/nieuwsbrieven">Sluiten</Link></div>
         <form className="template-picker" method="get"><input type="hidden" name="nieuw" value="1"/><label>Sjabloon<select name="template" defaultValue={selectedTemplate?.id ?? ""}>{(templates.data ?? []).map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label><label>Titel voor variabelen<input name="titel" defaultValue={title}/></label><input type="hidden" name="lijst" value={selectedList}/><button>Automatisch invullen</button></form>
@@ -57,8 +58,14 @@ export default async function NewsletterPage({ searchParams }: { searchParams: P
             <label>Interne titel<input name="title" required defaultValue={title}/></label>
             <label>Onderwerp<input name="subject" required defaultValue={subject}/></label>
           </div>
+          <div className="form-row">
+            <label>Opmaak<select name="template_variant" defaultValue={selectedTemplate?.newsletter_variant ?? "besc"}>{Object.entries(newsletterVariantLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+            <label>Voorbeeldtekst inbox<input name="preheader" maxLength={300} placeholder="Korte samenvatting naast het onderwerp"/></label>
+            <label>Afbeelding (HTTPS)<input name="hero_image_url" type="url" defaultValue={selectedTemplate?.default_hero_image_url ?? ""} placeholder="https://..."/></label>
+          </div>
+          <label>Beschrijving afbeelding<input name="hero_image_alt" maxLength={300} defaultValue={selectedTemplate?.default_hero_image_alt ?? ""} placeholder="Beschrijf wat er op de afbeelding staat"/></label>
           <label>Nieuwsbrieftekst<textarea name="body_text" rows={16} required defaultValue={body}/></label>
-          <p className="form-hint">De uitschrijfinstructie wordt automatisch toegevoegd. Maximaal 100 actieve ontvangers per Gmail-verzending.</p>
+          <p className="form-hint">De applicatie maakt automatisch veilige HTML én een tekstversie. Afbeeldingen moeten publiek bereikbaar zijn via HTTPS. De uitschrijfinstructie wordt automatisch toegevoegd.</p>
           <div className="form-actions"><button className="primary" disabled={!gmail.configured || !activeLists.length}><Newspaper size={16}/>Gmail-concept aanmaken</button></div>
         </form>
       </section>}

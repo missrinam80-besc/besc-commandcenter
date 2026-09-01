@@ -26,8 +26,18 @@ const kpiSchema = z.object({
   period_start: optionalDate,
   period_end: optionalDate,
   source: z.string().trim().min(2).max(100),
+  collection_method: z.enum(["manual", "imported", "api"]),
   source_url: z.string().url().optional().or(z.literal("")),
+  metric_definition: z.string().trim().max(1000).optional(),
   notes: z.string().trim().max(2000).optional(),
+  project_id: z.string().uuid().optional().or(z.literal("")),
+  campaign_id: z.string().uuid().optional().or(z.literal("")),
+  event_id: z.string().uuid().optional().or(z.literal("")),
+  content_id: z.string().uuid().optional().or(z.literal("")),
+  partner_id: z.string().uuid().optional().or(z.literal("")),
+  task_id: z.string().uuid().optional().or(z.literal("")),
+  community_person_id: z.string().uuid().optional().or(z.literal("")),
+  social_post_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 const optionalValues = (values: z.infer<typeof kpiSchema>) => ({
@@ -36,7 +46,16 @@ const optionalValues = (values: z.infer<typeof kpiSchema>) => ({
   period_start: values.period_start || null,
   period_end: values.period_end || null,
   source_url: values.source_url || null,
+  metric_definition: values.metric_definition || null,
   notes: values.notes || null,
+  project_id: values.project_id || null,
+  campaign_id: values.campaign_id || null,
+  event_id: values.event_id || null,
+  content_id: values.content_id || null,
+  partner_id: values.partner_id || null,
+  task_id: values.task_id || null,
+  community_person_id: values.community_person_id || null,
+  social_post_id: values.social_post_id || null,
 });
 
 export async function saveKpi(formData: FormData) {

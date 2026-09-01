@@ -31,6 +31,17 @@ test("beheerder heeft alle rechten", () => {
   );
 });
 
+test("custom rolprofiel kan extra capabilities toevoegen bovenop de basisrol", () => {
+  const actual = permittedCapabilities({
+    role: "volunteer",
+    finance_role: "none",
+    capabilities: ["manageContent", "manageEvents"],
+  });
+  assert.equal(actual.includes("manageContent"), true);
+  assert.equal(actual.includes("manageEvents"), true);
+  assert.equal(actual.includes("manageUsers"), false);
+});
+
 test("bestuur beheert de organisatie maar niet de gebruikers", () => {
   const actual = permittedCapabilities({ role: "board", finance_role: "none" });
   assert.deepEqual(actual, capabilities.filter((capability) => capability !== "manageUsers"));

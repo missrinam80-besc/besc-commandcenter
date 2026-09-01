@@ -39,7 +39,7 @@ type BasicRow = {
 
 type GoogleDocumentLink = {
   id: string;
-  entity_type: "meeting" | "event" | "partner";
+  entity_type: "project" | "meeting" | "event" | "campaign" | "partner";
   entity_id: string;
   name: string;
   web_url: string;
@@ -49,6 +49,14 @@ type GoogleDocumentLink = {
 const moduleForEntity = {
   meeting: "meetings",
   event: "events",
+  partner: "sponsors",
+} as const;
+
+const linkedModuleForEntity = {
+  project: "projects",
+  meeting: "meetings",
+  event: "events",
+  campaign: "campaigns",
   partner: "sponsors",
 } as const;
 
@@ -96,13 +104,15 @@ export default async function DocumentsPage({
     supabase.from("administrative_documents").select("id,title,status,drive_url,updated_at").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
     supabase.from("meetings").select("id,title,status,minutes_url,updated_at").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
     supabase.from("merch_launches").select("id,title,status,drive_url,updated_at").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
-    supabase.from("google_resource_links").select("id,entity_type,entity_id,name,web_url,updated_at").eq("organization_id", organizationId).eq("resource_type", "document").in("entity_type", ["meeting", "event", "partner"]),
+    supabase.from("google_resource_links").select("id,entity_type,entity_id,name,web_url,updated_at").eq("organization_id", organizationId).eq("resource_type", "document").in("entity_type", ["project", "meeting", "event", "campaign", "partner"]),
     supabase.from("approval_requests").select("entity_id,status").eq("organization_id", organizationId).eq("entity_type", "document").order("requested_at", { ascending: false }),
   ]);
 
-  const links = new Map(
-    ((generatedLinks.data ?? []) as GoogleDocumentLink[]).map((link) => [`${link.entity_type}:${link.entity_id}`, link]),
-  );
+  const links = new Map<string, GoogleDocumentLink[]>();
+  for (const link of (generatedLinks.data ?? []) as GoogleDocumentLink[]) {
+    const key = `${link.entity_type}:${link.entity_id}`;
+    links.set(key, [...(links.get(key) ?? []), link]);
+  }
   const documentApprovalMap = new Map<string, ApprovalStatus>();
   for (const request of documentApprovals.data ?? []) {
     if (!documentApprovalMap.has(request.entity_id)) {
@@ -119,7 +129,7 @@ export default async function DocumentsPage({
     const moduleKey = moduleForEntity[entityType];
     const documentType = documentTypeForEntity[entityType];
     return (rows ?? []).filter(include).map((row) => {
-      const link = links.get(`${entityType}:${row.id}`);
+      const link = links.get(`${entityType}:${row.id}`)?.[0];
       const entityTitle = row.title ?? row.name ?? "Naamloos dossier";
       return {
         id: `${entityType}:${row.id}`,
@@ -139,11 +149,41 @@ export default async function DocumentsPage({
     });
   }
 
-  const generatedDocuments = [
+  const expectedGeneratedDocuments = [
     ...expectedDocuments(meetings.data, "meeting", (id) => `/app/vergaderingen/${id}`, (row) => !["cancelled", "archived"].includes(row.status)),
     ...expectedDocuments(events.data, "event", (id) => `/app/events/${id}`, (row) => !["cancelled", "archived"].includes(row.status)),
     ...expectedDocuments(sponsors.data, "partner", (id) => `/app/sponsors/${id}`, (row) => row.status === "active"),
   ];
+  const primaryDocumentIds = new Set(expectedGeneratedDocuments.flatMap((document) => document.documentLinkId ? [document.documentLinkId] : []));
+  const sourceRows = new Map<string, BasicRow>();
+  for (const [entityType, rows] of [
+    ["project", projects.data], ["meeting", meetings.data], ["event", events.data],
+    ["campaign", campaigns.data], ["partner", sponsors.data],
+  ] as const) {
+    for (const row of rows ?? []) sourceRows.set(`${entityType}:${row.id}`, row);
+  }
+  const linkedDocuments: GeneratedDocumentRecord[] = ((generatedLinks.data ?? []) as GoogleDocumentLink[])
+    .filter((link) => !primaryDocumentIds.has(link.id))
+    .map((link) => {
+      const sourceRow = sourceRows.get(`${link.entity_type}:${link.entity_id}`);
+      const moduleKey = linkedModuleForEntity[link.entity_type];
+      return {
+        id: `linked:${link.id}`,
+        entityId: link.entity_id,
+        documentLinkId: link.id,
+        title: link.name,
+        module: moduleKey,
+        moduleLabel: documentModuleLabels[moduleKey],
+        documentType: "linked_document",
+        documentTypeLabel: generatedDocumentTypeLabels.linked_document,
+        status: "available",
+        sourceStatus: sourceRow?.status ?? "onbekend",
+        sourceHref: link.entity_type === "project" ? `/app/projecten/${link.entity_id}` : link.entity_type === "meeting" ? `/app/vergaderingen/${link.entity_id}` : link.entity_type === "event" ? `/app/events/${link.entity_id}` : link.entity_type === "campaign" ? `/app/campagnes/${link.entity_id}` : `/app/sponsors/${link.entity_id}`,
+        driveUrl: link.web_url,
+        updatedAt: link.updated_at,
+      };
+    });
+  const generatedDocuments = [...expectedGeneratedDocuments, ...linkedDocuments];
   const visibleDocuments = filterGeneratedDocuments(generatedDocuments, {
     query: search,
     module: moduleFilter,

@@ -1,4 +1,4 @@
-import { Archive, Trash2 } from "lucide-react";
+import { Archive, ChevronDown, Trash2 } from "lucide-react";
 import { changeRecordLifecycle } from "@/app/app/lifecycle-actions";
 import type { LifecycleEntity } from "@/lib/record-lifecycle";
 
@@ -18,48 +18,39 @@ export function RecordLifecyclePanel({
   if (!canManage) return null;
 
   return (
-    <section className="form-card lifecycle-panel">
-      <div className="form-heading">
+    <section className="form-card lifecycle-panel lifecycle-panel-compact">
+      <div className="lifecycle-compact">
         <div>
           <span className="eyebrow">DOSSIERBEHEER</span>
-          <h2>Archiveren of verwijderen</h2>
+          <h2>{isArchived ? `${label} is gearchiveerd` : `${label} beheren`}</h2>
         </div>
-      </div>
-      <div className="lifecycle-actions">
-        <div>
-          <Archive size={20}/>
-          <div>
-            <strong>{isArchived ? "Dit dossier is gearchiveerd" : `${label} archiveren`}</strong>
-            <p>Een archiefitem blijft bewaard, vindbaar via de statusfilters en kan later opnieuw worden geactiveerd.</p>
-          </div>
-          {!isArchived && (
+        <div className="lifecycle-compact-actions">
+          {!isArchived ? (
             <form action={changeRecordLifecycle}>
               <input type="hidden" name="entity" value={entity}/>
               <input type="hidden" name="id" value={id}/>
               <input type="hidden" name="action" value="archive"/>
-              <button className="archive-action">Archiveren</button>
+              <button className="archive-action"><Archive size={15}/>Archiveren</button>
             </form>
+          ) : (
+            <span className="lifecycle-state"><Archive size={15}/>Bewaard in archief</span>
           )}
-        </div>
-        <div className="lifecycle-danger">
-          <Trash2 size={20}/>
-          <div>
-            <strong>{label} verwijderen</strong>
-            <p>Het item verdwijnt uit de werkweergaven. Historiek, koppelingen en externe Google-bestanden blijven veilig bewaard.</p>
-          </div>
-          <form action={changeRecordLifecycle}>
-            <input type="hidden" name="entity" value={entity}/>
-            <input type="hidden" name="id" value={id}/>
-            <input type="hidden" name="action" value="delete"/>
-            <label>
-              Typ <b>VERWIJDER</b>
-              <input name="confirmation" autoComplete="off" required pattern="VERWIJDER"/>
-            </label>
-            <button className="danger-button">Verwijderen</button>
-          </form>
+          <details className="lifecycle-delete">
+            <summary><Trash2 size={15}/>Verwijderen<ChevronDown size={14}/></summary>
+            <form action={changeRecordLifecycle}>
+              <p>Het dossier verdwijnt uit de werkweergaven. Google-bestanden blijven bewaard.</p>
+              <input type="hidden" name="entity" value={entity}/>
+              <input type="hidden" name="id" value={id}/>
+              <input type="hidden" name="action" value="delete"/>
+              <label>
+                Typ <b>VERWIJDER</b>
+                <input name="confirmation" autoComplete="off" required pattern="VERWIJDER"/>
+              </label>
+              <button className="danger-button">Definitief uit werkweergaven verwijderen</button>
+            </form>
+          </details>
         </div>
       </div>
     </section>
   );
 }
-

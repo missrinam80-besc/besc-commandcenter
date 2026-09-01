@@ -6,6 +6,8 @@ const migration = readFileSync("supabase/migrations/20260730200000_add_email_com
 const actions = readFileSync("src/app/app/communicatie/actions.ts", "utf8");
 const gmail = readFileSync("src/lib/google-gmail.ts", "utf8");
 const approvals = readFileSync("src/lib/approvals.ts", "utf8");
+const communicationPage = readFileSync("src/app/app/communicatie/page.tsx", "utf8");
+const bccMigration = readFileSync("supabase/migrations/20260803150000_add_email_bcc_addresses.sql", "utf8");
 
 test("e-mailcommunicatie ondersteunt dossiers en een gecontroleerde levenscyclus", () => {
   assert.match(migration, /entity_type in \('partner','event','meeting'\)/);
@@ -31,6 +33,15 @@ test("Gmail MIME verwijdert regeleinden uit headers en gebruikt base64url", () =
   assert.match(gmail, /replace\(\/\[\\r\\n\]\+\/g, " "\)/);
   assert.match(gmail, /toString\("base64url"\)/);
   assert.match(gmail, /Content-Type: text\/plain; charset="UTF-8"/);
+});
+
+test("dossiermails ondersteunen BCC en passen sjablonen toe vanuit een modal", () => {
+  assert.match(bccMigration, /bcc_addresses text\[\]/);
+  assert.match(actions, /bcc_addresses/);
+  assert.match(actions, /saveGmailDraft\(\{[\s\S]*bcc/);
+  assert.match(communicationPage, /FormModal title="Communicatie voorbereiden"/);
+  assert.match(communicationPage, /Sjabloon toepassen/);
+  assert.match(communicationPage, /name="bcc_addresses"/);
 });
 
 test("alleen bestuur en beheerders kunnen e-mails beoordelen", () => {

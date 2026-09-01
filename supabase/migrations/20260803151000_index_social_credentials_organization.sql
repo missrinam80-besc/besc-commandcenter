@@ -1,0 +1,2 @@
+create index social_account_credentials_organization_idx
+  on private.social_account_credentials(organization_id);

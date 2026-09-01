@@ -1,5 +1,6 @@
 import { operationalModules, type OperationalModule } from "@/app/app/operations/config";
 import { MarkdownField } from "@/components/markdown-field";
+import { communityRoleLabels } from "@/lib/community-people";
 
 const platforms = ["Discord", "Twitch", "YouTube", "TikTok", "Instagram", "Facebook", "X", "Threads", "LinkedIn", "Blogger", "Website", "Nieuwsbrief"];
 type RecordData = { id?: string; [key: string]: unknown };
@@ -14,6 +15,9 @@ export function OperationalRecordForm({
   content = [],
   campaigns = [],
   events = [],
+  accountOptions = [],
+  personRoles = [],
+  returnTo,
 }: {
   action: (formData: FormData) => void | Promise<void>;
   module: OperationalModule;
@@ -23,6 +27,9 @@ export function OperationalRecordForm({
   content?: Option[];
   campaigns?: Option[];
   events?: Option[];
+  accountOptions?: { id: string; label: string }[];
+  personRoles?: string[];
+  returnTo?: string;
 }) {
   const config = operationalModules[module];
   const dateValue = record[config.dateColumn ?? ""]
@@ -32,6 +39,7 @@ export function OperationalRecordForm({
   return (
     <form action={action}>
       <input type="hidden" name="module" value={module}/>
+      {returnTo && <input type="hidden" name="return_to" value={returnTo}/>}
       {record.id && <input type="hidden" name="id" value={record.id}/>}
       <label>Naam / titel<input name="title" defaultValue={String(record[config.titleColumn] ?? "")}/></label>
       <div className="form-row">
@@ -40,8 +48,10 @@ export function OperationalRecordForm({
         {module !== "community" && module !== "social" && <label>Prioriteit<select name="priority" defaultValue={String(record.priority ?? "normal")}><option value="low">Laag</option><option value="normal">Normaal</option><option value="high">Hoog</option><option value="urgent">Urgent</option></select></label>}
         {config.dateColumn && <label>{config.dateLabel}<input type={module === "social" ? "datetime-local" : "date"} name="date" defaultValue={dateValue}/></label>}
         {module === "campagnes" && <>
+          {!record.id && <label className="inline-check campaign-template-toggle"><input type="checkbox" name="apply_template" defaultChecked/>Start met het standaardsjabloon voor dit campagnetype</label>}
           <label>Startdatum<input type="date" name="start_date" defaultValue={String(record.start_date ?? "").slice(0, 10)}/></label>
           <label>Project<select name="project_id" defaultValue={String(record.project_id ?? "")}><option value="">Geen project</option>{projects.map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label>
+          <label>Event<select name="event_id" defaultValue={String(record.event_id ?? "")}><option value="">Geen event</option>{events.map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label>
           <label>Partner<select name="partner_id" defaultValue={String(record.partner_id ?? "")}><option value="">Geen partner</option>{partners.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
           <label>Budget<input type="number" step="0.01" min="0" name="budget" defaultValue={String(record.budget ?? "")}/></label>
           <label>Waarde<input type="number" step="0.01" min="0" name="value" defaultValue={String(record.value ?? "")}/></label>
@@ -70,6 +80,7 @@ export function OperationalRecordForm({
       {module === "community" && <>
         <h3 className="form-subtitle">Profiel en inzetbaarheid</h3>
         <div className="form-row">
+          <label>Command Center-account<select name="account_user_id" defaultValue={String(record.account_user_id ?? "")}><option value="">Geen account gekoppeld</option>{accountOptions.map((account) => <option key={account.id} value={account.id}>{account.label}</option>)}</select></label>
           <label>Handle<input name="handle" defaultValue={String(record.handle ?? "")}/></label>
           <label>Discord<input name="discord_handle" defaultValue={String(record.discord_handle ?? "")}/></label>
           <label>E-mail<input type="email" name="email" defaultValue={String(record.email ?? "")}/></label>
@@ -78,6 +89,7 @@ export function OperationalRecordForm({
           <label>Streamteamniveau<input name="streamteam_level" defaultValue={String(record.streamteam_level ?? "")}/></label>
           <label>Onboarding<select name="onboarding_status" defaultValue={String(record.onboarding_status ?? "not_started")}><option value="not_started">Niet gestart</option><option value="in_progress">Bezig</option><option value="completed">Afgerond</option><option value="not_required">Niet nodig</option></select></label>
         </div>
+        <fieldset className="role-picker"><legend>Rollen</legend>{Object.entries(communityRoleLabels).map(([role, label]) => <label className="inline-check" key={role}><input type="checkbox" name="roles" value={role} defaultChecked={personRoles.includes(role)}/>{label}</label>)}</fieldset>
         <label>Vaardigheden (komma gescheiden)<input name="skills" defaultValue={Array.isArray(record.skills) ? record.skills.join(", ") : ""}/></label>
         <label>Interesses (komma gescheiden)<input name="interests" defaultValue={Array.isArray(record.interests) ? record.interests.join(", ") : ""}/></label>
         <label>Platformen (komma gescheiden)<input name="platforms" defaultValue={Array.isArray(record.platforms) ? record.platforms.join(", ") : ""}/></label>
@@ -92,7 +104,8 @@ export function OperationalRecordForm({
         </div>
       </> : <MarkdownField label="Notities / briefing" name="notes" rows={7} defaultValue={String(record.notes ?? "")}/>}
       {module === "campagnes" && <>
-        <MarkdownField label="Deliverables-overzicht" name="deliverables" rows={4} defaultValue={String(record.deliverables ?? "")}/>
+        <fieldset className="channel-picker"><legend>Kanalen</legend>{platforms.map((channel) => <label key={channel}><input type="checkbox" name="channels" value={channel} defaultChecked={Array.isArray(record.channels) && record.channels.includes(channel)}/>{channel}</label>)}</fieldset>
+        <p className="form-help">Deliverables worden als afzonderlijke, opvolgbare onderdelen in het campagnedossier beheerd.</p>
         <MarkdownField label="Resultaten en evaluatie" name="results_summary" rows={4} defaultValue={String(record.results_summary ?? "")}/>
         <div className="form-row">
           <label>Impressies<input type="number" min="0" name="impressions" defaultValue={String(record.impressions ?? "")}/></label>

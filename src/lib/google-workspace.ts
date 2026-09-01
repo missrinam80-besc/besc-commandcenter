@@ -103,6 +103,7 @@ export async function googleAccessToken() {
           "https://www.googleapis.com/auth/cloud-platform",
           "https://www.googleapis.com/auth/drive",
           "https://www.googleapis.com/auth/documents",
+          "https://www.googleapis.com/auth/presentations",
           "https://www.googleapis.com/auth/calendar",
         ],
         lifetime: "3600s",
@@ -510,6 +511,12 @@ export async function ensureEventDriveStructure(eventTitle: string, eventFolderI
 
 export type GoogleTemplateRole = "minutes" | "sponsorReport" | "event";
 
+export function googlePitchdeckConfiguration() {
+  const sponsor = (process.env.GOOGLE_TEMPLATE_SPONSOR_PITCHDECK_ID ?? "").trim();
+  const event = (process.env.GOOGLE_TEMPLATE_EVENT_PITCHDECK_ID ?? "").trim();
+  return { configured: Boolean(sponsor && event), sponsor, event };
+}
+
 export async function createDocumentFromGoogleTemplate(input: {
   template: GoogleTemplateRole;
   name: string;
@@ -566,6 +573,22 @@ export async function createDocumentFromGoogleTemplate(input: {
     driveId: verified.driveId ?? null,
     parents: verified.parents ?? [input.parentId],
   };
+}
+
+export async function createPresentationFromGoogleTemplate(input: {
+  template: "sponsor" | "event";
+  name: string;
+  parentId: string;
+  replacements: Record<string, string | number | null | undefined>;
+}) {
+  const templates = googlePitchdeckConfiguration();
+  const templateId = templates[input.template];
+  if (!templateId) throw new Error(`Google Slides-template voor ${input.template} ontbreekt.`);
+  const copied = await googleJson<{id:string;name:string;mimeType:string;webViewLink?:string;driveId?:string;parents?:string[]}>(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(templateId)}/copy?supportsAllDrives=true&fields=${driveFolderFields}`,{method:"POST",body:JSON.stringify({name:input.name.trim(),parents:[input.parentId]})});
+  if(copied.mimeType!=="application/vnd.google-apps.presentation")throw new Error("Het ingestelde pitchdeck-template is geen Google Slides-presentatie.");
+  const requests=Object.entries(input.replacements).map(([key,value])=>({replaceAllText:{containsText:{text:`{{${key}}}`,matchCase:false},replaceText:value==null||String(value).trim()===""?"Niet ingevuld":String(value)}}));
+  if(requests.length)await googleJson<{replies:unknown[]}>(`https://slides.googleapis.com/v1/presentations/${encodeURIComponent(copied.id)}:batchUpdate`,{method:"POST",body:JSON.stringify({requests})});
+  return {id:copied.id,name:copied.name,mimeType:copied.mimeType,webViewLink:copied.webViewLink??`https://docs.google.com/presentation/d/${copied.id}/edit`,driveId:copied.driveId??null,parents:copied.parents??[input.parentId]};
 }
 
 export async function moveGoogleDriveFolderToModule(folderId: string, module: GoogleDriveModule) {

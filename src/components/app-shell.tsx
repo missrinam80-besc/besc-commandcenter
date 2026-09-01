@@ -4,7 +4,7 @@ import {
   Archive, BarChart3, Bell, BookOpen, Bot, CalendarDays, CheckCircle2,
   ChevronDown, CircleDollarSign, CircleUserRound, Clapperboard, Clock3, CloudCog,
   FileText, FolderKanban, Handshake, Inbox, Landmark, LayoutDashboard, LogOut,
-  Mail, Megaphone, Menu, Newspaper, ShoppingBag, Sparkles, UserRoundSearch, Users,
+  Mail, Megaphone, Menu, Newspaper, CircleHelp, Rocket, ShieldCheck, ShoppingBag, Sparkles, UserRoundSearch, Users,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
@@ -93,12 +93,54 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Documenten & Drive", href: "/app/documenten", icon: FileText },
       { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin", "board"] },
+      { label: "Productieacceptatie", href: "/app/acceptatie", icon: Rocket, roles: ["admin", "board"] },
+      { label: "Rechtencontrole", href: "/app/beheer/rechten", icon: ShieldCheck, roles: ["admin", "board"] },
+      { label: "Archief", href: "/app/archief", icon: Archive, roles: ["admin", "board"] },
       { label: "Historiek", href: "/app/historiek", icon: Archive, roles: ["admin", "board"] },
       { label: "Activiteit", href: "/app/activiteit", icon: Clock3, roles: ["admin", "board"] },
       { label: "Gebruikers & toegang", href: "/app/beheer/gebruikers", icon: Users, roles: ["admin"] },
     ],
   },
 ];
+
+const helpSearchByActive: Record<string, string> = {
+  Home: "Start hier",
+  Meldingen: "Meldingen",
+  "Mijn werk": "Taken",
+  Inbox: "Inbox",
+  Kalender: "Calendar",
+  Goedkeuringen: "Goedkeuringen",
+  Projecten: "Projecten",
+  Events: "Events",
+  Campagnes: "Campagnes",
+  "Social planning": "Social planning",
+  "Community & vrijwilligers": "Community",
+  "Sponsors & CRM": "Sponsors",
+  Communicatie: "E-mail",
+  Content: "Content",
+  "Shop & merchandise": "Shop",
+  Nieuwsbrieven: "Nieuwsbrieven",
+  "AI Hub": "AI Hub",
+  "Vergaderingen & besluiten": "Vergaderingen",
+  "VZW-administratie": "VZW-administratie",
+  "Financiën": "Financien",
+  Kennisbank: "Start hier",
+  "Rapportage & KPI": "Rapportage",
+  "Documenten & Drive": "Drive",
+  Integraties: "Integraties",
+  Productieacceptatie: "Productie acceptatie",
+  Rechtencontrole: "Rollen rechten",
+  Archief: "Archiveren",
+  Historiek: "Historiek",
+  Activiteit: "Activiteit",
+  "Gebruikers & toegang": "Rollen rechten",
+  Account: "Account",
+};
+
+function helpHref(active: string) {
+  const query = helpSearchByActive[active] || active || "Start hier";
+  return `/app/kennisbank?zoeken=${encodeURIComponent(query)}`;
+}
 
 function canSeeItem(item: NavigationItem, role: OrganizationRole, financeRole: FinanceRole) {
   if (!item.roles && !item.financeRoles) return true;
@@ -195,7 +237,7 @@ export async function AppShell({
     approvalCountQuery = approvalCountQuery.eq("requested_by", user.id).in("status", ["pending", "changes_requested"]);
   }
   const [{ data: profile }, { count: inboxCount }, { count: notificationCount }, { count: approvalCount }] = await Promise.all([
-    supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
+    supabase.from("profiles").select("display_name,theme_preference").eq("id", user.id).maybeSingle(),
     supabase.from("inbox_items").select("id", { count: "exact", head: true }).eq("organization_id", membership.organization_id).is("deleted_at", null).in("status", ["new", "reviewing"]),
     supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("read_at", null),
     approvalCountQuery,
@@ -207,7 +249,7 @@ export async function AppShell({
   const role = providedRole || organizationRoleLabels[membershipRole] || "Teamlid";
 
   return (
-    <main className="app-shell" data-role={membershipRole} data-active={active}>
+    <main className="app-shell" data-role={membershipRole} data-active={active} data-theme={profile?.theme_preference || "system"}>
       <aside className="sidebar">
         <Link className="brand" href="/app" aria-label="BESC Command Center home">
           <Image src="/besc-logo.png" width={875} height={286} priority alt="BESC"/>
@@ -216,6 +258,9 @@ export async function AppShell({
         <PrimaryNavigation active={active} notificationCount={notificationCount ?? 0}/>
         <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
         <div className="sidebar-utility">
+          <Link className="context-help-link" href={helpHref(active)}>
+            <CircleHelp size={17}/><span>Help bij deze pagina</span>
+          </Link>
           <GlobalSearchTrigger active={active === "Zoeken"}/>
         </div>
         <div className="user">
@@ -239,6 +284,9 @@ export async function AppShell({
           <PrimaryNavigation active={active} notificationCount={notificationCount ?? 0}/>
           <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
           <div className="mobile-navigation-search">
+            <Link className="context-help-link" href={helpHref(active)}>
+              <CircleHelp size={17}/>Help bij deze pagina
+            </Link>
             <GlobalSearchTrigger active={active === "Zoeken"}/>
           </div>
           <Link className={active === "Account" ? "active" : ""} href="/app/account">

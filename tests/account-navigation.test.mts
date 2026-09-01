@@ -7,6 +7,8 @@ const accountPage = readFileSync("src/app/app/account/page.tsx", "utf8");
 const accountActions = readFileSync("src/app/app/account/actions.ts", "utf8");
 const callback = readFileSync("src/app/auth/callback/route.ts", "utf8");
 const migration = readFileSync("supabase/migrations/20260730103244_expand_user_profiles.sql", "utf8");
+const themeMigration = readFileSync("supabase/migrations/20260803140000_add_profile_theme_preference.sql", "utf8");
+const themeCss = readFileSync("src/app/globals.css", "utf8");
 
 test("zijnavigatie volgt herkenbare werkstromen", () => {
   for (const group of [
@@ -28,6 +30,8 @@ test("zijnavigatie volgt herkenbare werkstromen", () => {
     ['label: "Nieuwsbrieven"', 'label: "AI Hub"'],
     ['label: "Vergaderingen & besluiten"', 'label: "VZW-administratie"'],
     ['label: "Rapportage & KPI"', 'label: "Beheer"'],
+    ['label: "Integraties"', 'label: "Productieacceptatie"'],
+    ['label: "Productieacceptatie"', 'label: "Historiek"'],
     ['label: "Historiek"', 'label: "Activiteit"'],
     ['label: "Activiteit"', 'label: "Gebruikers & toegang"'],
   ]) {
@@ -35,6 +39,10 @@ test("zijnavigatie volgt herkenbare werkstromen", () => {
   }
   assert.doesNotMatch(shell, /href: "\/app\/financien\/rapportage"/);
   assert.match(shell, /href="\/app\/account"/);
+  assert.match(shell, /helpHref\(active\)/);
+  assert.match(shell, /Help bij deze pagina/);
+  assert.match(shell, /context-help-link/);
+  assert.match(shell, /\{ label: "Productieacceptatie", href: "\/app\/acceptatie", icon: Rocket, roles: \["admin", "board"\] \}/);
   assert.match(shell, /\{ label: "Gebruikers & toegang", href: "\/app\/beheer\/gebruikers", icon: Users, roles: \["admin"\] \}/);
   assert.ok(shell.indexOf("<Navigation active={active}") < shell.indexOf("<GlobalSearchTrigger active={active"), "Zoeken moet onder de gegroepeerde navigatie staan");
 });
@@ -45,6 +53,21 @@ test("accountpagina beheert profiel, beveiliging en voorkeuren", () => {
   assert.match(accountPage, /Wachtwoord wijzigen/);
   assert.match(accountPage, /Meldingsvoorkeuren/);
   assert.match(accountPage, /profile-completeness/);
+});
+
+test("weergavevoorkeur volgt systeem, licht of donker en blijft per gebruiker bewaard", () => {
+  assert.match(themeMigration, /theme_preference in \('system','light','dark'\)/);
+  assert.match(accountPage, /name="theme_preference" value="system"/);
+  assert.match(accountPage, /name="theme_preference" value="light"/);
+  assert.match(accountPage, /name="theme_preference" value="dark"/);
+  assert.match(accountActions, /theme_preference: parsed\.data\.theme_preference/);
+  assert.match(shell, /data-theme=\{profile\?\.theme_preference \|\| "system"\}/);
+  assert.match(themeCss, /prefers-color-scheme:dark/);
+  assert.match(themeCss, /color-scheme:dark/);
+  assert.match(themeCss, /--theme-field:#1a1e1c/);
+  assert.match(themeCss, /--theme-control:#292f2b/);
+  assert.match(themeCss, /input\[type="file"\]::file-selector-button/);
+  assert.match(themeCss, /outline:3px solid var\(--theme-focus\)/);
 });
 
 test("Discord kan veilig gekoppeld en ontkoppeld worden", () => {

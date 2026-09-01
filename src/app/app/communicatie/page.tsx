@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Mail, Plus } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { FormModal } from "@/components/form-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { googleGmailConfiguration } from "@/lib/google-gmail";
 import { renderEmailTemplate } from "@/lib/email-templates";
@@ -79,29 +80,34 @@ export default async function CommunicationPage({ searchParams }: { searchParams
         {query.succes && <div className="success">De e-mailactie is verwerkt.</div>}
 
         {showForm && (
-          <section className="form-card">
+          <FormModal title="Communicatie voorbereiden" closeHref="/app/communicatie">
+          <div>
             <div className="form-heading"><div><span className="eyebrow">NIEUW CONCEPT</span><h2>Communicatie voorbereiden</h2></div><Link href="/app/communicatie">Sluiten</Link></div>
             <form className="template-picker" method="get">
               <input type="hidden" name="nieuw" value="1"/><input type="hidden" name="type" value={selectedType}/><input type="hidden" name="id" value={selectedId}/>
               <label>Sjabloon<select name="template" defaultValue={selectedTemplate?.id ?? ""}><option value="">Leeg bericht</option>{availableTemplates.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
-              <button>Variabelen invullen</button>
+              <button>Sjabloon toepassen</button>
             </form>
             <form action={saveEmailCommunication}>
               <input type="hidden" name="email_template_id" value={selectedTemplate?.id ?? ""}/>
               <div className="form-row">
                 <label>Soort communicatie<select name="communication_type" defaultValue={selectedType === "partner" ? "sponsor_follow_up" : selectedType === "event" ? "event_communication" : "invitation"}>{Object.entries(typeLabels).map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label>
                 <label>Dossiertype<select name="entity_type" defaultValue={selectedType}><option value="partner">Sponsor</option><option value="event">Event</option><option value="meeting">Vergadering</option></select></label>
-                <label>Dossier<select name="entity_id" defaultValue={selectedId} required><option value="">Kies een dossier</option><optgroup label="Sponsors">{(partners.data ?? []).map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</optgroup><optgroup label="Events">{(events.data ?? []).map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</optgroup><optgroup label="Vergaderingen">{(meetings.data ?? []).map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</optgroup></select></label>
+                {selectedType === "partner" && <label>Sponsor<select name="entity_id" defaultValue={selectedId}><option value="">Kies een sponsor</option>{(partners.data ?? []).map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>}
+                {selectedType === "event" && <label>Event<select name="entity_id" defaultValue={selectedId}><option value="">Kies een event</option>{(events.data ?? []).map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label>}
+                {selectedType === "meeting" && <label>Vergadering<select name="entity_id" defaultValue={selectedId}><option value="">Kies een vergadering</option>{(meetings.data ?? []).map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label>}
                 <label>Interne titel<input name="title" required defaultValue={selectedTitle ? `E-mail - ${selectedTitle}` : ""} placeholder="Bijv. opvolging sponsordossier"/></label>
                 <label>Aan<input name="to_addresses" type="text" required defaultValue={defaultTo} placeholder="naam@organisatie.be; tweede@organisatie.be"/></label>
                 <label>CC<input name="cc_addresses" type="text" placeholder="Optioneel, gescheiden door ;"/></label>
+                <label>BCC<input name="bcc_addresses" type="text" placeholder="Optioneel, verborgen voor andere ontvangers"/></label>
                 <label>Onderwerp<input name="subject" required defaultValue={defaultSubject} placeholder="Onderwerp van de e-mail"/></label>
                 <label>Opvolgdatum<input name="follow_up_date" type="date"/></label>
               </div>
               <label>Bericht<textarea name="body_text" required rows={12} defaultValue={defaultBody} placeholder={"Beste,\n\n...\n\nMet vriendelijke groeten,\nBESC vzw"}/></label>
               <div className="form-actions"><button className="primary" disabled={!gmail.configured}><Mail size={15}/>Opslaan als Gmail-concept</button></div>
             </form>
-          </section>
+          </div>
+          </FormModal>
         )}
 
         <section className="form-card">
