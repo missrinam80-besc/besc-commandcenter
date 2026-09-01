@@ -80,8 +80,38 @@ Open `.env.local` en vul minstens in:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<anon key uit supabase start>
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_SITE_URL=http://localhost:3001
 ```
+
+De lokale Supabase-instellingen staan in `supabase/config.toml`.
+Gebruik de Studio-pagina voor Auth Providers niet als enige bron van waarheid. Voor lokale ontwikkeling worden externe loginproviders, zoals Discord, via `supabase/config.toml` ingesteld.
+
+### Discord-login lokaal voorbereiden
+
+1. Open het Discord Developer Portal.
+2. Maak een application aan voor lokale tests, bijvoorbeeld `BESC Command Center Local`.
+3. Ga naar OAuth2.
+4. Voeg deze redirect URL toe:
+
+```text
+http://127.0.0.1:54321/auth/v1/callback
+```
+
+5. Kopieer de Client ID en Client Secret.
+6. Zet deze waarden lokaal in `.env` of in je lokale shell:
+
+```env
+DISCORD_CLIENT_ID=
+DISCORD_CLIENT_SECRET=
+```
+
+7. Zet daarna in `supabase/config.toml` onder `[auth.external.discord]`:
+
+```toml
+enabled = true
+```
+
+8. Herstart Supabase zodat de providerconfiguratie geladen wordt.
 
 Pas daarna de database opnieuw toe:
 
