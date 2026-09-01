@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const migration = readFileSync("supabase/migrations/20260803150000_add_social_integration_core.sql", "utf8");
+const migration = readFileSync("supabase/migrations/20260803150500_add_social_integration_core.sql", "utf8");
 const page = readFileSync("src/app/app/integraties/social/page.tsx", "utf8");
 const actions = readFileSync("src/app/app/integraties/social/actions.ts", "utf8");
 const connectorDefinitions = readFileSync("src/lib/social-connectors.ts", "utf8");
