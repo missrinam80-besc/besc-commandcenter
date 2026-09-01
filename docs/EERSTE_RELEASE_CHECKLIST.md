@@ -19,9 +19,9 @@ Deze checklist is het vaste vertrekpunt voor de eerste volledig werkende versie 
 - [x] Admin kan inloggen en de interne app openen.
 - [x] Vrijwilliger kan inloggen met beperkte interne toegang.
 - [x] Portaalgebruiker komt in het sponsorportaal terecht.
-- [ ] Controleren dat portaalgebruiker geen interne `/app`-toegang krijgt.
-- [ ] Gebruikersbeheer testen: gebruiker activeren, rol wijzigen, toegang intrekken.
-- [ ] Rechtenbeheer testen: custom rol aanmaken, toewijzen en terug verwijderen.
+- [x] Controleren dat portaalgebruiker geen interne `/app`-toegang krijgt.
+- [x] Gebruikersbeheer testen: gebruiker activeren, rol wijzigen, toegang intrekken.
+- [x] Rechtenbeheer testen: custom rol aanmaken, toewijzen en terug verwijderen.
 
 ## 3. Kernmodules
 
