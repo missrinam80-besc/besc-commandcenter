@@ -14,7 +14,8 @@ const emailOtpTypes = new Set<EmailOtpType>([
 ]);
 
 export async function GET(request: Request) {
-  const { origin, searchParams } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
   const rawType = searchParams.get("type");
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
         }
       }
       const destination = user && next === "/app" ? await resolveAuthenticatedHome(supabase, user.id) : next;
-      return NextResponse.redirect(new URL(destination, origin));
+      return NextResponse.redirect(new URL(destination, siteUrl));
     }
   }
   const failurePath = type === "recovery"
@@ -56,5 +57,5 @@ export async function GET(request: Request) {
     : type === "email_change"
       ? "/app/account?fout=email-bevestigen"
       : "/login?error=callback";
-  return NextResponse.redirect(new URL(failurePath, origin));
+  return NextResponse.redirect(new URL(failurePath, siteUrl));
 }
