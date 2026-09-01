@@ -88,7 +88,11 @@ export async function googleAccessToken() {
   const sts = await stsResponse.json() as { access_token?: string; expires_in?: number; error_description?: string; error?: string };
   if (!stsResponse.ok || !sts.access_token) {
     const target = audience.replace("//iam.googleapis.com/", "");
-    throw new Error(`${sts.error_description || sts.error || "Google STS heeft het Vercel-token niet geaccepteerd."} Doel: ${target}`);
+    const detail = sts.error_description || sts.error || "Google STS heeft het Vercel-token niet geaccepteerd.";
+    const setupHint = detail.toLowerCase().includes("audience")
+      ? "Controleer in Google Cloud of het projectnummer, de Workload Identity Pool ID en de Provider ID exact bestaan en ingeschakeld zijn."
+      : "Controleer de Google Workload Identity-configuratie en de serviceaccountrechten.";
+    throw new Error(`${detail} ${setupHint} Doel: ${target}`);
   }
   const impersonationResponse = await fetch(
     `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${encodeURIComponent(config.email)}:generateAccessToken`,
