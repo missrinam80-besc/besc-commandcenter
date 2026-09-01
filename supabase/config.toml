@@ -30,13 +30,14 @@ additional_redirect_urls = [
 ]
 jwt_expiry = 3600
 enable_signup = true
+enable_manual_linking = true
 
 [auth.email]
 enable_signup = true
 enable_confirmations = false
 
 [auth.external.discord]
-enabled = false
+enabled = true
 client_id = "env(DISCORD_CLIENT_ID)"
 secret = "env(DISCORD_CLIENT_SECRET)"
 redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
