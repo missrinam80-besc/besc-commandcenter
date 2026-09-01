@@ -37,6 +37,10 @@ yarn-error.log*
 # local monday exports may contain personal or confidential data
 /monday-export/output/
 
+# local Supabase runtime state
+/supabase/.branches/
+/supabase/.temp/
+
 # vercel
 .vercel
 

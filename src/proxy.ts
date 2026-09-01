@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { hasPermission } from "@/lib/permissions";
 import { requiredCapabilityForQuery } from "@/lib/route-permissions";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
+import { getSupabaseServerUrl } from "@/lib/supabase/url";
 
 function redirectWithCookies(url: URL, response: NextResponse) {
   const redirectResponse = NextResponse.redirect(url);
@@ -15,7 +16,7 @@ function redirectWithCookies(url: URL, response: NextResponse) {
 export async function proxy(request: NextRequest) {
   if (!isSupabaseConfigured()) return NextResponse.next();
   let response = NextResponse.next({ request });
-  const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, { cookies: { getAll: () => request.cookies.getAll(), setAll: items => { items.forEach(({name,value}) => request.cookies.set(name,value)); response = NextResponse.next({request}); items.forEach(({name,value,options}) => response.cookies.set(name,value,options)); } } });
+  const supabase = createServerClient(getSupabaseServerUrl(), process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, { cookies: { getAll: () => request.cookies.getAll(), setAll: items => { items.forEach(({name,value}) => request.cookies.set(name,value)); response = NextResponse.next({request}); items.forEach(({name,value,options}) => response.cookies.set(name,value,options)); } } });
   const { data: { user } } = await supabase.auth.getUser();
   if (!user && request.nextUrl.pathname.startsWith("/app")) return redirectWithCookies(new URL("/login", request.url), response);
   if (user && request.nextUrl.pathname === "/login") return redirectWithCookies(new URL("/app", request.url), response);
