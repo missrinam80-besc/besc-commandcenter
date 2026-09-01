@@ -1,0 +1,5 @@
+create index if not exists newsletter_subscription_requests_org_list_idx
+  on private.newsletter_subscription_requests(organization_id, mailing_list_id);
+
+create index if not exists newsletter_unsubscribe_requests_org_list_idx
+  on private.newsletter_unsubscribe_requests(organization_id, mailing_list_id);
