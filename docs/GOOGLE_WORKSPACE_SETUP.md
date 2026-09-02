@@ -47,6 +47,57 @@ besc-vercel
 
 8. Controleer dat de pool en provider niet disabled zijn.
 
+## Als beide actief lijken
+
+Controleer dan de echte resource name. Let op: Google toont soms een naam/label en een technische ID. De app heeft de technische ID nodig.
+
+Open rechtsboven in Google Cloud de Cloud Shell en voer uit:
+
+```bash
+gcloud iam workload-identity-pools describe besc-vercel \
+  --location=global \
+  --project=besc-command-center \
+  --format="yaml(name,state,disabled)"
+```
+
+Voer daarna uit:
+
+```bash
+gcloud iam workload-identity-pools providers describe besc-vercel \
+  --workload-identity-pool=besc-vercel \
+  --location=global \
+  --project=besc-command-center \
+  --format="yaml(name,state,disabled,issuerUri,allowedAudiences,attributeMapping,attributeCondition)"
+```
+
+De `name` van de provider moet eindigen op:
+
+```text
+projects/154027614837/locations/global/workloadIdentityPools/besc-vercel/providers/besc-vercel
+```
+
+Als het projectnummer, de pool-ID of provider-ID anders is, pas dan `.env.local` aan.
+
+De provider moet minstens deze issuer gebruiken:
+
+```text
+https://oidc.vercel.com/besc-s-projects
+```
+
+Als `allowedAudiences` is ingevuld, moet deze waarde toegelaten zijn:
+
+```text
+https://vercel.com/besc-s-projects
+```
+
+De lokale Vercel-token gebruikt als subject:
+
+```text
+owner:besc-s-projects:project:besc-command-center:environment:development
+```
+
+Als er een `attributeCondition` ingesteld is, moet die subject of de gemapte attributen hiermee overeenkomen.
+
 ## Als de naam anders is
 
 Pas dan lokaal `.env.local` aan:
