@@ -9,7 +9,7 @@ De Command Center gebruikt een OAuth 2.0-webserverflow. Een serviceaccount kan n
 3. Controleer het OAuth-toestemmingsscherm en voeg de bevoegde BESC-beheerder als testgebruiker toe zolang de app in teststatus staat.
 4. Maak een OAuth-client van het type **Web application**.
 5. Voeg deze geautoriseerde redirect-URI's toe:
-   - lokaal: `http://localhost:3000/app/integraties/social/youtube/callback`
+   - lokaal: `http://localhost:3001/app/integraties/social/youtube/callback`
    - productie: `https://<productiedomein>/app/integraties/social/youtube/callback`
 
 Officiële documentatie:
@@ -26,7 +26,7 @@ Voeg lokaal en in Vercel toe:
 SUPABASE_SECRET_KEY=
 GOOGLE_YOUTUBE_CLIENT_ID=
 GOOGLE_YOUTUBE_CLIENT_SECRET=
-NEXT_PUBLIC_SITE_URL=
+NEXT_PUBLIC_SITE_URL=http://localhost:3001
 CRON_SECRET=
 ```
 
