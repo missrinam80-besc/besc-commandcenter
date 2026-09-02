@@ -35,6 +35,19 @@ export function googleWorkloadAudience(input: {
   return `//iam.googleapis.com/projects/${projectNumber}/locations/global/workloadIdentityPools/${poolId}/providers/${providerId}`;
 }
 
+export function vercelOidcTokenExpiry(token: string) {
+  const payload = token.split(".")[1];
+  if (!payload) return null;
+  try {
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), "=");
+    const decoded = JSON.parse(Buffer.from(padded, "base64").toString("utf8")) as { exp?: unknown };
+    return typeof decoded.exp === "number" ? decoded.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 export function googleWorkspaceConfiguration() {
   const missing = requiredVariables.filter((name) => !env(name));
   return {
@@ -70,6 +83,10 @@ export async function googleAccessToken() {
     "";
   if (!oidcToken) {
     throw new Error("Geen Vercel OIDC-token beschikbaar. Deploy op Vercel of voer lokaal `vercel env pull` uit.");
+  }
+  const tokenExpiry = vercelOidcTokenExpiry(oidcToken);
+  if (tokenExpiry && tokenExpiry <= Date.now() + 60_000) {
+    throw new Error("De lokale Vercel OIDC-token is verlopen. Haal lokaal een nieuwe token op met `vercel env pull .env.local --yes` en herstart daarna de webapp-container.");
   }
   const audience = googleWorkloadAudience(config);
   const stsResponse = await fetch("https://sts.googleapis.com/v1/token", {

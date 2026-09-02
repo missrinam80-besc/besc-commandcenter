@@ -89,6 +89,24 @@ Daarna moet dit serviceaccount toegang hebben tot:
 
 ## Lokale test
 
+Controleer eerst of de lokale Vercel OIDC-token nog geldig is. Een lokaal opgehaalde token is tijdelijk. Is die verlopen, haal dan een nieuwe op.
+
+Veilige werkwijze:
+
+1. Maak eerst een kopie van `.env.local`.
+2. Haal daarna de Vercel development-variabelen opnieuw op.
+3. Controleer of je lokale extra waarden, zoals Discord, nog aanwezig zijn.
+4. Herstart de webapp-container.
+
+Gebruik:
+
+```powershell
+Copy-Item .env.local .env.local.backup
+pnpm dlx vercel env pull .env.local --yes --environment=development
+```
+
+Let op: `vercel env pull` kan `.env.local` volledig vervangen. Voeg lokale waarden die niet in Vercel staan daarna opnieuw toe.
+
 Na correctie:
 
 1. Herstart de webapp-container.
