@@ -8,7 +8,13 @@ Threads gebruikt een afzonderlijke OAuth-stroom, maar schrijft naar hetzelfde be
 
 1. Maak of gebruik een Meta Business-app waarvan BESC eigenaar is.
 2. Activeer Facebook Login for Business en de Instagram Graph API.
-3. Voeg deze exacte geldige OAuth redirect URI toe:
+3. Voeg deze exacte geldige OAuth redirect URI's toe:
+
+   Lokaal:
+
+   `http://localhost:3001/app/integraties/social/meta/callback`
+
+   Productie:
 
    `https://<jouw-command-center-domein>/app/integraties/social/meta/callback`
 
@@ -16,6 +22,20 @@ Threads gebruikt een afzonderlijke OAuth-stroom, maar schrijft naar hetzelfde be
    - Facebook: `pages_show_list`, `pages_read_engagement`, `read_insights`
    - Instagram: bovenstaande scopes plus `instagram_basic`, `instagram_manage_insights`
 5. Voor accounts die niet als approl of testaccount zijn toegevoegd, is Advanced Access en mogelijk App Review nodig.
+
+## Lokale variabelen
+
+Zet deze waarden in `.env.local` op je pc en herstart daarna de webcontainer:
+
+```text
+META_APP_ID
+META_APP_SECRET
+META_GRAPH_API_VERSION
+NEXT_PUBLIC_SITE_URL=http://localhost:3001
+SUPABASE_SECRET_KEY
+```
+
+`META_GRAPH_API_VERSION` moet exact overeenkomen met de versie die je in het Meta-dashboard gebruikt, bijvoorbeeld `vXX.X`.
 
 ## Vercel-variabelen
 

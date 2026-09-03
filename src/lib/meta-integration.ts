@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export type MetaPlatform = "facebook" | "instagram";
 
-const facebookScopes = ["pages_show_list", "pages_read_engagement"];
+const facebookScopes = ["pages_show_list", "pages_read_engagement", "read_insights"];
 const instagramScopes = [...facebookScopes, "instagram_basic", "instagram_manage_insights"];
 
 export function metaScopes(platform: MetaPlatform) {
