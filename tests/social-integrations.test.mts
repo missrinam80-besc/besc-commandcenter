@@ -125,7 +125,8 @@ test("Threads-sync schrijft officiële accountinzichten en vernieuwt tokens", ()
 test("Meta OAuth gebruikt minimale platformspecifieke scopes en statecontrole", () => {
   assert.match(meta, /pages_show_list/);
   assert.match(meta, /pages_read_engagement/);
-  assert.match(meta, /instagram_manage_insights/);
+  assert.match(meta, /instagram_basic/);
+  assert.doesNotMatch(meta, /instagram_manage_insights/);
   assert.match(meta, /fb_exchange_token/);
   assert.match(metaStart, /randomBytes\(32\)/);
   assert.match(metaStart, /httpOnly: true/);

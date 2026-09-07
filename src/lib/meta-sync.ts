@@ -81,6 +81,7 @@ export async function syncMetaAccountById(accountId: string, trigger: TriggerTyp
         if (typeof value === "number") snapshots.push({ platformMetric, normalizedMetric, value, periodStart: null, periodEnd: null });
       }
       for (const metric of numericInsights(result.insights)) snapshots.push({ platformMetric: metric.metric, normalizedMetric: `period_${metric.metric}`, value: metric.value, periodStart, periodEnd });
+      partialError = result.insightError;
     }
 
     const rows = snapshots.map((item) => ({

@@ -20,7 +20,7 @@ Threads gebruikt een afzonderlijke OAuth-stroom, maar schrijft naar hetzelfde be
 
 4. Vraag alleen de scopes die de app gebruikt:
    - Facebook: `pages_show_list`, `pages_read_engagement`
-   - Instagram: bovenstaande scopes plus `instagram_basic`, `instagram_manage_insights`
+   - Instagram: bovenstaande scopes plus `instagram_basic`
 5. Voor accounts die niet als approl of testaccount zijn toegevoegd, is Advanced Access en mogelijk App Review nodig.
 
 ## Lokale variabelen
@@ -75,4 +75,5 @@ Tokens worden via de bestaande server-only RPC in Supabase Vault opgeslagen. Sup
 - Facebook Insights kan per paginatype, permissie en API-versie verschillen. Profielmetingen blijven bewaard wanneer Insights niet beschikbaar is; de run krijgt dan status `partial`.
 - Facebook gebruikt voor de pilot `page_views_total` en `page_post_engagements`; oudere bereik- en impressiemetingen worden bewust niet meer opgevraagd.
 - Instagram vereist een professioneel account dat aan een beheerbare Facebook-pagina is gekoppeld.
+- Instagram Insights worden in de pilot als optioneel behandeld. Wanneer Meta geen insight-toegang geeft, blijft de koppeling bruikbaar en krijgt alleen de synchronisatierun status `partial`.
 - Publiceren blijft buiten deze pilot. De roadmap vereist eerst een menselijke goedkeuringsstap voor geplande content.
