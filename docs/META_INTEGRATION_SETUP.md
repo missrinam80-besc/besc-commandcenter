@@ -73,5 +73,6 @@ Tokens worden via de bestaande server-only RPC in Supabase Vault opgeslagen. Sup
 ## Beperkingen van de pilot
 
 - Facebook Insights kan per paginatype, permissie en API-versie verschillen. Profielmetingen blijven bewaard wanneer Insights niet beschikbaar is; de run krijgt dan status `partial`.
+- Facebook gebruikt voor de pilot `page_views_total` en `page_post_engagements`; oudere bereik- en impressiemetingen worden bewust niet meer opgevraagd.
 - Instagram vereist een professioneel account dat aan een beheerbare Facebook-pagina is gekoppeld.
 - Publiceren blijft buiten deze pilot. De roadmap vereist eerst een menselijke goedkeuringsstap voor geplande content.

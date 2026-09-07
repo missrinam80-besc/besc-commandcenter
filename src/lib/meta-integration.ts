@@ -128,7 +128,7 @@ export async function fetchFacebookMetrics(accessToken: string, pageId: string) 
   let insightError: string | null = null;
   try {
     insights = await metaJson(
-      `https://graph.facebook.com/${config.apiVersion}/${pageId}/insights?metric=page_impressions_unique,page_post_engagements&period=days_28`,
+      `https://graph.facebook.com/${config.apiVersion}/${pageId}/insights?metric=page_views_total,page_post_engagements&period=days_28`,
       accessToken,
     );
   } catch (error) {
