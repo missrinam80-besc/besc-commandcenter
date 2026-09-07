@@ -68,7 +68,7 @@ test("beheer toont platformfasering, accountstatus en syncgeschiedenis", () => {
   assert.match(connectorDefinitions, /youtube: \{[^\n]+state: "ready_for_pilot"/);
   assert.match(connectorDefinitions, /facebook: \{[^\n]+state: "ready_for_pilot"/);
   assert.match(connectorDefinitions, /instagram: \{[^\n]+state: "ready_for_pilot"/);
-  assert.match(connectorDefinitions, /threads: \{[^\n]+state: "ready_for_pilot"/);
+  assert.match(connectorDefinitions, /threads: \{[^\n]+state: "blocked"[^\n]+Niet gebruiken in de eerste versie/);
   assert.match(connectorDefinitions, /twitch: \{[^\n]+state: "ready_for_pilot"/);
   assert.match(connectorDefinitions, /linkedin: \{[^\n]+state: "blocked"[^\n]+Community Management/);
   assert.match(connectorDefinitions, /tiktok: \{[^\n]+state: "blocked"[^\n]+audit/);
@@ -206,12 +206,14 @@ test("social koppelingen hebben auditregistratie en een interne quotarem", () =>
 });
 
 test("social integraties hebben finale acceptatiecontrole en beslispoorten", () => {
-  for (const platform of ["youtube", "facebook", "instagram", "threads", "twitch"]) {
+  for (const platform of ["youtube", "facebook", "instagram", "twitch"]) {
     assert.match(socialAcceptance, new RegExp(`${platform}: \\[`));
   }
+  assert.doesNotMatch(socialAcceptance, /threads: \[/);
   assert.match(socialAcceptance, /OAuth-flow/);
   assert.match(socialAcceptance, /Handmatige sync uitvoeren/);
   assert.match(socialAcceptance, /Socialrapportage en CSV-export valideren/);
+  assert.match(socialAcceptance, /platform: "Threads"/);
   assert.match(socialAcceptance, /platform: "LinkedIn"/);
   assert.match(socialAcceptance, /platform: "TikTok"/);
   assert.match(socialAcceptance, /platform: "X"/);

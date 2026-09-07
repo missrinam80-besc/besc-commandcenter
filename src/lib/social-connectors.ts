@@ -11,7 +11,7 @@ export const socialPlatformDefinitions: Record<SocialPlatform, {
   youtube: { label: "YouTube", phase: "Eerste pilot", capabilities: ["Kanaaldata", "Videoanalytics"], state: "ready_for_pilot" },
   facebook: { label: "Facebook", phase: "Meta-pilot", capabilities: ["Paginadata", "Pagina-inzichten"], state: "ready_for_pilot" },
   instagram: { label: "Instagram", phase: "Meta-pilot", capabilities: ["Accountdata", "Accountinzichten"], state: "ready_for_pilot" },
-  threads: { label: "Threads", phase: "Meta-pilot", capabilities: ["Accountdata", "Accountinzichten"], state: "ready_for_pilot" },
+  threads: { label: "Threads", phase: "Later", capabilities: ["Accountdata", "Accountinzichten"], state: "blocked", requirement: "Niet gebruiken in de eerste versie; OAuth vereist extra platformvoorwaarden." },
   twitch: { label: "Twitch", phase: "Operationele pilot", capabilities: ["Live-status", "Kanaalplanning"], state: "ready_for_pilot" },
   linkedin: { label: "LinkedIn", phase: "Na producttoegang", capabilities: ["Organisatieposts", "Analytics"], state: "blocked", requirement: "Community Management-toegang door LinkedIn" },
   tiktok: { label: "TikTok", phase: "Na audit", capabilities: ["Direct Post"], state: "blocked", requirement: "Productgoedkeuring en audit door TikTok" },

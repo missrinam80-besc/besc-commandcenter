@@ -80,7 +80,7 @@ Deze onderdelen zijn pas volledig klaar zodra de externe accounts en API-toegang
 - [ ] Gmail configureren.
 - [ ] YouTube OAuth/API configureren.
 - [ ] Meta/Facebook/Instagram configureren.
-- [ ] Threads configureren.
+- [x] Threads niet gebruiken in v1.
 - [ ] Twitch configureren.
 
 ## 7. Docker en VPS
