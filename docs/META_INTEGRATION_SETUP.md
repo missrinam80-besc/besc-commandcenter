@@ -54,7 +54,13 @@ CRON_SECRET
 
 `META_APP_SECRET` en `SUPABASE_SECRET_KEY` zijn uitsluitend servervariabelen en mogen nooit het voorvoegsel `NEXT_PUBLIC_` krijgen. Vul bij `META_GRAPH_API_VERSION` bewust de actieve versie uit het Meta-dashboard in; de applicatie kiest geen mogelijk verouderde versie voor je.
 
-Voeg voor Threads als redirect URI toe:
+Voeg voor Threads deze redirect URI's toe:
+
+Lokaal:
+
+`http://localhost:3001/app/integraties/social/threads/callback`
+
+Productie:
 
 `https://<jouw-command-center-domein>/app/integraties/social/threads/callback`
 
