@@ -181,7 +181,7 @@ function Navigation({
                 const Icon = item.icon;
                 const count = item.counter === "inbox" ? inboxCount : item.counter === "approvals" ? approvalCount : 0;
                 return (
-                  <Link className={active === item.label ? "active" : ""} href={item.href} key={item.href}>
+                  <Link className={active === item.label ? "active" : ""} href={item.href} key={`${group.label}:${item.label}:${item.href}`}>
                     <Icon size={17}/>
                     <span>{item.label}</span>
                     {count > 0 && <b>{count > 99 ? "99+" : count}</b>}
