@@ -50,6 +50,10 @@ export function isManager(membership: MembershipAccess) {
   return membership.role === "admin" || membership.role === "board";
 }
 
+export function isTeamMember(membership: MembershipAccess) {
+  return membership.role === "admin" || membership.role === "board" || membership.role === "member";
+}
+
 export function hasPermission(membership: MembershipAccess, capability: Capability) {
   if (membership.capabilities?.includes(capability)) return true;
   switch (capability) {
@@ -57,13 +61,14 @@ export function hasPermission(membership: MembershipAccess, capability: Capabili
       return isAdmin(membership);
     case "manageOrganization":
     case "manageInbox":
-    case "manageProjects":
-    case "manageContent":
-    case "manageEvents":
     case "manageIntegrations":
     case "manageKpis":
     case "manageAiTemplates":
       return isManager(membership);
+    case "manageProjects":
+    case "manageContent":
+    case "manageEvents":
+      return isTeamMember(membership);
     case "manageFinance":
       return isManager(membership) || membership.finance_role === "approver" || membership.finance_role === "treasurer";
     case "viewFinance":

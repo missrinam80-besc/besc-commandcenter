@@ -119,6 +119,11 @@ function canMutate(policy: AreaPolicy, membership: MembershipAccess | null, arch
   return "no";
 }
 
+function canDelete(policy: AreaPolicy, membership: MembershipAccess | null): AccessDecision {
+  if (!membership || membership.role !== "admin") return "no";
+  return canMutate(policy, membership, true);
+}
+
 function canExport(policy: AreaPolicy, membership: MembershipAccess | null): AccessDecision {
   if (!membership) return "no";
   if (policy.managerExport && isManagerLike(membership)) return "yes";
@@ -155,7 +160,7 @@ export function accessMatrixForRole(role: AccessRoleKey): AccessArea[] {
     create: canCreate(policy, membership),
     edit: canMutate(policy, membership),
     archive: canMutate(policy, membership, true),
-    delete: canMutate(policy, membership, true),
+    delete: canDelete(policy, membership),
     export: canExport(policy, membership),
     approve: canApprove(policy, membership),
     dataScope: policy.dataScope ?? "Organisatiedata binnen BESC.",
@@ -187,7 +192,7 @@ export function accessMatrixForProfile(profile: MembershipAccess): AccessArea[] 
     create: canCreate(policy, membership),
     edit: canMutate(policy, membership),
     archive: canMutate(policy, membership, true),
-    delete: canMutate(policy, membership, true),
+    delete: canDelete(policy, membership),
     export: canExport(policy, membership),
     approve: canApprove(policy, membership),
     dataScope: policy.dataScope ?? "Organisatiedata binnen BESC.",

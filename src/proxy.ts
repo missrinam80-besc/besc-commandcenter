@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { hasPermission } from "@/lib/permissions";
-import { requiredCapabilityForQuery } from "@/lib/route-permissions";
+import { canViewInternalPath, requiredCapabilityForQuery } from "@/lib/route-permissions";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { getSupabaseServerUrl } from "@/lib/supabase/url";
 import { resolveAuthenticatedHome } from "@/lib/auth-destination";
@@ -22,10 +22,11 @@ export async function proxy(request: NextRequest) {
   if (!user && request.nextUrl.pathname.startsWith("/app")) return redirectWithCookies(new URL("/login", request.url), response);
   if (user && request.nextUrl.pathname === "/login") return redirectWithCookies(new URL(await resolveAuthenticatedHome(supabase, user.id), request.url), response);
 
-  const capability = user && request.nextUrl.pathname.startsWith("/app")
+  const shouldCheckAppAccess = Boolean(user && request.nextUrl.pathname.startsWith("/app"));
+  const capability = shouldCheckAppAccess
     ? requiredCapabilityForQuery(request.nextUrl.pathname, request.nextUrl.searchParams)
     : null;
-  if (user && capability) {
+  if (user && shouldCheckAppAccess) {
     const enriched = await supabase
       .from("organization_members")
       .select("role,finance_role,status,organization_access_roles(capabilities)")
@@ -46,7 +47,11 @@ export async function proxy(request: NextRequest) {
       return redirectWithCookies(new URL("/wachten-op-goedkeuring", request.url), response);
     }
     const customRole = (membership as { organization_access_roles?: { capabilities?: string[] | null } | null }).organization_access_roles;
-    if (!hasPermission({ ...membership, capabilities: customRole?.capabilities ?? null }, capability)) {
+    const access = { ...membership, capabilities: customRole?.capabilities ?? null };
+    if (!canViewInternalPath(request.nextUrl.pathname, access, request.nextUrl.searchParams)) {
+      return redirectWithCookies(new URL("/app?fout=geen-toegang", request.url), response);
+    }
+    if (capability && !hasPermission(access, capability)) {
       const destination = request.nextUrl.clone();
       destination.searchParams.delete("nieuw");
       destination.searchParams.delete("bewerken");

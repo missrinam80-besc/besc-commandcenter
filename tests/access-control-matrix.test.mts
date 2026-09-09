@@ -43,6 +43,7 @@ test("rechtenmatrix bewaakt aanmaken, bewerken, archiveren, verwijderen, exporte
   }
   assert.match(matrix, /canReviewApproval/);
   assert.match(matrix, /hasPermission/);
+  assert.match(matrix, /membership\.role !== "admin"/);
   assert.match(matrix, new RegExp("Geen toegang tot /app"));
 });
 
