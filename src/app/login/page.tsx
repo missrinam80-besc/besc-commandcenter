@@ -3,6 +3,8 @@ import { KeyRound, Mail } from "lucide-react";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { registerWithPassword, requestPasswordReset, sendMagicLink, signInWithDiscord, signInWithPassword } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 const messages:Record<string,string>={
   inloggegevens:"E-mailadres of wachtwoord is niet correct.",velden:"Vul alle verplichte velden in.",
   "magic-link":"De magic link kon niet worden verstuurd. Wacht minstens 60 seconden en controleer de e-mailinstellingen in Supabase.",
