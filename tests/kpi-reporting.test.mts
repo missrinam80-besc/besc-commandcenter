@@ -23,7 +23,7 @@ test("KPI-registraties koppelen bron, definitie en alle relevante dossiers", asy
   assert.match(detail, /Verzamelmethode/);
 });
 
-test("social inzichten koppelen publicaties aan controleerbare KPI-metingen",async()=>{const[page,route,migration]=await Promise.all([source("src/app/app/rapportage/social/page.tsx"),source("src/app/app/rapportage/social/export/route.ts"),source("supabase/migrations/20260803193000_link_kpis_to_social_posts.sql")]);assert.match(migration,/social_post_id uuid references public\.social_posts/);assert.match(page,/PLATFORMOVERZICHT/);assert.match(page,/collection_method/);assert.match(page,/ManagementReportActions/);assert.match(route,/Content-Disposition/)});
+test("social inzichten koppelen publicaties aan controleerbare KPI-metingen",async()=>{const[page,route,migration]=await Promise.all([source("src/app/app/rapportage/social/page.tsx"),source("src/app/app/rapportage/social/export/route.ts"),source("supabase/migrations/20260803193000_link_kpis_to_social_posts.sql")]);assert.match(migration,/social_post_id uuid references public\.social_posts/);assert.match(page,/PLATFORMOVERZICHT/);assert.match(page,/collection_method/);assert.match(page,/ManagementReportActions/);assert.match(page,/\["admin", "board", "member"\]/);assert.match(route,/Content-Disposition/);assert.match(route,/\["admin", "board", "member"\]/)});
 
 test("sponsorrapport is online, afdrukbaar en als CSV beschikbaar", async () => {
   const [overview, page, detail, exportRoute] = await Promise.all([

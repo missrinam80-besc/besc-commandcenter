@@ -15,8 +15,8 @@ export default async function SocialInsights({ searchParams }: { searchParams: P
   const year = Number(query.jaar) || new Date().getFullYear();
   const { supabase, membership } = await requireActiveMembership();
   const organizationId = membership.organization_id;
-  if (!["admin", "board"].includes(membership.role)) {
-    return <AppShell active="Rapportage & KPI"><div className="module-body"><div className="permission-note">Social inzichten zijn alleen beschikbaar voor bestuur en beheerders.</div></div></AppShell>;
+  if (!["admin", "board", "member"].includes(membership.role)) {
+    return <AppShell active="Social inzichten"><div className="module-body"><div className="permission-note">Social inzichten zijn alleen beschikbaar voor bestuur en medewerkers.</div></div></AppShell>;
   }
   const start = `${year}-01-01T00:00:00Z`;
   const end = `${year}-12-31T23:59:59Z`;
@@ -42,7 +42,7 @@ export default async function SocialInsights({ searchParams }: { searchParams: P
   })).sort((a, b) => b.posts - a.posts || b.automaticMeasurements - a.automaticMeasurements);
   const apiMeasurements = kpiRows.filter((item) => item.collection_method === "api").length + automaticRows.length;
 
-  return <AppShell active="Rapportage & KPI">
+  return <AppShell active="Social inzichten">
     <header className="project-detail-head">
       <div><Link href="/app/rapportage">← Terug naar rapportage</Link><span className="eyebrow">SOCIAL INZICHTEN</span><h1>Social media</h1><p>{year} · handmatige, geïmporteerde en officiële API-metingen duidelijk onderscheiden</p></div>
       <div className="project-actions"><ManagementReportActions exportHref={`/app/rapportage/social/export?jaar=${year}`}/></div>
