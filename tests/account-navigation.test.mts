@@ -34,8 +34,7 @@ test("zijnavigatie volgt herkenbare werkstromen", () => {
     ['label: "Management overzicht"', 'label: "Sponsorrapportage"'],
     ['label: "Sponsorrapportage"', 'label: "Streamerrapportage"'],
     ['label: "Streamerrapportage"', 'label: "Beheer"'],
-    ['label: "Integraties"', 'label: "Productieacceptatie"'],
-    ['label: "Productieacceptatie"', 'label: "Archief"'],
+    ['label: "Integraties"', 'label: "Rechtencontrole"'],
     ['label: "Archief"', 'label: "Historiek"'],
     ['label: "Historiek"', 'label: "Activiteit"'],
     ['label: "Activiteit"', 'label: "Gebruikers & toegang"'],
@@ -47,7 +46,9 @@ test("zijnavigatie volgt herkenbare werkstromen", () => {
   assert.match(shell, /helpHref\(active\)/);
   assert.match(shell, /Help bij deze pagina/);
   assert.match(shell, /context-help-link/);
-  assert.match(shell, /\{ label: "Productieacceptatie", href: "\/app\/acceptatie", icon: Rocket, roles: \["admin", "board"\] \}/);
+  assert.doesNotMatch(shell, /Productieacceptatie/);
+  assert.match(shell, /\{ label: "Sponsorrapportage", href: "\/app\/rapportage\/sponsors", icon: Handshake, roles: \["admin", "board", "member"\] \}/);
+  assert.match(shell, /\{ label: "Streamerrapportage", href: "\/app\/rapportage\/creators", icon: UserRoundSearch, roles: \["admin", "board", "member"\] \}/);
   assert.match(shell, /\{ label: "Gebruikers & toegang", href: "\/app\/beheer\/gebruikers", icon: Users, roles: \["admin"\] \}/);
   assert.ok(shell.indexOf("<Navigation active={active}") < shell.indexOf("<GlobalSearchTrigger active={active"), "Zoeken moet onder de gegroepeerde navigatie staan");
 });

@@ -26,32 +26,42 @@ test("KPI-registraties koppelen bron, definitie en alle relevante dossiers", asy
 test("social inzichten koppelen publicaties aan controleerbare KPI-metingen",async()=>{const[page,route,migration]=await Promise.all([source("src/app/app/rapportage/social/page.tsx"),source("src/app/app/rapportage/social/export/route.ts"),source("supabase/migrations/20260803193000_link_kpis_to_social_posts.sql")]);assert.match(migration,/social_post_id uuid references public\.social_posts/);assert.match(page,/PLATFORMOVERZICHT/);assert.match(page,/collection_method/);assert.match(page,/ManagementReportActions/);assert.match(route,/Content-Disposition/)});
 
 test("sponsorrapport is online, afdrukbaar en als CSV beschikbaar", async () => {
-  const [page, detail, exportRoute] = await Promise.all([
+  const [overview, page, detail, exportRoute] = await Promise.all([
+    source("src/app/app/rapportage/sponsors/page.tsx"),
     source("src/app/app/rapportage/sponsors/[id]/page.tsx"),
     source("src/components/operational-record-detail.tsx"),
     source("src/app/app/rapportage/sponsors/[id]/export/route.ts"),
   ]);
+  assert.match(overview, /ReportSelector/);
+  assert.match(overview, /basePath="\/app\/rapportage\/sponsors"/);
   assert.match(page, /ManagementReportActions/);
   assert.match(page, /FINANCIËLE REALISATIE/);
   assert.match(page, /CREATORS & STREAMERS/);
+  assert.match(page, /\["admin", "board", "member"\]/);
   assert.match(detail, /Sponsorrapport/);
   assert.match(exportRoute, /Content-Disposition/);
   assert.match(exportRoute, /collection_method/);
+  assert.match(exportRoute, /\["admin", "board", "member"\]/);
 });
 
 test("event- en creatorrapporten gebruiken dezelfde controleerbare uitvoer", async () => {
-  const [eventPage, eventExport, creatorPage, creatorExport, eventDetail, operationalDetail] = await Promise.all([
+  const [eventPage, eventExport, creatorOverview, creatorPage, creatorExport, eventDetail, operationalDetail] = await Promise.all([
     source("src/app/app/rapportage/events/[id]/page.tsx"),
     source("src/app/app/rapportage/events/[id]/export/route.ts"),
+    source("src/app/app/rapportage/creators/page.tsx"),
     source("src/app/app/rapportage/creators/[id]/page.tsx"),
     source("src/app/app/rapportage/creators/[id]/export/route.ts"),
     source("src/app/app/events/[id]/page.tsx"),
     source("src/components/operational-record-detail.tsx"),
   ]);
+  assert.match(creatorOverview, /ReportSelector/);
+  assert.match(creatorOverview, /basePath="\/app\/rapportage\/creators"/);
   for (const page of [eventPage, creatorPage]) {
     assert.match(page, /ManagementReportActions/);
     assert.match(page, /collection_method/);
   }
+  assert.match(creatorPage, /\["admin","board","member"\]/);
+  assert.match(creatorExport, /\["admin","board","member"\]/);
   for (const route of [eventExport, creatorExport]) assert.match(route, /Content-Disposition/);
   assert.match(eventDetail, /Eventrapport/);
   assert.match(operationalDetail, /Creatorrapport/);

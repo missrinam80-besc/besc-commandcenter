@@ -22,6 +22,6 @@ test("detail- en integratiepanelen gebruiken themavariabelen in plaats van harde
   assert.match(css, /record-metadata/);
   assert.match(css, /drive-connected-row/);
   assert.match(css, /integration-security/);
-  assert.match(css, /acceptance-run-banner/);
+  assert.doesNotMatch(css, /acceptance-run-banner/);
   assert.match(css, /background-color:var\(--theme-control\)/);
 });

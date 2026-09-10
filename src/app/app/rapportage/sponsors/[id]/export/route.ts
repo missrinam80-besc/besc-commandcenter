@@ -10,7 +10,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const range = managementPeriod(period, anchor);
   const start = range.start.toISOString().slice(0, 10), end = range.end.toISOString().slice(0, 10);
   const { supabase, membership } = await requireActiveMembership();
-  if (!["admin", "board"].includes(membership.role)) return new Response("Geen toegang", { status: 403 });
+  if (!["admin", "board", "member"].includes(membership.role)) return new Response("Geen toegang", { status: 403 });
   const org = membership.organization_id;
   const [partner, campaigns, kpis] = await Promise.all([
     supabase.from("partners").select("name").eq("organization_id", org).eq("id", id).is("deleted_at", null).maybeSingle(),

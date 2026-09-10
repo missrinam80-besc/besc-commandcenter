@@ -7,10 +7,8 @@ const adminOnlyPrefixes = [
 const memberHiddenPrefixes = [
   "/app/administratie",
   "/app/integraties",
-  "/app/acceptatie",
   "/app/beheer",
   "/app/rapportage/management",
-  "/app/rapportage/sponsors",
   "/app/rapportage/events",
 ];
 

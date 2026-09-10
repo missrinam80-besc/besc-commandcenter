@@ -17,7 +17,7 @@ Laatste technische controle: 10 september 2026.
 - Fase 8 — YouTube, Facebook, Instagram en Twitch als officiële API-pilots; Threads en X blijven beslispoorten voor later.
 - Fase 9 — kennisbankmodule, command-centerhandleiding, procesdocumentatie en beheerd publicatieproces.
 - Fase 10 — contextuele hulp, onboardinglinks en directe helpnavigatie vanuit de applicatie.
-- Fase 11 — productieacceptatiepagina met technische checks, datachecks, handmatige rooktest en beslispoorten.
+- Fase 11 — handmatige releasecontrole via checklist, technische checks, datachecks, rooktest en beslispoorten.
 
 ## Externe acceptatie nodig
 
@@ -42,7 +42,7 @@ Deze onderdelen zijn volgens de goedgekeurde roadmap niet zonder nieuwe beslissi
 
 Een gesloten beslispoort is geen defect of onafgewerkte implementatie. Zodra de voorwaarde aantoonbaar vervuld is, wordt ze een afzonderlijke bouw- en acceptatieronde.
 
-## Finale productieacceptatie
+## Finale releasecontrole
 
 1. Alle variabelen uit `.env.example` die voor actieve modules nodig zijn in Vercel zetten.
 2. OAuth redirect URI's exact bij de providers registreren.

@@ -38,7 +38,7 @@ De applicatie is al opgesplitst in herkenbare functionele modules via `src/app/a
 - Content en publicatie: content, nieuwsbrieven, shop, AI Hub.
 - Organisatie: vergaderingen, administratie, financiën, documenten, kennisbank.
 - Inzichten: rapportage, management, social inzichten, sponsorrapportage, creator-/streamerrapportage.
-- Beheer: gebruikers, rechten, integraties, activiteit, archief, historiek, acceptatie.
+- Beheer: gebruikers, rechten, integraties, activiteit, archief en historiek.
 
 De modules zijn voldoende apart voor V1. Er is bewust gedeelde code voor generieke modulepagina's, formulieren, rechten, integraties en rapportage. Dat is correct: het voorkomt dubbele logica en maakt de app beter onderhoudbaar.
 
@@ -85,7 +85,7 @@ docker build --target runner -t commandcenter-web:production-check .
 ## Aanbevolen volgende ronde
 
 1. Update de eerste-releasechecklist met de integraties die intussen effectief getest zijn.
-2. Werk de resterende kernmoduletests af en vul de acceptatiepagina.
+2. Werk de resterende kernmoduletests af en leg de resultaten vast in de releasechecklist.
 3. Maak lokaal een eerste databasebackup volgens `docs/BACKUP_EN_RESTORE.md`.
 4. Ruim starterassets op na expliciet akkoord.
 5. Maak daarna een release-kandidaatbranch of pull request naar `main`.

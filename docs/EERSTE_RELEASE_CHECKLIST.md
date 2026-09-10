@@ -45,7 +45,7 @@ Test per module minimaal: openen, record aanmaken, record bewerken, archiveren/v
 - [ ] Rapportage
 - [ ] Meldingen
 - [ ] Archief
-- [ ] Acceptatie
+- [x] Productieacceptatiepagina verwijderd; releasecontrole gebeurt via deze checklist.
 - [ ] Integraties
 
 ## 4. Rapportage en exports

@@ -4,7 +4,7 @@ import {
   Archive, BarChart3, Bell, BookOpen, Bot, CalendarDays, CheckCircle2,
   ChevronDown, CircleDollarSign, CircleUserRound, Clapperboard, Clock3, CloudCog,
   FolderKanban, Handshake, Inbox, Landmark, LayoutDashboard, LogOut,
-  Mail, Megaphone, Menu, Newspaper, CircleHelp, Rocket, ShieldCheck, ShoppingBag, Sparkles, UserRoundSearch, Users,
+  Mail, Megaphone, Menu, Newspaper, CircleHelp, ShieldCheck, ShoppingBag, Sparkles, UserRoundSearch, Users,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
@@ -87,8 +87,8 @@ const navigationGroups: NavigationGroup[] = [
       { label: "Rapportage & KPI", href: "/app/rapportage", icon: BarChart3, roles: ["admin", "board"] },
       { label: "Social inzichten", href: "/app/rapportage/social", icon: BarChart3, roles: ["admin", "board", "member"] },
       { label: "Management overzicht", href: "/app/rapportage/management", icon: BarChart3, roles: ["admin", "board"] },
-      { label: "Sponsorrapportage", href: "/app/rapportage", icon: Handshake, roles: ["admin", "board"] },
-      { label: "Streamerrapportage", href: "/app/rapportage?domein=community", icon: UserRoundSearch, roles: ["admin", "board", "member"] },
+      { label: "Sponsorrapportage", href: "/app/rapportage/sponsors", icon: Handshake, roles: ["admin", "board", "member"] },
+      { label: "Streamerrapportage", href: "/app/rapportage/creators", icon: UserRoundSearch, roles: ["admin", "board", "member"] },
     ],
   },
   {
@@ -96,7 +96,6 @@ const navigationGroups: NavigationGroup[] = [
     icon: CloudCog,
     items: [
       { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin", "board"] },
-      { label: "Productieacceptatie", href: "/app/acceptatie", icon: Rocket, roles: ["admin", "board"] },
       { label: "Rechtencontrole", href: "/app/beheer/rechten", icon: ShieldCheck, roles: ["admin", "board"] },
       { label: "Archief", href: "/app/archief", icon: Archive, roles: ["admin", "board", "member"] },
       { label: "Historiek", href: "/app/historiek", icon: Archive, roles: ["admin", "board", "member"] },
@@ -131,7 +130,6 @@ const helpSearchByActive: Record<string, string> = {
   "Rapportage & KPI": "Rapportage",
   "Documenten & Drive": "Drive",
   Integraties: "Integraties",
-  Productieacceptatie: "Productie acceptatie",
   Rechtencontrole: "Rollen rechten",
   Archief: "Archiveren",
   Historiek: "Historiek",

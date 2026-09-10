@@ -96,6 +96,10 @@ test("directe app-routes volgen de afgesproken zichtbaarheid per rol", () => {
   assert.equal(canViewInternalPath("/app/beheer/gebruikers", board), false);
   assert.equal(canViewInternalPath("/app/inbox", member), true);
   assert.equal(canViewInternalPath("/app/rapportage/social", member), true);
+  assert.equal(canViewInternalPath("/app/rapportage/sponsors", member), true);
+  assert.equal(canViewInternalPath("/app/rapportage/sponsors/sponsor-1", member), true);
+  assert.equal(canViewInternalPath("/app/rapportage/creators", member), true);
+  assert.equal(canViewInternalPath("/app/rapportage/creators/streamer-1", member), true);
   assert.equal(canViewInternalPath("/app/administratie", member), false);
   assert.equal(canViewInternalPath("/app/financien", member), false);
   assert.equal(canViewInternalPath("/app/financien", member, new URLSearchParams("nieuw=kost")), true);
@@ -104,6 +108,8 @@ test("directe app-routes volgen de afgesproken zichtbaarheid per rol", () => {
   assert.equal(canViewInternalPath("/app/kennisbank/artikel-1", volunteer), true);
   assert.equal(canViewInternalPath("/app/inbox", volunteer), false);
   assert.equal(canViewInternalPath("/app/projecten", volunteer), false);
+  assert.equal(canViewInternalPath("/app/rapportage/sponsors", volunteer), false);
+  assert.equal(canViewInternalPath("/app/rapportage/creators", volunteer), false);
 });
 
 const routeCases: Array<{
