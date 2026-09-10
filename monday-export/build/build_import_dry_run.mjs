@@ -155,7 +155,7 @@ const unavailable = wb.worksheets.add("Te herstellen borden");
 const mapping = wb.worksheets.add("Veldmapping");
 const schema = wb.worksheets.add("Schema vooraf nodig");
 
-const purple = "#342F74", orange = "#EF7F3B", palePurple = "#F4F1FF", paleOrange = "#FFF3E8", green = "#E8F5E9", red = "#FDECEC", grid = "#D9DDE7";
+const purple = "#342F74", orange = "#EF7F3B", palePurple = "#F4F1FF", green = "#E8F5E9", red = "#FDECEC", grid = "#D9DDE7";
 const header = { fill: orange, font: { bold: true, color: "#FFFFFF" }, borders: { preset: "outside", style: "thin", color: grid } };
 const title = { fill: purple, font: { bold: true, color: "#FFFFFF", size: 18 } };
 const colName = (number) => { let out = "", n = number; while (n > 0) { n--; out = String.fromCharCode(65 + (n % 26)) + out; n = Math.floor(n / 26); } return out; };

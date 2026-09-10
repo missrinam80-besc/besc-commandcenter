@@ -1,18 +1,45 @@
 # BESC Command Center
 
-Eerste werkende basis voor release 0.1: Home, Inbox, Taken en Projecten.
+Interne werkplek voor BESC vzw met ledenbeheer, planning, projecten, events, campagnes, content, sponsors, communicatie, rapportage, social inzichten en portalen.
 
-## Lokaal starten
+## Lokale ontwikkelomgeving
 
-1. Kopieer `.env.example` naar `.env.local` en vul de Supabase-waarden in.
-2. Voer de SQL-migratie in `supabase/migrations` uit op een Supabase-project.
-3. Schakel e-mail en Discord in onder Supabase Auth Providers. Voeg `/auth/callback` toe aan de redirect allow list.
-4. Start met `pnpm dev`.
+De aanbevolen lokale setup draait op Windows met Docker Desktop en lokale Supabase:
 
-## Huidige staat
+1. Werk vanuit `D:\BESC\Command Center`.
+2. Vul `.env.local` op basis van `.env.docker.example`.
+3. Start Supabase lokaal.
+4. Start de webapp met Docker Compose.
+5. Open de app op `http://localhost:3001`.
 
-De dashboard-UI bevat representatieve voorbeelddata om de informatiearchitectuur te beoordelen. De Supabase SSR-clients, OAuth-callback en beveiligde kernmigratie zijn aanwezig. De volgende iteratie verbindt de schermen met echte data en voegt inloggen plus accountgoedkeuring toe.
+Gebruik `docs/DOCKER_VPS_SETUP.md` voor de volledige beginnershandleiding.
 
 ## Configuratie
 
-Volg [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md) om de database, e-mailauthenticatie, Discord en de eerste beheerder te configureren.
+Belangrijke gidsen:
+
+- `docs/SUPABASE_SETUP.md`
+- `docs/GOOGLE_WORKSPACE_SETUP.md`
+- `docs/YOUTUBE_INTEGRATION_SETUP.md`
+- `docs/TWITCH_INTEGRATION_SETUP.md`
+- `docs/META_INTEGRATION_SETUP.md`
+- `docs/EERSTE_RELEASE_CHECKLIST.md`
+- `docs/V1_CLEANUP_AUDIT.md`
+
+Secrets horen nooit in Git. Gebruik lokaal `.env.local` en later op de VPS of in Vercel echte productievariabelen.
+
+## Kwaliteitscontrole
+
+Gebruik voor afgeronde wijzigingen minimaal:
+
+```powershell
+pnpm test
+pnpm run lint
+pnpm run build
+```
+
+Voor de productiecontainer:
+
+```powershell
+docker build --target runner -t commandcenter-web:production-check .
+```

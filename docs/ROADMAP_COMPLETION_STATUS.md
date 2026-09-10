@@ -1,6 +1,6 @@
 # Roadmapstatus BESC Command Center
 
-Laatste technische controle: 9 augustus 2026.
+Laatste technische controle: 10 september 2026.
 
 ## Afgerond in de applicatie
 
@@ -25,9 +25,9 @@ De code is aanwezig, maar deze koppelingen zijn pas operationeel nadat BESC de a
 
 | Pilot | Externe actie | Technische test |
 |---|---|---|
-| YouTube | OAuth-client en juiste API's activeren | koppelen, handmatige sync, cronrun, rapport controleren |
-| Facebook/Instagram | Meta Business-app, scopes en eventueel App Review | pagina/account koppelen, sync en partial errors controleren |
-| Twitch | vertrouwelijke Twitch-app en redirect URI | koppelen, live-status/planning en tokenrefresh controleren |
+| YouTube | OAuth-client en juiste API's activeren | lokaal gekoppeld en handmatige sync getest |
+| Facebook/Instagram | Meta Business-app, scopes en eventueel App Review | lokaal gekoppeld; BESC-pagina en Instagramaccount gecontroleerd |
+| Twitch | vertrouwelijke Twitch-app en redirect URI | lokaal gekoppeld en handmatige sync getest |
 
 ## Bewuste beslispoorten
 
@@ -36,7 +36,7 @@ Deze onderdelen zijn volgens de goedgekeurde roadmap niet zonder nieuwe beslissi
 - **Threads:** niet gebruiken in de eerste versie; pas opnieuw opnemen wanneer BESC beslist dat de extra OAuth- en platformvoorwaarden de moeite waard zijn.
 - **LinkedIn:** pas na Community Management-producttoegang.
 - **TikTok:** pas na productgoedkeuring en audit.
-- **X:** pas na expliciet API-budget en ingestelde kostenlimiet.
+- **X:** niet gebruiken in de eerste versie; pas na expliciet API-budget en ingestelde kostenlimiet.
 - **Volledige vzw-boekhouding:** pas na schriftelijke validatie door de boekhouder van regime, rapporten, bewaartermijnen, correcties en afsluitingen.
 - **AI Hub-verdieping:** verdere AI-automatisering pas per concrete werkstroom, eigenaar, brondata en kostenlimiet.
 

@@ -74,14 +74,16 @@ Test per module minimaal: openen, record aanmaken, record bewerken, archiveren/v
 Deze onderdelen zijn pas volledig klaar zodra de externe accounts en API-toegang ingesteld zijn.
 
 - [ ] Discord login/provider configureren.
-- [ ] Google Drive configureren.
-- [ ] Google Docs configureren.
-- [ ] Google Calendar configureren.
+- [x] Discord login/provider configureren.
+- [x] Google Drive configureren.
+- [x] Google Docs configureren.
+- [x] Google Calendar configureren.
 - [ ] Gmail configureren.
-- [ ] YouTube OAuth/API configureren.
-- [ ] Meta/Facebook/Instagram configureren.
+- [x] YouTube OAuth/API configureren.
+- [x] Meta/Facebook/Instagram configureren.
 - [x] Threads niet gebruiken in v1.
-- [ ] Twitch configureren.
+- [x] X niet gebruiken in v1.
+- [x] Twitch configureren.
 
 ## 7. Docker en VPS
 
@@ -126,3 +128,11 @@ Voor iedere grotere wijziging:
 - Elke afgeronde stap wordt naar GitHub gepusht.
 - `main` blijft de stabiele bron.
 - Grote wijzigingen gaan via een pull request naar `main`.
+
+## 11. Cleanup en structuur
+
+- [x] `.gitignore` gecontroleerd voor env-bestanden, lokale Supabase-runtime en Monday-exportdata.
+- [x] README bijgewerkt naar de huidige projectstatus.
+- [x] V1 cleanup- en structuuraudit toegevoegd.
+- [ ] Beslissen of ongebruikte standaard Next.js-assets verwijderd mogen worden.
+- [ ] Beslissen wat er met Monday-importhulpmiddelen gebeurt na definitieve migratiecontrole.
