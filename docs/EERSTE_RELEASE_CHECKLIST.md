@@ -103,6 +103,8 @@ Deze onderdelen zijn pas volledig klaar zodra de externe accounts en API-toegang
 ## 8. Backups en beheer
 
 - [ ] Databasebackupstrategie kiezen.
+- [x] Backup- en restorehandleiding uitschrijven.
+- [x] Handmatige lokale backup maken.
 - [ ] Handmatige lokale backup testen.
 - [ ] Restore-test uitvoeren.
 - [ ] Updateprocedure vastleggen.

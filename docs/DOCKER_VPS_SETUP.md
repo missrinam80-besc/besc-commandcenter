@@ -185,3 +185,5 @@ Er zijn twee realistische routes voor productie:
 - Supabase volledig self-hosten op de VPS.
 
 Voor een eerste VPS is managed Supabase technisch eenvoudiger en veiliger. Volledig self-hosted Supabase kan, maar vraagt extra beheer voor backups, upgrades, SMTP, secrets en beveiliging.
+
+Zie ook `docs/BACKUP_EN_RESTORE.md` voor de concrete backup- en restoreprocedure.

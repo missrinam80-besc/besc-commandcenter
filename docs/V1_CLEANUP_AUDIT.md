@@ -50,7 +50,7 @@ De modules zijn voldoende apart voor V1. Er is bewust gedeelde code voor generie
 - Acceptatiepagina volledig invullen met bewijs per test.
 - Productievariabelen voorbereiden voor VPS of Vercel.
 - Definitieve domeinnaam en HTTPS-configuratie bepalen.
-- Backup- en restoreprocedure uitschrijven en minstens een restore-test uitvoeren.
+- Backup- en restoreprocedure volgen en minstens een restore-test uitvoeren.
 - Beslissen of Monday-importhistoriek actief bewaard blijft in de app of alleen als archief.
 
 ## Opruimkandidaten
@@ -86,6 +86,6 @@ docker build --target runner -t commandcenter-web:production-check .
 
 1. Update de eerste-releasechecklist met de integraties die intussen effectief getest zijn.
 2. Werk de resterende kernmoduletests af en vul de acceptatiepagina.
-3. Maak een backup- en restorehandleiding voor lokaal en VPS.
+3. Maak lokaal een eerste databasebackup volgens `docs/BACKUP_EN_RESTORE.md`.
 4. Ruim starterassets op na expliciet akkoord.
 5. Maak daarna een release-kandidaatbranch of pull request naar `main`.
