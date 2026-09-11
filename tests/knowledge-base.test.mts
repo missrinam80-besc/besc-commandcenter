@@ -29,6 +29,15 @@ test("kennisbankformulieren gebruiken modal en Markdown", async () => {
   assert.doesNotMatch(form, /name="title"[^>]*\brequired\b/);
 });
 
+test("kennisbankkaarten houden lange teksten binnen hun kader", async () => {
+  const styles = await source("src/app/knowledge.css");
+
+  assert.match(styles, /knowledge-category-strip>a>div/);
+  assert.match(styles, /overflow-wrap:anywhere/);
+  assert.match(styles, /-webkit-line-clamp:2/);
+  assert.match(styles, /knowledge-card-top\{[^}]*gap:10px/);
+});
+
 test("eerste Command Center-handleidingen worden idempotent geseed", async () => {
   const [migration, expanded] = await Promise.all([
     source("supabase/migrations/20260809090000_seed_knowledge_command_center_guides.sql"),
