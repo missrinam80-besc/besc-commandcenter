@@ -29,6 +29,8 @@ test("zijnavigatie volgt herkenbare werkstromen", () => {
     ['label: "Shop & merchandise"', 'label: "Nieuwsbrieven"'],
     ['label: "Nieuwsbrieven"', 'label: "AI Hub"'],
     ['label: "Vergaderingen & besluiten"', 'label: "VZW-administratie"'],
+    ['label: "Financiën"', 'label: "Materialen & resources"'],
+    ['label: "Materialen & resources"', 'label: "Kennisbank"'],
     ['label: "Rapportage & KPI"', 'label: "Social inzichten"'],
     ['label: "Social inzichten"', 'label: "Management overzicht"'],
     ['label: "Management overzicht"', 'label: "Sponsorrapportage"'],
@@ -49,6 +51,7 @@ test("zijnavigatie volgt herkenbare werkstromen", () => {
   assert.doesNotMatch(shell, /Productieacceptatie/);
   assert.match(shell, /\{ label: "Sponsorrapportage", href: "\/app\/rapportage\/sponsors", icon: Handshake, roles: \["admin", "board", "member"\] \}/);
   assert.match(shell, /\{ label: "Streamerrapportage", href: "\/app\/rapportage\/creators", icon: UserRoundSearch, roles: \["admin", "board", "member"\] \}/);
+  assert.match(shell, /\{ label: "Materialen & resources", href: "\/app\/materialen", icon: Boxes, roles: \["admin", "board", "member"\] \}/);
   assert.match(shell, /\{ label: "Gebruikers & toegang", href: "\/app\/beheer\/gebruikers", icon: Users, roles: \["admin"\] \}/);
   assert.ok(shell.indexOf("<Navigation active={active}") < shell.indexOf("<GlobalSearchTrigger active={active"), "Zoeken moet onder de gegroepeerde navigatie staan");
 });

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Archive, BarChart3, Bell, BookOpen, Bot, CalendarDays, CheckCircle2,
+  Archive, BarChart3, Bell, BookOpen, Bot, Boxes, CalendarDays, CheckCircle2,
   ChevronDown, CircleDollarSign, CircleUserRound, Clapperboard, Clock3, CloudCog,
   FolderKanban, Handshake, Inbox, Landmark, LayoutDashboard, LogOut,
   Mail, Megaphone, Menu, Newspaper, CircleHelp, ShieldCheck, ShoppingBag, Sparkles, UserRoundSearch, Users,
@@ -77,6 +77,7 @@ const navigationGroups: NavigationGroup[] = [
       { label: "Vergaderingen & besluiten", href: "/app/vergaderingen", icon: Landmark, roles: ["admin", "board", "member"] },
       { label: "VZW-administratie", href: "/app/administratie", icon: Landmark, roles: ["admin", "board"] },
       { label: "Financiën", href: "/app/financien", icon: CircleDollarSign, roles: ["admin", "board"], financeRoles: ["submitter", "approver", "treasurer"] },
+      { label: "Materialen & resources", href: "/app/materialen", icon: Boxes, roles: ["admin", "board", "member"] },
       { label: "Kennisbank", href: "/app/kennisbank", icon: BookOpen },
     ],
   },
@@ -126,6 +127,7 @@ const helpSearchByActive: Record<string, string> = {
   "Vergaderingen & besluiten": "Vergaderingen",
   "VZW-administratie": "VZW-administratie",
   "Financiën": "Financien",
+  "Materialen & resources": "Materialen resources inventaris",
   Kennisbank: "Start hier",
   "Rapportage & KPI": "Rapportage",
   "Documenten & Drive": "Drive",
