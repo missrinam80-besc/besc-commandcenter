@@ -29,13 +29,17 @@ test("kennisbankformulieren gebruiken modal en Markdown", async () => {
   assert.doesNotMatch(form, /name="title"[^>]*\brequired\b/);
 });
 
-test("kennisbankkaarten houden lange teksten binnen hun kader", async () => {
-  const styles = await source("src/app/knowledge.css");
+test("kennisbank gebruikt een categoriedropdown in plaats van een labelrij", async () => {
+  const [page, styles] = await Promise.all([
+    source("src/app/app/kennisbank/page.tsx"),
+    source("src/app/knowledge.css"),
+  ]);
 
-  assert.match(styles, /knowledge-category-strip\{display:grid/);
-  assert.match(styles, /knowledge-category-strip>a>div/);
-  assert.match(styles, /overflow-wrap:anywhere/);
-  assert.doesNotMatch(styles, /knowledge-category-strip\{[^}]*overflow-x:auto/);
+  assert.match(page, /knowledge-category-picker/);
+  assert.match(page, /<select name="categorie"/);
+  assert.doesNotMatch(page, /knowledge-category-strip/);
+  assert.match(styles, /knowledge-category-picker/);
+  assert.doesNotMatch(styles, /knowledge-category-strip/);
   assert.match(styles, /knowledge-card-top\{[^}]*gap:10px/);
 });
 

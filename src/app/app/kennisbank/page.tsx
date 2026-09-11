@@ -1,6 +1,5 @@
 import Link from "next/link";
-import type { CSSProperties } from "react";
-import { BookOpen, FolderOpen, Search, Star } from "lucide-react";
+import { BookOpen, Search, Star } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { FormModal } from "@/components/form-modal";
 import { KnowledgeForm } from "@/components/knowledge-form";
@@ -73,6 +72,7 @@ export default async function KnowledgePage({
     display_name: (member.profiles as unknown as { display_name: string | null } | null)?.display_name,
   }));
   const startArticle = (articles ?? []).find((article) => article.title === "Start hier: werken met BESC Command Center");
+  const selectedCategory = (categories ?? []).find((category) => category.id === q.categorie);
 
   return (
     <AppShell active="Kennisbank">
@@ -132,27 +132,28 @@ export default async function KnowledgePage({
           </section>
         )}
 
-        <section className="knowledge-category-strip">
-          <article>
+        <section className="knowledge-category-picker">
+          <div className="knowledge-category-count">
             <BookOpen size={18}/>
             <div>
               <span>Artikelen</span>
               <strong>{articles?.length ?? 0}</strong>
             </div>
-          </article>
-          {(categories ?? []).map((category) => (
-            <Link
-              href={`?categorie=${category.id}`}
-              key={category.id}
-              style={{ "--category-color": category.color } as CSSProperties}
-            >
-              <FolderOpen size={16}/>
-              <div>
-                <strong>{category.name}</strong>
-                <span>{category.description || "Geen beschrijving"}</span>
-              </div>
-            </Link>
-          ))}
+          </div>
+          <form>
+            {q.zoeken && <input type="hidden" name="zoeken" value={q.zoeken}/>}
+            {q.type && <input type="hidden" name="type" value={q.type}/>}
+            {manager && q.status && <input type="hidden" name="status" value={q.status}/>}
+            <label>
+              Categorie
+              <select name="categorie" defaultValue={q.categorie ?? ""}>
+                <option value="">Alle categorieen</option>
+                {(categories ?? []).map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}
+              </select>
+            </label>
+            <button>Toepassen</button>
+          </form>
+          <p>{selectedCategory?.description || "Kies een categorie om de kennisbank snel te filteren."}</p>
         </section>
 
         <form className="knowledge-filters">
@@ -160,10 +161,7 @@ export default async function KnowledgePage({
             <Search size={15}/>
             <input name="zoeken" defaultValue={q.zoeken ?? ""} placeholder="Zoek in titel, samenvatting of inhoud..."/>
           </label>
-          <select name="categorie" defaultValue={q.categorie ?? ""}>
-            <option value="">Alle categorieen</option>
-            {(categories ?? []).map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}
-          </select>
+          {q.categorie && <input type="hidden" name="categorie" value={q.categorie}/>}
           <select name="type" defaultValue={q.type ?? ""}>
             <option value="">Alle types</option>
             {Object.entries(typeLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
