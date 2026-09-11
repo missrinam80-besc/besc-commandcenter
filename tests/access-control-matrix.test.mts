@@ -78,6 +78,6 @@ test("rechtencontrolepagina is zichtbaar voor bestuur en beheer en toont de matr
   assert.match(migration, /grant select, insert, update, delete/);
   assert.match(authContext, /enriched\.error/);
   assert.match(proxy, /enriched\.error/);
-  assert.match(styles, /permissions-audit-page>\.panel>\.section-heading\{margin:0;padding:19px 21px 14px/);
-  assert.match(styles, /permissions-audit-page \.permissions-table\{padding:0 21px 21px/);
+  assert.match(styles, /permissions-audit-page>\.panel\{overflow:hidden;padding:20px 21px/);
+  assert.match(styles, /permissions-audit-page>\.panel>\.section-heading\{margin:0 0 14px/);
 });
