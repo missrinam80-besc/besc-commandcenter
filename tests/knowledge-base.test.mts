@@ -32,9 +32,10 @@ test("kennisbankformulieren gebruiken modal en Markdown", async () => {
 test("kennisbankkaarten houden lange teksten binnen hun kader", async () => {
   const styles = await source("src/app/knowledge.css");
 
+  assert.match(styles, /knowledge-category-strip\{display:grid/);
   assert.match(styles, /knowledge-category-strip>a>div/);
   assert.match(styles, /overflow-wrap:anywhere/);
-  assert.match(styles, /-webkit-line-clamp:2/);
+  assert.doesNotMatch(styles, /knowledge-category-strip\{[^}]*overflow-x:auto/);
   assert.match(styles, /knowledge-card-top\{[^}]*gap:10px/);
 });
 
