@@ -33,3 +33,12 @@ test("managementoverzicht markeert het eigen navigatie-item als actief", async (
   assert.match(page, /AppShell active="Management overzicht"/);
   assert.doesNotMatch(page, /AppShell active="Rapportage & KPI"/);
 });
+
+test("rapportagepanelen geven lege staten en lijsten voldoende binnenruimte", async () => {
+  const styles = await source("src/app/management-report.css");
+
+  assert.match(styles, /\.management-report \.management-table-wrap>\.empty/);
+  assert.match(styles, /\.management-report \.relation-list>\.empty/);
+  assert.match(styles, /padding:19px 22px/);
+  assert.match(styles, /\.management-report \.relation-list\{margin:0;padding:0 18px 18px/);
+});
