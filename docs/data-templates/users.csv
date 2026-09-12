@@ -1,0 +1,6 @@
+email,naam,rol,status,opmerking
+admin@voorbeeld.be,Voornaam Naam,beheerder,actief,Hoofdbeheerder
+bestuur@voorbeeld.be,Voornaam Naam,bestuur,actief,Bestuurslid
+medewerker@voorbeeld.be,Voornaam Naam,medewerker,actief,Medewerker
+vrijwilliger@voorbeeld.be,Voornaam Naam,vrijwilliger,actief,Vrijwilliger
+sponsor@voorbeeld.be,Contactpersoon Sponsor,portaalgebruiker,actief,Gekoppeld aan sponsor
