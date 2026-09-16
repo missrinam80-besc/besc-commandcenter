@@ -97,6 +97,7 @@ const navigationGroups: NavigationGroup[] = [
     icon: CloudCog,
     items: [
       { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin", "board"] },
+      { label: "CSV-import", href: "/app/beheer/import", icon: FolderKanban, roles: ["admin", "board"] },
       { label: "Rechtencontrole", href: "/app/beheer/rechten", icon: ShieldCheck, roles: ["admin", "board"] },
       { label: "Archief", href: "/app/archief", icon: Archive, roles: ["admin", "board", "member"] },
       { label: "Historiek", href: "/app/historiek", icon: Archive, roles: ["admin", "board", "member"] },

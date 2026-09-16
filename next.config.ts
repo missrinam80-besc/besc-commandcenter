@@ -8,6 +8,7 @@ const devOrigin = siteUrl?.startsWith("https://") ? new URL(siteUrl).hostname : 
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   turbopack: {
     root: projectRoot,
   },
