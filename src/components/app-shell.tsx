@@ -1,10 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Archive, BarChart3, Bell, BookOpen, Bot, CalendarDays, CheckCircle2,
+  Archive, BarChart3, Bell, BookOpen, Bot, Boxes, CalendarDays, CheckCircle2,
   ChevronDown, CircleDollarSign, CircleUserRound, Clapperboard, Clock3, CloudCog,
-  FileText, FolderKanban, Handshake, Inbox, Landmark, LayoutDashboard, LogOut,
-  Mail, Megaphone, Menu, Newspaper, CircleHelp, Rocket, ShieldCheck, ShoppingBag, Sparkles, UserRoundSearch, Users,
+  FolderKanban, Handshake, Inbox, Landmark, LayoutDashboard, LogOut,
+  Mail, Megaphone, Menu, Newspaper, CircleHelp, ShieldCheck, ShoppingBag, Sparkles, UserRoundSearch, Users,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
@@ -36,47 +36,48 @@ const navigationGroups: NavigationGroup[] = [
     icon: LayoutDashboard,
     items: [
       { label: "Mijn werk", href: "/app/taken", icon: CheckCircle2 },
-      { label: "Inbox", href: "/app/inbox", icon: Inbox, counter: "inbox" },
+      { label: "Inbox", href: "/app/inbox", icon: Inbox, roles: ["admin", "board", "member"], counter: "inbox" },
       { label: "Kalender", href: "/app/kalender", icon: CalendarDays },
-      { label: "Goedkeuringen", href: "/app/goedkeuringen", icon: CheckCircle2, counter: "approvals" },
+      { label: "Goedkeuringen", href: "/app/goedkeuringen", icon: CheckCircle2, roles: ["admin", "board", "member"], counter: "approvals" },
     ],
   },
   {
     label: "Planning & uitvoering",
     icon: FolderKanban,
     items: [
-      { label: "Projecten", href: "/app/projecten", icon: FolderKanban },
-      { label: "Events", href: "/app/events", icon: CalendarDays },
-      { label: "Campagnes", href: "/app/campagnes", icon: Megaphone },
-      { label: "Social planning", href: "/app/social", icon: Megaphone },
+      { label: "Projecten", href: "/app/projecten", icon: FolderKanban, roles: ["admin", "board", "member"] },
+      { label: "Events", href: "/app/events", icon: CalendarDays, roles: ["admin", "board", "member"] },
+      { label: "Campagnes", href: "/app/campagnes", icon: Megaphone, roles: ["admin", "board", "member"] },
+      { label: "Social planning", href: "/app/social", icon: Megaphone, roles: ["admin", "board", "member"] },
     ],
   },
   {
     label: "Relaties & communicatie",
     icon: Handshake,
     items: [
-      { label: "Community & vrijwilligers", href: "/app/community", icon: UserRoundSearch },
+      { label: "Community & vrijwilligers", href: "/app/community", icon: UserRoundSearch, roles: ["admin", "board", "member"] },
       { label: "Sponsors & CRM", href: "/app/sponsors", icon: Handshake, roles: ["admin", "board", "member"] },
-      { label: "Communicatie", href: "/app/communicatie", icon: Mail },
+      { label: "Communicatie", href: "/app/communicatie", icon: Mail, roles: ["admin", "board", "member"] },
     ],
   },
   {
     label: "Content & publicatie",
     icon: Clapperboard,
     items: [
-      { label: "Content", href: "/app/content", icon: Clapperboard },
+      { label: "Content", href: "/app/content", icon: Clapperboard, roles: ["admin", "board", "member"] },
       { label: "Shop & merchandise", href: "/app/shop", icon: ShoppingBag, roles: ["admin", "board", "member"] },
-      { label: "Nieuwsbrieven", href: "/app/nieuwsbrieven", icon: Newspaper, roles: ["admin", "board"] },
-      { label: "AI Hub", href: "/app/ai-hub", icon: Bot },
+      { label: "Nieuwsbrieven", href: "/app/nieuwsbrieven", icon: Newspaper, roles: ["admin", "board", "member"] },
+      { label: "AI Hub", href: "/app/ai-hub", icon: Bot, roles: ["admin", "board", "member"] },
     ],
   },
   {
     label: "Organisatie",
     icon: BookOpen,
     items: [
-      { label: "Vergaderingen & besluiten", href: "/app/vergaderingen", icon: Landmark },
+      { label: "Vergaderingen & besluiten", href: "/app/vergaderingen", icon: Landmark, roles: ["admin", "board", "member"] },
       { label: "VZW-administratie", href: "/app/administratie", icon: Landmark, roles: ["admin", "board"] },
       { label: "Financiën", href: "/app/financien", icon: CircleDollarSign, roles: ["admin", "board"], financeRoles: ["submitter", "approver", "treasurer"] },
+      { label: "Materialen & resources", href: "/app/materialen", icon: Boxes, roles: ["admin", "board", "member"] },
       { label: "Kennisbank", href: "/app/kennisbank", icon: BookOpen },
     ],
   },
@@ -84,20 +85,23 @@ const navigationGroups: NavigationGroup[] = [
     label: "Inzichten",
     icon: BarChart3,
     items: [
-      { label: "Rapportage & KPI", href: "/app/rapportage", icon: BarChart3 },
+      { label: "Rapportage & KPI", href: "/app/rapportage", icon: BarChart3, roles: ["admin", "board"] },
+      { label: "Social inzichten", href: "/app/rapportage/social", icon: BarChart3, roles: ["admin", "board", "member"] },
+      { label: "Management overzicht", href: "/app/rapportage/management", icon: BarChart3, roles: ["admin", "board"] },
+      { label: "Sponsorrapportage", href: "/app/rapportage/sponsors", icon: Handshake, roles: ["admin", "board", "member"] },
+      { label: "Streamerrapportage", href: "/app/rapportage/creators", icon: UserRoundSearch, roles: ["admin", "board", "member"] },
     ],
   },
   {
     label: "Beheer",
     icon: CloudCog,
     items: [
-      { label: "Documenten & Drive", href: "/app/documenten", icon: FileText },
       { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin", "board"] },
-      { label: "Productieacceptatie", href: "/app/acceptatie", icon: Rocket, roles: ["admin", "board"] },
+      { label: "CSV-import", href: "/app/beheer/import", icon: FolderKanban, roles: ["admin", "board"] },
       { label: "Rechtencontrole", href: "/app/beheer/rechten", icon: ShieldCheck, roles: ["admin", "board"] },
-      { label: "Archief", href: "/app/archief", icon: Archive, roles: ["admin", "board"] },
-      { label: "Historiek", href: "/app/historiek", icon: Archive, roles: ["admin", "board"] },
-      { label: "Activiteit", href: "/app/activiteit", icon: Clock3, roles: ["admin", "board"] },
+      { label: "Archief", href: "/app/archief", icon: Archive, roles: ["admin", "board", "member"] },
+      { label: "Historiek", href: "/app/historiek", icon: Archive, roles: ["admin", "board", "member"] },
+      { label: "Activiteit", href: "/app/activiteit", icon: Clock3, roles: ["admin", "board", "member"] },
       { label: "Gebruikers & toegang", href: "/app/beheer/gebruikers", icon: Users, roles: ["admin"] },
     ],
   },
@@ -124,11 +128,11 @@ const helpSearchByActive: Record<string, string> = {
   "Vergaderingen & besluiten": "Vergaderingen",
   "VZW-administratie": "VZW-administratie",
   "Financiën": "Financien",
+  "Materialen & resources": "Materialen resources inventaris",
   Kennisbank: "Start hier",
   "Rapportage & KPI": "Rapportage",
   "Documenten & Drive": "Drive",
   Integraties: "Integraties",
-  Productieacceptatie: "Productie acceptatie",
   Rechtencontrole: "Rollen rechten",
   Archief: "Archiveren",
   Historiek: "Historiek",
@@ -178,7 +182,7 @@ function Navigation({
                 const Icon = item.icon;
                 const count = item.counter === "inbox" ? inboxCount : item.counter === "approvals" ? approvalCount : 0;
                 return (
-                  <Link className={active === item.label ? "active" : ""} href={item.href} key={item.href}>
+                  <Link className={active === item.label ? "active" : ""} href={item.href} key={`${group.label}:${item.label}:${item.href}`}>
                     <Icon size={17}/>
                     <span>{item.label}</span>
                     {count > 0 && <b>{count > 99 ? "99+" : count}</b>}

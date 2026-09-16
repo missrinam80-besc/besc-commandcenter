@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { managementPeriod, percentageDelta, targetScore } from "../src/lib/management-report.ts";
+
+const source = (path: string) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("maandrapport vergelijkt met de vorige kalendermaand", () => {
   const range = managementPeriod("month", new Date(2026, 0, 15));
@@ -23,4 +26,19 @@ test("procentuele ontwikkeling behandelt een lege vergelijkingsperiode", () => {
 
 test("doelscore telt alleen KPI's met een doel", () => {
   assert.deepEqual(targetScore([{ value: 10, target: 8 }, { value: 4, target: 5 }, { value: 3, target: null }]), { reached: 1, total: 2, percentage: 50 });
+});
+
+test("managementoverzicht markeert het eigen navigatie-item als actief", async () => {
+  const page = await source("src/app/app/rapportage/management/page.tsx");
+  assert.match(page, /AppShell active="Management overzicht"/);
+  assert.doesNotMatch(page, /AppShell active="Rapportage & KPI"/);
+});
+
+test("rapportagepanelen geven lege staten en lijsten voldoende binnenruimte", async () => {
+  const styles = await source("src/app/management-report.css");
+
+  assert.match(styles, /\.management-report \.management-table-wrap>\.empty/);
+  assert.match(styles, /\.management-report \.relation-list>\.empty/);
+  assert.match(styles, /padding:19px 22px/);
+  assert.match(styles, /\.management-report \.relation-list\{margin:0;padding:0 18px 18px/);
 });

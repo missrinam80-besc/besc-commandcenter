@@ -81,6 +81,7 @@ export async function syncMetaAccountById(accountId: string, trigger: TriggerTyp
         if (typeof value === "number") snapshots.push({ platformMetric, normalizedMetric, value, periodStart: null, periodEnd: null });
       }
       for (const metric of numericInsights(result.insights)) snapshots.push({ platformMetric: metric.metric, normalizedMetric: `period_${metric.metric}`, value: metric.value, periodStart, periodEnd });
+      partialError = result.insightError;
     }
 
     const rows = snapshots.map((item) => ({
@@ -96,9 +97,10 @@ export async function syncMetaAccountById(accountId: string, trigger: TriggerTyp
     }
     const finishedAt = new Date().toISOString();
     const runStatus = partialError ? "partial" : "succeeded";
+    const accountLastError = rows.length ? null : partialError?.slice(0, 1000) ?? null;
     const [runUpdate, accountUpdate] = await Promise.all([
       admin.from("social_sync_runs").update({ status: runStatus, records_read: rows.length, records_written: rows.length, error_message: partialError?.slice(0, 1000) ?? null, finished_at: finishedAt }).eq("id", run.id),
-      admin.from("social_accounts").update({ account_name: resolvedName, last_sync_at: finishedAt, last_error: partialError?.slice(0, 1000) ?? null, token_expires_at: credentials.expires_at, updated_at: finishedAt }).eq("id", account.id),
+      admin.from("social_accounts").update({ account_name: resolvedName, last_sync_at: finishedAt, last_error: accountLastError, token_expires_at: credentials.expires_at, updated_at: finishedAt }).eq("id", account.id),
     ]);
     if (runUpdate.error || accountUpdate.error) throw runUpdate.error ?? accountUpdate.error;
     return { runId: run.id, status: runStatus as "partial" | "succeeded", recordsWritten: rows.length };

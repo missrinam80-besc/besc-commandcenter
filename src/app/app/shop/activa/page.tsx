@@ -1,23 +1,5 @@
-import Link from "next/link";
-import { Archive, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
-import { AppShell } from "@/components/app-shell";
-import { AssetForm } from "@/components/asset-form";
-import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
-import { FormModal } from "@/components/form-modal";
-import { requireActiveMembership } from "@/lib/auth-context";
-import { formatCurrency, formatDate } from "@/lib/format";
-import { isManager } from "@/lib/permissions";
-import { removeAsset } from "./actions";
+import { redirect } from "next/navigation";
 
-const statusLabels: Record<string,string> = { planned:"Gepland",active:"In gebruik",maintenance:"Onderhoud",loaned:"Uitgeleend",retired:"Buiten gebruik",lost:"Vermist",archived:"Gearchiveerd" };
-export default async function AssetsPage({ searchParams }: { searchParams: Promise<Record<string,string|undefined>> }) {
-  const q = await searchParams; const { supabase, membership } = await requireActiveMembership(); const org = membership.organization_id;
-  const [assetsResult, peopleResult, partnersResult, projectsResult, eventsResult, campaignsResult] = await Promise.all([
-    supabase.from("assets").select("*,community_people(display_name),partners(name),projects(title),events(title),campaigns(title)").eq("organization_id",org).is("deleted_at",null).order("name"),
-    supabase.from("community_people").select("id,display_name").eq("organization_id",org).is("deleted_at",null).order("display_name"), supabase.from("partners").select("id,name").eq("organization_id",org).is("deleted_at",null).order("name"),
-    supabase.from("projects").select("id,title").eq("organization_id",org).is("deleted_at",null).order("title"), supabase.from("events").select("id,title").eq("organization_id",org).is("deleted_at",null).order("title"), supabase.from("campaigns").select("id,title").eq("organization_id",org).is("deleted_at",null).order("title"),
-  ]);
-  const rows=assetsResult.data??[], editing=q.bewerken?rows.find(item=>item.id===q.bewerken):null, canManage=isManager(membership), options={people:peopleResult.data??[],partners:partnersResult.data??[],projects:projectsResult.data??[],events:eventsResult.data??[],campaigns:campaignsResult.data??[]};
-  return <AppShell active="Shop & merchandise"><header className="topbar module-top"><div><p>MATERIAAL & MIDDELEN</p><h1>Activaregister</h1></div><div className="project-actions"><Link href="/app/shop">Shop</Link>{canManage&&<Link className="primary" href="?nieuw=1"><Plus size={16}/>Nieuw actief</Link>}</div></header><div className="module-body">{q.succes&&<div className="success">Het activaregister is bijgewerkt.</div>}{q.fout&&<div className="error-note">De actie is mislukt ({q.fout}).</div>}{q.nieuw&&canManage?<FormModal title="Nieuw actief"><AssetForm {...options}/></FormModal>:null}{editing&&canManage?<FormModal title="Actief bewerken"><AssetForm record={editing} {...options}/><div className="modal-danger-zone"><form action={removeAsset}><input type="hidden" name="id" value={editing.id}/><input type="hidden" name="mode" value="archive"/><button><Archive size={14}/>Archiveren</button></form><form action={removeAsset}><input type="hidden" name="id" value={editing.id}/><input type="hidden" name="mode" value="delete"/><ConfirmSubmitButton className="danger-button" message="Dit actief verbergen uit het operationele register?"><Trash2 size={14}/>Verwijderen</ConfirmSubmitButton></form></div></FormModal>:null}
-  <section className="project-task-section"><div className="section-heading"><div><span className="eyebrow">REGISTER</span><h2>Activa</h2></div><span>{rows.length}</span></div><div className="operations-table"><div className="operations-head"><span>Actief</span><span>Verantwoordelijke / locatie</span><span>Waarde</span><span>Status</span><span/></div>{rows.map(item=><article key={item.id}><div><strong>{item.name}</strong><p>{item.asset_type}{item.serial_number?` · ${item.serial_number}`:""}</p></div><span>{item.community_people?.display_name||"Niet toegewezen"}{item.location?` · ${item.location}`:""}</span><span>{formatCurrency(item.current_value??item.purchase_value)}<small>{item.acquired_date?` sinds ${formatDate(item.acquired_date)}`:""}</small></span><span className="badge purple">{statusLabels[item.status]??item.status}</span><div>{item.document_url&&<a className="row-action" href={item.document_url} target="_blank" rel="noreferrer"><ExternalLink size={13}/></a>}{canManage&&<Link className="row-action" href={`?bewerken=${item.id}`}><Pencil size={13}/></Link>}</div></article>)}{!rows.length&&<div className="empty">Nog geen activa geregistreerd.</div>}</div></section></div></AppShell>;
+export default function LegacyAssetsPage() {
+  redirect("/app/materialen");
 }

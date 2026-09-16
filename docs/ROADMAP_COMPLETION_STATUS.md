@@ -1,6 +1,6 @@
 # Roadmapstatus BESC Command Center
 
-Laatste technische controle: 9 augustus 2026.
+Laatste technische controle: 10 september 2026.
 
 ## Afgerond in de applicatie
 
@@ -14,10 +14,10 @@ Laatste technische controle: 9 augustus 2026.
 - Fase 7 — managementrapportage, sponsor-/streamerportalen, CSV/PDF en pitchdecks.
 - Fase 8 — publieke nieuwsbriefinschrijving, dubbele bevestiging, uitschrijving, HTML-templates en dark mode.
 - Fase 8 — generiek beveiligd social-accountmodel met Vault, quota, audit en dagelijkse sync.
-- Fase 8 — YouTube, Facebook, Instagram, Threads en Twitch als officiële API-pilots.
+- Fase 8 — YouTube, Facebook, Instagram en Twitch als officiële API-pilots; Threads en X blijven beslispoorten voor later.
 - Fase 9 — kennisbankmodule, command-centerhandleiding, procesdocumentatie en beheerd publicatieproces.
 - Fase 10 — contextuele hulp, onboardinglinks en directe helpnavigatie vanuit de applicatie.
-- Fase 11 — productieacceptatiepagina met technische checks, datachecks, handmatige rooktest en beslispoorten.
+- Fase 11 — handmatige releasecontrole via checklist, technische checks, datachecks, rooktest en beslispoorten.
 
 ## Externe acceptatie nodig
 
@@ -25,24 +25,24 @@ De code is aanwezig, maar deze koppelingen zijn pas operationeel nadat BESC de a
 
 | Pilot | Externe actie | Technische test |
 |---|---|---|
-| YouTube | OAuth-client en juiste API's activeren | koppelen, handmatige sync, cronrun, rapport controleren |
-| Facebook/Instagram | Meta Business-app, scopes en eventueel App Review | pagina/account koppelen, sync en partial errors controleren |
-| Threads | Threads-app en redirect URI | koppelen, sync en tokenvernieuwing controleren |
-| Twitch | vertrouwelijke Twitch-app en redirect URI | koppelen, live-status/planning en tokenrefresh controleren |
+| YouTube | OAuth-client en juiste API's activeren | lokaal gekoppeld en handmatige sync getest |
+| Facebook/Instagram | Meta Business-app, scopes en eventueel App Review | lokaal gekoppeld; BESC-pagina en Instagramaccount gecontroleerd |
+| Twitch | vertrouwelijke Twitch-app en redirect URI | lokaal gekoppeld en handmatige sync getest |
 
 ## Bewuste beslispoorten
 
 Deze onderdelen zijn volgens de goedgekeurde roadmap niet zonder nieuwe beslissing te bouwen:
 
+- **Threads:** niet gebruiken in de eerste versie; pas opnieuw opnemen wanneer BESC beslist dat de extra OAuth- en platformvoorwaarden de moeite waard zijn.
 - **LinkedIn:** pas na Community Management-producttoegang.
 - **TikTok:** pas na productgoedkeuring en audit.
-- **X:** pas na expliciet API-budget en ingestelde kostenlimiet.
+- **X:** niet gebruiken in de eerste versie; pas na expliciet API-budget en ingestelde kostenlimiet.
 - **Volledige vzw-boekhouding:** pas na schriftelijke validatie door de boekhouder van regime, rapporten, bewaartermijnen, correcties en afsluitingen.
 - **AI Hub-verdieping:** verdere AI-automatisering pas per concrete werkstroom, eigenaar, brondata en kostenlimiet.
 
 Een gesloten beslispoort is geen defect of onafgewerkte implementatie. Zodra de voorwaarde aantoonbaar vervuld is, wordt ze een afzonderlijke bouw- en acceptatieronde.
 
-## Finale productieacceptatie
+## Finale releasecontrole
 
 1. Alle variabelen uit `.env.example` die voor actieve modules nodig zijn in Vercel zetten.
 2. OAuth redirect URI's exact bij de providers registreren.

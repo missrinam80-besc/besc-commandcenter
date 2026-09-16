@@ -22,6 +22,19 @@ test("detail- en integratiepanelen gebruiken themavariabelen in plaats van harde
   assert.match(css, /record-metadata/);
   assert.match(css, /drive-connected-row/);
   assert.match(css, /integration-security/);
-  assert.match(css, /acceptance-run-banner/);
+  assert.doesNotMatch(css, /acceptance-run-banner/);
   assert.match(css, /background-color:var\(--theme-control\)/);
+});
+
+test("dark mode corrigeert modulepanelen met eigen lichte CSS", async () => {
+  const css = await source("src/app/globals.css");
+
+  assert.match(css, /calendar-summary article/);
+  assert.match(css, /approval-queue>article/);
+  assert.match(css, /drive-register/);
+  assert.match(css, /management-hero-metrics article/);
+  assert.match(css, /report-kpi-grid>article/);
+  assert.match(css, /knowledge-grid>a/);
+  assert.match(css, /\.app-shell\[data-theme="dark"\] :where\(\.approval-current/);
+  assert.match(css, /prefers-color-scheme:dark/);
 });

@@ -4,6 +4,22 @@ import { requireActiveMembership } from "@/lib/auth-context";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { exchangeYouTubeCode, fetchYouTubeChannel, youtubeConfiguration, youtubeScopes } from "@/lib/youtube-integration";
 
+function oauthErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object") {
+    const details = error as { message?: unknown; error_description?: unknown; error?: unknown; code?: unknown; details?: unknown; hint?: unknown };
+    return [
+      details.message,
+      details.error_description,
+      details.error,
+      details.code,
+      details.details,
+      details.hint,
+    ].filter((item) => typeof item === "string" && item.trim()).join(" - ") || JSON.stringify(error);
+  }
+  return "Onbekende OAuth-fout";
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const trustedOrigin = youtubeConfiguration().siteUrl || url.origin;
@@ -47,7 +63,7 @@ export async function GET(request: Request) {
     if (accountError) throw accountError;
     return NextResponse.redirect(new URL("/app/integraties/social?succes=youtube-verbonden", trustedOrigin));
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Onbekende OAuth-fout";
+    const message = oauthErrorMessage(error);
     await supabase.from("social_accounts").update({ status: "error", last_error: message.slice(0, 1000), updated_at: new Date().toISOString() }).eq("id", account.id).eq("organization_id", membership.organization_id);
     return NextResponse.redirect(new URL("/app/integraties/social?fout=youtube-oauth", trustedOrigin));
   }

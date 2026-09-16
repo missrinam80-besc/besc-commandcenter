@@ -4,6 +4,8 @@ import { AppShell } from "@/components/app-shell";
 import { FinanceNavigation } from "@/components/finance-navigation";
 import { requireActiveMembership } from "@/lib/auth-context";
 
+export const dynamic = "force-dynamic";
+
 const categoryLabels: Record<string, string> = {
   event: "Event",
   content: "Content",

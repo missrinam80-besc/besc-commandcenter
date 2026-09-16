@@ -2,19 +2,19 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  canViewInternalPath,
+  requiredCapabilityForQuery,
+} from "../src/lib/route-permissions.ts";
+import {
   capabilities,
   hasPermission,
   type Capability,
   type MembershipAccess,
 } from "../src/lib/permissions.ts";
-import { requiredCapabilityForQuery } from "../src/lib/route-permissions.ts";
 
 const managementCapabilities: Capability[] = [
   "manageOrganization",
   "manageInbox",
-  "manageProjects",
-  "manageContent",
-  "manageEvents",
   "manageIntegrations",
   "manageKpis",
   "manageAiTemplates",
@@ -47,19 +47,24 @@ test("bestuur beheert de organisatie maar niet de gebruikers", () => {
   assert.deepEqual(actual, capabilities.filter((capability) => capability !== "manageUsers"));
 });
 
-for (const role of ["member", "volunteer"]) {
-  test(`${role} kan kosten indienen en AI gebruiken`, () => {
-    assert.deepEqual(
-      permittedCapabilities({ role, finance_role: "none" }),
-      ["submitExpenses", "useAi"],
-    );
-  });
-}
+test("medewerker kan samenwerken in planning, uitvoering en content", () => {
+  assert.deepEqual(
+    permittedCapabilities({ role: "member", finance_role: "none" }),
+    ["manageProjects", "manageContent", "manageEvents", "submitExpenses", "useAi"],
+  );
+});
+
+test("vrijwilliger blijft beperkt tot eigen werk, kalender en kennisbank", () => {
+  assert.deepEqual(
+    permittedCapabilities({ role: "volunteer", finance_role: "none" }),
+    ["submitExpenses", "useAi"],
+  );
+});
 
 test("kostenindiener kan financiën bekijken maar niet beheren", () => {
   assert.deepEqual(
     permittedCapabilities({ role: "member", finance_role: "submitter" }),
-    ["submitExpenses", "viewFinance", "useAi"],
+    ["manageProjects", "manageContent", "manageEvents", "submitExpenses", "viewFinance", "useAi"],
   );
 });
 
@@ -67,6 +72,9 @@ for (const financeRole of ["approver", "treasurer"]) {
   test(`${financeRole} kan financiën beheren zonder algemene beheerrechten`, () => {
     const actual = permittedCapabilities({ role: "member", finance_role: financeRole });
     assert.deepEqual(actual, [
+      "manageProjects",
+      "manageContent",
+      "manageEvents",
       "manageFinance",
       "submitExpenses",
       "viewFinance",
@@ -77,6 +85,34 @@ for (const financeRole of ["approver", "treasurer"]) {
     }
   });
 }
+
+test("directe app-routes volgen de afgesproken zichtbaarheid per rol", () => {
+  const admin = { role: "admin", finance_role: "none" };
+  const board = { role: "board", finance_role: "none" };
+  const member = { role: "member", finance_role: "none" };
+  const volunteer = { role: "volunteer", finance_role: "none" };
+
+  assert.equal(canViewInternalPath("/app/beheer/gebruikers", admin), true);
+  assert.equal(canViewInternalPath("/app/beheer/gebruikers", board), false);
+  assert.equal(canViewInternalPath("/app/inbox", member), true);
+  assert.equal(canViewInternalPath("/app/rapportage/social", member), true);
+  assert.equal(canViewInternalPath("/app/rapportage/sponsors", member), true);
+  assert.equal(canViewInternalPath("/app/rapportage/sponsors/sponsor-1", member), true);
+  assert.equal(canViewInternalPath("/app/rapportage/creators", member), true);
+  assert.equal(canViewInternalPath("/app/rapportage/creators/streamer-1", member), true);
+  assert.equal(canViewInternalPath("/app/materialen", member), true);
+  assert.equal(canViewInternalPath("/app/administratie", member), false);
+  assert.equal(canViewInternalPath("/app/financien", member), false);
+  assert.equal(canViewInternalPath("/app/financien", member, new URLSearchParams("nieuw=kost")), true);
+  assert.equal(canViewInternalPath("/app/taken", volunteer), true);
+  assert.equal(canViewInternalPath("/app/kalender", volunteer), true);
+  assert.equal(canViewInternalPath("/app/kennisbank/artikel-1", volunteer), true);
+  assert.equal(canViewInternalPath("/app/inbox", volunteer), false);
+  assert.equal(canViewInternalPath("/app/projecten", volunteer), false);
+  assert.equal(canViewInternalPath("/app/materialen", volunteer), false);
+  assert.equal(canViewInternalPath("/app/rapportage/sponsors", volunteer), false);
+  assert.equal(canViewInternalPath("/app/rapportage/creators", volunteer), false);
+});
 
 const routeCases: Array<{
   label: string;
@@ -137,6 +173,11 @@ const routeCases: Array<{
   {
     label: "overige organisatiemodule beheren",
     url: "/app/vergaderingen?nieuw=1",
+    expected: "manageOrganization",
+  },
+  {
+    label: "materiaal beheren",
+    url: "/app/materialen?nieuw=1",
     expected: "manageOrganization",
   },
 ];

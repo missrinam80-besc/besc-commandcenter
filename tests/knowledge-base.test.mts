@@ -29,6 +29,20 @@ test("kennisbankformulieren gebruiken modal en Markdown", async () => {
   assert.doesNotMatch(form, /name="title"[^>]*\brequired\b/);
 });
 
+test("kennisbank gebruikt een categoriedropdown in plaats van een labelrij", async () => {
+  const [page, styles] = await Promise.all([
+    source("src/app/app/kennisbank/page.tsx"),
+    source("src/app/knowledge.css"),
+  ]);
+
+  assert.match(page, /knowledge-category-picker/);
+  assert.match(page, /<select name="categorie"/);
+  assert.doesNotMatch(page, /knowledge-category-strip/);
+  assert.match(styles, /knowledge-category-picker/);
+  assert.doesNotMatch(styles, /knowledge-category-strip/);
+  assert.match(styles, /knowledge-card-top\{[^}]*gap:10px/);
+});
+
 test("eerste Command Center-handleidingen worden idempotent geseed", async () => {
   const [migration, expanded] = await Promise.all([
     source("supabase/migrations/20260809090000_seed_knowledge_command_center_guides.sql"),

@@ -1,0 +1,17 @@
+services:
+  web:
+    build:
+      context: .
+      target: dev
+    env_file:
+      - .env.local
+    environment:
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3001}
+      SUPABASE_URL_SERVER: ${SUPABASE_URL_SERVER:-http://host.docker.internal:54321}
+    ports:
+      - "3001:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    restart: unless-stopped

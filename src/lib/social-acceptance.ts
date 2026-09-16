@@ -1,8 +1,8 @@
 import type { SocialPlatform } from "@/lib/social-connectors";
 
-export type SocialAcceptancePlatform = Extract<SocialPlatform, "youtube" | "facebook" | "instagram" | "threads" | "twitch">;
+export type SocialAcceptancePlatform = Extract<SocialPlatform, "youtube" | "facebook" | "instagram" | "twitch">;
 
-export const socialAcceptancePlatforms: SocialAcceptancePlatform[] = ["youtube", "facebook", "instagram", "threads", "twitch"];
+export const socialAcceptancePlatforms: SocialAcceptancePlatform[] = ["youtube", "facebook", "instagram", "twitch"];
 
 export const socialAcceptanceChecklist: Record<SocialAcceptancePlatform, string[]> = {
   youtube: [
@@ -23,12 +23,6 @@ export const socialAcceptanceChecklist: Record<SocialAcceptancePlatform, string[
     "Accountinzichten controleren",
     "Socialrapportage en CSV-export valideren",
   ],
-  threads: [
-    "Threads OAuth-flow doorlopen",
-    "Handmatige sync uitvoeren",
-    "Accountinzichten en tokenverlenging controleren",
-    "Socialrapportage en CSV-export valideren",
-  ],
   twitch: [
     "Twitch OAuth-flow doorlopen",
     "Handmatige sync uitvoeren",
@@ -38,6 +32,11 @@ export const socialAcceptanceChecklist: Record<SocialAcceptancePlatform, string[
 };
 
 export const socialDecisionGates = [
+  {
+    platform: "Threads",
+    decision: "Later",
+    reason: "Niet gebruiken in de eerste versie omdat de lokale OAuth-flow extra HTTPS- en platformvoorwaarden vereist.",
+  },
   {
     platform: "LinkedIn",
     decision: "Later",

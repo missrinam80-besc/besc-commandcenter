@@ -52,7 +52,7 @@ const duplicateRows=source.boards.filter(b=>(duplicateNames.get(b.name.toLowerCa
 
 const wb=Workbook.create();
 const summary=wb.worksheets.add("Samenvatting"),workspaces=wb.worksheets.add("Workspaces"),boards=wb.worksheets.add("Borden"),items=wb.worksheets.add("Items"),subs=wb.worksheets.add("Subitems"),cols=wb.worksheets.add("Kolommen"),dupes=wb.worksheets.add("Dubbele bordnamen");
-const purple="#342F74",orange="#EF7F3B",light="#F4F1FF",grid="#E5E7EB";
+const purple="#342F74",orange="#EF7F3B",grid="#E5E7EB";
 const header={fill:orange,font:{bold:true,color:"#FFFFFF"},borders:{preset:"outside",style:"thin",color:grid}};
 const setup=(sheet,headers,rows,tableName,widths={})=>{sheet.getRangeByIndexes(0,0,1,headers.length).values=[headers];sheet.getRangeByIndexes(0,0,1,headers.length).format=header;if(rows.length)sheet.getRangeByIndexes(1,0,rows.length,headers.length).values=rows;const used=sheet.getRangeByIndexes(0,0,Math.max(rows.length+1,1),headers.length);used.format.wrapText=true;used.format.borders={insideHorizontal:{style:"thin",color:grid}};used.format.autofitColumns();for(const[col,width]of Object.entries(widths))sheet.getRange(`${col}:${col}`).format.columnWidth=width;sheet.freezePanes.freezeRows(1);sheet.showGridLines=false;if(rows.length)sheet.tables.add(`A1:${String.fromCharCode(64+headers.length)}${rows.length+1}`,true,tableName);};
 

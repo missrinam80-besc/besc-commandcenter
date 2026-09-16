@@ -8,6 +8,7 @@ import {
   googleCalendarMeetingPayload,
   googleWorkloadAudience,
   googleWorkspaceConfiguration,
+  vercelOidcTokenExpiry,
 } from "../src/lib/google-workspace.ts";
 
 test("Workspace-configuratie rapporteert ontbrekende variabelen zonder waarden te lekken", () => {
@@ -135,6 +136,12 @@ test("Google audience accepteert losse IDs en volledige resourcepaden", () => {
     workloadIdentityPoolId: "projects/154027614837/locations/global/workloadIdentityPools/besc-vercel",
     workloadIdentityProviderId: "projects/154027614837/locations/global/workloadIdentityPools/besc-vercel/providers/provider",
   }), expected);
+});
+
+test("Vercel OIDC-vervaldatum wordt uit lokale JWT gelezen", () => {
+  const payload = Buffer.from(JSON.stringify({ exp: 1785131936 })).toString("base64url");
+  assert.equal(vercelOidcTokenExpiry(`header.${payload}.signature`), 1785131936000);
+  assert.equal(vercelOidcTokenExpiry("ongeldig"), null);
 });
 
 test("Google Drive-map-ID wordt uit ondersteunde links gelezen", () => {

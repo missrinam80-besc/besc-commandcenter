@@ -73,12 +73,13 @@ export const accessPolicies: AreaPolicy[] = [
   { key: "sponsors", label: "Sponsors & CRM", manageCapability: "manageOrganization", activeMemberView: true, managerExport: true, dataScope: "Partner- en sponsordossiers." },
   { key: "communication", label: "Communicatie", manageCapability: "manageOrganization", activeMemberView: true, approvalEntity: "email", dataScope: "Dossiercommunicatie en Gmail-conceptstatussen." },
   { key: "content", label: "Content", manageCapability: "manageContent", activeMemberView: true, managerExport: true, approvalEntity: "content", dataScope: "Contentitems, publicatieplanning en gekoppelde dossiers." },
-  { key: "shop", label: "Shop & merchandise", manageCapability: "manageOrganization", activeMemberView: true, dataScope: "Producten, lanceringen, activa en merchandiseplanning." },
+  { key: "shop", label: "Shop & merchandise", manageCapability: "manageOrganization", activeMemberView: true, dataScope: "Producten, lanceringen en merchandiseplanning." },
   { key: "newsletters", label: "Nieuwsbrieven", manageCapability: "manageOrganization", managerExport: true, approvalEntity: "newsletter", dataScope: "Mailinglijsten, abonnees en nieuwsbrieven; beperkt tot bestuur/beheer." },
   { key: "ai", label: "AI Hub", manageCapability: "manageAiTemplates", activeMemberView: true, activeMemberCreate: true, dataScope: "Promptbibliotheek en AI-output binnen BESC." },
   { key: "meetings", label: "Vergaderingen & besluiten", manageCapability: "manageOrganization", activeMemberView: true, approvalEntity: "document", dataScope: "Vergaderingen, besluiten, actiepunten en notulenlinks." },
   { key: "administration", label: "VZW-administratie", manageCapability: "manageOrganization", dataScope: "Formele VZW-administratie; beperkt tot bestuur/beheer." },
   { key: "finance", label: "Financiën", manageCapability: "manageFinance", viewCapability: "viewFinance", activeMemberCreate: true, financeExport: true, approvalEntity: "expense", dataScope: "Kosten, budgetten en inkomsten volgens finance-rol." },
+  { key: "materials", label: "Materialen & resources", manageCapability: "manageOrganization", activeMemberView: true, dataScope: "Streammateriaal, eventresources, hardware, licenties, locaties, waarde en dossierkoppelingen." },
   { key: "knowledge", label: "Kennisbank", manageCapability: "manageOrganization", activeMemberView: true, dataScope: "Interne handleidingen en procedures." },
   { key: "reports", label: "Rapportage & KPI", manageCapability: "manageKpis", activeMemberView: true, managerExport: true, dataScope: "KPI’s en rapporten; managementrapporten beperkt tot bestuur/beheer." },
   { key: "documents", label: "Documenten & Drive", manageCapability: "manageOrganization", activeMemberView: true, approvalEntity: "document", dataScope: "Alleen links en metadata; rechten blijven in Google Workspace." },
@@ -119,6 +120,11 @@ function canMutate(policy: AreaPolicy, membership: MembershipAccess | null, arch
   return "no";
 }
 
+function canDelete(policy: AreaPolicy, membership: MembershipAccess | null): AccessDecision {
+  if (!membership || membership.role !== "admin") return "no";
+  return canMutate(policy, membership, true);
+}
+
 function canExport(policy: AreaPolicy, membership: MembershipAccess | null): AccessDecision {
   if (!membership) return "no";
   if (policy.managerExport && isManagerLike(membership)) return "yes";
@@ -155,7 +161,7 @@ export function accessMatrixForRole(role: AccessRoleKey): AccessArea[] {
     create: canCreate(policy, membership),
     edit: canMutate(policy, membership),
     archive: canMutate(policy, membership, true),
-    delete: canMutate(policy, membership, true),
+    delete: canDelete(policy, membership),
     export: canExport(policy, membership),
     approve: canApprove(policy, membership),
     dataScope: policy.dataScope ?? "Organisatiedata binnen BESC.",
@@ -187,7 +193,7 @@ export function accessMatrixForProfile(profile: MembershipAccess): AccessArea[] 
     create: canCreate(policy, membership),
     edit: canMutate(policy, membership),
     archive: canMutate(policy, membership, true),
-    delete: canMutate(policy, membership, true),
+    delete: canDelete(policy, membership),
     export: canExport(policy, membership),
     approve: canApprove(policy, membership),
     dataScope: policy.dataScope ?? "Organisatiedata binnen BESC.",

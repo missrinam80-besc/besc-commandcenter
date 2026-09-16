@@ -14,7 +14,8 @@ export async function createInboxItem(formData: FormData) {
   if (!isSupabaseConfigured()) unavailable("/app/inbox");
   const parsed = baseSchema.extend({ source: z.string().trim().max(60).optional(), priority }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/inbox?nieuw=1&fout=velden");
-  const { supabase, user, membership } = await requirePermission("manageInbox", "/app/inbox?fout=geen-toegang");
+  const { supabase, user, membership } = await requireActiveMembership();
+  if (!["admin", "board", "member"].includes(membership.role)) redirect("/app/inbox?fout=geen-toegang");
   const { error } = await supabase.from("inbox_items").insert({ ...parsed.data, title: parsed.data.title || "Naamloos inboxitem", source: parsed.data.source || "Handmatig", organization_id: membership.organization_id, created_by: user.id });
   if (error) redirect("/app/inbox?nieuw=1&fout=opslaan");
   revalidatePath("/app"); revalidatePath("/app/inbox"); redirect("/app/inbox?succes=aangemaakt");

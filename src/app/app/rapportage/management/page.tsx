@@ -50,7 +50,7 @@ export default async function ManagementReportPage({
   const { supabase, membership } = await requireActiveMembership();
   const manager = ["admin", "board"].includes(membership.role);
   const organizationId = membership.organization_id;
-  if (!manager) return <AppShell active="Rapportage & KPI"><div className="module-body"><div className="permission-note">Het managementoverzicht is alleen beschikbaar voor bestuur en beheerders.</div></div></AppShell>;
+  if (!manager) return <AppShell active="Management overzicht"><div className="module-body"><div className="permission-note">Het managementoverzicht is alleen beschikbaar voor bestuur en beheerders.</div></div></AppShell>;
 
   const start = range.start.toISOString();
   const end = range.end.toISOString();
@@ -185,7 +185,7 @@ export default async function ManagementReportPage({
   ].slice(0, 10);
 
   return (
-    <AppShell active="Rapportage & KPI">
+    <AppShell active="Management overzicht">
       <header className="topbar module-top management-report-top">
         <div><p>BESTUURSRAPPORT</p><h1>Managementoverzicht</h1></div>
         <div><ManagementReportActions exportHref={`/app/rapportage/management/export?periode=${period}&datum=${anchor.toISOString().slice(0, 10)}`}/><Link className="row-action" href="/app/rapportage">KPI-register</Link></div>

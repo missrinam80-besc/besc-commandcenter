@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export type MetaPlatform = "facebook" | "instagram";
 
 const facebookScopes = ["pages_show_list", "pages_read_engagement"];
-const instagramScopes = [...facebookScopes, "instagram_basic", "instagram_manage_insights"];
+const instagramScopes = [...facebookScopes, "instagram_basic"];
 
 export function metaScopes(platform: MetaPlatform) {
   return platform === "instagram" ? instagramScopes : facebookScopes;
@@ -128,7 +128,7 @@ export async function fetchFacebookMetrics(accessToken: string, pageId: string) 
   let insightError: string | null = null;
   try {
     insights = await metaJson(
-      `https://graph.facebook.com/${config.apiVersion}/${pageId}/insights?metric=page_impressions_unique,page_post_engagements&period=days_28`,
+      `https://graph.facebook.com/${config.apiVersion}/${pageId}/insights?metric=page_views_total,page_post_engagements&period=days_28`,
       accessToken,
     );
   } catch (error) {
@@ -144,9 +144,15 @@ export async function fetchInstagramMetrics(accessToken: string, instagramId: st
     accessToken,
   );
   const parameters = new URLSearchParams({ metric: "reach,profile_views", period: "day", since: String(since), until: String(until) });
-  const insights = await metaJson<{ data?: Array<{ name: string; period?: string; values?: Array<{ value?: number; end_time?: string }> }> }>(
-    `https://graph.facebook.com/${config.apiVersion}/${instagramId}/insights?${parameters.toString()}`,
-    accessToken,
-  );
-  return { profile, insights: insights.data ?? [] };
+  let insights: { data?: Array<{ name: string; period?: string; values?: Array<{ value?: number; end_time?: string }> }> } = { data: [] };
+  let insightError: string | null = null;
+  try {
+    insights = await metaJson(
+      `https://graph.facebook.com/${config.apiVersion}/${instagramId}/insights?${parameters.toString()}`,
+      accessToken,
+    );
+  } catch (error) {
+    insightError = error instanceof Error ? error.message : "Instagram Insights niet beschikbaar.";
+  }
+  return { profile, insights: insights.data ?? [], insightError };
 }

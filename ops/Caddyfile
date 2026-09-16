@@ -1,0 +1,7 @@
+{
+	email admin@example.com
+}
+
+commandcenter.example.com {
+	reverse_proxy web:3000
+}

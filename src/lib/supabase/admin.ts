@@ -1,8 +1,9 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
+import { getSupabaseServerUrl } from "@/lib/supabase/url";
 
 export function createAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = getSupabaseServerUrl();
   const secret = process.env.SUPABASE_SECRET_KEY;
   if (!url || !secret) throw new Error("SUPABASE_SECRET_KEY ontbreekt voor beveiligde serveracties.");
   return createClient(url, secret, {

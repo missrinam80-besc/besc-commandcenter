@@ -75,7 +75,7 @@ const obviousDemoPatterns = [
   /spring summit 2026|lente launch|codeforge|cloudnova|community hacknight/i,
 ];
 
-const importAdvice = ({ boardName, itemName, groupName, target, createdAt }) => {
+const importAdvice = ({ boardName, itemName, groupName, target }) => {
   const board = lower(boardName);
   const item = clean(itemName);
   const group = lower(groupName);

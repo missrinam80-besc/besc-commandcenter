@@ -35,6 +35,19 @@ export function googleWorkloadAudience(input: {
   return `//iam.googleapis.com/projects/${projectNumber}/locations/global/workloadIdentityPools/${poolId}/providers/${providerId}`;
 }
 
+export function vercelOidcTokenExpiry(token: string) {
+  const payload = token.split(".")[1];
+  if (!payload) return null;
+  try {
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), "=");
+    const decoded = JSON.parse(Buffer.from(padded, "base64").toString("utf8")) as { exp?: unknown };
+    return typeof decoded.exp === "number" ? decoded.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 export function googleWorkspaceConfiguration() {
   const missing = requiredVariables.filter((name) => !env(name));
   return {
@@ -71,6 +84,10 @@ export async function googleAccessToken() {
   if (!oidcToken) {
     throw new Error("Geen Vercel OIDC-token beschikbaar. Deploy op Vercel of voer lokaal `vercel env pull` uit.");
   }
+  const tokenExpiry = vercelOidcTokenExpiry(oidcToken);
+  if (tokenExpiry && tokenExpiry <= Date.now() + 60_000) {
+    throw new Error("De lokale Vercel OIDC-token is verlopen. Haal lokaal een nieuwe token op met `vercel env pull .env.local --yes` en herstart daarna de webapp-container.");
+  }
   const audience = googleWorkloadAudience(config);
   const stsResponse = await fetch("https://sts.googleapis.com/v1/token", {
     method: "POST",
@@ -88,7 +105,11 @@ export async function googleAccessToken() {
   const sts = await stsResponse.json() as { access_token?: string; expires_in?: number; error_description?: string; error?: string };
   if (!stsResponse.ok || !sts.access_token) {
     const target = audience.replace("//iam.googleapis.com/", "");
-    throw new Error(`${sts.error_description || sts.error || "Google STS heeft het Vercel-token niet geaccepteerd."} Doel: ${target}`);
+    const detail = sts.error_description || sts.error || "Google STS heeft het Vercel-token niet geaccepteerd.";
+    const setupHint = detail.toLowerCase().includes("audience")
+      ? "Controleer in Google Cloud of het projectnummer, de Workload Identity Pool ID en de Provider ID exact bestaan en ingeschakeld zijn."
+      : "Controleer de Google Workload Identity-configuratie en de serviceaccountrechten.";
+    throw new Error(`${detail} ${setupHint} Doel: ${target}`);
   }
   const impersonationResponse = await fetch(
     `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${encodeURIComponent(config.email)}:generateAccessToken`,

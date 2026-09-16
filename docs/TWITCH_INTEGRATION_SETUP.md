@@ -7,9 +7,13 @@ De Twitch-pilot bewaart uitsluitend operationele kanaaldata: accountidentiteit, 
 1. Registreer een vertrouwelijke Twitch-app waarvan BESC eigenaar is.
 2. Voeg als OAuth redirect URL toe:
 
+   `http://localhost:3001/app/integraties/social/twitch/callback`
+
+   Voeg later voor productie ook toe:
+
    `https://<jouw-command-center-domein>/app/integraties/social/twitch/callback`
 
-3. Voeg in Vercel toe:
+3. Voeg lokaal en in Vercel toe:
 
 ```text
 TWITCH_CLIENT_ID

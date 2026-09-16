@@ -43,11 +43,12 @@ test("rechtenmatrix bewaakt aanmaken, bewerken, archiveren, verwijderen, exporte
   }
   assert.match(matrix, /canReviewApproval/);
   assert.match(matrix, /hasPermission/);
+  assert.match(matrix, /membership\.role !== "admin"/);
   assert.match(matrix, new RegExp("Geen toegang tot /app"));
 });
 
 test("rechtencontrolepagina is zichtbaar voor bestuur en beheer en toont de matrix", async () => {
-  const [shell, page, actions, migration, users, authContext, proxy] = await Promise.all([
+  const [shell, page, actions, migration, users, authContext, proxy, styles] = await Promise.all([
     source("src/components/app-shell.tsx"),
     source("src/app/app/beheer/rechten/page.tsx"),
     source("src/app/app/beheer/actions.ts"),
@@ -55,6 +56,7 @@ test("rechtencontrolepagina is zichtbaar voor bestuur en beheer en toont de matr
     source("src/app/app/beheer/gebruikers/page.tsx"),
     source("src/lib/auth-context.ts"),
     source("src/proxy.ts"),
+    source("src/app/globals.css"),
   ]);
 
   assert.match(shell, /Rechtencontrole/);
@@ -76,4 +78,6 @@ test("rechtencontrolepagina is zichtbaar voor bestuur en beheer en toont de matr
   assert.match(migration, /grant select, insert, update, delete/);
   assert.match(authContext, /enriched\.error/);
   assert.match(proxy, /enriched\.error/);
+  assert.match(styles, /permissions-audit-page>\.panel\{overflow:hidden;padding:20px 21px/);
+  assert.match(styles, /permissions-audit-page>\.panel>\.section-heading\{margin:0 0 14px/);
 });

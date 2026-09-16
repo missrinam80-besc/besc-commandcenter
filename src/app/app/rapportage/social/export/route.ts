@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const year = /^20\d{2}$/.test(url.searchParams.get("jaar") ?? "") ? url.searchParams.get("jaar")! : String(new Date().getFullYear());
   const { supabase, membership } = await requireActiveMembership();
-  if (!["admin", "board"].includes(membership.role)) return new Response("Geen toegang", { status: 403 });
+  if (!["admin", "board", "member"].includes(membership.role)) return new Response("Geen toegang", { status: 403 });
   const start = `${year}-01-01T00:00:00Z`;
   const end = `${year}-12-31T23:59:59Z`;
   const [kpis, periodMetrics, lifetimeMetrics] = await Promise.all([
