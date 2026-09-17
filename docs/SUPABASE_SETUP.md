@@ -49,3 +49,6 @@ Start `pnpm dev` en test achtereenvolgens:
 5. inboxitem maken en omzetten naar taak;
 6. taak starten en afronden;
 7. project met Google Drive-link maken.
+
+
+EINDE
