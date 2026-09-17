@@ -21,13 +21,22 @@ async function getSiteUrl() {
 export async function signInWithPassword(formData: FormData) {
   const email = String(formData.get("email") || "").trim();
   const password = String(formData.get("password") || "");
-  if (!email || !password) redirect("/login?error=velden");
+
+  if (!email || !password) {
+    redirect("/login?error=velden");
+  }
+
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
   if (error) {
-  console.error("Supabase login error:", error.message, error.status, error.code);
-  redirect("/login?error=inloggegevens");
-}
+    redirect("/login?error=inloggegevens");
+  }
+
   redirect(await resolveAuthenticatedHome(supabase, data.user.id));
 }
 
