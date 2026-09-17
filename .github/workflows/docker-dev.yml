@@ -32,6 +32,30 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Validate DEV build configuration
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "ERROR: NEXT_PUBLIC_SUPABASE_URL is missing"
+            exit 1
+          fi
+
+          if [ -z "$SITE_URL" ]; then
+            echo "ERROR: NEXT_PUBLIC_SITE_URL is missing"
+            exit 1
+          fi
+
+          if [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "ERROR: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is missing"
+            exit 1
+          fi
+
+          echo "DEV build configuration is present."
+
       - name: Build and push DEV image
         uses: docker/build-push-action@v6
         with:
