@@ -24,7 +24,10 @@ export async function signInWithPassword(formData: FormData) {
   if (!email || !password) redirect("/login?error=velden");
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) redirect("/login?error=inloggegevens");
+  if (error) {
+  console.error("Supabase login error:", error.message, error.status, error.code);
+  redirect("/login?error=inloggegevens");
+}
   redirect(await resolveAuthenticatedHome(supabase, data.user.id));
 }
 
