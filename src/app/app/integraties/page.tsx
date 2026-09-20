@@ -85,7 +85,7 @@ export default async function Page({
         {query.succes && query.succes !== "google-verbonden" && <div className="success">Integratie bijgewerkt.</div>}
 
         <section className="integration-security">
-          <KeyRound/><div><strong>Geheimen blijven buiten Supabase</strong><span>API-sleutels staan uitsluitend in Vercel Environment Variables en lokaal in .env.local.</span></div>
+          <KeyRound/><div><strong>Geheimen blijven buiten Supabase</strong><span>Geheimen staan uitsluitend server-side in Docker environment variables of secrets.</span></div>
         </section>
         <section className="integration-env-grid">
           {envStatus.map((item) => <article key={item.name} className={item.configured ? "ready" : "missing"}>{item.configured ? <CheckCircle2/> : <TriangleAlert/>}<div><strong>{item.name}</strong><span>{item.configured ? "Serverconfiguratie gevonden" : `${item.variable} ontbreekt`}</span></div></article>)}
