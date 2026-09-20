@@ -1,165 +1,69 @@
 # Google Workspace-integratie instellen
 
-Deze integratie gebruikt Google Workload Identity Federation. De app logt dus niet in met een gewoon Google-wachtwoord, maar ruilt een Vercel OIDC-token om voor tijdelijke Google API-toegang.
+De Docker-devserver gebruikt OAuth met een speciaal Google Workspace-account. Er is geen service-accountkey, Vercel OIDC of Workload Identity Federation nodig.
 
-## Huidige lokale waarden
+## Serverconfiguratie
 
-De app gebruikt lokaal deze variabelen uit `.env.local`:
+Vul de volgende server-only variabelen in op BESCSRVDEV. Gebruik bij voorkeur Docker secrets of een beveiligde environment-configuratie; zet deze waarden nooit in `NEXT_PUBLIC_*` of in Git.
 
 ```env
+GOOGLE_OAUTH_CLIENT_ID=...
+GOOGLE_OAUTH_CLIENT_SECRET=...
+GOOGLE_OAUTH_REFRESH_TOKEN=...
+GOOGLE_OAUTH_USER_EMAIL=google-account@jouwdomein.be
 GOOGLE_CLOUD_PROJECT_ID=besc-command-center
-GOOGLE_CLOUD_PROJECT_NUMBER=154027614837
-GOOGLE_WORKLOAD_IDENTITY_POOL_ID=besc-vercel
-GOOGLE_WORKLOAD_IDENTITY_POOL_PROVIDER_ID=besc-vercel
-GOOGLE_SERVICE_ACCOUNT_EMAIL=besc-command-center@besc-command-center.iam.gserviceaccount.com
+GOOGLE_SHARED_DRIVE_ID=
+GOOGLE_DRIVE_ROOT_FOLDER_ID=
+GOOGLE_CALENDAR_ID=
+GOOGLE_TEMPLATE_MINUTES_ID=
+GOOGLE_TEMPLATE_SPONSOR_REPORT_ID=
+GOOGLE_TEMPLATE_EVENT_ID=
+GOOGLE_TEMPLATE_SPONSOR_PITCHDECK_ID=
+GOOGLE_TEMPLATE_EVENT_PITCHDECK_ID=
+GOOGLE_GMAIL_SENDER=google-account@jouwdomein.be
 ```
 
-De foutmelding:
+De refresh token is server-only en mag nooit in Git of in de browser terechtkomen. Gebruik bij voorkeur Docker secrets of een beveiligde environment-configuratie.
 
-```text
-The target service indicated by the "audience" parameters is invalid.
-```
+## Google Cloud en Workspace
 
-betekent dat Google dit doel niet vindt of niet actief ziet:
+1. Selecteer project `besc-command-center` in Google Cloud.
+2. Activeer Drive API, Docs API, Slides API, Calendar API en Gmail API.
+3. Maak in Google Cloud bij **APIs & Services → Credentials** een OAuth-client aan voor een desktopapplicatie.
+4. Autoriseer met het speciale Workspace-account minimaal Drive, Docs, Slides, Calendar en Gmail Compose.
+5. Geef dit account toegang tot de Shared Drive, rootmap, Docs/Slides-templates en kalender.
+6. Gebruik voor Gmail een afzender die overeenkomt met `GOOGLE_GMAIL_SENDER`.
 
-```text
-projects/154027614837/locations/global/workloadIdentityPools/besc-vercel/providers/besc-vercel
-```
+## Eenmalige refresh token maken
 
-## Controle in Google Cloud
-
-1. Open Google Cloud Console.
-2. Selecteer project `besc-command-center`.
-3. Open `IAM & Admin`.
-4. Open `Workload Identity Federation`.
-5. Controleer of er een pool bestaat met ID:
-
-```text
-besc-vercel
-```
-
-6. Open die pool.
-7. Controleer of er een provider bestaat met ID:
-
-```text
-besc-vercel
-```
-
-8. Controleer dat de pool en provider niet disabled zijn.
-
-## Als beide actief lijken
-
-Controleer dan de echte resource name. Let op: Google toont soms een naam/label en een technische ID. De app heeft de technische ID nodig.
-
-Open rechtsboven in Google Cloud de Cloud Shell en voer uit:
-
-```bash
-gcloud iam workload-identity-pools describe besc-vercel \
-  --location=global \
-  --project=besc-command-center \
-  --format="yaml(name,state,disabled)"
-```
-
-Voer daarna uit:
-
-```bash
-gcloud iam workload-identity-pools providers describe besc-vercel \
-  --workload-identity-pool=besc-vercel \
-  --location=global \
-  --project=besc-command-center \
-  --format="yaml(name,state,disabled,issuerUri,allowedAudiences,attributeMapping,attributeCondition)"
-```
-
-De `name` van de provider moet eindigen op:
-
-```text
-projects/154027614837/locations/global/workloadIdentityPools/besc-vercel/providers/besc-vercel
-```
-
-Als het projectnummer, de pool-ID of provider-ID anders is, pas dan `.env.local` aan.
-
-De provider moet minstens deze issuer gebruiken:
-
-```text
-https://oidc.vercel.com/besc-s-projects
-```
-
-Als `allowedAudiences` is ingevuld, moet deze waarde toegelaten zijn:
-
-```text
-https://vercel.com/besc-s-projects
-```
-
-De lokale Vercel-token gebruikt als subject:
-
-```text
-owner:besc-s-projects:project:besc-command-center:environment:development
-```
-
-Als er een `attributeCondition` ingesteld is, moet die subject of de gemapte attributen hiermee overeenkomen.
-
-## Als de naam anders is
-
-Pas dan lokaal `.env.local` aan:
-
-```env
-GOOGLE_WORKLOAD_IDENTITY_POOL_ID=<juiste-pool-id>
-GOOGLE_WORKLOAD_IDENTITY_POOL_PROVIDER_ID=<juiste-provider-id>
-```
-
-Herstart daarna de webapp-container.
-
-## Als de pool/provider nog niet bestaat
-
-Maak in Google Cloud een Workload Identity Pool en Provider aan voor Vercel OIDC.
-
-Gebruik als issuer:
-
-```text
-https://oidc.vercel.com/besc-s-projects
-```
-
-De exacte subject/audience-regels moeten overeenkomen met het Vercel-project `besc-command-center` en de environment `development` of `production`.
-
-## Serviceaccountrechten
-
-Het serviceaccount:
-
-```text
-besc-command-center@besc-command-center.iam.gserviceaccount.com
-```
-
-moet via Workload Identity toestemming krijgen om geïmpersoneerd te worden.
-
-Daarna moet dit serviceaccount toegang hebben tot:
-
-- de gedeelde Drive;
-- de rootmap;
-- de gebruikte Google Docs-templates;
-- de Google Calendar.
-
-## Lokale test
-
-Controleer eerst of de lokale Vercel OIDC-token nog geldig is. Een lokaal opgehaalde token is tijdelijk. Is die verlopen, haal dan een nieuwe op.
-
-Veilige werkwijze:
-
-1. Maak eerst een kopie van `.env.local`.
-2. Haal daarna de Vercel development-variabelen opnieuw op.
-3. Controleer of je lokale extra waarden, zoals Discord, nog aanwezig zijn.
-4. Herstart de webapp-container.
-
-Gebruik:
+1. Zet de OAuth-clientgegevens tijdelijk in je lokale PowerShell-sessie:
 
 ```powershell
-Copy-Item .env.local .env.local.backup
-pnpm dlx vercel env pull .env.local --yes --environment=development
+$env:GOOGLE_OAUTH_CLIENT_ID="..."
+$env:GOOGLE_OAUTH_CLIENT_SECRET="..."
 ```
 
-Let op: `vercel env pull` kan `.env.local` volledig vervangen. Voeg lokale waarden die niet in Vercel staan daarna opnieuw toe.
+2. Start vanuit de projectmap:
 
-Na correctie:
+```powershell
+node scripts/google-oauth-refresh-token.mjs
+```
 
-1. Herstart de webapp-container.
-2. Ga naar `http://localhost:3001/app/integraties`.
-3. Klik opnieuw op `Verbinding testen` bij Google Workspace.
+3. Open de URL die het script toont en meld aan met het speciale Workspace-account.
+4. Kopieer de regel `GOOGLE_OAUTH_REFRESH_TOKEN=...` uit de terminal naar de beveiligde serveromgeving. Deel deze token niet in chat en commit hem niet.
+5. Verwijder daarna de tijdelijke PowerShell-variabelen of sluit het venster.
+
+## Functionele controle
+
+Na het invullen van de serverconfiguratie:
+
+1. Herstart de app-container op BESCSRVDEV.
+2. Open `https://cc-dev.belgianstreamerscommunity.be/app/integraties`.
+3. Klik bij Google Workspace op `Verbinding testen`.
+4. Controleer daarna afzonderlijk Drive-maptoegang, Calendar-sync en het aanmaken van een Gmail-concept.
+
+Bij een fout controleer je eerst de serverlog op de foutmelding, zonder tokens of secrets te delen. De meest voorkomende oorzaken zijn een verlopen of ingetrokken refresh token, ontbrekende API-activering of ontbrekende Drive-/Calendar-rechten.
+
+## Lokale voorbereiding
+
+Voor lokale tests mag dezelfde Cloud Supabase- en Google-configuratie in `.env.local` worden gebruikt. Start daarvoor alleen de applicatiecontainer; een lokale Supabase-stack is niet nodig. Er is geen Vercel CLI of Vercel-token nodig.

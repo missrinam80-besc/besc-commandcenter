@@ -75,7 +75,7 @@ export default async function CommunicationPage({ searchParams }: { searchParams
       </header>
       <div className="module-body communication-module">
         <p className="lead">Maak Gmail-concepten vanuit een BESC-dossier. Een tweede bevoegde persoon keurt de e-mail goed voordat het bestuur ze kan verzenden.</p>
-        {!gmail.configured && <div className="error-note">Gmail is nog niet geconfigureerd. Voeg GOOGLE_GMAIL_SENDER toe en autoriseer gmail.compose via Google Workspace-domeindelegatie.</div>}
+        {!gmail.configured && <div className="error-note">Gmail is nog niet geconfigureerd. Voeg GOOGLE_GMAIL_SENDER toe en autoriseer Gmail Compose via Google OAuth.</div>}
         {query.fout && <div className="error-note">De actie is mislukt ({query.fout}).</div>}
         {query.succes && <div className="success">De e-mailactie is verwerkt.</div>}
 

@@ -6,18 +6,16 @@ import {
   eventDriveSubfolders,
   googleCalendarEventPayload,
   googleCalendarMeetingPayload,
-  googleWorkloadAudience,
   googleWorkspaceConfiguration,
-  vercelOidcTokenExpiry,
 } from "../src/lib/google-workspace.ts";
 
 test("Workspace-configuratie rapporteert ontbrekende variabelen zonder waarden te lekken", () => {
-  const previous = process.env.GOOGLE_WORKLOAD_IDENTITY_POOL_ID;
-  delete process.env.GOOGLE_WORKLOAD_IDENTITY_POOL_ID;
+  const previous = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  delete process.env.GOOGLE_OAUTH_CLIENT_ID;
   const result = googleWorkspaceConfiguration();
   assert.equal(result.configured, false);
-  assert.ok(result.missing.includes("GOOGLE_WORKLOAD_IDENTITY_POOL_ID"));
-  if (previous) process.env.GOOGLE_WORKLOAD_IDENTITY_POOL_ID = previous;
+  assert.ok(result.missing.includes("GOOGLE_OAUTH_CLIENT_ID"));
+  if (previous) process.env.GOOGLE_OAUTH_CLIENT_ID = previous;
 });
 
 test("Google Calendar-payload bewaart exacte tijden en BESC-herkomst", () => {
@@ -122,26 +120,6 @@ test("geannuleerde Calendar-items blijven zichtbaar maar blokkeren geen tijd", (
   });
   assert.equal(event.summary, "GEANNULEERD — Community Night");
   assert.equal(event.transparency, "transparent");
-});
-
-test("Google audience accepteert losse IDs en volledige resourcepaden", () => {
-  const expected = "//iam.googleapis.com/projects/154027614837/locations/global/workloadIdentityPools/besc-vercel/providers/provider";
-  assert.equal(googleWorkloadAudience({
-    projectNumber: "154027614837",
-    workloadIdentityPoolId: "besc-vercel",
-    workloadIdentityProviderId: "provider",
-  }), expected);
-  assert.equal(googleWorkloadAudience({
-    projectNumber: "projects/154027614837",
-    workloadIdentityPoolId: "projects/154027614837/locations/global/workloadIdentityPools/besc-vercel",
-    workloadIdentityProviderId: "projects/154027614837/locations/global/workloadIdentityPools/besc-vercel/providers/provider",
-  }), expected);
-});
-
-test("Vercel OIDC-vervaldatum wordt uit lokale JWT gelezen", () => {
-  const payload = Buffer.from(JSON.stringify({ exp: 1785131936 })).toString("base64url");
-  assert.equal(vercelOidcTokenExpiry(`header.${payload}.signature`), 1785131936000);
-  assert.equal(vercelOidcTokenExpiry("ongeldig"), null);
 });
 
 test("Google Drive-map-ID wordt uit ondersteunde links gelezen", () => {

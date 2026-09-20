@@ -1,9 +1,8 @@
 const requiredVariables = [
-  "GOOGLE_SERVICE_ACCOUNT_EMAIL",
+  "GOOGLE_OAUTH_CLIENT_ID",
+  "GOOGLE_OAUTH_CLIENT_SECRET",
+  "GOOGLE_OAUTH_REFRESH_TOKEN",
   "GOOGLE_CLOUD_PROJECT_ID",
-  "GOOGLE_CLOUD_PROJECT_NUMBER",
-  "GOOGLE_WORKLOAD_IDENTITY_POOL_ID",
-  "GOOGLE_WORKLOAD_IDENTITY_POOL_PROVIDER_ID",
   "GOOGLE_SHARED_DRIVE_ID",
   "GOOGLE_DRIVE_ROOT_FOLDER_ID",
   "GOOGLE_CALENDAR_ID",
@@ -14,38 +13,8 @@ const requiredVariables = [
 
 export type GoogleWorkspaceVariable = (typeof requiredVariables)[number];
 
-function env(name: GoogleWorkspaceVariable) {
+function env(name: string) {
   return (process.env[name] ?? "").trim().replace(/^["']|["']$/g, "");
-}
-
-function resourceSegment(value: string, marker: string) {
-  const normalized = value.replace(/^\/\/iam\.googleapis\.com\//, "");
-  const index = normalized.lastIndexOf(marker);
-  return index >= 0 ? normalized.slice(index + marker.length).split("/")[0] : normalized;
-}
-
-export function googleWorkloadAudience(input: {
-  projectNumber: string;
-  workloadIdentityPoolId: string;
-  workloadIdentityProviderId: string;
-}) {
-  const projectNumber = resourceSegment(input.projectNumber.trim(), "projects/");
-  const poolId = resourceSegment(input.workloadIdentityPoolId.trim(), "workloadIdentityPools/");
-  const providerId = resourceSegment(input.workloadIdentityProviderId.trim(), "providers/");
-  return `//iam.googleapis.com/projects/${projectNumber}/locations/global/workloadIdentityPools/${poolId}/providers/${providerId}`;
-}
-
-export function vercelOidcTokenExpiry(token: string) {
-  const payload = token.split(".")[1];
-  if (!payload) return null;
-  try {
-    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), "=");
-    const decoded = JSON.parse(Buffer.from(padded, "base64").toString("utf8")) as { exp?: unknown };
-    return typeof decoded.exp === "number" ? decoded.exp * 1000 : null;
-  } catch {
-    return null;
-  }
 }
 
 export function googleWorkspaceConfiguration() {
@@ -53,11 +22,8 @@ export function googleWorkspaceConfiguration() {
   return {
     configured: missing.length === 0,
     missing,
-    email: env("GOOGLE_SERVICE_ACCOUNT_EMAIL"),
+    email: env("GOOGLE_OAUTH_USER_EMAIL"),
     projectId: env("GOOGLE_CLOUD_PROJECT_ID"),
-    projectNumber: env("GOOGLE_CLOUD_PROJECT_NUMBER"),
-    workloadIdentityPoolId: env("GOOGLE_WORKLOAD_IDENTITY_POOL_ID"),
-    workloadIdentityProviderId: env("GOOGLE_WORKLOAD_IDENTITY_POOL_PROVIDER_ID"),
     sharedDriveId: env("GOOGLE_SHARED_DRIVE_ID"),
     rootFolderId: env("GOOGLE_DRIVE_ROOT_FOLDER_ID"),
     calendarId: env("GOOGLE_CALENDAR_ID"),
@@ -69,83 +35,49 @@ export function googleWorkspaceConfiguration() {
   };
 }
 
-let tokenCache: { token: string; expiresAt: number } | null = null;
+const googleApiScopes = [
+  "https://www.googleapis.com/auth/cloud-platform",
+  "https://www.googleapis.com/auth/drive",
+  "https://www.googleapis.com/auth/documents",
+  "https://www.googleapis.com/auth/presentations",
+  "https://www.googleapis.com/auth/calendar",
+] as const;
 
-export async function googleAccessToken() {
-  if (tokenCache && tokenCache.expiresAt > Date.now() + 60_000) return tokenCache.token;
+let tokenCache: { cacheKey: string; token: string; expiresAt: number } | null = null;
+
+export async function googleAccessToken(options: {
+  scopes?: readonly string[];
+} = {}) {
   const config = googleWorkspaceConfiguration();
   if (!config.configured) throw new Error(`Ontbrekende Google-configuratie: ${config.missing.join(", ")}`);
-  const { headers } = await import("next/headers");
-  const requestHeaders = await headers();
-  const oidcToken =
-    requestHeaders.get("x-vercel-oidc-token") ??
-    process.env.VERCEL_OIDC_TOKEN ??
-    "";
-  if (!oidcToken) {
-    throw new Error("Geen Vercel OIDC-token beschikbaar. Deploy op Vercel of voer lokaal `vercel env pull` uit.");
-  }
-  const tokenExpiry = vercelOidcTokenExpiry(oidcToken);
-  if (tokenExpiry && tokenExpiry <= Date.now() + 60_000) {
-    throw new Error("De lokale Vercel OIDC-token is verlopen. Haal lokaal een nieuwe token op met `vercel env pull .env.local --yes` en herstart daarna de webapp-container.");
-  }
-  const audience = googleWorkloadAudience(config);
-  const stsResponse = await fetch("https://sts.googleapis.com/v1/token", {
+  const scopes = options.scopes?.length ? [...options.scopes] : [...googleApiScopes];
+  const cacheKey = `${env("GOOGLE_OAUTH_CLIENT_ID")}|${scopes.join(" ")}`;
+  if (tokenCache?.cacheKey === cacheKey && tokenCache.expiresAt > Date.now() + 60_000) return tokenCache.token;
+
+  const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      audience,
-      grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
-      requested_token_type: "urn:ietf:params:oauth:token-type:access_token",
-      scope: "https://www.googleapis.com/auth/cloud-platform",
-      subject_token: oidcToken,
-      subject_token_type: "urn:ietf:params:oauth:token-type:jwt",
+      client_id: env("GOOGLE_OAUTH_CLIENT_ID"),
+      client_secret: env("GOOGLE_OAUTH_CLIENT_SECRET"),
+      refresh_token: env("GOOGLE_OAUTH_REFRESH_TOKEN"),
+      grant_type: "refresh_token",
     }),
     cache: "no-store",
   });
-  const sts = await stsResponse.json() as { access_token?: string; expires_in?: number; error_description?: string; error?: string };
-  if (!stsResponse.ok || !sts.access_token) {
-    const target = audience.replace("//iam.googleapis.com/", "");
-    const detail = sts.error_description || sts.error || "Google STS heeft het Vercel-token niet geaccepteerd.";
-    const setupHint = detail.toLowerCase().includes("audience")
-      ? "Controleer in Google Cloud of het projectnummer, de Workload Identity Pool ID en de Provider ID exact bestaan en ingeschakeld zijn."
-      : "Controleer de Google Workload Identity-configuratie en de serviceaccountrechten.";
-    throw new Error(`${detail} ${setupHint} Doel: ${target}`);
-  }
-  const impersonationResponse = await fetch(
-    `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${encodeURIComponent(config.email)}:generateAccessToken`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${sts.access_token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        scope: [
-          "https://www.googleapis.com/auth/cloud-platform",
-          "https://www.googleapis.com/auth/drive",
-          "https://www.googleapis.com/auth/documents",
-          "https://www.googleapis.com/auth/presentations",
-          "https://www.googleapis.com/auth/calendar",
-        ],
-        lifetime: "3600s",
-      }),
-      cache: "no-store",
-    },
-  );
-  const impersonation = await impersonationResponse.json() as {
-    accessToken?: string;
-    expireTime?: string;
-    error?: { message?: string };
+  const result = await tokenResponse.json() as {
+    access_token?: string;
+    expires_in?: number;
+    error_description?: string;
+    error?: string;
   };
-  if (!impersonationResponse.ok || !impersonation.accessToken) {
-    throw new Error(impersonation.error?.message || "Impersonatie van het Google-serviceaccount is mislukt.");
+  if (!tokenResponse.ok || !result.access_token) {
+    throw new Error(result.error_description || result.error || "Google OAuth-authenticatie is mislukt.");
   }
-  const expiresAt = impersonation.expireTime
-    ? new Date(impersonation.expireTime).getTime()
-    : Date.now() + 3_600_000;
   tokenCache = {
-    token: impersonation.accessToken,
-    expiresAt,
+    cacheKey,
+    token: result.access_token,
+    expiresAt: Date.now() + (result.expires_in ?? 3_600) * 1_000,
   };
   return tokenCache.token;
 }
