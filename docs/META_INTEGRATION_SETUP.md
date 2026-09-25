@@ -19,7 +19,7 @@ Threads gebruikt een afzonderlijke OAuth-stroom, maar schrijft naar hetzelfde be
    `https://<jouw-command-center-domein>/app/integraties/social/meta/callback`
 
 4. Vraag alleen de scopes die de app gebruikt:
-   - Facebook: `pages_show_list`, `pages_read_engagement`
+   - Facebook: `business_management`, `pages_show_list`, `pages_read_engagement`, `read_insights`
    - Instagram: bovenstaande scopes plus `instagram_basic`
 5. Voor accounts die niet als approl of testaccount zijn toegevoegd, is Advanced Access en mogelijk App Review nodig.
 
