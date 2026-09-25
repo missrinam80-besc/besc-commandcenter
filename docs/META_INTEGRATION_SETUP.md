@@ -19,7 +19,7 @@ Threads gebruikt een afzonderlijke OAuth-stroom, maar schrijft naar hetzelfde be
    `https://<jouw-command-center-domein>/app/integraties/social/meta/callback`
 
 4. Vraag alleen de scopes die de app gebruikt:
-   - Facebook: `business_management`, `pages_show_list`, `pages_read_engagement`, `read_insights`
+   - Facebook: `business_management`, `pages_show_list`, `pages_read_engagement`
    - Instagram: bovenstaande scopes plus `instagram_basic`
 5. Voor accounts die niet als approl of testaccount zijn toegevoegd, is Advanced Access en mogelijk App Review nodig.
 
@@ -78,7 +78,7 @@ Tokens worden via de bestaande server-only RPC in Supabase Vault opgeslagen. Sup
 
 ## Beperkingen van de pilot
 
-- Facebook Insights kan per paginatype, permissie en API-versie verschillen. Profielmetingen blijven bewaard wanneer Insights niet beschikbaar is; de run krijgt dan status `partial`.
+- Facebook Insights kan per paginatype, permissie en API-versie verschillen. Profielmetingen blijven bewaard wanneer Insights niet beschikbaar is; de run krijgt dan status `partial`. `read_insights` wordt in de huidige Meta-use-case niet aangeboden en is daarom geen vereiste voor de koppeling.
 - Facebook gebruikt voor de pilot `page_views_total` en `page_post_engagements`; oudere bereik- en impressiemetingen worden bewust niet meer opgevraagd.
 - Instagram vereist een professioneel account dat aan een beheerbare Facebook-pagina is gekoppeld.
 - Instagram Insights worden in de pilot als optioneel behandeld. Wanneer Meta geen insight-toegang geeft, blijft de koppeling bruikbaar en krijgt alleen de synchronisatierun status `partial`.
