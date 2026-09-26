@@ -213,7 +213,7 @@ export default async function SocialIntegrationsPage({
               const account = accounts.find((item) => item.id === run.social_account_id);
               return <article key={run.id}>
                 {run.status === "succeeded" ? <CheckCircle2/> : <Clock3/>}
-                <div><strong>{account?.account_name ?? "Onbekend account"}</strong><span>{run.trigger_type} · {new Date(run.created_at).toLocaleString("nl-BE")}</span>{run.error_message ? <small>{run.error_message}</small> : null}</div>
+                <div><strong>{account?.account_name ?? "Onbekend account"}</strong><span>{run.trigger_type} · {new Intl.DateTimeFormat("nl-BE", { dateStyle: "short", timeStyle: "medium", timeZone: "Europe/Brussels" }).format(new Date(run.created_at))}</span>{run.error_message ? <small>{run.error_message}</small> : null}</div>
                 <b className={`integration-status ${run.status}`}>{syncLabels[run.status] ?? run.status}</b>
                 <span>{run.records_written}/{run.records_read} verwerkt</span>
               </article>;
