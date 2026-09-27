@@ -5,6 +5,7 @@ import { FormModal } from "@/components/form-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { googleGmailConfiguration } from "@/lib/google-gmail";
 import { renderEmailTemplate } from "@/lib/email-templates";
+import { DossierPicker } from "@/components/dossier-picker";
 import { saveEmailCommunication } from "./actions";
 
 const statusLabels: Record<string, string> = {
@@ -12,18 +13,20 @@ const statusLabels: Record<string, string> = {
   approved: "Goedgekeurd", sent: "Verzonden", rejected: "Geweigerd", failed: "Gmail-fout",
 };
 const typeLabels: Record<string, string> = {
-  sponsor_follow_up: "Sponsoropvolging", event_communication: "Eventcommunicatie", invitation: "Uitnodiging",
+  sponsor_follow_up: "Sponsoropvolging", event_communication: "Eventcommunicatie", invitation: "Uitnodiging", project_update: "Projectcommunicatie", campaign_update: "Campagnecommunicatie",
 };
 
 export default async function CommunicationPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const query = await searchParams;
   const { supabase, membership, user } = await requireActiveMembership();
   const org = membership.organization_id;
-  const [communications, partners, events, meetings, contacts, templates, organization, profile] = await Promise.all([
+  const [communications, partners, events, meetings, projects, campaigns, contacts, templates, organization, profile] = await Promise.all([
     supabase.from("email_communications").select("id,title,entity_type,entity_id,communication_type,status,to_addresses,subject,updated_at,sent_at,creator:profiles!email_communications_created_by_fkey(display_name)").eq("organization_id", org).order("updated_at", { ascending: false }),
     supabase.from("partners").select("id,name,email,next_follow_up").eq("organization_id", org).is("deleted_at", null).not("status", "eq", "archived").order("name"),
     supabase.from("events").select("id,title,start_at,location,is_online").eq("organization_id", org).is("deleted_at", null).not("status", "eq", "archived").order("title"),
     supabase.from("meetings").select("id,title,meeting_at,attendees").eq("organization_id", org).is("deleted_at", null).not("status", "eq", "archived").order("title"),
+    supabase.from("projects").select("id,title").eq("organization_id", org).is("deleted_at", null).not("status", "eq", "archived").order("title"),
+    supabase.from("campaigns").select("id,title").eq("organization_id", org).is("deleted_at", null).not("status", "eq", "archived").order("title"),
     supabase.from("partner_contacts").select("partner_id,name,email,is_primary").eq("organization_id", org).eq("is_primary", true),
     supabase.from("email_templates").select("id,name,category,entity_type,subject_template,body_template").eq("organization_id", org).eq("is_active", true).order("name"),
     supabase.from("organizations").select("name").eq("id", org).maybeSingle(),
@@ -31,19 +34,21 @@ export default async function CommunicationPage({ searchParams }: { searchParams
   ]);
   const rows = communications.data ?? [];
   const gmail = googleGmailConfiguration();
-  const selectedType = ["partner", "event", "meeting"].includes(query.type ?? "") ? query.type! : "partner";
+  const selectedType = ["partner", "event", "meeting", "project", "campaign"].includes(query.type ?? "") ? query.type! : "partner";
   const selectedId = query.id ?? "";
   const selectedPartner = (partners.data ?? []).find((item) => item.id === selectedId);
   const selectedContact = (contacts.data ?? []).find((item) => item.partner_id === selectedId);
   const defaultTo = selectedType === "partner" ? (selectedContact?.email || selectedPartner?.email || "") : "";
   const selectedEvent = (events.data ?? []).find((item) => item.id === selectedId);
   const selectedMeeting = (meetings.data ?? []).find((item) => item.id === selectedId);
+  const selectedProject = (projects.data ?? []).find((item) => item.id === selectedId);
+  const selectedCampaign = (campaigns.data ?? []).find((item) => item.id === selectedId);
   const selectedTitle = selectedType === "partner"
     ? selectedPartner?.name
     : selectedType === "event"
       ? selectedEvent?.title
-      : selectedMeeting?.title;
-  const defaultCategory = selectedType === "partner" ? "sponsor_follow_up" : selectedType === "event" ? "event_communication" : "invitation";
+      : selectedType === "meeting" ? selectedMeeting?.title : selectedType === "project" ? selectedProject?.title : selectedCampaign?.title;
+  const defaultCategory = selectedType === "partner" ? "sponsor_follow_up" : selectedType === "event" ? "event_communication" : selectedType === "meeting" ? "invitation" : selectedType === "project" ? "project_update" : "campaign_update";
   const availableTemplates = (templates.data ?? []).filter((item) => !item.entity_type || item.entity_type === selectedType);
   const selectedTemplate = availableTemplates.find((item) => item.id === query.template) ??
     availableTemplates.find((item) => item.category === defaultCategory);
@@ -61,6 +66,8 @@ export default async function CommunicationPage({ searchParams }: { searchParams
     event_locatie: selectedEvent?.is_online ? "Online" : selectedEvent?.location || "nog te bepalen",
     vergadering_naam: selectedMeeting?.title || "",
     vergadering_datum: dateTime(selectedMeeting?.meeting_at),
+    project_naam: selectedProject?.title || "",
+    campagne_naam: selectedCampaign?.title || "",
     opvolgdatum: selectedPartner?.next_follow_up || "",
   };
   const defaultSubject = selectedTemplate ? renderEmailTemplate(selectedTemplate.subject_template, templateContext) : "";
@@ -91,11 +98,8 @@ export default async function CommunicationPage({ searchParams }: { searchParams
             <form action={saveEmailCommunication}>
               <input type="hidden" name="email_template_id" value={selectedTemplate?.id ?? ""}/>
               <div className="form-row">
-                <label>Soort communicatie<select name="communication_type" defaultValue={selectedType === "partner" ? "sponsor_follow_up" : selectedType === "event" ? "event_communication" : "invitation"}>{Object.entries(typeLabels).map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-                <label>Dossiertype<select name="entity_type" defaultValue={selectedType}><option value="partner">Sponsor</option><option value="event">Event</option><option value="meeting">Vergadering</option></select></label>
-                {selectedType === "partner" && <label>Sponsor<select name="entity_id" defaultValue={selectedId}><option value="">Kies een sponsor</option>{(partners.data ?? []).map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>}
-                {selectedType === "event" && <label>Event<select name="entity_id" defaultValue={selectedId}><option value="">Kies een event</option>{(events.data ?? []).map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label>}
-                {selectedType === "meeting" && <label>Vergadering<select name="entity_id" defaultValue={selectedId}><option value="">Kies een vergadering</option>{(meetings.data ?? []).map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label>}
+                <label>Soort communicatie<select name="communication_type" defaultValue={selectedType === "partner" ? "sponsor_follow_up" : selectedType === "event" ? "event_communication" : selectedType === "meeting" ? "invitation" : selectedType === "project" ? "project_update" : "campaign_update"}>{Object.entries(typeLabels).map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+                <DossierPicker selectedType={selectedType} selectedId={selectedId} partners={(partners.data ?? []).map((item) => ({ id: item.id, title: item.name }))} events={(events.data ?? []).map((item) => ({ id: item.id, title: item.title }))} meetings={(meetings.data ?? []).map((item) => ({ id: item.id, title: item.title }))} projects={(projects.data ?? []).map((item) => ({ id: item.id, title: item.title }))} campaigns={(campaigns.data ?? []).map((item) => ({ id: item.id, title: item.title }))} />
                 <label>Interne titel<input name="title" required defaultValue={selectedTitle ? `E-mail - ${selectedTitle}` : ""} placeholder="Bijv. opvolging sponsordossier"/></label>
                 <label>Aan<input name="to_addresses" type="text" required defaultValue={defaultTo} placeholder="naam@organisatie.be; tweede@organisatie.be"/></label>
                 <label>CC<input name="cc_addresses" type="text" placeholder="Optioneel, gescheiden door ;"/></label>
@@ -114,7 +118,7 @@ export default async function CommunicationPage({ searchParams }: { searchParams
           <div className="form-heading"><div><span className="eyebrow">REGISTER</span><h2>Communicatiegeschiedenis</h2></div><span>{rows.length} items</span></div>
           <div className="communication-list">
             {rows.map((item) => {
-              const sourceHref = item.entity_type === "partner" ? `/app/sponsors/${item.entity_id}` : item.entity_type === "event" ? `/app/events/${item.entity_id}` : `/app/vergaderingen/${item.entity_id}`;
+              const sourceHref = item.entity_type === "partner" ? `/app/sponsors/${item.entity_id}` : item.entity_type === "event" ? `/app/events/${item.entity_id}` : item.entity_type === "meeting" ? `/app/vergaderingen/${item.entity_id}` : item.entity_type === "project" ? `/app/projecten/${item.entity_id}` : `/app/campagnes/${item.entity_id}`;
               return <article key={item.id}>
                 <Mail size={18}/>
                 <div><Link href={`/app/communicatie/${item.id}`}>{item.title}</Link><span>{item.subject} · {item.to_addresses.join(", ")}</span></div>

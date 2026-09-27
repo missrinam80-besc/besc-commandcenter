@@ -20,7 +20,7 @@ export default async function EmailDetail({ params, searchParams }: { params: Pr
   if (!item) notFound();
   const canEdit = (item.created_by === user.id || isManager(membership)) && ["draft", "changes_requested", "failed"].includes(item.status);
   const canSend = isManager(membership) && item.status === "approved" && Boolean(item.gmail_draft_id);
-  const sourceHref = item.entity_type === "partner" ? `/app/sponsors/${item.entity_id}` : item.entity_type === "event" ? `/app/events/${item.entity_id}` : `/app/vergaderingen/${item.entity_id}`;
+  const sourceHref = item.entity_type === "partner" ? `/app/sponsors/${item.entity_id}` : item.entity_type === "event" ? `/app/events/${item.entity_id}` : item.entity_type === "meeting" ? `/app/vergaderingen/${item.entity_id}` : item.entity_type === "project" ? `/app/projecten/${item.entity_id}` : `/app/campagnes/${item.entity_id}`;
   const gmail = googleGmailConfiguration();
 
   return (
@@ -45,7 +45,7 @@ export default async function EmailDetail({ params, searchParams }: { params: Pr
             <form action={saveEmailCommunication}>
               <input type="hidden" name="id" value={item.id}/><input type="hidden" name="entity_type" value={item.entity_type}/><input type="hidden" name="entity_id" value={item.entity_id}/><input type="hidden" name="email_template_id" value={item.email_template_id || ""}/>
               <div className="form-row">
-                <label>Soort<select name="communication_type" defaultValue={item.communication_type}><option value="sponsor_follow_up">Sponsoropvolging</option><option value="event_communication">Eventcommunicatie</option><option value="invitation">Uitnodiging</option></select></label>
+                <label>Soort<select name="communication_type" defaultValue={item.communication_type}><option value="sponsor_follow_up">Sponsoropvolging</option><option value="event_communication">Eventcommunicatie</option><option value="invitation">Uitnodiging</option><option value="project_update">Projectcommunicatie</option><option value="campaign_update">Campagnecommunicatie</option></select></label>
                 <label>Interne titel<input name="title" required defaultValue={item.title}/></label>
                 <label>Aan<input name="to_addresses" required defaultValue={item.to_addresses.join("; ")}/></label>
                 <label>CC<input name="cc_addresses" defaultValue={item.cc_addresses.join("; ")}/></label>

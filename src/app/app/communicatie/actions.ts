@@ -8,8 +8,8 @@ import { saveGmailDraft, sendGmailDraft } from "@/lib/google-gmail";
 import { isManager } from "@/lib/permissions";
 import { unresolvedEmailVariables } from "@/lib/email-templates";
 
-const entityType = z.enum(["partner", "event", "meeting"]);
-const communicationType = z.enum(["sponsor_follow_up", "event_communication", "invitation"]);
+const entityType = z.enum(["partner", "event", "meeting", "project", "campaign"]);
+const communicationType = z.enum(["sponsor_follow_up", "event_communication", "invitation", "project_update", "campaign_update"]);
 const email = z.string().trim().email();
 
 function emails(value: string) {
@@ -20,7 +20,7 @@ function emails(value: string) {
 }
 
 function dossierHref(type: z.infer<typeof entityType>, id: string) {
-  return type === "partner" ? `/app/sponsors/${id}` : type === "event" ? `/app/events/${id}` : `/app/vergaderingen/${id}`;
+  return type === "partner" ? `/app/sponsors/${id}` : type === "event" ? `/app/events/${id}` : type === "meeting" ? `/app/vergaderingen/${id}` : type === "project" ? `/app/projecten/${id}` : `/app/campagnes/${id}`;
 }
 
 async function dossier(
@@ -28,7 +28,7 @@ async function dossier(
   type: z.infer<typeof entityType>,
   id: string,
 ) {
-  const table = type === "partner" ? "partners" : type === "event" ? "events" : "meetings";
+  const table = type === "partner" ? "partners" : type === "event" ? "events" : type === "meeting" ? "meetings" : type === "project" ? "projects" : "campaigns";
   const titleColumn = type === "partner" ? "name" : "title";
   const { data } = await context.supabase
     .from(table)

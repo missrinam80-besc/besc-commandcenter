@@ -8,6 +8,7 @@ const gmail = readFileSync("src/lib/google-gmail.ts", "utf8");
 const approvals = readFileSync("src/lib/approvals.ts", "utf8");
 const communicationPage = readFileSync("src/app/app/communicatie/page.tsx", "utf8");
 const bccMigration = readFileSync("supabase/migrations/20260803150000_add_email_bcc_addresses.sql", "utf8");
+const projectCampaignMigration = readFileSync("supabase/migrations/20260927100000_allow_project_campaign_email_communications.sql", "utf8");
 
 test("e-mailcommunicatie ondersteunt dossiers en een gecontroleerde levenscyclus", () => {
   assert.match(migration, /entity_type in \('partner','event','meeting'\)/);
@@ -42,6 +43,14 @@ test("dossiermails ondersteunen BCC en passen sjablonen toe vanuit een modal", (
   assert.match(communicationPage, /FormModal title="Communicatie voorbereiden"/);
   assert.match(communicationPage, /Sjabloon toepassen/);
   assert.match(communicationPage, /name="bcc_addresses"/);
+});
+
+test("e-mailcommunicatie ondersteunt projecten en campagnes als dossier", () => {
+  assert.match(actions, /z\.enum\(\["partner", "event", "meeting", "project", "campaign"\]\)/);
+  assert.match(communicationPage, /DossierPicker/);
+  assert.match(communicationPage, /projects/);
+  assert.match(communicationPage, /campaigns/);
+  assert.match(projectCampaignMigration, /'partner','event','meeting','project','campaign'/);
 });
 
 test("alleen bestuur en beheerders kunnen e-mails beoordelen", () => {
