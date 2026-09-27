@@ -45,6 +45,8 @@ test("dossiermails ondersteunen BCC en passen sjablonen toe vanuit een modal", (
   assert.match(communicationComposer, /Sjabloon toepassen/);
   assert.match(communicationComposer, /renderTemplate/);
   assert.match(communicationComposer, /name="bcc_addresses"/);
+  assert.match(communicationComposer, /name="communication_type" value=\{communicationType\}/);
+  assert.match(actions, /parsed\.data\.id \? `\/app\/communicatie\/\$\{id\}\?succes=concept` : "\/app\/communicatie\?succes=concept"/);
 });
 
 test("e-mailcommunicatie ondersteunt projecten en campagnes als dossier", () => {

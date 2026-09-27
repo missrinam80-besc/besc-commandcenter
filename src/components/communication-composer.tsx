@@ -38,6 +38,9 @@ export function CommunicationComposer({ action, gmailConfigured, templates, part
   const startingType = (Object.keys(labels) as DossierType[]).includes(initialType as DossierType) ? initialType as DossierType : "partner";
   const [type, setType] = useState<DossierType>(startingType);
   const [entityId, setEntityId] = useState(initialId);
+  const [communicationType, setCommunicationType] = useState(
+    startingType === "partner" ? "sponsor_follow_up" : startingType === "event" ? "event_communication" : startingType === "meeting" ? "invitation" : startingType === "project" ? "project_update" : "campaign_update",
+  );
   const [templateId, setTemplateId] = useState("");
   const initialOptions = startingType === "partner" ? partners : startingType === "event" ? events : startingType === "meeting" ? meetings : startingType === "project" ? projects : campaigns;
   const initialSelected = initialOptions.find((item) => item.id === initialId);
@@ -48,8 +51,6 @@ export function CommunicationComposer({ action, gmailConfigured, templates, part
   const options = type === "partner" ? partners : type === "event" ? events : type === "meeting" ? meetings : type === "project" ? projects : campaigns;
   const availableTemplates = useMemo(() => templates.filter((item) => !item.entity_type || item.entity_type === type), [templates, type]);
   const selected = options.find((item) => item.id === entityId);
-  const communicationType = type === "partner" ? "sponsor_follow_up" : type === "event" ? "event_communication" : type === "meeting" ? "invitation" : type === "project" ? "project_update" : "campaign_update";
-
   function templateContext(selectedOption = selected) {
     return {
       organisatie: organizationName,
@@ -106,8 +107,7 @@ export function CommunicationComposer({ action, gmailConfigured, templates, part
       <button type="button" onClick={() => applyTemplate(templateId)}>Sjabloon toepassen</button>
     </div>
     <div className="form-row">
-      <input type="hidden" name="communication_type" value={communicationType}/>
-      <label>Soort communicatie<select value={communicationType} disabled>{Object.entries(communicationTypes).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+      <label>Soort communicatie<select name="communication_type" value={communicationType} onChange={(event) => setCommunicationType(event.target.value)}>{Object.entries(communicationTypes).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
       <label>Dossiertype<select name="entity_type" value={type} onChange={(event) => changeType(event.target.value as DossierType)}>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
       <label>{labels[type]}<select name="entity_id" value={entityId} onChange={(event) => changeEntity(event.target.value)} required><option value="">Kies een {labels[type].toLowerCase()}</option>{options.map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label>
       <label>Interne titel<input name="title" required value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Bijv. projectopvolging"/></label>
