@@ -4,8 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { FormModal } from "@/components/form-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { googleGmailConfiguration } from "@/lib/google-gmail";
-import { renderEmailTemplate } from "@/lib/email-templates";
-import { DossierPicker } from "@/components/dossier-picker";
+import { CommunicationComposer } from "@/components/communication-composer";
 import { saveEmailCommunication } from "./actions";
 
 const statusLabels: Record<string, string> = {
@@ -36,42 +35,8 @@ export default async function CommunicationPage({ searchParams }: { searchParams
   const gmail = googleGmailConfiguration();
   const selectedType = ["partner", "event", "meeting", "project", "campaign"].includes(query.type ?? "") ? query.type! : "partner";
   const selectedId = query.id ?? "";
-  const selectedPartner = (partners.data ?? []).find((item) => item.id === selectedId);
-  const selectedContact = (contacts.data ?? []).find((item) => item.partner_id === selectedId);
-  const defaultTo = selectedType === "partner" ? (selectedContact?.email || selectedPartner?.email || "") : "";
-  const selectedEvent = (events.data ?? []).find((item) => item.id === selectedId);
-  const selectedMeeting = (meetings.data ?? []).find((item) => item.id === selectedId);
-  const selectedProject = (projects.data ?? []).find((item) => item.id === selectedId);
-  const selectedCampaign = (campaigns.data ?? []).find((item) => item.id === selectedId);
-  const selectedTitle = selectedType === "partner"
-    ? selectedPartner?.name
-    : selectedType === "event"
-      ? selectedEvent?.title
-      : selectedType === "meeting" ? selectedMeeting?.title : selectedType === "project" ? selectedProject?.title : selectedCampaign?.title;
-  const defaultCategory = selectedType === "partner" ? "sponsor_follow_up" : selectedType === "event" ? "event_communication" : selectedType === "meeting" ? "invitation" : selectedType === "project" ? "project_update" : "campaign_update";
-  const availableTemplates = (templates.data ?? []).filter((item) => !item.entity_type || item.entity_type === selectedType);
-  const selectedTemplate = availableTemplates.find((item) => item.id === query.template) ??
-    availableTemplates.find((item) => item.category === defaultCategory);
-  const dateTime = (value: string | null | undefined) => value
-    ? new Intl.DateTimeFormat("nl-BE", { dateStyle: "long", timeStyle: "short" }).format(new Date(value))
-    : "nog te bepalen";
-  const templateContext = {
-    organisatie: organization.data?.name || "BESC vzw",
-    afzender: profile.data?.display_name || "BESC",
-    dossier: selectedTitle || "het dossier",
-    contact_naam: selectedContact?.name || "",
-    partner_naam: selectedPartner?.name || "",
-    event_naam: selectedEvent?.title || "",
-    event_datum: dateTime(selectedEvent?.start_at),
-    event_locatie: selectedEvent?.is_online ? "Online" : selectedEvent?.location || "nog te bepalen",
-    vergadering_naam: selectedMeeting?.title || "",
-    vergadering_datum: dateTime(selectedMeeting?.meeting_at),
-    project_naam: selectedProject?.title || "",
-    campagne_naam: selectedCampaign?.title || "",
-    opvolgdatum: selectedPartner?.next_follow_up || "",
-  };
-  const defaultSubject = selectedTemplate ? renderEmailTemplate(selectedTemplate.subject_template, templateContext) : "";
-  const defaultBody = selectedTemplate ? renderEmailTemplate(selectedTemplate.body_template, templateContext) : "";
+  const organizationName = organization.data?.name || "BESC vzw";
+  const senderName = profile.data?.display_name || "BESC";
   const showForm = query.nieuw === "1";
 
   return (
@@ -90,26 +55,20 @@ export default async function CommunicationPage({ searchParams }: { searchParams
           <FormModal title="Communicatie voorbereiden" closeHref="/app/communicatie">
           <div>
             <div className="form-heading"><div><span className="eyebrow">NIEUW CONCEPT</span><h2>Communicatie voorbereiden</h2></div><Link href="/app/communicatie">Sluiten</Link></div>
-            <form className="template-picker" method="get">
-              <input type="hidden" name="nieuw" value="1"/><input type="hidden" name="type" value={selectedType}/><input type="hidden" name="id" value={selectedId}/>
-              <label>Sjabloon<select name="template" defaultValue={selectedTemplate?.id ?? ""}><option value="">Leeg bericht</option>{availableTemplates.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
-              <button>Sjabloon toepassen</button>
-            </form>
-            <form action={saveEmailCommunication}>
-              <input type="hidden" name="email_template_id" value={selectedTemplate?.id ?? ""}/>
-              <div className="form-row">
-                <label>Soort communicatie<select name="communication_type" defaultValue={selectedType === "partner" ? "sponsor_follow_up" : selectedType === "event" ? "event_communication" : selectedType === "meeting" ? "invitation" : selectedType === "project" ? "project_update" : "campaign_update"}>{Object.entries(typeLabels).map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-                <DossierPicker selectedType={selectedType} selectedId={selectedId} partners={(partners.data ?? []).map((item) => ({ id: item.id, title: item.name }))} events={(events.data ?? []).map((item) => ({ id: item.id, title: item.title }))} meetings={(meetings.data ?? []).map((item) => ({ id: item.id, title: item.title }))} projects={(projects.data ?? []).map((item) => ({ id: item.id, title: item.title }))} campaigns={(campaigns.data ?? []).map((item) => ({ id: item.id, title: item.title }))} />
-                <label>Interne titel<input name="title" required defaultValue={selectedTitle ? `E-mail - ${selectedTitle}` : ""} placeholder="Bijv. opvolging sponsordossier"/></label>
-                <label>Aan<input name="to_addresses" type="text" required defaultValue={defaultTo} placeholder="naam@organisatie.be; tweede@organisatie.be"/></label>
-                <label>CC<input name="cc_addresses" type="text" placeholder="Optioneel, gescheiden door ;"/></label>
-                <label>BCC<input name="bcc_addresses" type="text" placeholder="Optioneel, verborgen voor andere ontvangers"/></label>
-                <label>Onderwerp<input name="subject" required defaultValue={defaultSubject} placeholder="Onderwerp van de e-mail"/></label>
-                <label>Opvolgdatum<input name="follow_up_date" type="date"/></label>
-              </div>
-              <label>Bericht<textarea name="body_text" required rows={12} defaultValue={defaultBody} placeholder={"Beste,\n\n...\n\nMet vriendelijke groeten,\nBESC vzw"}/></label>
-              <div className="form-actions"><button className="primary" disabled={!gmail.configured}><Mail size={15}/>Opslaan als Gmail-concept</button></div>
-            </form>
+            <CommunicationComposer
+              action={saveEmailCommunication}
+              gmailConfigured={gmail.configured}
+              templates={(templates.data ?? [])}
+              partners={(partners.data ?? []).map((item) => ({ id: item.id, title: item.name, email: contacts.data?.find((contact) => contact.partner_id === item.id)?.email || item.email || "", contactName: contacts.data?.find((contact) => contact.partner_id === item.id)?.name || "", followUpDate: item.next_follow_up }))}
+              events={(events.data ?? []).map((item) => ({ id: item.id, title: item.title, date: item.start_at, location: item.location, isOnline: item.is_online }))}
+              meetings={(meetings.data ?? []).map((item) => ({ id: item.id, title: item.title, date: item.meeting_at }))}
+              projects={(projects.data ?? []).map((item) => ({ id: item.id, title: item.title }))}
+              campaigns={(campaigns.data ?? []).map((item) => ({ id: item.id, title: item.title }))}
+              organizationName={organizationName}
+              senderName={senderName}
+              initialType={selectedType}
+              initialId={selectedId}
+            />
           </div>
           </FormModal>
         )}

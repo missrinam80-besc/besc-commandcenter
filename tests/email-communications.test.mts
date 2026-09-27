@@ -7,6 +7,7 @@ const actions = readFileSync("src/app/app/communicatie/actions.ts", "utf8");
 const gmail = readFileSync("src/lib/google-gmail.ts", "utf8");
 const approvals = readFileSync("src/lib/approvals.ts", "utf8");
 const communicationPage = readFileSync("src/app/app/communicatie/page.tsx", "utf8");
+const communicationComposer = readFileSync("src/components/communication-composer.tsx", "utf8");
 const bccMigration = readFileSync("supabase/migrations/20260803150000_add_email_bcc_addresses.sql", "utf8");
 const projectCampaignMigration = readFileSync("supabase/migrations/20260927100000_allow_project_campaign_email_communications.sql", "utf8");
 
@@ -41,13 +42,15 @@ test("dossiermails ondersteunen BCC en passen sjablonen toe vanuit een modal", (
   assert.match(actions, /bcc_addresses/);
   assert.match(actions, /saveGmailDraft\(\{[\s\S]*bcc/);
   assert.match(communicationPage, /FormModal title="Communicatie voorbereiden"/);
-  assert.match(communicationPage, /Sjabloon toepassen/);
-  assert.match(communicationPage, /name="bcc_addresses"/);
+  assert.match(communicationComposer, /Sjabloon toepassen/);
+  assert.match(communicationComposer, /renderTemplate/);
+  assert.match(communicationComposer, /name="bcc_addresses"/);
 });
 
 test("e-mailcommunicatie ondersteunt projecten en campagnes als dossier", () => {
   assert.match(actions, /z\.enum\(\["partner", "event", "meeting", "project", "campaign"\]\)/);
-  assert.match(communicationPage, /DossierPicker/);
+  assert.match(communicationPage, /CommunicationComposer/);
+  assert.match(communicationComposer, /value=\{type\}/);
   assert.match(communicationPage, /projects/);
   assert.match(communicationPage, /campaigns/);
   assert.match(projectCampaignMigration, /'partner','event','meeting','project','campaign'/);
