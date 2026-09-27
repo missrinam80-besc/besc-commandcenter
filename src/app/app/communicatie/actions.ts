@@ -150,7 +150,7 @@ export async function saveEmailCommunication(formData: FormData) {
   }
   revalidatePath("/app/communicatie");
   revalidatePath(source.href);
-  redirect(parsed.data.id ? `/app/communicatie/${id}?succes=concept` : "/app/communicatie?succes=concept");
+  redirect("/app/communicatie?succes=concept");
 }
 
 export async function sendApprovedEmail(formData: FormData) {
