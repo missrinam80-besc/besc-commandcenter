@@ -23,7 +23,7 @@ async function saveProjectDriveLink(input: {
 }) {
   const { projectId, folder, supabase, organizationId, userId } = input;
   const webUrl = folder.webViewLink || `https://drive.google.com/drive/folders/${folder.id}`;
-  const { error: linkError } = await supabase.from("google_resource_links").upsert({
+  const link = {
     organization_id: organizationId,
     entity_type: "project",
     entity_id: projectId,
@@ -36,7 +36,19 @@ async function saveProjectDriveLink(input: {
     parent_id: folder.parents[0] ?? null,
     created_by: userId,
     updated_at: new Date().toISOString(),
-  }, { onConflict: "organization_id,entity_type,entity_id,resource_type" });
+  };
+  const { data: existingLink, error: lookupError } = await supabase
+    .from("google_resource_links")
+    .select("id")
+    .eq("organization_id", organizationId)
+    .eq("entity_type", "project")
+    .eq("entity_id", projectId)
+    .eq("resource_type", "folder")
+    .maybeSingle();
+  if (lookupError) throw lookupError;
+  const { error: linkError } = existingLink
+    ? await supabase.from("google_resource_links").update(link).eq("organization_id", organizationId).eq("id", existingLink.id)
+    : await supabase.from("google_resource_links").insert(link);
   if (linkError) throw linkError;
   const { error: projectError } = await supabase
     .from("projects")
