@@ -65,6 +65,7 @@ export async function saveMeeting(formData: FormData) {
       await syncLinkedMeeting({
         supabase,
         organizationId: membership.organization_id,
+        createdBy: user.id,
       }, id, cancelled_calendar_action);
     } catch {
       calendarWarning = true;

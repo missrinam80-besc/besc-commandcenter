@@ -8,28 +8,43 @@ import {
 type SyncContext = {
   supabase: SupabaseClient;
   organizationId: string;
+  createdBy?: string;
 };
 
 export type CancelledCalendarAction = "keep" | "remove";
 
-async function updateLink(
+async function persistLink(
   context: SyncContext,
   entityType: "event" | "meeting",
   entityId: string,
   result: { id: string; name: string; webUrl: string },
 ) {
-  const { error } = await context.supabase
+  const { data: existing, error: lookupError } = await context.supabase
     .from("google_resource_links")
-    .update({
-      google_id: result.id,
-      name: result.name,
-      web_url: result.webUrl,
-      updated_at: new Date().toISOString(),
-    })
+    .select("id")
     .eq("organization_id", context.organizationId)
     .eq("entity_type", entityType)
     .eq("entity_id", entityId)
-    .eq("resource_type", "calendar_event");
+    .eq("resource_type", "calendar_event")
+    .maybeSingle();
+  if (lookupError) throw lookupError;
+  const values = {
+    organization_id: context.organizationId,
+    entity_type: entityType,
+    entity_id: entityId,
+    resource_type: "calendar_event",
+    google_id: result.id,
+    name: result.name,
+    mime_type: "application/vnd.google.calendar.event",
+    web_url: result.webUrl,
+    drive_id: null,
+    parent_id: null,
+    created_by: context.createdBy ?? null,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = existing
+    ? await context.supabase.from("google_resource_links").update(values).eq("organization_id", context.organizationId).eq("id", existing.id)
+    : await context.supabase.from("google_resource_links").insert(values);
   if (error) throw error;
 }
 
@@ -55,8 +70,8 @@ export async function syncLinkedEvent(
       .eq("resource_type", "calendar_event")
       .maybeSingle(),
   ]);
-  if (!event || !link) return false;
-  if (event.status === "cancelled" && cancelledAction === "remove") {
+  if (!event) return false;
+  if (event.status === "cancelled" && cancelledAction === "remove" && link) {
     await deleteGoogleCalendarEvent(link.google_id);
     const { error } = await context.supabase
       .from("google_resource_links")
@@ -86,8 +101,8 @@ export async function syncLinkedEvent(
     driveUrl: event.drive_url,
     eventbriteUrl: event.eventbrite_url,
     streamUrl: event.stream_url,
-  }, link.google_id);
-  await updateLink(context, "event", eventId, result);
+  }, link?.google_id);
+  await persistLink(context, "event", eventId, result);
   return true;
 }
 
@@ -113,8 +128,8 @@ export async function syncLinkedMeeting(
       .eq("resource_type", "calendar_event")
       .maybeSingle(),
   ]);
-  if (!meeting || !link) return false;
-  if (meeting.status === "cancelled" && cancelledAction === "remove") {
+  if (!meeting) return false;
+  if (meeting.status === "cancelled" && cancelledAction === "remove" && link) {
     await deleteGoogleCalendarEvent(link.google_id);
     const { error } = await context.supabase
       .from("google_resource_links")
@@ -140,7 +155,7 @@ export async function syncLinkedMeeting(
     endAt: meeting.ends_at,
     attendees: meeting.attendees ?? [],
     minutesUrl: meeting.minutes_url,
-  }, link.google_id);
-  await updateLink(context, "meeting", meetingId, result);
+  }, link?.google_id);
+  await persistLink(context, "meeting", meetingId, result);
   return true;
 }

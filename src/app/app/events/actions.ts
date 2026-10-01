@@ -73,6 +73,7 @@ export async function saveEvent(formData: FormData) {
       await syncLinkedEvent({
         supabase,
         organizationId: membership.organization_id,
+        createdBy: user.id,
       }, parsed.data.id, parsed.data.cancelled_calendar_action);
     } catch {
       calendarWarning = true;
