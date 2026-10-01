@@ -89,7 +89,7 @@ export default async function CommunicationPage({ searchParams }: { searchParams
                 <b className={`email-status ${item.status}`}>{statusLabels[item.status]}</b>
                 <div className="communication-actions">
                   {canEdit && <Link className="row-action" href={`/app/communicatie/${item.id}`}>Bewerken</Link>}
-                  {canEdit && <Link className="row-action" href={`/app/communicatie/${item.id}#goedkeuring`}>Goedkeuring</Link>}
+                  {canEdit && <Link className="row-action" href={`/app/communicatie/${item.id}?goedkeuring=1#goedkeuring`}>Goedkeuring</Link>}
                   {canEdit && <form action={deleteEmailCommunication}><input type="hidden" name="id" value={item.id}/><ConfirmSubmitButton className="row-action danger-button" message="Dit Gmail-concept verwijderen? De mail blijft als historisch spoor bewaard in het archief.">Verwijderen</ConfirmSubmitButton></form>}
                   <Link className="row-action" href={sourceHref}>Dossier</Link>
                 </div>

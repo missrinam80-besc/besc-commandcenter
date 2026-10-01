@@ -39,7 +39,7 @@ export default async function EmailDetail({ params, searchParams }: { params: Pr
           {item.sent_at && <div><span>Verzonden</span><strong>{new Date(item.sent_at).toLocaleString("nl-BE")}</strong></div>}
         </section>
 
-        {canEdit ? (
+        {canEdit && query.goedkeuring !== "1" ? (
           <section className="form-card">
             <div className="form-heading"><div><span className="eyebrow">CONCEPT</span><h2>Bericht bewerken</h2></div></div>
             <form action={saveEmailCommunication}>
