@@ -571,8 +571,9 @@ export function googleDriveFileId(input: string) {
   try {
     const url = new URL(value);
     const folderMatch = url.pathname.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+    const fileMatch = url.pathname.match(/\/(?:file|document|spreadsheets|presentation)\/(?:u\/\d+\/)?d\/([a-zA-Z0-9_-]+)/);
     const queryId = url.searchParams.get("id");
-    const id = folderMatch?.[1] ?? queryId;
+    const id = folderMatch?.[1] ?? fileMatch?.[1] ?? queryId;
     return id && /^[a-zA-Z0-9_-]{10,}$/.test(id) ? id : null;
   } catch {
     return null;

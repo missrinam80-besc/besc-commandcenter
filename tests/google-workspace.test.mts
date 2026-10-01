@@ -126,6 +126,10 @@ test("Google Drive-map-ID wordt uit ondersteunde links gelezen", () => {
   const id = "1AbCdEfGhIjKlMnOpQrStUvWxYz";
   assert.equal(googleDriveFileId(id), id);
   assert.equal(googleDriveFileId(`https://drive.google.com/drive/folders/${id}?usp=sharing`), id);
+  assert.equal(googleDriveFileId(`https://docs.google.com/document/d/${id}/edit`), id);
+  assert.equal(googleDriveFileId(`https://docs.google.com/spreadsheets/u/0/d/${id}/edit`), id);
+  assert.equal(googleDriveFileId(`https://docs.google.com/presentation/d/${id}/edit`), id);
+  assert.equal(googleDriveFileId(`https://drive.google.com/file/d/${id}/view`), id);
   assert.equal(googleDriveFileId(`https://drive.google.com/open?id=${id}`), id);
   assert.equal(googleDriveFileId("https://drive.google.com/drive/my-drive"), null);
   assert.equal(googleDriveFileId("geen geldige link"), null);
