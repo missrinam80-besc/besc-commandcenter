@@ -544,10 +544,10 @@ export async function createPresentationFromGoogleTemplate(input: {
   return {id:copied.id,name:copied.name,mimeType:copied.mimeType,webViewLink:copied.webViewLink??`https://docs.google.com/presentation/d/${copied.id}/edit`,driveId:copied.driveId??null,parents:copied.parents??[input.parentId]};
 }
 
-export async function moveGoogleDriveFolderToModule(folderId: string, module: GoogleDriveModule) {
+export async function moveGoogleDriveFolderToModule(folderId: string, module: GoogleDriveModule): Promise<GoogleDriveFolder & { moved: boolean }> {
   const current = await getGoogleDriveFolder(folderId);
   const moduleFolder = await ensureGoogleDriveModuleFolder(module);
-  if (current.parents.includes(moduleFolder.id)) return current;
+  if (current.parents.includes(moduleFolder.id)) return { ...current, moved: false };
   const params = new URLSearchParams({
     addParents: moduleFolder.id,
     removeParents: current.parents.join(","),
@@ -562,7 +562,7 @@ export async function moveGoogleDriveFolderToModule(folderId: string, module: Go
   if (!verified.parents.includes(moduleFolder.id)) {
     throw new Error(`De map kon niet onder de modulemap ${googleDriveModuleFolders[module]} worden geplaatst.`);
   }
-  return verified;
+  return { ...verified, moved: true };
 }
 
 export function googleDriveFileId(input: string) {

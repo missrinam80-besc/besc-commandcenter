@@ -168,7 +168,7 @@ export async function organizeProjectFolder(formData: FormData) {
     redirect(`${path(parsed.data.project_id)}?fout=drive-verplaatsen`);
   }
   revalidatePath(path(parsed.data.project_id));
-  redirect(`${path(parsed.data.project_id)}?succes=drive-geordend`);
+  redirect(`${path(parsed.data.project_id)}?succes=${folder.moved ? "drive-geordend" : "drive-al-geordend"}`);
 }
 
 export async function updateProject(formData: FormData) {

@@ -165,7 +165,9 @@ export default async function ProjectPage({ params, searchParams }: {
 
       <div className="project-detail-body">
         {query.fout ? <div className="error-note">{driveErrors[query.fout] ?? `Actie mislukt: ${query.fout}.`}</div> : null}
-        {query.succes ? <div className="success">Wijziging opgeslagen.</div> : null}
+        {query.succes === "drive-geordend" ? <div className="success">De mapstructuur is gecontroleerd en de projectmap staat onder Google Drive → Projecten.</div> : null}
+        {query.succes === "drive-al-geordend" ? <div className="success">De mapstructuur is gecontroleerd. De projectmap stond al onder Google Drive → Projecten.</div> : null}
+        {query.succes && !query.succes.startsWith("drive-") ? <div className="success">Wijziging opgeslagen.</div> : null}
 
         {query.bewerken && canManage ? (
           <FormModal title="Project bewerken">
