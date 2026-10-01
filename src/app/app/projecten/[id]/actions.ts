@@ -155,8 +155,10 @@ export async function organizeProjectFolder(formData: FormData) {
     .eq("resource_type", "folder")
     .maybeSingle();
   if (!link?.google_id) redirect(`${path(parsed.data.project_id)}?fout=drive-ontbreekt`);
+  let folderMoved = false;
   try {
     const folder = await moveGoogleDriveFolderToModule(link.google_id, "projects");
+    folderMoved = folder.moved;
     await saveProjectDriveLink({
       projectId: parsed.data.project_id,
       folder,
@@ -168,7 +170,7 @@ export async function organizeProjectFolder(formData: FormData) {
     redirect(`${path(parsed.data.project_id)}?fout=drive-verplaatsen`);
   }
   revalidatePath(path(parsed.data.project_id));
-  redirect(`${path(parsed.data.project_id)}?succes=${folder.moved ? "drive-geordend" : "drive-al-geordend"}`);
+  redirect(`${path(parsed.data.project_id)}?succes=${folderMoved ? "drive-geordend" : "drive-al-geordend"}`);
 }
 
 export async function updateProject(formData: FormData) {
