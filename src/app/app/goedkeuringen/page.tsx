@@ -91,7 +91,9 @@ export default async function ApprovalsPage({
                   {row.request_note && <p>{row.request_note}</p>}
                   {row.decision_note && <p><strong>Beslissing:</strong> {row.decision_note}</p>}
                 </div>
-                {canReview ? (
+                <div className="approval-queue-actions">
+                  <Link className="row-action" href={row.source_href}>Bekijken</Link>
+                  {canReview ? (
                   <form className="approval-queue-actions" action={decideApproval}>
                     <input type="hidden" name="id" value={row.id}/>
                     <input type="hidden" name="return_to" value="/app/goedkeuringen"/>
@@ -102,7 +104,8 @@ export default async function ApprovalsPage({
                       <button className="approval-reject" name="decision" value="rejected">Weigeren</button>
                     </div>
                   </form>
-                ) : <Link className="row-action" href={row.source_href}>Open dossier</Link>}
+                  ) : row.status === "pending" ? <span className="form-hint">Alleen bestuur of beheer kan deze aanvraag beoordelen.</span> : null}
+                </div>
               </article>
             );
           })}

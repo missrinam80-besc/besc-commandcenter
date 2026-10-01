@@ -66,6 +66,12 @@ test("e-mailregister biedt bewerken, goedkeuring en soft-delete", () => {
   assert.match(softDeleteMigration, /add column if not exists deleted_at timestamptz/);
 });
 
+test("goedkeuringswerkvoorraad heeft een expliciete bekijkactie", () => {
+  const approvalsPage = readFileSync("src/app/app/goedkeuringen/page.tsx", "utf8");
+  assert.match(approvalsPage, />Bekijken</);
+  assert.match(approvalsPage, /Alleen bestuur of beheer kan deze aanvraag beoordelen/);
+});
+
 test("alleen bestuur en beheerders kunnen e-mails beoordelen", () => {
   assert.match(approvals, /membership\.role === "admin" \|\| membership\.role === "board"/);
   assert.match(approvals, /return entityType === "expense"/);
