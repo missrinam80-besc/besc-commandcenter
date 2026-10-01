@@ -8,6 +8,7 @@ import {
   createProjectDriveFolder,
   getGoogleDriveFolder,
   googleDriveFileId,
+  GoogleApiError,
   moveGoogleDriveFolderToModule,
 } from "@/lib/google-workspace";
 
@@ -77,7 +78,11 @@ export async function createProjectFolder(formData: FormData) {
       organizationId: context.membership.organization_id,
       userId: context.user.id,
     });
-  } catch {
+  } catch (error) {
+    console.error("Project Drive folder creation failed", {
+      status: error instanceof GoogleApiError ? error.status : undefined,
+      message: error instanceof Error ? error.message : String(error),
+    });
     redirect(`${path(project.id)}?fout=${parsed.data.mode === "existing" ? "drive-bestaande-link" : "drive-aanmaken"}`);
   }
   revalidatePath(path(project.id));
