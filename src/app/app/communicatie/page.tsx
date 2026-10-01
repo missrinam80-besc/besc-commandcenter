@@ -2,10 +2,12 @@ import Link from "next/link";
 import { Mail, Plus } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { FormModal } from "@/components/form-modal";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { isManager } from "@/lib/permissions";
 import { googleGmailConfiguration } from "@/lib/google-gmail";
 import { CommunicationComposer } from "@/components/communication-composer";
-import { saveEmailCommunication } from "./actions";
+import { deleteEmailCommunication, saveEmailCommunication } from "./actions";
 
 const statusLabels: Record<string, string> = {
   draft: "Concept", pending_approval: "Wacht op goedkeuring", changes_requested: "Wijzigingen gevraagd",
@@ -20,7 +22,7 @@ export default async function CommunicationPage({ searchParams }: { searchParams
   const { supabase, membership, user } = await requireActiveMembership();
   const org = membership.organization_id;
   const [communications, partners, events, meetings, projects, campaigns, contacts, templates, organization, profile] = await Promise.all([
-    supabase.from("email_communications").select("id,title,entity_type,entity_id,communication_type,status,to_addresses,subject,updated_at,sent_at,creator:profiles!email_communications_created_by_fkey(display_name)").eq("organization_id", org).order("updated_at", { ascending: false }),
+    supabase.from("email_communications").select("id,title,entity_type,entity_id,communication_type,status,to_addresses,subject,updated_at,sent_at,created_by,creator:profiles!email_communications_created_by_fkey(display_name)").eq("organization_id", org).is("deleted_at", null).order("updated_at", { ascending: false }),
     supabase.from("partners").select("id,name,email,next_follow_up").eq("organization_id", org).is("deleted_at", null).not("status", "eq", "archived").order("name"),
     supabase.from("events").select("id,title,start_at,location,is_online").eq("organization_id", org).is("deleted_at", null).not("status", "eq", "archived").order("title"),
     supabase.from("meetings").select("id,title,meeting_at,attendees").eq("organization_id", org).is("deleted_at", null).not("status", "eq", "archived").order("title"),
@@ -32,6 +34,7 @@ export default async function CommunicationPage({ searchParams }: { searchParams
     supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
   ]);
   const rows = communications.data ?? [];
+  const manager = isManager(membership);
   const gmail = googleGmailConfiguration();
   const selectedType = ["partner", "event", "meeting", "project", "campaign"].includes(query.type ?? "") ? query.type! : "partner";
   const selectedId = query.id ?? "";
@@ -49,7 +52,7 @@ export default async function CommunicationPage({ searchParams }: { searchParams
         <p className="lead">Maak Gmail-concepten vanuit een BESC-dossier. Een tweede bevoegde persoon keurt de e-mail goed voordat het bestuur ze kan verzenden.</p>
         {!gmail.configured && <div className="error-note">Gmail is nog niet geconfigureerd. Voeg GOOGLE_GMAIL_SENDER toe en autoriseer Gmail Compose via Google OAuth.</div>}
         {query.fout && <div className="error-note">De actie is mislukt ({query.fout}).</div>}
-        {query.succes && <div className="success">De e-mailactie is verwerkt.</div>}
+        {query.succes === "verwijderd" ? <div className="success">Het Gmail-concept is verwijderd.</div> : query.succes && <div className="success">De e-mailactie is verwerkt.</div>}
 
         {showForm && (
           <FormModal title="Communicatie voorbereiden" closeHref="/app/communicatie">
@@ -78,12 +81,18 @@ export default async function CommunicationPage({ searchParams }: { searchParams
           <div className="communication-list">
             {rows.map((item) => {
               const sourceHref = item.entity_type === "partner" ? `/app/sponsors/${item.entity_id}` : item.entity_type === "event" ? `/app/events/${item.entity_id}` : item.entity_type === "meeting" ? `/app/vergaderingen/${item.entity_id}` : item.entity_type === "project" ? `/app/projecten/${item.entity_id}` : `/app/campagnes/${item.entity_id}`;
+              const canEdit = (item.created_by === user.id || manager) && ["draft", "changes_requested", "failed"].includes(item.status);
               return <article key={item.id}>
                 <Mail size={18}/>
                 <div><Link href={`/app/communicatie/${item.id}`}>{item.title}</Link><span>{item.subject} · {item.to_addresses.join(", ")}</span></div>
                 <span>{typeLabels[item.communication_type]}</span>
                 <b className={`email-status ${item.status}`}>{statusLabels[item.status]}</b>
-                <Link className="row-action" href={sourceHref}>Dossier</Link>
+                <div className="communication-actions">
+                  {canEdit && <Link className="row-action" href={`/app/communicatie/${item.id}`}>Bewerken</Link>}
+                  {canEdit && <Link className="row-action" href={`/app/communicatie/${item.id}#goedkeuring`}>Goedkeuring</Link>}
+                  {canEdit && <form action={deleteEmailCommunication}><input type="hidden" name="id" value={item.id}/><ConfirmSubmitButton className="row-action danger-button" message="Dit Gmail-concept verwijderen? De mail blijft als historisch spoor bewaard in het archief.">Verwijderen</ConfirmSubmitButton></form>}
+                  <Link className="row-action" href={sourceHref}>Dossier</Link>
+                </div>
               </article>;
             })}
             {!rows.length && <div className="empty">Nog geen Gmail-concepten of verzonden communicatie.</div>}

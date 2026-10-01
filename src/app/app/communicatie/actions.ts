@@ -153,6 +153,24 @@ export async function saveEmailCommunication(formData: FormData) {
   redirect("/app/communicatie?succes=concept");
 }
 
+export async function deleteEmailCommunication(formData: FormData) {
+  const parsed = z.object({ id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) redirect("/app/communicatie?fout=verwijderen");
+  const context = await requireActiveMembership();
+  const { data: item } = await context.supabase.from("email_communications")
+    .select("id,created_by,status").eq("organization_id", context.membership.organization_id)
+    .eq("id", parsed.data.id).is("deleted_at", null).maybeSingle();
+  const canDelete = item && (item.created_by === context.user.id || isManager(context.membership)) &&
+    ["draft", "changes_requested", "failed"].includes(item.status);
+  if (!canDelete) redirect(`/app/communicatie/${parsed.data.id}?fout=niet-verwijderbaar`);
+  const { error } = await context.supabase.from("email_communications")
+    .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("organization_id", context.membership.organization_id).eq("id", parsed.data.id).is("deleted_at", null);
+  if (error) redirect(`/app/communicatie/${parsed.data.id}?fout=verwijderen`);
+  revalidatePath("/app/communicatie");
+  redirect("/app/communicatie?succes=verwijderd");
+}
+
 export async function sendApprovedEmail(formData: FormData) {
   const parsed = z.object({ id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/communicatie?fout=verzenden");

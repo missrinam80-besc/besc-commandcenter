@@ -10,6 +10,7 @@ const communicationPage = readFileSync("src/app/app/communicatie/page.tsx", "utf
 const communicationComposer = readFileSync("src/components/communication-composer.tsx", "utf8");
 const bccMigration = readFileSync("supabase/migrations/20260803150000_add_email_bcc_addresses.sql", "utf8");
 const projectCampaignMigration = readFileSync("supabase/migrations/20260927100000_allow_project_campaign_email_communications.sql", "utf8");
+const softDeleteMigration = readFileSync("supabase/migrations/20261001100000_add_email_communication_soft_delete.sql", "utf8");
 
 test("e-mailcommunicatie ondersteunt dossiers en een gecontroleerde levenscyclus", () => {
   assert.match(migration, /entity_type in \('partner','event','meeting'\)/);
@@ -56,6 +57,13 @@ test("e-mailcommunicatie ondersteunt projecten en campagnes als dossier", () => 
   assert.match(communicationPage, /projects/);
   assert.match(communicationPage, /campaigns/);
   assert.match(projectCampaignMigration, /'partner','event','meeting','project','campaign'/);
+});
+
+test("e-mailregister biedt bewerken, goedkeuring en soft-delete", () => {
+  assert.match(communicationPage, /deleteEmailCommunication/);
+  assert.match(communicationPage, /Goedkeuring/);
+  assert.match(actions, /deleted_at/);
+  assert.match(softDeleteMigration, /add column if not exists deleted_at timestamptz/);
 });
 
 test("alleen bestuur en beheerders kunnen e-mails beoordelen", () => {

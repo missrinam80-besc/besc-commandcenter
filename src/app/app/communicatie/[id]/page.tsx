@@ -16,7 +16,7 @@ const statusLabels: Record<string, string> = {
 export default async function EmailDetail({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string,string|undefined>> }) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const { supabase, user, membership } = await requireActiveMembership();
-  const { data: item } = await supabase.from("email_communications").select("*").eq("organization_id", membership.organization_id).eq("id", id).maybeSingle();
+  const { data: item } = await supabase.from("email_communications").select("*").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle();
   if (!item) notFound();
   const canEdit = (item.created_by === user.id || isManager(membership)) && ["draft", "changes_requested", "failed"].includes(item.status);
   const canSend = isManager(membership) && item.status === "approved" && Boolean(item.gmail_draft_id);
@@ -65,7 +65,7 @@ export default async function EmailDetail({ params, searchParams }: { params: Pr
           </section>
         )}
 
-        {!["sent", "failed"].includes(item.status) && <ApprovalPanel entityType="email" entityId={item.id} sourceHref={`/app/communicatie/${item.id}`} title="Menselijke goedkeuring"/>}
+        {!["sent", "failed"].includes(item.status) && <div id="goedkeuring"><ApprovalPanel entityType="email" entityId={item.id} sourceHref={`/app/communicatie/${item.id}`} title="Menselijke goedkeuring"/></div>}
         {canSend && <section className="form-card email-send-card"><div><span className="eyebrow">VERZENDING</span><h2>Klaar om te verzenden</h2><p>Het concept is door een andere bevoegde gebruiker goedgekeurd. Controleer het bericht nog één keer voor verzending.</p></div><form action={sendApprovedEmail}><input type="hidden" name="id" value={item.id}/><button className="primary"><Send size={16}/>Nu via Gmail verzenden</button></form></section>}
       </div>
     </AppShell>

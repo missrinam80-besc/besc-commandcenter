@@ -33,6 +33,7 @@ async function sourceRecord(
       .select("id,title,created_by,status,gmail_draft_id")
       .eq("organization_id", org)
       .eq("id", id)
+      .is("deleted_at", null)
       .maybeSingle();
     if (!data || !data.gmail_draft_id || !["draft", "changes_requested"].includes(data.status)) return null;
     return { title: data.title, module: "communication" as const };
