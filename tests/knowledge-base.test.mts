@@ -81,6 +81,24 @@ test("eerste Command Center-handleidingen worden idempotent geseed", async () =>
   assert.match(expanded, /on conflict \(organization_id, title\) where deleted_at is null do update/);
 });
 
+test("operationele richtlijnen worden idempotent aan de kennisbank toegevoegd", async () => {
+  const migration = await source("supabase/migrations/20261001110000_seed_operational_guidelines.sql");
+
+  for (const title of [
+    "Richtlijnen Projecten en Campagnes",
+    "Richtlijnen Content en Social Posts",
+    "Richtlijnen Events en Sponsorcommunicatie",
+    "Richtlijnen Shop en Merchandise",
+    "Richtlijnen Nieuwsbrieven",
+  ]) {
+    assert.match(migration, new RegExp(title));
+  }
+
+  assert.match(migration, /'guide', 'published'/);
+  assert.match(migration, /on conflict \(organization_id, title\) where deleted_at is null do update/);
+  assert.match(migration, /current_date \+ 180/);
+});
+
 test("Home biedt onboardinglinks naar de Command Center-handleidingen", async () => {
   const [dashboard, styles] = await Promise.all([
     source("src/components/dashboard.tsx"),
