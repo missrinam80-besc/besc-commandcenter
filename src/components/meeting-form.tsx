@@ -1,5 +1,6 @@
 import { saveMeeting } from "@/app/app/vergaderingen/actions";
 import { MarkdownField } from "@/components/markdown-field";
+import { formatDateTimeLocal } from "@/lib/format";
 
 type Data = { id?: string; [key: string]: unknown };
 
@@ -34,8 +35,8 @@ export function MeetingForm({ record = {} }: { record?: Data }) {
             <option value="remove">Afspraak verwijderen</option>
           </select>
         </label>
-        <label>Starttijd<input type="datetime-local" name="meeting_at" defaultValue={String(record.meeting_at ?? "").slice(0, 16)}/></label>
-        <label>Eindtijd<input type="datetime-local" name="ends_at" defaultValue={String(record.ends_at ?? "").slice(0, 16)}/></label>
+        <label>Starttijd<input type="datetime-local" name="meeting_at" defaultValue={formatDateTimeLocal(record.meeting_at as string | null)}/></label>
+        <label>Eindtijd<input type="datetime-local" name="ends_at" defaultValue={formatDateTimeLocal(record.ends_at as string | null)}/></label>
         <label>Deelnemers (komma gescheiden)<input name="attendees" defaultValue={Array.isArray(record.attendees) ? record.attendees.join(", ") : ""}/></label>
       </div>
       <p className="form-hint">Deze keuze geldt alleen bij status Geannuleerd. De vergadering en historiek blijven in BESC bewaard.</p>

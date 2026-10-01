@@ -8,6 +8,13 @@ import {
   googleCalendarMeetingPayload,
   googleWorkspaceConfiguration,
 } from "../src/lib/google-workspace.ts";
+import { formatDateTime, localDateTimeToIso } from "../src/lib/format.ts";
+
+test("datetime-local gebruikt de Brusselse tijdzone", () => {
+  const iso = localDateTimeToIso("2026-10-02T22:16");
+  assert.equal(iso, "2026-10-02T20:16:00.000Z");
+  assert.match(formatDateTime(iso), /2 okt 2026, 22:16/);
+});
 
 test("Workspace-configuratie rapporteert ontbrekende variabelen zonder waarden te lekken", () => {
   const previous = process.env.GOOGLE_OAUTH_CLIENT_ID;

@@ -6,6 +6,7 @@ import { SavedViews } from "@/components/saved-views";
 import { demoDashboard } from "@/lib/demo-data";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { formatDateTime } from "@/lib/format";
 import { updateTaskStatus } from "../actions";
 
 type TaskRow = {
@@ -50,12 +51,7 @@ function TaskList({ tasks, completed = false }: { tasks: TaskRow[]; completed?: 
             </Link>
             <p>
               {task.projects?.title ?? "Zonder project"} ·{" "}
-              {task.due_at
-                ? new Intl.DateTimeFormat("nl-BE", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  }).format(new Date(task.due_at))
-                : "geen deadline"}
+              {formatDateTime(task.due_at, "geen deadline")}
             </p>
           </div>
           <span className="badge">{labels[task.status] ?? task.status}</span>

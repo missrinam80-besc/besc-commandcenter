@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requirePermission } from "@/lib/auth-context";
+import { localDateTimeToIso } from "@/lib/format";
 
 const assignmentSchema = z.object({
   entity_type: z.enum(["project", "event"]),
@@ -37,7 +38,7 @@ export async function createPersonAssignment(formData: FormData) {
     event_id: parsed.data.entity_type === "event" ? parsed.data.entity_id : null,
     role_name: parsed.data.role_name || "Betrokkene",
     status: parsed.data.status,
-    starts_at: parsed.data.starts_at ? new Date(parsed.data.starts_at).toISOString() : null,
+    starts_at: localDateTimeToIso(parsed.data.starts_at),
     notes: parsed.data.notes || null,
     created_by: user.id,
   };
@@ -56,7 +57,7 @@ export async function updatePersonAssignment(formData: FormData) {
     person_id: parsed.data.person_id,
     role_name: parsed.data.role_name || "Betrokkene",
     status: parsed.data.status,
-    starts_at: parsed.data.starts_at ? new Date(parsed.data.starts_at).toISOString() : null,
+    starts_at: localDateTimeToIso(parsed.data.starts_at),
     notes: parsed.data.notes || null,
   }).eq("organization_id", membership.organization_id).eq("id", parsed.data.id)
     .eq(parsed.data.entity_type === "project" ? "project_id" : "event_id", parsed.data.entity_id);

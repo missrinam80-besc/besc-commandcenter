@@ -1,6 +1,7 @@
 import { operationalModules, type OperationalModule } from "@/app/app/operations/config";
 import { MarkdownField } from "@/components/markdown-field";
 import { communityRoleLabels } from "@/lib/community-people";
+import { formatDateTimeLocal } from "@/lib/format";
 
 const platforms = ["Discord", "Twitch", "YouTube", "TikTok", "Instagram", "Facebook", "X", "Threads", "LinkedIn", "Blogger", "Website", "Nieuwsbrief"];
 type RecordData = { id?: string; [key: string]: unknown };
@@ -33,7 +34,7 @@ export function OperationalRecordForm({
 }) {
   const config = operationalModules[module];
   const dateValue = record[config.dateColumn ?? ""]
-    ? String(record[config.dateColumn ?? ""]).slice(0, module === "social" ? 16 : 10)
+    ? module === "social" ? formatDateTimeLocal(String(record[config.dateColumn ?? ""])) : String(record[config.dateColumn ?? ""]).slice(0, 10)
     : "";
 
   return (

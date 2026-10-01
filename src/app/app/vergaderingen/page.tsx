@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { MeetingForm } from "@/components/meeting-form";
 import { FormModal } from "@/components/form-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { formatDateTime } from "@/lib/format";
 
 type MeetingAction = {
   id: string;
@@ -91,7 +92,7 @@ export default async function Page({
               <article key={meeting.id}>
                 <div><strong>{meeting.title}</strong><p>{meeting.decisions || meeting.notes || "Geen verslaginformatie"}</p></div>
                 <span>{meeting.meeting_type}</span>
-                <span>{meeting.meeting_at ? new Date(meeting.meeting_at).toLocaleString("nl-BE") : `${(meeting.attendees ?? []).length} deelnemers`}</span>
+                <span>{meeting.meeting_at ? formatDateTime(meeting.meeting_at) : `${(meeting.attendees ?? []).length} deelnemers`}</span>
                 <span className="badge purple">{meeting.status}</span>
                 <Link className="row-action" href={`/app/vergaderingen/${meeting.id}`}>Openen</Link>
               </article>

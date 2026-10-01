@@ -9,6 +9,7 @@ import { RecordConnectionsPanel } from "@/components/record-connections-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
 import { hasPermission } from "@/lib/permissions";
+import { formatDateTime, formatDateTimeLocal } from "@/lib/format";
 import {
   addChecklistItem,
   deleteTask,
@@ -98,7 +99,7 @@ export default async function TaskDetailPage({
                 <label>Status<select name="status" defaultValue={task.status}><option value="todo">Te doen</option><option value="doing">Bezig</option><option value="waiting">Wachten</option><option value="review">Review</option><option value="done">Afgerond</option><option value="cancelled">Geannuleerd</option></select></label>
                 <label>Prioriteit<select name="priority" defaultValue={task.priority}><option value="low">Laag</option><option value="normal">Normaal</option><option value="high">Hoog</option><option value="urgent">Urgent</option></select></label>
               </div>
-              <label>Deadline<input type="datetime-local" name="due_at" defaultValue={task.due_at?.slice(0, 16) || ""}/></label>
+              <label>Deadline<input type="datetime-local" name="due_at" defaultValue={formatDateTimeLocal(task.due_at)}/></label>
               <div className="form-actions"><button className="primary">Wijzigingen opslaan</button></div>
             </form>
           </FormModal>
@@ -110,7 +111,7 @@ export default async function TaskDetailPage({
             <div className="content-meta">
               <div><span>Project</span><strong>{task.projects?.title || "Geen project"}</strong></div>
               <div><span>Prioriteit</span><strong>{task.priority}</strong></div>
-              <div><span>Deadline</span><strong>{task.due_at ? new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(task.due_at)) : "Geen deadline"}</strong></div>
+              <div><span>Deadline</span><strong>{formatDateTime(task.due_at)}</strong></div>
             </div>
           </section>
           <aside>

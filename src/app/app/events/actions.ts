@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { localDateTimeToIso } from "@/lib/format";
 import { syncLinkedEvent } from "@/lib/linked-calendar-sync";
 
 const schema = z.object({
@@ -42,8 +43,8 @@ function values(input: z.infer<typeof schema>) {
     title: input.title || "Naamloos event",
     description: input.description || null,
     project_id: input.project_id || null,
-    start_at: input.start_at ? new Date(input.start_at).toISOString() : null,
-    end_at: input.end_at ? new Date(input.end_at).toISOString() : null,
+    start_at: localDateTimeToIso(input.start_at),
+    end_at: localDateTimeToIso(input.end_at),
     location: input.location || null,
     is_online: input.is_online === "on",
     drive_url: input.drive_url || null,

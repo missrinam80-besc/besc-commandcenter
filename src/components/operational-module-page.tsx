@@ -11,6 +11,7 @@ import { OperationalRecordForm } from "@/components/operational-record-form";
 import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { hasPermission } from "@/lib/permissions";
+import { formatDateTime } from "@/lib/format";
 
 const PAGE_SIZE = 25;
 
@@ -42,7 +43,7 @@ function secondaryValue(module: OperationalModule, row: Row) {
   }
   return `${channelLabel(row)} · ${
     row.scheduled_at
-      ? String(row.scheduled_at).slice(0, 16).replace("T", " ")
+      ? formatDateTime(String(row.scheduled_at))
       : "Niet gepland"
   }`;
 }

@@ -8,6 +8,7 @@ import {
   type ApprovalEntityType,
   type ApprovalStatus,
 } from "@/lib/approvals";
+import { formatLocalDate } from "@/lib/format";
 
 type ApprovalRow = {
   id: string;
@@ -63,7 +64,7 @@ export async function ApprovalPanel({
           </div>
           <div>
             <strong>{approvalStatusLabels[request.status]}</strong>
-            <span>Aangevraagd door {request.requester?.display_name || "onbekend"} op {new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium" }).format(new Date(request.requested_at))}</span>
+            <span>Aangevraagd door {request.requester?.display_name || "onbekend"} op {formatLocalDate(request.requested_at)}</span>
             {request.request_note && <p>{request.request_note}</p>}
             {request.decision_note && <p><b>Toelichting:</b> {request.decision_note}</p>}
           </div>

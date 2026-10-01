@@ -5,7 +5,7 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { FormModal } from "@/components/form-modal";
 import { MarkdownField } from "@/components/markdown-field";
 import { SearchablePersonPicker, type PersonPickerOption } from "@/components/searchable-person-picker";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatDateTimeLocal } from "@/lib/format";
 
 type Assignment = {
   id: string; person_id: string; role_name: string; status: string; starts_at: string | null; notes: string | null;
@@ -27,7 +27,7 @@ export function PeopleAssignmentsPanel({ entityType, entityId, assignments, peop
   const form = (assignment?: Assignment) => <form action={assignment ? updatePersonAssignment : createPersonAssignment}>
     <input type="hidden" name="entity_type" value={entityType}/><input type="hidden" name="entity_id" value={entityId}/><input type="hidden" name="return_to" value={basePath}/>
     {assignment ? <><input type="hidden" name="id" value={assignment.id}/><input type="hidden" name="person_id" value={assignment.person_id}/><p className="form-help">Persoon: <strong>{assignment.community_people?.display_name || "Onbekende persoon"}</strong></p></> : <SearchablePersonPicker options={people}/>} 
-    <div className="form-row"><label>Rol of verantwoordelijkheid<input name="role_name" defaultValue={assignment?.role_name ?? ""}/></label><label>Status<select name="status" defaultValue={assignment?.status ?? "planned"}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>Startmoment<input type="datetime-local" name="starts_at" defaultValue={assignment?.starts_at?.slice(0, 16) ?? ""}/></label></div>
+    <div className="form-row"><label>Rol of verantwoordelijkheid<input name="role_name" defaultValue={assignment?.role_name ?? ""}/></label><label>Status<select name="status" defaultValue={assignment?.status ?? "planned"}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>Startmoment<input type="datetime-local" name="starts_at" defaultValue={formatDateTimeLocal(assignment?.starts_at)}/></label></div>
     <MarkdownField label="Notities" name="notes" rows={4} defaultValue={assignment?.notes}/><div className="form-actions"><button className="primary">Opslaan</button></div>
   </form>;
 

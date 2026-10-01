@@ -15,7 +15,7 @@ import { FinancialSummaryPanel } from "@/components/financial-summary-panel";
 import { OperationalRecordForm } from "@/components/operational-record-form";
 import { PeopleAssignmentsPanel } from "@/components/people-assignments-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime, formatDateTimeLocal } from "@/lib/format";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
 import { hasPermission } from "@/lib/permissions";
 import { updateTaskStatus } from "../../actions";
@@ -208,7 +208,7 @@ export default async function ProjectPage({ params, searchParams }: {
               <div className="form-row">
                 <label>Status<select name="status" defaultValue={selectedTask.status}><option value="todo">Te doen</option><option value="doing">Bezig</option><option value="waiting">Wachten</option><option value="review">Review</option><option value="done">Afgerond</option><option value="cancelled">Geannuleerd</option></select></label>
                 <label>Prioriteit<select name="priority" defaultValue={selectedTask.priority}><option value="low">Laag</option><option value="normal">Normaal</option><option value="high">Hoog</option><option value="urgent">Urgent</option></select></label>
-                <label>Deadline<input type="datetime-local" name="due_at" defaultValue={selectedTask.due_at?.slice(0, 16) || ""}/></label>
+                <label>Deadline<input type="datetime-local" name="due_at" defaultValue={formatDateTimeLocal(selectedTask.due_at)}/></label>
               </div>
               <div className="form-actions"><Link href={`/app/taken/${selectedTask.id}`}>Volledig taakdossier</Link><button className="primary">Opslaan</button></div>
             </form>

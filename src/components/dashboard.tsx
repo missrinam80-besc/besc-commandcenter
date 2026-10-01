@@ -15,7 +15,7 @@ function greeting(){
 }
 
 export function Dashboard({data}:{data:DashboardData}){
-  return <><header className="topbar"><div><p>{new Intl.DateTimeFormat("nl-BE",{weekday:"long",day:"numeric",month:"long"}).format(new Date())}</p><h1>{greeting()}, {data.name}</h1></div>
+  return <><header className="topbar"><div><p>{new Intl.DateTimeFormat("nl-BE",{weekday:"long",day:"numeric",month:"long",timeZone:"Europe/Brussels"}).format(new Date())}</p><h1>{greeting()}, {data.name}</h1></div>
     <details className="quick-create"><summary className="primary"><Plus size={17}/>Snel toevoegen</summary><div><Link href="/app/taken?nieuw=1">Nieuwe taak</Link><Link href="/app/inbox?nieuw=1">Inboxitem</Link>{["admin","board"].includes(data.roleKey)&&<><Link href="/app/projecten?nieuw=1">Nieuw project</Link><Link href="/app/events?nieuw=1">Nieuw event</Link></>}</div></details>
   </header><div className="dashboard">
     {(data.notificationCount>0||data.attentionCount>0)&&<div className="attention-bar"><div><strong>{data.attentionCount} werkitems vragen aandacht</strong><span>{data.notificationCount} ongelezen meldingen · achterstanden, blokkades en reviews gebundeld</span></div><Link href="/app/meldingen">Bekijk signalen <ArrowRight size={15}/></Link></div>}

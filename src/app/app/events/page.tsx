@@ -6,6 +6,7 @@ import { FormModal } from "@/components/form-modal";
 import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { hasPermission } from "@/lib/permissions";
+import { formatLocalDate } from "@/lib/format";
 import { saveEvent } from "./actions";
 
 const PAGE_SIZE = 25;
@@ -146,11 +147,7 @@ export default async function Events({
                 {eventStatuses[event.status as keyof typeof eventStatuses]}
               </span>
               <span className="content-date">
-                {event.start_at
-                  ? new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium" }).format(
-                      new Date(event.start_at),
-                    )
-                  : "Niet gepland"}
+                {formatLocalDate(event.start_at, "Niet gepland")}
               </span>
               <span />
               <Link className="row-action" href={`/app/events/${event.id}`}>Openen</Link>

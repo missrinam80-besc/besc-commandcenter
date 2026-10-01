@@ -129,7 +129,7 @@ export default async function Page({
           </section>
         )}
         <section className="integration-list">
-          {rows.map((item) => <article key={item.id}><CloudCog/><div><strong>{item.display_name}</strong><span>{providers[item.provider]} · {item.account_label || "Geen accountlabel"}{item.last_sync_at ? ` · getest ${new Date(item.last_sync_at).toLocaleString("nl-BE")}` : ""}</span></div><b className={`integration-status ${item.status}`}>{statuses[item.status]}</b></article>)}
+          {rows.map((item) => <article key={item.id}><CloudCog/><div><strong>{item.display_name}</strong><span>{providers[item.provider]} · {item.account_label || "Geen accountlabel"}{item.last_sync_at ? ` · getest ${new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Brussels" }).format(new Date(item.last_sync_at))}` : ""}</span></div><b className={`integration-status ${item.status}`}>{statuses[item.status]}</b></article>)}
           {!rows.length && <div className="empty">Nog geen integraties geregistreerd.</div>}
         </section>
       </div>

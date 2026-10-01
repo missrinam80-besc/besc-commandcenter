@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { localDateTimeToIso } from "@/lib/format";
 
 const returnTo=(id:string)=>`/app/taken/${id}`;
 export async function updateTaskDetails(formData:FormData){
@@ -14,7 +15,7 @@ export async function updateTaskDetails(formData:FormData){
     const{data:project}=await supabase.from("projects").select("id").eq("id",parsed.data.project_id).eq("organization_id",membership.organization_id).is("deleted_at",null).maybeSingle();
     if(!project)redirect(`${returnTo(parsed.data.id)}?fout=project`);
   }
-  const{error}=await supabase.from("tasks").update({title:parsed.data.title||"Naamloze taak",description:parsed.data.description||null,status:parsed.data.status,priority:parsed.data.priority,due_at:parsed.data.due_at||null,project_id:parsed.data.project_id||null,completed_at:parsed.data.status==="done"?new Date().toISOString():null}).eq("id",parsed.data.id).eq("organization_id",membership.organization_id);
+  const{error}=await supabase.from("tasks").update({title:parsed.data.title||"Naamloze taak",description:parsed.data.description||null,status:parsed.data.status,priority:parsed.data.priority,due_at:localDateTimeToIso(parsed.data.due_at),project_id:parsed.data.project_id||null,completed_at:parsed.data.status==="done"?new Date().toISOString():null}).eq("id",parsed.data.id).eq("organization_id",membership.organization_id);
   if(error) redirect(`${returnTo(parsed.data.id)}?fout=opslaan`);
   await supabase.from("activity_events").insert({organization_id:membership.organization_id,entity_type:"task",entity_id:parsed.data.id,action:"task_updated",actor_id:user.id});
   revalidatePath(returnTo(parsed.data.id));revalidatePath("/app/taken");revalidatePath("/app/projecten");

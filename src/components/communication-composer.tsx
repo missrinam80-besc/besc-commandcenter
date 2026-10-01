@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Mail } from "lucide-react";
+import { formatDateTime } from "@/lib/format";
 
 type DossierType = "partner" | "event" | "meeting" | "project" | "campaign";
 type Option = { id: string; title: string; email?: string; contactName?: string; followUpDate?: string | null; date?: string | null; location?: string | null; isOnline?: boolean };
@@ -18,7 +19,7 @@ function renderTemplate(value: string, context: Record<string, string>) {
 }
 
 function formatDate(value: string | null | undefined) {
-  return value ? new Intl.DateTimeFormat("nl-BE", { dateStyle: "long", timeStyle: "short" }).format(new Date(value)) : "nog te bepalen";
+  return value ? formatDateTime(value, "nog te bepalen") : "nog te bepalen";
 }
 
 export function CommunicationComposer({ action, gmailConfigured, templates, partners, events, meetings, projects, campaigns, organizationName, senderName, initialType, initialId }: {

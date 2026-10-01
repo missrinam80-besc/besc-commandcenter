@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requirePermission } from "@/lib/auth-context";
+import { localDateTimeToIso } from "@/lib/format";
 import { approvalStatuses, contentChannels, contentStatuses, contentTypes } from "./constants";
 
 const schema = z.object({
@@ -42,7 +43,7 @@ function values(parsed: z.infer<typeof schema>, channels: string[]) {
     primary_channel: parsed.primary_channel || null,
     channels,
     deadline: parsed.deadline || null,
-    publication_at: parsed.publication_at ? new Date(parsed.publication_at).toISOString() : null,
+    publication_at: localDateTimeToIso(parsed.publication_at),
     drive_url: parsed.drive_url || null,
     canva_url: parsed.canva_url || null,
     publication_url: parsed.publication_url || null,

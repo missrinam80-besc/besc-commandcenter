@@ -1,5 +1,6 @@
 import { approvalStatuses, contentChannels, contentStatuses, contentTypes } from "@/app/app/content/constants";
 import { MarkdownField } from "@/components/markdown-field";
+import { formatDateTimeLocal } from "@/lib/format";
 
 type Content = {
   id?: string; title?: string; description?: string | null; content_type?: string;
@@ -29,7 +30,7 @@ export function ContentForm({ action, content = {}, projects = [], campaigns = [
       <label>Campagne<select name="campaign_id" defaultValue={content.campaign_id ?? ""}><option value="">Geen campagne</option>{campaigns.map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label>
       <label>Partner<select name="partner_id" defaultValue={content.partner_id ?? ""}><option value="">Geen partner</option>{partners.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
       <label>Deadline<input type="date" name="deadline" defaultValue={content.deadline ?? ""}/></label>
-      <label>Publicatiemoment<input type="datetime-local" name="publication_at" defaultValue={content.publication_at?.slice(0, 16) ?? ""}/></label>
+      <label>Publicatiemoment<input type="datetime-local" name="publication_at" defaultValue={formatDateTimeLocal(content.publication_at)}/></label>
       <label>Hoofdkanaal<select name="primary_channel" defaultValue={content.primary_channel ?? ""}><option value="">Nog te bepalen</option>{contentChannels.map((channel) => <option key={channel}>{channel}</option>)}</select></label>
       <label>Goedkeuring<select name="approval_status" defaultValue={content.approval_status ?? "not_required"}>{Object.entries(approvalStatuses).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
     </div>

@@ -9,6 +9,7 @@ import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { RecordConnectionsPanel } from "@/components/record-connections-panel";
 import { TaskCreateModal } from "@/components/task-create-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { formatDateTime } from "@/lib/format";
 import { updateContent } from "../actions";
 import { approvalStatuses, contentStatuses, contentTypes } from "../constants";
 import { hasPermission } from "@/lib/permissions";
@@ -80,7 +81,7 @@ export default async function ContentDetail({
           <article><span>Goedkeuring</span><strong>{approvalStatuses[item.approval_status as keyof typeof approvalStatuses] ?? item.approval_status}</strong></article>
           <article><span>Project</span><strong>{item.projects?.title ?? "Niet gekoppeld"}</strong></article>
           <article><span>Deadline</span><strong>{item.deadline ?? "Niet bepaald"}</strong></article>
-          <article><span>Publicatie</span><strong>{item.publication_at ? new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.publication_at)) : "Niet gepland"}</strong></article>
+          <article><span>Publicatie</span><strong>{formatDateTime(item.publication_at, "Niet gepland")}</strong></article>
         </section>
         <ApprovalPanel entityType="content" entityId={id} sourceHref={`/app/content/${id}`} title="Contentgoedkeuring"/>
         <section className="form-card">

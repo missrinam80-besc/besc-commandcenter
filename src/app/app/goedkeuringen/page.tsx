@@ -3,6 +3,7 @@ import { CheckCircle2, Clock3, Filter, RotateCcw, UserRound, XCircle } from "luc
 import { decideApproval } from "./actions";
 import { AppShell } from "@/components/app-shell";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { formatDateTime } from "@/lib/format";
 import {
   approvalCounts,
   approvalEntityLabels,
@@ -87,7 +88,7 @@ export default async function ApprovalsPage({
                 <div className="approval-main">
                   <div><span>{approvalModuleLabels[row.module]} · {approvalEntityLabels[row.entity_type]}</span><b className={`approval-badge ${row.status}`}>{approvalStatusLabels[row.status]}</b></div>
                   <Link href={row.source_href}>{row.title}</Link>
-                  <small>Aangevraagd door {row.requester?.display_name || "onbekend"} · {new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(row.requested_at))}</small>
+                  <small>Aangevraagd door {row.requester?.display_name || "onbekend"} · {formatDateTime(row.requested_at)}</small>
                   {row.request_note && <p>{row.request_note}</p>}
                   {row.decision_note && <p><strong>Beslissing:</strong> {row.decision_note}</p>}
                 </div>

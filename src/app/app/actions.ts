@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireActiveMembership, requirePermission } from "@/lib/auth-context";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { dossierEntityTypes } from "@/lib/dossier-relations";
+import { localDateTimeToIso } from "@/lib/format";
 
 const baseSchema = z.object({ title: z.string().trim().max(180).optional(), description: z.string().trim().max(5000).optional() });
 const priority = z.enum(["low", "normal", "high", "urgent"]).optional().default("normal");
@@ -26,7 +27,7 @@ export async function createTask(formData: FormData) {
   const parsed = baseSchema.extend({ priority, due_at: z.string().optional(), project_id: z.string().uuid().optional().or(z.literal("")), assignee_id: z.string().uuid().optional().or(z.literal("")), checklist: z.string().max(5000).optional(), context_entity_type: z.enum(dossierEntityTypes).optional(), context_entity_id: z.string().uuid().optional().or(z.literal("")), return_to: z.string().optional() }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/taken?nieuw=1&fout=velden");
   const { supabase, user, membership } = await requireActiveMembership();
-  const { data: task, error } = await supabase.from("tasks").insert({ title: parsed.data.title || "Naamloze taak", description: parsed.data.description, priority: parsed.data.priority, due_at: parsed.data.due_at || null, project_id: parsed.data.project_id || null, organization_id: membership.organization_id, created_by: user.id }).select("id").single();
+  const { data: task, error } = await supabase.from("tasks").insert({ title: parsed.data.title || "Naamloze taak", description: parsed.data.description, priority: parsed.data.priority, due_at: localDateTimeToIso(parsed.data.due_at), project_id: parsed.data.project_id || null, organization_id: membership.organization_id, created_by: user.id }).select("id").single();
   if (error || !task) redirect("/app/taken?nieuw=1&fout=opslaan");
   if (parsed.data.assignee_id) {
     const { data: assignee } = await supabase.from("organization_members").select("user_id").eq("organization_id", membership.organization_id).eq("user_id", parsed.data.assignee_id).eq("status", "active").maybeSingle();

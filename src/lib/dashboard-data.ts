@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { demoDashboard } from "@/lib/demo-data";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { hasPermission } from "@/lib/permissions";
+import { formatDateTime } from "@/lib/format";
 import type { AttentionView, DashboardData, DashboardWidget, ScheduleView } from "@/lib/types";
 
 const statusLabels:Record<string,string>={todo:"Te doen",doing:"Bezig",waiting:"Wachten",review:"Review",done:"Afgerond"};
@@ -12,7 +13,7 @@ type ProjectRow={id:string;title:string;status:string;due_date:string|null;owner
 
 function dateLabel(value:string|null,withTime=false){
   if(!value)return "Nog te plannen";
-  return new Intl.DateTimeFormat("nl-BE",withTime?{dateStyle:"medium",timeStyle:"short"}:{day:"numeric",month:"long"}).format(new Date(value));
+  return withTime ? formatDateTime(value, "Nog te plannen") : new Intl.DateTimeFormat("nl-BE", { day: "numeric", month: "long", timeZone: "Europe/Brussels" }).format(new Date(value));
 }
 function startOfToday(){const date=new Date();date.setHours(0,0,0,0);return date}
 

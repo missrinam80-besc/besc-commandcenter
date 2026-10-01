@@ -148,7 +148,7 @@ export default async function CalendarPage({
     const key = calendarDayKey(item.date);
     grouped.set(key, [...(grouped.get(key) ?? []), item]);
   });
-  const title = new Intl.DateTimeFormat("nl-BE", { month: "long", year: "numeric" }).format(new Date(Date.UTC(year, monthNumber - 1, 1)));
+  const title = new Intl.DateTimeFormat("nl-BE", { month: "long", year: "numeric", timeZone: "Europe/Brussels" }).format(new Date(Date.UTC(year, monthNumber - 1, 1)));
   const today = calendarDayKey(new Date().toISOString());
   const scopeParam = scope === "mine" ? "mijn" : "alles";
   const base = `type=${selected}&scope=${scopeParam}`;
@@ -208,7 +208,7 @@ export default async function CalendarPage({
           </>
         ) : (
           <section className="calendar-agenda">
-            {items.map((item) => <Link href={item.href} key={item.id}><time dateTime={item.date}><strong>{new Intl.DateTimeFormat("nl-BE", { day: "2-digit" }).format(new Date(item.date))}</strong><span>{new Intl.DateTimeFormat("nl-BE", { month: "short" }).format(new Date(item.date))}</span></time><i className={`calendar-kind ${item.kind}`}/><div><strong>{item.title}</strong><small>{item.label}{item.timed && time(item.date) ? ` · ${time(item.date)}` : ""}</small></div><ChevronRight size={15}/></Link>)}
+            {items.map((item) => <Link href={item.href} key={item.id}><time dateTime={item.date}><strong>{new Intl.DateTimeFormat("nl-BE", { day: "2-digit", timeZone: "Europe/Brussels" }).format(new Date(item.date))}</strong><span>{new Intl.DateTimeFormat("nl-BE", { month: "short", timeZone: "Europe/Brussels" }).format(new Date(item.date))}</span></time><i className={`calendar-kind ${item.kind}`}/><div><strong>{item.title}</strong><small>{item.label}{item.timed && time(item.date) ? ` · ${time(item.date)}` : ""}</small></div><ChevronRight size={15}/></Link>)}
           </section>
         )}
         {!items.length && <div className="calendar-empty">Geen geplande items voor deze selectie.</div>}

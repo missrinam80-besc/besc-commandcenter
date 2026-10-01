@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { localDateTimeToIso } from "@/lib/format";
 import { syncLinkedMeeting } from "@/lib/linked-calendar-sync";
 
 async function manager() {
@@ -37,8 +38,8 @@ export async function saveMeeting(formData: FormData) {
   }
   const { supabase, user, membership } = await manager();
   const { id, cancelled_calendar_action, ...data } = parsed.data;
-  const meetingAt = data.meeting_at ? new Date(data.meeting_at).toISOString() : null;
-  const endsAt = data.ends_at ? new Date(data.ends_at).toISOString() : null;
+  const meetingAt = localDateTimeToIso(data.meeting_at);
+  const endsAt = localDateTimeToIso(data.ends_at);
   if (meetingAt && endsAt && new Date(endsAt) <= new Date(meetingAt)) {
     redirect(`/app/vergaderingen${id ? `/${id}?bewerken=1&` : "?nieuw=1&"}fout=tijden`);
   }
