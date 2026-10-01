@@ -79,9 +79,17 @@ export async function createProjectFolder(formData: FormData) {
       userId: context.user.id,
     });
   } catch (error) {
+    const errorObject = typeof error === "object" && error !== null
+      ? error as { message?: unknown; code?: unknown; details?: unknown; hint?: unknown }
+      : null;
     console.error("Project Drive folder creation failed", {
       status: error instanceof GoogleApiError ? error.status : undefined,
-      message: error instanceof Error ? error.message : String(error),
+      message: error instanceof Error
+        ? error.message
+        : errorObject?.message ? String(errorObject.message) : JSON.stringify(error),
+      code: errorObject?.code ? String(errorObject.code) : undefined,
+      details: errorObject?.details ? String(errorObject.details) : undefined,
+      hint: errorObject?.hint ? String(errorObject.hint) : undefined,
     });
     redirect(`${path(project.id)}?fout=${parsed.data.mode === "existing" ? "drive-bestaande-link" : "drive-aanmaken"}`);
   }
