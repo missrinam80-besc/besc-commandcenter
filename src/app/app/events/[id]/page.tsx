@@ -23,6 +23,8 @@ import { createEventFolder, linkEventFolder, organizeEventFolder } from "./actio
 import { generateEventDossier } from "@/app/app/google-document-actions";
 import { syncEventToGoogleCalendar } from "../calendar-actions";
 import { hasPermission } from "@/lib/permissions";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { cancelEvent } from "../actions";
 
 type DriveLink = {
   web_url: string;
@@ -105,6 +107,7 @@ export default async function Event({
             <input type="hidden" name="event_id" value={id}/>
             <button><CalendarSync size={16}/>{calendar ? "Kalender bijwerken" : "Naar Google Calendar"}</button>
           </form>
+          {canManage && !["cancelled", "archived", "completed"].includes(e.status) && <form action={cancelEvent}><input type="hidden" name="id" value={id}/><ConfirmSubmitButton className="danger-button" message="Dit event annuleren? Het event blijft bewaard en wordt als geannuleerd zichtbaar in Google Calendar.">Event annuleren</ConfirmSubmitButton></form>}
           <Link href="?nieuw=taak">Taak toevoegen</Link>
           {canManageCampaigns && <Link href="?nieuw=campagne">Campagne toevoegen</Link>}
           {canManageCampaigns && <Link href={`/app/rapportage/events/${id}`}>Eventrapport</Link>}
@@ -112,7 +115,7 @@ export default async function Event({
         </div>
       </header>
       <div className="project-detail-body">
-        {q.succes && <div className="success">{q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : "Event opgeslagen."}</div>}
+        {q.succes && <div className="success">{q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : "Event opgeslagen."}</div>}
         {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
         {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
         {q.bewerken && (

@@ -96,3 +96,24 @@ export async function saveEvent(formData: FormData) {
   revalidatePath("/app/events");
   redirect(`/app/events/${data.id}?succes=1`);
 }
+
+export async function cancelEvent(formData: FormData) {
+  const parsed = z.object({ id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) redirect("/app/events?fout=velden");
+  const { supabase, user, membership } = await manager();
+  const { error } = await supabase
+    .from("events")
+    .update({ status: "cancelled", updated_at: new Date().toISOString() })
+    .eq("organization_id", membership.organization_id)
+    .eq("id", parsed.data.id);
+  if (error) redirect(`/app/events/${parsed.data.id}?fout=opslaan`);
+  let calendarWarning = false;
+  try {
+    await syncLinkedEvent({ supabase, organizationId: membership.organization_id, createdBy: user.id }, parsed.data.id, "keep");
+  } catch {
+    calendarWarning = true;
+  }
+  revalidatePath("/app/events");
+  revalidatePath(`/app/events/${parsed.data.id}`);
+  redirect(`/app/events/${parsed.data.id}?succes=geannuleerd${calendarWarning ? "&waarschuwing=kalender-sync" : ""}`);
+}

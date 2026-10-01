@@ -203,10 +203,8 @@ export async function syncGoogleCalendarEvent(
   const config = googleWorkspaceConfiguration();
   if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
   const payload = googleCalendarEventPayload(event);
-  let googleEventId = knownGoogleEventId || null;
-  if (!googleEventId) {
-    googleEventId = (await findGoogleCalendarEntity("event", event.id))?.id ?? null;
-  }
+  const discoveredEventId = (await findGoogleCalendarEntity("event", event.id))?.id ?? null;
+  const googleEventId = discoveredEventId || knownGoogleEventId || null;
   if (googleEventId) {
     try {
       const updated = await googleJson<GoogleCalendarEvent>(
@@ -305,10 +303,8 @@ export async function syncGoogleCalendarMeeting(
   const config = googleWorkspaceConfiguration();
   if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
   const payload = googleCalendarMeetingPayload(meeting);
-  let googleEventId = knownGoogleEventId || null;
-  if (!googleEventId) {
-    googleEventId = (await findGoogleCalendarEntity("meeting", meeting.id))?.id ?? null;
-  }
+  const discoveredEventId = (await findGoogleCalendarEntity("meeting", meeting.id))?.id ?? null;
+  const googleEventId = discoveredEventId || knownGoogleEventId || null;
   if (googleEventId) {
     try {
       const updated = await googleJson<GoogleCalendarEvent>(
