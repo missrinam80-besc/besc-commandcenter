@@ -135,8 +135,10 @@ export async function organizeEventFolder(formData: FormData) {
     .eq("resource_type", "folder")
     .maybeSingle();
   if (!link?.google_id) redirect(`${path(context.event.id)}?fout=drive-ontbreekt`);
+  let folderMoved = false;
   try {
     const moved = await moveGoogleDriveFolderToModule(link.google_id, "events");
+    folderMoved = moved.moved;
     const { eventFolder } = await ensureEventDriveStructure(context.event.title, moved.id);
     await saveEventDriveLink({
       eventId: context.event.id,
@@ -149,5 +151,5 @@ export async function organizeEventFolder(formData: FormData) {
     redirect(`${path(context.event.id)}?fout=drive-verplaatsen`);
   }
   revalidatePath(path(context.event.id));
-  redirect(`${path(context.event.id)}?succes=drive`);
+  redirect(`${path(context.event.id)}?succes=${folderMoved ? "drive-geordend" : "drive-al-geordend"}`);
 }

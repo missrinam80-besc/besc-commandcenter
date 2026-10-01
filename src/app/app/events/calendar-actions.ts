@@ -50,7 +50,7 @@ export async function syncEventToGoogleCalendar(formData: FormData) {
       streamUrl: event.stream_url,
     }, existing?.google_id);
     operation = result.operation;
-    const { error } = await context.supabase.from("google_resource_links").upsert({
+    const calendarLink = {
       organization_id: context.membership.organization_id,
       entity_type: "event",
       entity_id: event.id,
@@ -63,7 +63,19 @@ export async function syncEventToGoogleCalendar(formData: FormData) {
       parent_id: null,
       created_by: context.user.id,
       updated_at: new Date().toISOString(),
-    }, { onConflict: "organization_id,entity_type,entity_id,resource_type" });
+    };
+    const { data: existingLink, error: lookupError } = await context.supabase
+      .from("google_resource_links")
+      .select("id")
+      .eq("organization_id", context.membership.organization_id)
+      .eq("entity_type", "event")
+      .eq("entity_id", event.id)
+      .eq("resource_type", "calendar_event")
+      .maybeSingle();
+    if (lookupError) throw lookupError;
+    const { error } = existingLink
+      ? await context.supabase.from("google_resource_links").update(calendarLink).eq("organization_id", context.membership.organization_id).eq("id", existingLink.id)
+      : await context.supabase.from("google_resource_links").insert(calendarLink);
     if (error) throw error;
   } catch (error) {
     if (error instanceof Error && error.message.includes("eindtijd")) {
