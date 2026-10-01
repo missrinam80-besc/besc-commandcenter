@@ -220,7 +220,7 @@ export async function syncGoogleCalendarEvent(
         operation: "updated" as const,
       };
     } catch (error) {
-      if (!(error instanceof GoogleApiError) || error.status !== 404) throw error;
+      if (!(error instanceof GoogleApiError) || ![404, 410].includes(error.status)) throw error;
     }
   }
   const created = await googleJson<GoogleCalendarEvent>(
@@ -322,7 +322,7 @@ export async function syncGoogleCalendarMeeting(
         operation: "updated" as const,
       };
     } catch (error) {
-      if (!(error instanceof GoogleApiError) || error.status !== 404) throw error;
+      if (!(error instanceof GoogleApiError) || ![404, 410].includes(error.status)) throw error;
     }
   }
   const created = await googleJson<GoogleCalendarEvent>(
