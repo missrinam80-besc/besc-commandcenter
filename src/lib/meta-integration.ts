@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { inspectMetaToken } from "@/lib/meta-token-diagnostics";
 
 export type MetaPlatform = "facebook" | "instagram";
 
@@ -8,6 +9,13 @@ const instagramScopes = [...facebookScopes, "instagram_basic", "instagram_manage
 
 export function metaScopes(platform: MetaPlatform) {
   return platform === "instagram" ? instagramScopes : facebookScopes;
+}
+
+export function verifyMetaToken(accessToken: string, platform: MetaPlatform) {
+  const requiredScopes = platform === "instagram"
+    ? ["instagram_basic", "instagram_manage_insights", "pages_read_engagement"]
+    : ["pages_read_engagement", "read_insights"];
+  return inspectMetaToken(accessToken, metaConfiguration(platform), requiredScopes);
 }
 
 export function metaConfiguration(platform: MetaPlatform = "facebook") {
@@ -132,7 +140,7 @@ export async function fetchFacebookMetrics(accessToken: string, pageId: string) 
       accessToken,
     );
   } catch (error) {
-    insightError = error instanceof Error ? error.message : "Facebook Insights niet beschikbaar.";
+    insightError = `Facebook Insights (/${pageId}/insights; page_views_total,page_post_engagements): ${error instanceof Error ? error.message : "Niet beschikbaar."}`;
   }
   return { profile, insights: insights.data ?? [], insightError };
 }
@@ -152,7 +160,7 @@ export async function fetchInstagramMetrics(accessToken: string, instagramId: st
       accessToken,
     );
   } catch (error) {
-    insightError = error instanceof Error ? error.message : "Instagram Insights niet beschikbaar.";
+    insightError = `Instagram Insights (/${instagramId}/insights; reach,profile_views): ${error instanceof Error ? error.message : "Niet beschikbaar."}`;
   }
   return { profile, insights: insights.data ?? [], insightError };
 }
