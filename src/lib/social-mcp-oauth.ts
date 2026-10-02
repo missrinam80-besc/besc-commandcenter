@@ -74,7 +74,8 @@ export function registerMcpClient(body: unknown, config: McpConfig) {
     token_endpoint_auth_method: "none", grant_types: ["authorization_code", "refresh_token"], response_types: ["code"], scope: SOCIAL_MCP_SCOPE };
 }
 export function parseAuthorization(params: URLSearchParams, config: McpConfig): AuthorizationRequest {
-  const allowed = ["response_type", "client_id", "redirect_uri", "resource", "scope", "state", "code_challenge", "code_challenge_method"];
+  // Optional language preference is not an authorization input; accept but ignore it.
+  const allowed = ["response_type", "client_id", "redirect_uri", "resource", "scope", "state", "code_challenge", "code_challenge_method", "ui_locales"];
   for (const key of params.keys()) if (!allowed.includes(key) || params.getAll(key).length !== 1) throw new OAuthError("invalid_request");
   const clientId = params.get("client_id") ?? "";
   const redirectUri = params.get("redirect_uri") ?? "";
