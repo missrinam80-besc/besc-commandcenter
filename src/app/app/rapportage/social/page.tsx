@@ -2,10 +2,11 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ManagementReportActions } from "@/components/management-report-actions";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { socialMetricLabel } from "@/lib/meta-insights";
 
 const number = (value: number) => new Intl.NumberFormat("nl-BE", { maximumFractionDigits: 2 }).format(value);
 const date = (value: string | null) => value ? new Date(value).toLocaleDateString("nl-BE") : "—";
-const metricLabel = (value: string) => value.replace(/^period_/, "").replaceAll("_", " ");
+const metricLabel = socialMetricLabel;
 
 type AccountRelation = { account_name?: string; platform?: string } | null;
 type PostRelation = { title?: string; platform?: string } | null;
