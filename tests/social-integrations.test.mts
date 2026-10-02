@@ -173,9 +173,10 @@ test("YouTube-sync ververst tokens en registreert herleidbare kernmetingen", () 
 });
 
 test("automatische social sync is afgeschermd, begrensd en idempotent", () => {
-  assert.match(cronRoute, /Bearer \$\{cronSecret\}/);
+  const scheduler = readFileSync(new URL("../src/lib/social-sync-scheduler.ts", import.meta.url), "utf8");
+  assert.match(scheduler, /Bearer \$\{dependencies.secret\}/);
   assert.match(cronRoute, /sync_enabled/);
-  assert.match(cronRoute, /\.limit\(8\)/);
+  assert.match(scheduler, /due\.slice\(0, 8\)/);
   assert.match(cronRoute, /syncYouTubeAccountById\(account\.id, "scheduled"\)/);
   assert.match(cronRoute, /syncMetaAccountById\(account\.id, "scheduled"\)/);
   assert.match(cronRoute, /syncThreadsAccountById\(account\.id, "scheduled"\)/);

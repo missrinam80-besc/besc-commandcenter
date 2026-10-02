@@ -1,0 +1,12 @@
+[Unit]
+Description=BESC geplande social synchronisatie
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/besc-dev/command-center
+ExecStart=/bin/bash /opt/besc-dev/command-center/ops/run-social-sync.sh
+TimeoutStartSec=15min
+UMask=0077

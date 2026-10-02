@@ -141,10 +141,12 @@ Functionele rooktest:
 
 ## 8. Cron en automatische sync
 
+Voor Docker/VPS: volg [Automatische social synchronisatie op de VPS](SOCIAL_SYNC_VPS.md). De Vercel-planning start geen taken op de VPS.
+
 - [ ] `CRON_SECRET` ingesteld in DEV/productie;
 - [ ] `/api/cron/social-sync` accepteert alleen de juiste Bearer-token;
 - [ ] route weigert ontbrekende of foute token;
-- [ ] Vercel cron staat op de bedoelde omgeving;
+- [ ] VPS-timer (of Vercel cron bij Vercel-hosting) staat op de bedoelde omgeving;
 - [ ] handmatige gecontroleerde aanroep uitgevoerd;
 - [ ] tweede aanroep maakt geen dubbele metingen;
 - [ ] mislukte connector wordt gelogd zonder secrets te tonen;

@@ -1,0 +1,10 @@
+[Unit]
+Description=BESC controleert social synchronisatie elke 15 minuten
+
+[Timer]
+OnCalendar=*-*-* *:00/15:00 UTC
+Persistent=true
+Unit=besc-social-sync.service
+
+[Install]
+WantedBy=timers.target
