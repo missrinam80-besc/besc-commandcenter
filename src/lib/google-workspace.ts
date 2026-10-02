@@ -219,7 +219,7 @@ export async function syncGoogleCalendarEvent(
   const linkedEvent = !discoveredEventId && knownGoogleEventId
     ? await getGoogleCalendarEvent(knownGoogleEventId)
     : null;
-  const googleEventId = discoveredEventId || linkedEvent?.id || null;
+  const googleEventId = discoveredEventId || (linkedEvent?.status === "cancelled" ? null : linkedEvent?.id) || null;
   if (googleEventId) {
     try {
       const updated = await googleJson<GoogleCalendarEvent>(
@@ -322,7 +322,7 @@ export async function syncGoogleCalendarMeeting(
   const linkedEvent = !discoveredEventId && knownGoogleEventId
     ? await getGoogleCalendarEvent(knownGoogleEventId)
     : null;
-  const googleEventId = discoveredEventId || linkedEvent?.id || null;
+  const googleEventId = discoveredEventId || (linkedEvent?.status === "cancelled" ? null : linkedEvent?.id) || null;
   if (googleEventId) {
     try {
       const updated = await googleJson<GoogleCalendarEvent>(
