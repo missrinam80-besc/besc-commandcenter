@@ -92,3 +92,10 @@ test("productieroute filtert actieve auto-sync accounts en workers behouden dubb
     assert.ok(worker.includes('status: "skipped"'));
   }
 });
+
+test("VPS-script kiest expliciet de serverconfiguratie, niet de lokale Compose-configuratie", () => {
+  const script = readFileSync(new URL("../ops/run-social-sync.sh", import.meta.url), "utf8");
+  assert.ok(script.includes('${BESC_COMPOSE_FILE:-docker-compose.server.yml}'));
+  assert.ok(script.includes('[[ ! -f "$sync_compose_file" ]]'));
+  assert.ok(script.includes('docker compose -f "$sync_compose_file" exec -T web'));
+});
