@@ -8,6 +8,7 @@ export const lifecycleEntities = {
     listPath: "/app/projecten",
     detailPath: "/app/projecten",
     archiveStatus: "archived",
+    restoreStatus: "planned",
   },
   event: {
     table: "events",
@@ -16,6 +17,7 @@ export const lifecycleEntities = {
     listPath: "/app/events",
     detailPath: "/app/events",
     archiveStatus: "archived",
+    restoreStatus: "planning",
   },
   content: {
     table: "content_items",
@@ -24,6 +26,7 @@ export const lifecycleEntities = {
     listPath: "/app/content",
     detailPath: "/app/content",
     archiveStatus: "archived",
+    restoreStatus: "draft",
   },
   partner: {
     table: "partners",
@@ -32,6 +35,7 @@ export const lifecycleEntities = {
     listPath: "/app/sponsors",
     detailPath: "/app/sponsors",
     archiveStatus: "archived",
+    restoreStatus: "prospect",
   },
   campaign: {
     table: "campaigns",
@@ -40,6 +44,7 @@ export const lifecycleEntities = {
     listPath: "/app/campagnes",
     detailPath: "/app/campagnes",
     archiveStatus: "archived",
+    restoreStatus: "idea",
   },
   communityPerson: {
     table: "community_people",
@@ -48,6 +53,7 @@ export const lifecycleEntities = {
     listPath: "/app/community",
     detailPath: "/app/community",
     archiveStatus: "archived",
+    restoreStatus: "candidate",
   },
   socialPost: {
     table: "social_posts",
@@ -56,6 +62,7 @@ export const lifecycleEntities = {
     listPath: "/app/social",
     detailPath: "/app/social",
     archiveStatus: "archived",
+    restoreStatus: "idea",
   },
   meeting: {
     table: "meetings",
@@ -64,6 +71,7 @@ export const lifecycleEntities = {
     listPath: "/app/vergaderingen",
     detailPath: "/app/vergaderingen",
     archiveStatus: "archived",
+    restoreStatus: "planned",
   },
   knowledgeArticle: {
     table: "knowledge_articles",
@@ -72,6 +80,7 @@ export const lifecycleEntities = {
     listPath: "/app/kennisbank",
     detailPath: "/app/kennisbank",
     archiveStatus: "archived",
+    restoreStatus: "draft",
   },
 } as const satisfies Record<string, {
   table: string;
@@ -80,6 +89,7 @@ export const lifecycleEntities = {
   listPath: string;
   detailPath: string;
   archiveStatus: string;
+  restoreStatus: string;
 }>;
 
 export type LifecycleEntity = keyof typeof lifecycleEntities;

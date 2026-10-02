@@ -7,9 +7,11 @@ const config = readFileSync("src/lib/record-lifecycle.ts", "utf8");
 const panel = readFileSync("src/components/record-lifecycle-panel.tsx", "utf8");
 const operational = readFileSync("src/components/operational-record-detail.tsx", "utf8");
 
-test("lifecycle-acties gebruiken uitsluitend archiveren en soft-delete", () => {
-  assert.match(actions, /action: z\.enum\(\["archive", "delete"\]\)/);
+test("lifecycle-acties ondersteunen archiveren, herstellen en soft-delete", () => {
+  assert.match(actions, /action: z\.enum\(\["archive", "restore", "delete"\]\)/);
   assert.match(actions, /deleted_at: now/);
+  assert.match(actions, /config\.restoreStatus/);
+  assert.match(actions, /\.eq\("status", config\.archiveStatus\)/);
   assert.doesNotMatch(actions, /\.delete\(\)/);
   assert.match(actions, /\.eq\("organization_id", membership\.organization_id\)/);
   assert.match(actions, /\.is\("deleted_at", null\)/);
@@ -18,6 +20,7 @@ test("lifecycle-acties gebruiken uitsluitend archiveren en soft-delete", () => {
 test("definitief verbergen vereist een expliciete bevestiging", () => {
   assert.match(actions, /confirmation !== "VERWIJDER"/);
   assert.match(panel, /pattern="VERWIJDER"/);
+  assert.match(panel, /name="action" value="restore"/);
 });
 
 test("alle centrale dossiermodules zijn opgenomen", () => {

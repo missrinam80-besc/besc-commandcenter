@@ -19,7 +19,7 @@ const schema = z.object({
     "knowledgeArticle",
   ]),
   id: z.string().uuid(),
-  action: z.enum(["archive", "delete"]),
+  action: z.enum(["archive", "restore", "delete"]),
   confirmation: z.string().optional(),
 });
 
@@ -40,21 +40,28 @@ export async function changeRecordLifecycle(formData: FormData) {
   const now = new Date().toISOString();
   const changes = parsed.data.action === "archive"
     ? { status: config.archiveStatus, updated_at: now }
-    : { deleted_at: now, updated_at: now };
+    : parsed.data.action === "restore"
+      ? { status: config.restoreStatus, updated_at: now }
+      : { deleted_at: now, updated_at: now };
 
-  const { error } = await supabase
+  let query = supabase
     .from(config.table)
     .update(changes)
     .eq("organization_id", membership.organization_id)
-    .eq("id", parsed.data.id)
-    .is("deleted_at", null);
+    .eq("id", parsed.data.id);
+  query = parsed.data.action === "restore"
+    ? query.eq("status", config.archiveStatus).is("deleted_at", null)
+    : query.is("deleted_at", null);
+  const { error } = await query;
 
   if (error) {
     redirect(`${config.detailPath}/${parsed.data.id}?fout=lifecycle`);
   }
 
   revalidatePath(config.listPath);
+  revalidatePath("/app/archief");
   revalidatePath(`${config.detailPath}/${parsed.data.id}`);
-  redirect(`${config.listPath}?succes=${parsed.data.action === "archive" ? "gearchiveerd" : "verwijderd"}`);
+  const success = parsed.data.action === "archive" ? "gearchiveerd" : parsed.data.action === "restore" ? "hersteld" : "verwijderd";
+  redirect(`${config.listPath}?succes=${success}`);
 }
 

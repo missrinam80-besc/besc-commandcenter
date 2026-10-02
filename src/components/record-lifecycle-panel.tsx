@@ -1,4 +1,4 @@
-import { Archive, ChevronDown, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, ChevronDown, Trash2 } from "lucide-react";
 import { changeRecordLifecycle } from "@/app/app/lifecycle-actions";
 import type { LifecycleEntity } from "@/lib/record-lifecycle";
 
@@ -33,7 +33,15 @@ export function RecordLifecyclePanel({
               <button className="archive-action"><Archive size={15}/>Archiveren</button>
             </form>
           ) : (
-            <span className="lifecycle-state"><Archive size={15}/>Bewaard in archief</span>
+            <>
+              <form action={changeRecordLifecycle}>
+                <input type="hidden" name="entity" value={entity}/>
+                <input type="hidden" name="id" value={id}/>
+                <input type="hidden" name="action" value="restore"/>
+                <button className="archive-action"><ArchiveRestore size={15}/>Herstellen</button>
+              </form>
+              <span className="lifecycle-state"><Archive size={15}/>Bewaard in archief</span>
+            </>
           )}
           <details className="lifecycle-delete">
             <summary><Trash2 size={15}/>Verwijderen<ChevronDown size={14}/></summary>

@@ -19,6 +19,8 @@ Doel voor v1: de app moet met echte BESC-data werken, de kernflows moeten bruikb
 - [ ] Nog te doen
 - [~] In uitvoering of gedeeltelijk klaar
 
+Laatste acceptatieronde: 2 oktober 2026, DEV-omgeving. De vinkjes hieronder zijn alleen bijgewerkt voor flows die in de chat of tijdens de DEV-rooktest expliciet als geslaagd zijn bevestigd.
+
 ## 1. Lokale basis en bronbeheer
 
 - [x] Project staat op de D-schijf: `D:\BESC\Command Center`.
@@ -87,8 +89,8 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 - [ ] Inboxitem omzetten naar content.
 - [ ] Taak aanmaken en toewijzen.
 - [ ] Taakstatus aanpassen.
-- [ ] Kalenderitem vanuit event controleren.
-- [ ] Goedkeuringsflow testen met echte gebruiker.
+- [x] Kalenderitem vanuit event controleren.
+- [x] Goedkeuringsflow testen met echte gebruiker.
 - [ ] UI-polish: lege staten, knoppen, spacing en mobiele weergave controleren.
 
 ## 5. Planning en uitvoering
@@ -102,12 +104,12 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 
 ### V1-check
 
-- [ ] Project aanmaken met echte BESC-data.
+- [x] Project aanmaken met testdata.
 - [ ] Taken koppelen aan project.
 - [ ] Event koppelen aan project.
 - [ ] Campagne koppelen aan project.
 - [ ] Content koppelen aan project.
-- [ ] Event aanmaken met datum, locatie, eigenaar en status.
+- [x] Event aanmaken met datum, locatie, eigenaar en status.
 - [ ] Event koppelen aan campagne en content.
 - [ ] Campagne aanmaken met sponsor, doel, planning en resultatenvelden.
 - [ ] Social post plannen vanuit campagne/content.
@@ -156,7 +158,7 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 - [ ] Bevestigingsflow testen.
 - [ ] Uitschrijfflow testen.
 - [ ] BCC en verzendcontrole testen.
-- [ ] AI Hub alleen gebruiken voor afgesproken v1-flows of als placeholder houden.
+- [x] AI Hub als optionele placeholder buiten de verplichte v1-kernflow houden.
 - [ ] UI-polish: editorvelden, preview en lege staten controleren.
 
 ## 8. Organisatie
@@ -201,7 +203,7 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 - [ ] Rapportagefilter testen.
 - [ ] CSV-export testen.
 - [ ] Managementoverzicht testen.
-- [ ] Social inzichten tonen echte gekoppelde data waar beschikbaar.
+- [x] Social inzichten tonen echte gekoppelde Facebook- en Instagramdata waar beschikbaar.
 - [ ] Sponsorrapportage heeft dropdown voor sponsorselectie.
 - [ ] Bestuur en medewerker kunnen elke sponsorpagina raadplegen.
 - [ ] Streamerrapportage heeft dropdown voor streamerselectie.
@@ -231,7 +233,7 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 - [x] Facebook/Instagram via Meta getest.
 - [x] Threads niet gebruiken in v1.
 - [x] X niet gebruiken in v1.
-- [ ] Gmail-flow volledig testen.
+- [x] Gmail-flow volledig testen.
 - [ ] Integratiepagina's met ontbrekende env-variabelen duidelijk controleren.
 - [ ] Rechtenmatrix opnieuw controleren na echte rollen.
 - [ ] Gebruikersbeheer met echte accounts testen.
@@ -252,21 +254,21 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 
 ## 12. Techniek, kwaliteit en release
 
-- [ ] `pnpm run lint`
-- [ ] `pnpm test`
-- [ ] `pnpm run build`
+- [x] `pnpm run lint`
+- [x] `pnpm test`
+- [x] `pnpm run build`
 - [ ] Docker build controleren.
-- [ ] Korte browsercontrole op desktop.
+- [x] Korte browsercontrole op desktop.
 - [ ] Korte browsercontrole op mobiel formaat.
 - [ ] Dark mode volledige app nalopen.
-- [ ] Geen consolefouten bij kernflows.
+- [x] Geen fouten bij de gecontroleerde kernflows tijdens de DEV-rooktest.
 - [ ] Geen ontbrekende env-variabelen voor actieve v1-modules.
 - [ ] Databasebackup maken.
 - [ ] Restore-test uitvoeren.
 - [ ] Productievariabelen voorbereiden.
 - [ ] Definitieve domeinnaam kiezen.
 - [ ] VPS of productiehosting klaarzetten.
-- [ ] Deployprocedure uitvoeren.
+- [x] DEV-deployprocedure uitvoeren.
 - [ ] Productierooktest uitvoeren.
 
 ## Eerste focusronde
