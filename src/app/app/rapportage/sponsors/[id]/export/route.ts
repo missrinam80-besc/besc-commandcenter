@@ -1,5 +1,6 @@
 import { requireActiveMembership } from "@/lib/auth-context";
 import { managementPeriod, type ReportPeriod } from "@/lib/management-report";
+import { isActiveSponsor } from "@/lib/reporting-scope";
 const cell = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -13,11 +14,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!["admin", "board", "member"].includes(membership.role)) return new Response("Geen toegang", { status: 403 });
   const org = membership.organization_id;
   const [partner, campaigns, kpis] = await Promise.all([
-    supabase.from("partners").select("name").eq("organization_id", org).eq("id", id).is("deleted_at", null).maybeSingle(),
+    supabase.from("partners").select("name,partner_type,status").eq("organization_id", org).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("campaigns").select("id,title,status,start_date,end_date,value,impressions,clicks").eq("organization_id", org).eq("partner_id", id).is("deleted_at", null),
     supabase.from("kpi_records").select("name,metric,value,target,unit,source,collection_method,metric_definition,partner_id,campaign_id").eq("organization_id", org).is("deleted_at", null).gte("period_end", start).lt("period_end", end),
   ]);
-  if (!partner.data) return new Response("Niet gevonden", { status: 404 });
+  if (!partner.data || !isActiveSponsor(partner.data)) return new Response("Niet gevonden", { status: 404 });
   const campaignRows = (campaigns.data ?? []).filter((item) => (!item.start_date || item.start_date < end) && (!item.end_date || item.end_date >= start));
   const campaignIds = new Set(campaignRows.map((item) => item.id));
   const metricRows = (kpis.data ?? []).filter((item) => item.partner_id === id || (item.campaign_id && campaignIds.has(item.campaign_id)));

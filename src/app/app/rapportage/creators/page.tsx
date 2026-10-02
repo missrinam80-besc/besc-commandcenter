@@ -3,8 +3,7 @@ import { UserRoundSearch } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ReportSelector } from "@/components/report-selector";
 import { requireActiveMembership } from "@/lib/auth-context";
-
-type RoleRow = { role?: string | null };
+import { isActiveStreamTeamMember } from "@/lib/reporting-scope";
 
 export default async function CreatorReportsPage() {
   const { supabase, membership } = await requireActiveMembership();
@@ -14,14 +13,11 @@ export default async function CreatorReportsPage() {
   }
   const { data } = await supabase
     .from("community_people")
-    .select("id,display_name,handle,status,roles:community_person_roles(role)")
+    .select("id,display_name,handle,status,person_type,streamteam_level,roles:community_person_roles(role)")
     .eq("organization_id", org)
     .is("deleted_at", null)
     .order("display_name");
-  const people = (data ?? []).filter((person) => {
-    const roles = person.roles as RoleRow[] | null;
-    return roles?.some((role) => ["streamer", "creator"].includes(role.role ?? "")) ?? false;
-  });
+  const people = (data ?? []).filter(isActiveStreamTeamMember);
   return <AppShell active="Streamerrapportage">
     <header className="topbar module-top"><div><p>INZICHTEN</p><h1>Streamerrapportage</h1></div><Link className="row-action" href="/app/rapportage">Alle KPI-resultaten</Link></header>
     <div className="module-body">

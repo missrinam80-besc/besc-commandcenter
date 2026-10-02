@@ -1,6 +1,19 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { isActiveSponsor, isActiveStreamTeamMember } from "../src/lib/reporting-scope.ts";
+
+test("rapportages selecteren alleen actieve streamteamleden en sponsors", () => {
+  assert.equal(isActiveStreamTeamMember({ status: "active", person_type: "streamer", streamteam_level: "starter" }), true);
+  assert.equal(isActiveStreamTeamMember({ status: "active", person_type: "creator", streamteam_level: "starter" }), false);
+  assert.equal(isActiveStreamTeamMember({ status: "active", person_type: "streamer", streamteam_level: "" }), false);
+  assert.equal(isActiveStreamTeamMember({ status: "inactive", person_type: "streamer", streamteam_level: "starter" }), false);
+  assert.equal(isActiveStreamTeamMember({ status: "active", person_type: "volunteer", streamteam_level: "starter", roles: [{ role: "streamer" }] }), true);
+  assert.equal(isActiveStreamTeamMember({ status: "active", person_type: "volunteer", streamteam_level: "starter" }), false);
+  assert.equal(isActiveSponsor({ partner_type: "sponsor", status: "active" }), true);
+  assert.equal(isActiveSponsor({ partner_type: "partner", status: "active" }), false);
+  assert.equal(isActiveSponsor({ partner_type: "sponsor", status: "inactive" }), false);
+});
 
 const source = (path: string) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
@@ -68,6 +81,8 @@ test("event- en creatorrapporten gebruiken dezelfde controleerbare uitvoer", asy
   ]);
   assert.match(creatorOverview, /ReportSelector/);
   assert.match(creatorOverview, /basePath="\/app\/rapportage\/creators"/);
+  assert.match(creatorOverview, /person_type/);
+  assert.match(creatorOverview, /isActiveStreamTeamMember/);
   for (const page of [eventPage, creatorPage]) {
     assert.match(page, /ManagementReportActions/);
     assert.match(page, /collection_method/);

@@ -6,6 +6,7 @@ import { requireActiveMembership } from "@/lib/auth-context";
 import { managementPeriod, type ReportPeriod } from "@/lib/management-report";
 import { googlePitchdeckConfiguration } from "@/lib/google-workspace";
 import { generateSponsorPitchdeck } from "@/app/app/google-document-actions";
+import { isActiveSponsor } from "@/lib/reporting-scope";
 
 const money = (value: number) => new Intl.NumberFormat("nl-BE", { style: "currency", currency: "EUR" }).format(value);
 const number = (value: number) => new Intl.NumberFormat("nl-BE").format(value);
@@ -23,7 +24,7 @@ export default async function SponsorReportPage({ params, searchParams }: { para
   if (!["admin", "board", "member"].includes(membership.role)) return <AppShell active="Sponsorrapportage"><div className="module-body"><div className="permission-note">Sponsorrapporten zijn alleen beschikbaar voor bestuur en medewerkers.</div></div></AppShell>;
   const canManageReportAssets = ["admin", "board"].includes(membership.role);
   const [partner, campaignResult, allDeliverables, kpis, expenses, income, content] = await Promise.all([
-    supabase.from("partners").select("id,name,status,estimated_value,collaboration_type,agreement_summary").eq("organization_id", org).eq("id", id).is("deleted_at", null).maybeSingle(),
+    supabase.from("partners").select("id,name,status,partner_type,estimated_value,collaboration_type,agreement_summary").eq("organization_id", org).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("campaigns").select("id,title,status,start_date,end_date,value,impressions,clicks,results_summary").eq("organization_id", org).eq("partner_id", id).is("deleted_at", null).not("status", "in", "(cancelled,archived)"),
     supabase.from("campaign_deliverables").select("id,campaign_id,title,status,due_date,approval_status").eq("organization_id", org),
     supabase.from("kpi_records").select("id,name,metric,value,target,unit,source,collection_method,metric_definition,partner_id,campaign_id,community_person_id,community_people(display_name)").eq("organization_id", org).is("deleted_at", null).gte("period_end", start).lt("period_end", end),
@@ -31,7 +32,7 @@ export default async function SponsorReportPage({ params, searchParams }: { para
     supabase.from("income_entries").select("amount,partner_id,campaign_id,expected_date,status").eq("organization_id", org).is("deleted_at", null).gte("expected_date", start).lt("expected_date", end).not("status", "in", "(cancelled,archived)"),
     supabase.from("content_items").select("id,title,status,publication_at,campaign_id,partner_id,publication_url").eq("organization_id", org).is("deleted_at", null).gte("publication_at", range.start.toISOString()).lt("publication_at", range.end.toISOString()),
   ]);
-  if (!partner.data) notFound();
+  if (!partner.data || !isActiveSponsor(partner.data)) notFound();
   const campaigns = (campaignResult.data ?? []).filter((item) => (!item.start_date || item.start_date < end) && (!item.end_date || item.end_date >= start));
   const campaignIds = new Set(campaigns.map((item) => item.id));
   const deliverables = (allDeliverables.data ?? []).filter((item) => campaignIds.has(item.campaign_id));

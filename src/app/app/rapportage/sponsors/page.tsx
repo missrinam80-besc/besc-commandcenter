@@ -3,6 +3,7 @@ import { Handshake } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ReportSelector } from "@/components/report-selector";
 import { requireActiveMembership } from "@/lib/auth-context";
+import { isActiveSponsor } from "@/lib/reporting-scope";
 
 export default async function SponsorReportsPage() {
   const { supabase, membership } = await requireActiveMembership();
@@ -12,11 +13,13 @@ export default async function SponsorReportsPage() {
   }
   const { data } = await supabase
     .from("partners")
-    .select("id,name,status,collaboration_type")
+    .select("id,name,status,partner_type,collaboration_type")
     .eq("organization_id", org)
+    .eq("partner_type", "sponsor")
+    .eq("status", "active")
     .is("deleted_at", null)
     .order("name");
-  const sponsors = data ?? [];
+  const sponsors = (data ?? []).filter(isActiveSponsor);
   return <AppShell active="Sponsorrapportage">
     <header className="topbar module-top"><div><p>INZICHTEN</p><h1>Sponsorrapportage</h1></div><Link className="row-action" href="/app/rapportage">Alle KPI-resultaten</Link></header>
     <div className="module-body">
