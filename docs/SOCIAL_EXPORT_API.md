@@ -66,6 +66,8 @@ Controleer ook: een account van een andere organisatie geeft geen data; verkeerd
 
 ## Later koppelen aan ChatGPT
 
+**Nieuwe route: MCP-app met OAuth.** Gebruik voor de nieuwe ChatGPT-plug-in [SOCIAL_MCP_CHATGPT.md](SOCIAL_MCP_CHATGPT.md). De onderstaande GPT Action-instructies zijn alleen voor een bestaande, nog ondersteunde GPT; custom Actions migreren niet automatisch mee naar plug-ins. De REST-API blijft bruikbaar voor andere clients.
+
 Schema: `public/openapi/social-export.json`, na deployment via `/openapi/social-export.json`.
 
 1. Vervang de voorbeeldserver `https://YOUR-COMMAND-CENTER.example` in je te importeren schema-kopie door het publieke HTTPS-domein van jouw Command Center.
