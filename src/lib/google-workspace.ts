@@ -196,6 +196,18 @@ async function findGoogleCalendarEntity(entityType: "event" | "meeting", entityI
   ) ?? null;
 }
 
+async function getGoogleCalendarEvent(googleEventId: string) {
+  const config = googleWorkspaceConfiguration();
+  try {
+    return await googleJson<GoogleCalendarEvent>(
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(config.calendarId)}/events/${encodeURIComponent(googleEventId)}`,
+    );
+  } catch (error) {
+    if (error instanceof GoogleApiError && [404, 410].includes(error.status)) return null;
+    throw error;
+  }
+}
+
 export async function syncGoogleCalendarEvent(
   event: GoogleCalendarSourceEvent,
   knownGoogleEventId?: string | null,
@@ -204,7 +216,10 @@ export async function syncGoogleCalendarEvent(
   if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
   const payload = googleCalendarEventPayload(event);
   const discoveredEventId = (await findGoogleCalendarEntity("event", event.id))?.id ?? null;
-  const googleEventId = discoveredEventId || knownGoogleEventId || null;
+  const linkedEvent = !discoveredEventId && knownGoogleEventId
+    ? await getGoogleCalendarEvent(knownGoogleEventId)
+    : null;
+  const googleEventId = discoveredEventId || linkedEvent?.id || null;
   if (googleEventId) {
     try {
       const updated = await googleJson<GoogleCalendarEvent>(
@@ -304,7 +319,10 @@ export async function syncGoogleCalendarMeeting(
   if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
   const payload = googleCalendarMeetingPayload(meeting);
   const discoveredEventId = (await findGoogleCalendarEntity("meeting", meeting.id))?.id ?? null;
-  const googleEventId = discoveredEventId || knownGoogleEventId || null;
+  const linkedEvent = !discoveredEventId && knownGoogleEventId
+    ? await getGoogleCalendarEvent(knownGoogleEventId)
+    : null;
+  const googleEventId = discoveredEventId || linkedEvent?.id || null;
   if (googleEventId) {
     try {
       const updated = await googleJson<GoogleCalendarEvent>(
