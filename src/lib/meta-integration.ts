@@ -1,15 +1,16 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { inspectMetaToken } from "@/lib/meta-token-diagnostics";
-import { instagramInsightParameters, MetaApiError, type MetaInsight } from "@/lib/meta-insights";
+import { fetchFacebookInsightMeasurements, instagramInsightParameters, MetaApiError, type MetaInsight } from "@/lib/meta-insights";
 
 export type MetaPlatform = "facebook" | "instagram";
 
 const facebookScopes = ["business_management", "pages_show_list", "pages_read_engagement"];
+const facebookInsightScopes = [...facebookScopes, "read_insights"];
 const instagramScopes = [...facebookScopes, "instagram_basic", "instagram_manage_insights"];
 
 export function metaScopes(platform: MetaPlatform) {
-  return platform === "instagram" ? instagramScopes : facebookScopes;
+  return platform === "instagram" ? instagramScopes : facebookInsightScopes;
 }
 
 export function verifyMetaToken(accessToken: string, platform: MetaPlatform) {
@@ -127,25 +128,14 @@ export async function usableMetaCredentials(accountId: string) {
   return credentials;
 }
 
-export async function fetchFacebookMetrics(accessToken: string, pageId: string) {
+export async function fetchFacebookMetrics(accessToken: string, pageId: string, since: number, until: number) {
   const config = metaConfiguration("facebook");
   const profile = await metaJson<{ id: string; name?: string; fan_count?: number; followers_count?: number; link?: string }>(
     `https://graph.facebook.com/${config.apiVersion}/${pageId}?fields=id,name,fan_count,followers_count,link`,
     accessToken,
   );
-  let insights: { data?: MetaInsight[] } = { data: [] };
-  let insightError: string | null = null;
-  let insightErrorCode: number | undefined;
-  try {
-    insights = await metaJson(
-      `https://graph.facebook.com/${config.apiVersion}/${pageId}/insights?metric=page_views_total,page_post_engagements&period=days_28`,
-      accessToken,
-    );
-  } catch (error) {
-    insightErrorCode = error instanceof MetaApiError ? error.code : undefined;
-    insightError = `Facebook Insights (/${pageId}/insights; page_views_total,page_post_engagements): ${error instanceof Error ? error.message : "Niet beschikbaar."}`;
-  }
-  return { profile, insights: insights.data ?? [], insightError, insightErrorCode };
+  const insights = await fetchFacebookInsightMeasurements(accessToken, pageId, config.apiVersion, since, until);
+  return { profile, ...insights };
 }
 
 export async function fetchInstagramMetrics(accessToken: string, instagramId: string, since: number, until: number) {

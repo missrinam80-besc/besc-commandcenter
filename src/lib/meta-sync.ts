@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchFacebookMetrics, fetchInstagramMetrics, type MetaPlatform, usableMetaCredentials, verifyMetaToken } from "@/lib/meta-integration";
 import { metaPermissionSummary } from "@/lib/meta-token-diagnostics";
-import { isMetaPermissionError, numericInsights } from "@/lib/meta-insights";
+import { isMetaPermissionError, metaSyncWindow, numericInsights } from "@/lib/meta-insights";
 
 type TriggerType = "manual" | "scheduled";
 
@@ -33,7 +33,7 @@ export async function syncMetaAccountById(accountId: string, trigger: TriggerTyp
   try {
     const today = new Date().toISOString().slice(0, 10);
     const quotaUsed = account.quota_counter_date === today ? account.quota_used_estimate : 0;
-    const quotaCostEstimate = 3; // Profile + Insights + possible token diagnostic.
+    const quotaCostEstimate = platform === "facebook" ? 5 : 3; // Profile + metric requests + possible token diagnostic.
     if (quotaUsed + quotaCostEstimate > account.quota_daily_limit) throw new Error("De interne dagelijkse quotalimiet is bereikt.");
     const { data: reservation, error: quotaError } = await admin.from("social_accounts").update({
       quota_used_estimate: quotaUsed + quotaCostEstimate, quota_counter_date: today, updated_at: new Date().toISOString(),
@@ -54,7 +54,8 @@ export async function syncMetaAccountById(accountId: string, trigger: TriggerTyp
     let resolvedName = account.account_name;
 
     if (platform === "facebook") {
-      const result = await fetchFacebookMetrics(credentials.access_token, account.external_account_id);
+      const { since, until } = metaSyncWindow();
+      const result = await fetchFacebookMetrics(credentials.access_token, account.external_account_id, since, until);
       resolvedName = result.profile.name || resolvedName;
       for (const [platformMetric, normalizedMetric, value] of [
         ["fan_count", "followers", result.profile.fan_count],
@@ -62,7 +63,7 @@ export async function syncMetaAccountById(accountId: string, trigger: TriggerTyp
       ] as const) {
         if (typeof value === "number") snapshots.push({ platformMetric, normalizedMetric, value, periodStart: null, periodEnd: null });
       }
-      for (const metric of numericInsights(result.insights)) snapshots.push({ platformMetric: metric.metric, normalizedMetric: `period_${metric.metric}`, value: metric.value, periodStart, periodEnd });
+      for (const metric of result.measurements) snapshots.push({ platformMetric: metric.metric, normalizedMetric: `period_${metric.metric}`, value: metric.value, periodStart: metric.periodStart, periodEnd: metric.periodEnd });
       partialError = result.insightError;
       insightErrorCode = result.insightErrorCode;
     } else {
