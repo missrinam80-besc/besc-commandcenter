@@ -2,7 +2,8 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { exchangeMetaCode, fetchMetaManagedAssets, metaConfiguration, metaScopes, selectMetaAsset, type MetaPlatform } from "@/lib/meta-integration";
+import { exchangeMetaCode, fetchMetaManagedAssets, metaConfiguration, selectMetaAsset, verifyMetaToken, type MetaPlatform } from "@/lib/meta-integration";
+import { metaPermissionSummary } from "@/lib/meta-token-diagnostics";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -26,6 +27,7 @@ export async function GET(request: Request) {
     const token = await exchangeMetaCode(code);
     const assets = await fetchMetaManagedAssets(token.access_token!);
     const asset = selectMetaAsset(assets, platform, account.external_account_id);
+    const diagnostics = await verifyMetaToken(asset.accessToken, platform);
     const expiresAt = token.expires_in ? new Date(Date.now() + token.expires_in * 1000).toISOString() : null;
     const admin = createAdminClient();
     const { error: credentialError } = await admin.rpc("store_social_account_credentials", {
@@ -40,10 +42,10 @@ export async function GET(request: Request) {
       external_account_id: asset.externalId,
       account_type: asset.accountType,
       status: "connected",
-      granted_scopes: metaScopes(platform),
+      granted_scopes: diagnostics.scopes,
       token_expires_at: expiresAt,
       connected_by: user.id,
-      last_error: null,
+      last_error: diagnostics.missingScopes.length ? metaPermissionSummary(diagnostics) : null,
       updated_at: new Date().toISOString(),
     }).eq("id", account.id).eq("organization_id", membership.organization_id);
     if (accountError) throw accountError;

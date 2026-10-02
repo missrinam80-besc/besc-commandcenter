@@ -48,7 +48,9 @@ export async function saveSocialAccount(formData: FormData) {
     external_account_id: values.external_account_id || null,
     account_type: values.account_type || null,
     status: values.status,
-    granted_scopes: values.granted_scopes?.split(/[\s,]+/).map((scope) => scope.trim()).filter(Boolean) ?? [],
+    ...(["facebook", "instagram"].includes(values.platform) ? {} : {
+      granted_scopes: values.granted_scopes?.split(/[\s,]+/).map((scope) => scope.trim()).filter(Boolean) ?? [],
+    }),
     sync_enabled: values.sync_enabled === "on",
     sync_interval_minutes: values.sync_interval_minutes ?? 1440,
     retention_days: values.retention_days ?? 730,

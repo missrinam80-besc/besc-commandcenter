@@ -1,7 +1,8 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { fetchFacebookMetrics, fetchInstagramMetrics, type MetaPlatform, usableMetaCredentials } from "@/lib/meta-integration";
+import { fetchFacebookMetrics, fetchInstagramMetrics, type MetaPlatform, usableMetaCredentials, verifyMetaToken } from "@/lib/meta-integration";
+import { metaPermissionSummary } from "@/lib/meta-token-diagnostics";
 
 type TriggerType = "manual" | "scheduled";
 
@@ -40,7 +41,7 @@ export async function syncMetaAccountById(accountId: string, trigger: TriggerTyp
   try {
     const today = new Date().toISOString().slice(0, 10);
     const quotaUsed = account.quota_counter_date === today ? account.quota_used_estimate : 0;
-    const quotaCostEstimate = platform === "instagram" ? 2 : 2;
+    const quotaCostEstimate = 3; // Profile + Insights + possible token diagnostic.
     if (quotaUsed + quotaCostEstimate > account.quota_daily_limit) throw new Error("De interne dagelijkse quotalimiet is bereikt.");
     const { data: reservation, error: quotaError } = await admin.from("social_accounts").update({
       quota_used_estimate: quotaUsed + quotaCostEstimate, quota_counter_date: today, updated_at: new Date().toISOString(),
@@ -84,6 +85,17 @@ export async function syncMetaAccountById(accountId: string, trigger: TriggerTyp
       partialError = result.insightError;
     }
 
+    let verifiedScopes: string[] | undefined;
+    if (partialError) {
+      try {
+        const diagnostics = await verifyMetaToken(credentials.access_token, platform);
+        verifiedScopes = diagnostics.scopes;
+        partialError = `${partialError} ${metaPermissionSummary(diagnostics)}`;
+      } catch (error) {
+        partialError = `${partialError} ${error instanceof Error ? error.message : "Tokenrechten konden niet worden gecontroleerd."}`;
+      }
+    }
+
     const rows = snapshots.map((item) => ({
       organization_id: account.organization_id, social_account_id: account.id, sync_run_id: run.id,
       external_content_id: account.external_account_id, platform_metric: item.platformMetric,
@@ -97,10 +109,10 @@ export async function syncMetaAccountById(accountId: string, trigger: TriggerTyp
     }
     const finishedAt = new Date().toISOString();
     const runStatus = partialError ? "partial" : "succeeded";
-    const accountLastError = rows.length ? null : partialError?.slice(0, 1000) ?? null;
+    const accountLastError = partialError?.slice(0, 1000) ?? null;
     const [runUpdate, accountUpdate] = await Promise.all([
       admin.from("social_sync_runs").update({ status: runStatus, records_read: rows.length, records_written: rows.length, error_message: partialError?.slice(0, 1000) ?? null, finished_at: finishedAt }).eq("id", run.id),
-      admin.from("social_accounts").update({ account_name: resolvedName, last_sync_at: finishedAt, last_error: accountLastError, token_expires_at: credentials.expires_at, updated_at: finishedAt }).eq("id", account.id),
+      admin.from("social_accounts").update({ account_name: resolvedName, last_sync_at: finishedAt, last_error: accountLastError, ...(verifiedScopes ? { granted_scopes: verifiedScopes } : {}), token_expires_at: credentials.expires_at, updated_at: finishedAt }).eq("id", account.id),
     ]);
     if (runUpdate.error || accountUpdate.error) throw runUpdate.error ?? accountUpdate.error;
     return { runId: run.id, status: runStatus as "partial" | "succeeded", recordsWritten: rows.length };
