@@ -3,21 +3,13 @@ import { randomUUID } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchFacebookMetrics, fetchInstagramMetrics, type MetaPlatform, usableMetaCredentials, verifyMetaToken } from "@/lib/meta-integration";
 import { metaPermissionSummary } from "@/lib/meta-token-diagnostics";
+import { isMetaPermissionError, numericInsights } from "@/lib/meta-insights";
 
 type TriggerType = "manual" | "scheduled";
 
 function syncKey(trigger: TriggerType, intervalMinutes: number) {
   if (trigger === "manual") return `manual:${randomUUID()}`;
   return `scheduled:${Math.floor(Date.now() / (Math.max(intervalMinutes, 15) * 60_000))}`;
-}
-
-function numericInsights(items: Array<{ name: string; period?: string; values?: Array<{ value?: number; end_time?: string }> }>) {
-  return items.flatMap((item) => {
-    const values = item.values ?? [];
-    const total = values.reduce((sum, value) => sum + (typeof value.value === "number" ? value.value : 0), 0);
-    if (!values.length) return [];
-    return [{ metric: item.name, value: total, periodEnd: values.at(-1)?.end_time ?? null, period: item.period ?? "unknown" }];
-  });
 }
 
 export async function syncMetaAccountById(accountId: string, trigger: TriggerType, createdBy: string | null = null) {
@@ -58,6 +50,7 @@ export async function syncMetaAccountById(accountId: string, trigger: TriggerTyp
     const sourceUrl = platform === "facebook" ? `https://www.facebook.com/${account.external_account_id}` : `https://www.instagram.com/${account.account_name.replace(/^@/, "")}/`;
     const snapshots: Array<Record<string, unknown>> = [];
     let partialError: string | null = null;
+    let insightErrorCode: number | undefined;
     let resolvedName = account.account_name;
 
     if (platform === "facebook") {
@@ -71,6 +64,7 @@ export async function syncMetaAccountById(accountId: string, trigger: TriggerTyp
       }
       for (const metric of numericInsights(result.insights)) snapshots.push({ platformMetric: metric.metric, normalizedMetric: `period_${metric.metric}`, value: metric.value, periodStart, periodEnd });
       partialError = result.insightError;
+      insightErrorCode = result.insightErrorCode;
     } else {
       const result = await fetchInstagramMetrics(credentials.access_token, account.external_account_id, Math.floor(start.valueOf() / 1000), Math.floor(end.valueOf() / 1000));
       resolvedName = result.profile.username || resolvedName;
@@ -83,10 +77,11 @@ export async function syncMetaAccountById(accountId: string, trigger: TriggerTyp
       }
       for (const metric of numericInsights(result.insights)) snapshots.push({ platformMetric: metric.metric, normalizedMetric: `period_${metric.metric}`, value: metric.value, periodStart, periodEnd });
       partialError = result.insightError;
+      insightErrorCode = result.insightErrorCode;
     }
 
     let verifiedScopes: string[] | undefined;
-    if (partialError) {
+    if (partialError && isMetaPermissionError(insightErrorCode)) {
       try {
         const diagnostics = await verifyMetaToken(credentials.access_token, platform);
         verifiedScopes = diagnostics.scopes;

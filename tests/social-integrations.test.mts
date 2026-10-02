@@ -11,6 +11,7 @@ const youtubeStart = readFileSync("src/app/app/integraties/social/youtube/start/
 const youtubeCallback = readFileSync("src/app/app/integraties/social/youtube/callback/route.ts", "utf8");
 const youtubeSync = readFileSync("src/lib/youtube-sync.ts", "utf8");
 const meta = readFileSync("src/lib/meta-integration.ts", "utf8");
+const metaInsights = readFileSync("src/lib/meta-insights.ts", "utf8");
 const metaStart = readFileSync("src/app/app/integraties/social/meta/start/route.ts", "utf8");
 const metaCallback = readFileSync("src/app/app/integraties/social/meta/callback/route.ts", "utf8");
 const metaSync = readFileSync("src/lib/meta-sync.ts", "utf8");
@@ -138,7 +139,7 @@ test("Meta OAuth gebruikt minimale platformspecifieke scopes en statecontrole", 
 
 test("Meta-sync schrijft herleidbare Facebook- en Instagram-metingen", () => {
   assert.match(meta, /fan_count,followers_count/);
-  assert.match(meta, /reach,profile_views/);
+  assert.match(metaInsights, /reach,profile_views/);
   assert.match(metaSync, /social_sync_runs/);
   assert.match(metaSync, /social_metric_snapshots/);
   assert.match(metaSync, /last_28_complete_days/);
