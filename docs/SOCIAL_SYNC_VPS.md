@@ -17,11 +17,13 @@ Stop bij een Git/deployfout. Installeer geen timer zolang de nieuwe route niet d
 
 ## 2. Configuratie controleren
 
+Gebruik hetzelfde Compose-bestand als `deploy-dev.sh`. Controleer de `COMPOSE_FILE`-instelling met `grep -n COMPOSE_FILE deploy-dev.sh`. Het synchronisatiescript gebruikt standaard `docker-compose.server.yml` en stopt als dit ontbreekt. Voor een ander bestand stel je `BESC_COMPOSE_FILE` in, ook in de systemd-service via een `Environment=`-regel.
+
 ```bash
-docker compose exec -T web node -e 'console.log(process.env.CRON_SECRET ? "CRON_SECRET ingesteld" : "CRON_SECRET ontbreekt")'
+docker compose -f docker-compose.server.yml exec -T web node -e 'console.log(process.env.CRON_SECRET ? "CRON_SECRET ingesteld" : "CRON_SECRET ontbreekt")'
 ```
 
-Bij ontbrekend geheim: zoek via `grep -A 3 env_file docker-compose.yml` welk env-bestand jouw deployment gebruikt. Open dat met `nano`, voeg `CRON_SECRET=` met een zelf gegenereerd sterk willekeurig geheim toe (bijvoorbeeld `openssl rand -hex 32`), sla op en voer `docker compose up -d --force-recreate web` uit. Gebruik geen `NEXT_PUBLIC_`-variabele. Deel het geheim niet in chat of screenshots. Controleer opnieuw met bovenstaand commando.
+Bij ontbrekend geheim: zoek via `grep -A 3 env_file docker-compose.server.yml` welk env-bestand jouw deployment gebruikt (op deze DEV-server `.env.production`). Open dat met `nano`, voeg `CRON_SECRET=` met een zelf gegenereerd sterk willekeurig geheim toe (bijvoorbeeld `openssl rand -hex 32`), sla op en voer `docker compose -f docker-compose.server.yml up -d --no-deps --force-recreate web` uit. Vervang de bestandsnaam in alle commando's als je deployment een ander Compose-bestand gebruikt. Gebruik geen `NEXT_PUBLIC_`-variabele. Deel het geheim niet in chat of screenshots. Controleer opnieuw met bovenstaand commando.
 
 In **Social accounts**: schakel Automatische synchronisatie in voor de gewenste verbonden accounts. Gebruik voor dagelijkse cijfers een interval van 1440 minuten als dat instelbaar is. Een recent handmatig gesynchroniseerd account wacht tot zijn interval verstreken is.
 
