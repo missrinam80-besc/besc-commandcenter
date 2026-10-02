@@ -51,6 +51,25 @@ test("authorization rejects missing PKCE, wrong audience/scope, duplicate parame
   const duplicate = params(); duplicate.append("resource", config.resource); assert.throws(() => parseAuthorization(duplicate, config));
   const unknown = params(); unknown.set("organization_id", "other"); assert.throws(() => parseAuthorization(unknown, config));
 });
+test("authorization accepts ChatGPT ui_locales without weakening security checks", () => {
+  const client = registerMcpClient({ redirect_uris: config.redirects, token_endpoint_auth_method: "none" }, config);
+  const query = params();
+  query.set("client_id", client.client_id);
+  const expected = parseAuthorization(query, config);
+  for (const locale of ["nl-BE", "en-US nl-BE", ""]) {
+    query.set("ui_locales", locale);
+    assert.deepEqual(parseAuthorization(query, config), expected);
+    assert.deepEqual(readConsentTicket(consentTicket(parseAuthorization(query, config), config), config), expected);
+  }
+  const duplicate = new URLSearchParams(query); duplicate.append("ui_locales", "en-US");
+  assert.throws(() => parseAuthorization(duplicate, config));
+  for (const [name, value] of [["redirect_uri", "https://chatgpt.com/"], ["scope", "social:write"],
+    ["resource", "https://other.example/mcp"], ["code_challenge_method", "plain"], ["code_challenge", "bad"],
+    ["client_id", client.client_id + "tampered"], ["organization_id", "other"]]) {
+    const invalid = new URLSearchParams(query); invalid.set(name, value);
+    assert.throws(() => parseAuthorization(invalid, config));
+  }
+});
 test("consent tickets bind the full OAuth request and expire; reject tampering and key rotation", () => {
   const ticket = consentTicket(authorization(), config, 1000);
   assert.deepEqual(readConsentTicket(ticket, config, 2000), authorization());
