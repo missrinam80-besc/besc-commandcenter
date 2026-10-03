@@ -87,7 +87,7 @@ export function OperationalRecordForm({
           <label>E-mail<input type="email" name="email" defaultValue={String(record.email ?? "")}/></label>
           <label>Taal<input name="language" defaultValue={String(record.language ?? "")}/></label>
           <label>Beschikbaarheid<input name="availability" defaultValue={String(record.availability ?? "")}/></label>
-          <label>Streamteamniveau<input name="streamteam_level" defaultValue={String(record.streamteam_level ?? "")}/><span className="field-help">Vul dit in en kies het type of de rol Streamer met status Actief om dit profiel in Streamerrapportage op te nemen.</span></label>
+          <label>Streamteamniveau<input name="streamteam_level" defaultValue={String(record.streamteam_level ?? "")}/><span className="field-help">Dit veld is informatief. Kies de rol Streamteam en status Actief om dit profiel in Streamerrapportage op te nemen.</span></label>
           <label>Onboarding<select name="onboarding_status" defaultValue={String(record.onboarding_status ?? "not_started")}><option value="not_started">Niet gestart</option><option value="in_progress">Bezig</option><option value="completed">Afgerond</option><option value="not_required">Niet nodig</option></select></label>
         </div>
         <fieldset className="role-picker"><legend>Rollen</legend>{Object.entries(communityRoleLabels).map(([role, label]) => <label className="inline-check" key={role}><input type="checkbox" name="roles" value={role} defaultChecked={personRoles.includes(role)}/>{label}</label>)}</fieldset>

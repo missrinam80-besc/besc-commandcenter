@@ -3,7 +3,7 @@ export const communityRoleLabels = {
   board: "Bestuurslid",
   volunteer: "Vrijwilliger",
   creator: "Creator",
-  streamer: "Streamer",
+  streamteam: "Streamteam",
   moderator: "Moderator",
   staff: "Medewerker",
   contact: "Contactpersoon",

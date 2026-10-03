@@ -4,15 +4,21 @@ import test from "node:test";
 import { isActiveSponsor, isActiveStreamTeamMember } from "../src/lib/reporting-scope.ts";
 
 test("rapportages selecteren alleen actieve streamteamleden en sponsors", () => {
-  assert.equal(isActiveStreamTeamMember({ status: "active", person_type: "streamer", streamteam_level: "starter" }), true);
-  assert.equal(isActiveStreamTeamMember({ status: "active", person_type: "creator", streamteam_level: "starter" }), false);
-  assert.equal(isActiveStreamTeamMember({ status: "active", person_type: "streamer", streamteam_level: "" }), false);
-  assert.equal(isActiveStreamTeamMember({ status: "inactive", person_type: "streamer", streamteam_level: "starter" }), false);
-  assert.equal(isActiveStreamTeamMember({ status: "active", person_type: "volunteer", streamteam_level: "starter", roles: [{ role: "streamer" }] }), true);
-  assert.equal(isActiveStreamTeamMember({ status: "active", person_type: "volunteer", streamteam_level: "starter" }), false);
+  assert.equal(isActiveStreamTeamMember({ status: "active", roles: [{ role: "streamteam" }] }), true);
+  assert.equal(isActiveStreamTeamMember({ status: "active", roles: [{ role: "streamer" }] }), false);
+  assert.equal(isActiveStreamTeamMember({ status: "active", roles: [{ role: "streamteam" }], streamteam_level: "" }), true);
+  assert.equal(isActiveStreamTeamMember({ status: "inactive", roles: [{ role: "streamteam" }] }), false);
+  assert.equal(isActiveStreamTeamMember({ status: "active", roles: [{ role: "volunteer" }] }), false);
   assert.equal(isActiveSponsor({ partner_type: "sponsor", status: "active" }), true);
   assert.equal(isActiveSponsor({ partner_type: "partner", status: "active" }), false);
   assert.equal(isActiveSponsor({ partner_type: "sponsor", status: "inactive" }), false);
+});
+
+test("streamteamrol wordt in de database ondersteund en bestaande streamerrollen worden gemigreerd", async () => {
+  const migration = await source("supabase/migrations/20261003100000_add_streamteam_person_role.sql");
+  assert.match(migration, /'streamteam'/);
+  assert.match(migration, /set role = 'streamteam'/);
+  assert.match(migration, /where role = 'streamer'/);
 });
 
 const source = (path: string) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
@@ -81,7 +87,6 @@ test("event- en creatorrapporten gebruiken dezelfde controleerbare uitvoer", asy
   ]);
   assert.match(creatorOverview, /ReportSelector/);
   assert.match(creatorOverview, /basePath="\/app\/rapportage\/creators"/);
-  assert.match(creatorOverview, /person_type/);
   assert.match(creatorOverview, /isActiveStreamTeamMember/);
   for (const page of [eventPage, creatorPage]) {
     assert.match(page, /ManagementReportActions/);

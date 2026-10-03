@@ -205,8 +205,10 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 - [ ] Managementoverzicht testen.
 - [x] Social inzichten tonen echte gekoppelde Facebook- en Instagramdata waar beschikbaar.
 - [ ] Sponsorrapportage heeft dropdown voor sponsorselectie.
+- [ ] Sponsorrapportage toont alleen bedrijven met rol Sponsor en status Actief.
 - [ ] Bestuur en medewerker kunnen elke sponsorpagina raadplegen.
 - [ ] Streamerrapportage heeft dropdown voor streamerselectie.
+- [ ] Streamerrapportage toont alleen actieve profielen met rol Streamteam; streamteamniveau is niet verplicht.
 - [ ] Bestuur en medewerker kunnen elke streamerpagina raadplegen.
 - [ ] Sponsorportaalgebruiker ziet alleen eigen sponsorrapport.
 - [ ] Streamer ziet alleen eigen streamerportaal zodra portaal actief is.

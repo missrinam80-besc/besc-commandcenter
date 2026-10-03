@@ -9,7 +9,7 @@ import { operationalModules, type OperationalModule } from "./config";
 const optionalNumber=z.preprocess(value=>value===""?undefined:value,z.coerce.number().min(0).optional());
 const optionalUuid=z.string().uuid().optional().or(z.literal(""));
 const csv=(value:string|undefined)=>(value??"").split(",").map(item=>item.trim()).filter(Boolean);
-const communityRole=z.enum(["member","board","volunteer","creator","streamer","moderator","staff","contact","guest"]);
+const communityRole=z.enum(["member","board","volunteer","creator","streamteam","moderator","staff","contact","guest"]);
 
 async function manager(module:OperationalModule){return requirePermission("manageOrganization",`/app/${module}?fout=geen-toegang`);}
 export async function createOperationalRecord(formData:FormData){
