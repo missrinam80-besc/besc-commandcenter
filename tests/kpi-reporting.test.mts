@@ -52,6 +52,7 @@ test("rapportage-snelkoppelingen gebruiken compacte kaarttypografie", async () =
   assert.match(page, /<strong>Openen<\/strong>/);
   assert.match(styles, /\.report-kpi-summary>a strong\{font-size:13px/);
   assert.match(styles, /\.report-kpi-summary article,\.report-kpi-summary>a/);
+  assert.match(page, /Totaalrapport streamteam/);
 });
 
 test("social inzichten koppelen publicaties aan controleerbare KPI-metingen",async()=>{const[page,route,migration]=await Promise.all([source("src/app/app/rapportage/social/page.tsx"),source("src/app/app/rapportage/social/export/route.ts"),source("supabase/migrations/20260803193000_link_kpis_to_social_posts.sql")]);assert.match(migration,/social_post_id uuid references public\.social_posts/);assert.match(page,/PLATFORMOVERZICHT/);assert.match(page,/collection_method/);assert.match(page,/ManagementReportActions/);assert.match(page,/\["admin", "board", "member"\]/);assert.match(route,/Content-Disposition/);assert.match(route,/\["admin", "board", "member"\]/)});
@@ -97,6 +98,20 @@ test("event- en creatorrapporten gebruiken dezelfde controleerbare uitvoer", asy
   for (const route of [eventExport, creatorExport]) assert.match(route, /Content-Disposition/);
   assert.match(eventDetail, /Eventrapport/);
   assert.match(operationalDetail, /Creatorrapport/);
+});
+
+test("streamerrapportage bevat naast individuele fiches ook een totaalrapport", async () => {
+  const [overview, teamPage, teamExport] = await Promise.all([
+    source("src/app/app/rapportage/creators/page.tsx"),
+    source("src/app/app/rapportage/creators/team/page.tsx"),
+    source("src/app/app/rapportage/creators/team/export/route.ts"),
+  ]);
+  assert.match(overview, /Totaalrapport streamteam/);
+  assert.match(teamPage, /Resultaten per streamteamlid/);
+  assert.match(teamPage, /isActiveStreamTeamMember/);
+  assert.match(teamPage, /ManagementReportActions/);
+  assert.match(teamExport, /Content-Disposition/);
+  assert.match(teamExport, /isActiveStreamTeamMember/);
 });
 
 test("sponsor- en eventrapporten kunnen optioneel een Google Slides-pitchdeck maken", async () => {

@@ -479,8 +479,8 @@ export async function ensureEventDriveStructure(eventTitle: string, eventFolderI
 export type GoogleTemplateRole = "minutes" | "sponsorReport" | "event";
 
 export function googlePitchdeckConfiguration() {
-  const sponsor = (process.env.GOOGLE_TEMPLATE_SPONSOR_PITCHDECK_ID ?? "").trim();
-  const event = (process.env.GOOGLE_TEMPLATE_EVENT_PITCHDECK_ID ?? "").trim();
+  const sponsor = env("GOOGLE_TEMPLATE_SPONSOR_PITCHDECK_ID");
+  const event = env("GOOGLE_TEMPLATE_EVENT_PITCHDECK_ID");
   return { configured: Boolean(sponsor && event), sponsor, event };
 }
 

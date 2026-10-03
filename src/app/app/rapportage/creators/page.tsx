@@ -19,7 +19,7 @@ export default async function CreatorReportsPage() {
     .order("display_name");
   const people = (data ?? []).filter(isActiveStreamTeamMember);
   return <AppShell active="Streamerrapportage">
-    <header className="topbar module-top"><div><p>INZICHTEN</p><h1>Streamerrapportage</h1></div><Link className="row-action" href="/app/rapportage">Alle KPI-resultaten</Link></header>
+    <header className="topbar module-top"><div><p>INZICHTEN</p><h1>Streamerrapportage</h1></div><div className="module-head-actions"><Link className="primary" href="/app/rapportage/creators/team">Totaalrapport streamteam</Link><Link className="row-action" href="/app/rapportage">Alle KPI-resultaten</Link></div></header>
     <div className="module-body">
       <p className="lead">Kies een actief streamteamlid om deelname, gekoppelde dossiers en KPI-resultaten te bekijken.</p>
       <section className="form-card">
