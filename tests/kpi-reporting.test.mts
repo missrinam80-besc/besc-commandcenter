@@ -114,7 +114,7 @@ test("streamerrapportage bevat naast individuele fiches ook een totaalrapport", 
   assert.match(teamExport, /isActiveStreamTeamMember/);
 });
 
-test("sponsor- en eventrapporten kunnen optioneel een Google Slides-pitchdeck maken", async () => {
+test("sponsorrapport kan optioneel een Google Slides-pitchdeck maken", async () => {
   const [workspace, actions, sponsorPage, eventPage, environment] = await Promise.all([
     source("src/lib/google-workspace.ts"),
     source("src/app/app/google-document-actions.ts"),
@@ -127,10 +127,8 @@ test("sponsor- en eventrapporten kunnen optioneel een Google Slides-pitchdeck ma
   assert.match(workspace, /replaceAllText/);
   assert.match(workspace, /googlePitchdeckConfiguration/);
   assert.match(environment, /GOOGLE_TEMPLATE_SPONSOR_PITCHDECK_ID=/);
-  assert.match(environment, /GOOGLE_TEMPLATE_EVENT_PITCHDECK_ID=/);
   assert.match(actions, /generateSponsorPitchdeck/);
-  assert.match(actions, /generateEventPitchdeck/);
   assert.match(actions, /saveDocumentMetadata/);
   assert.match(sponsorPage, /Google Slides-pitchdeck/);
-  assert.match(eventPage, /Google Slides-pitchdeck/);
+  assert.doesNotMatch(eventPage, /Google Slides-pitchdeck/);
 });

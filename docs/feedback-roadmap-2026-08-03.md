@@ -290,7 +290,7 @@ Doel: management, sponsors en creators bruikbare inzichten geven.
 - creator-/streamerresultaten per campagne en project;
 - event- en financiële rapporten;
 - social inzichten voor BESC en later voor streamteamaccounts;
-- periodieke sponsor- en eventpitchdecks;
+- periodieke sponsorpitchdecks;
 - sponsorviewer met strikt beperkte toegang;
 - streamerportaal voor inschrijvingen, deliverables, voortgang en coaching.
 

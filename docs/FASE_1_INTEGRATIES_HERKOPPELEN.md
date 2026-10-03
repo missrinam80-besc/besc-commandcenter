@@ -71,7 +71,6 @@ Controleer service-account/domain-wide delegation en de volgende servervariabele
 - [ ] `GOOGLE_TEMPLATE_SPONSOR_REPORT_ID`;
 - [ ] `GOOGLE_TEMPLATE_EVENT_ID`;
 - [ ] `GOOGLE_TEMPLATE_SPONSOR_PITCHDECK_ID` indien pitchdecks in scope zijn;
-- [ ] `GOOGLE_TEMPLATE_EVENT_PITCHDECK_ID` indien pitchdecks in scope zijn.
 - [ ] geen service-accountkey, Vercel OIDC-token of Workload Identity Pool vereist;
 
 Functionele rooktest:

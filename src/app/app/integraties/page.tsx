@@ -65,7 +65,6 @@ export default async function Page({
   const envStatus = [
     { name: "Google Workspace", configured: workspaceConfig.configured, variable: workspaceConfig.missing.join(", ") || "9 variabelen aanwezig" },
     { name: "Sponsor-pitchdeck", configured: Boolean(pitchdeckConfig.sponsor), variable: "GOOGLE_TEMPLATE_SPONSOR_PITCHDECK_ID" },
-    { name: "Event-pitchdeck", configured: Boolean(pitchdeckConfig.event), variable: "GOOGLE_TEMPLATE_EVENT_PITCHDECK_ID" },
     { name: "Gmail-concepten", configured: gmailConfig.configured, variable: gmailConfig.configured ? gmailConfig.sender : "GOOGLE_GMAIL_SENDER" },
     { name: "Vercel AI Gateway", configured: Boolean(process.env.VERCEL_OIDC_TOKEN || process.env.AI_GATEWAY_API_KEY), variable: "VERCEL_OIDC_TOKEN" },
     { name: "OpenAI", configured: Boolean(process.env.OPENAI_API_KEY), variable: "OPENAI_API_KEY" },

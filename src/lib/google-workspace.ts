@@ -480,8 +480,7 @@ export type GoogleTemplateRole = "minutes" | "sponsorReport" | "event";
 
 export function googlePitchdeckConfiguration() {
   const sponsor = env("GOOGLE_TEMPLATE_SPONSOR_PITCHDECK_ID");
-  const event = env("GOOGLE_TEMPLATE_EVENT_PITCHDECK_ID");
-  return { configured: Boolean(sponsor && event), sponsor, event };
+  return { configured: Boolean(sponsor), sponsor };
 }
 
 export async function createDocumentFromGoogleTemplate(input: {
@@ -543,7 +542,7 @@ export async function createDocumentFromGoogleTemplate(input: {
 }
 
 export async function createPresentationFromGoogleTemplate(input: {
-  template: "sponsor" | "event";
+  template: "sponsor";
   name: string;
   parentId: string;
   replacements: Record<string, string | number | null | undefined>;
