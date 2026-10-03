@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ManagementReportActions } from "@/components/management-report-actions";
