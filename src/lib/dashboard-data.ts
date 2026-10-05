@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { demoDashboard } from "@/lib/demo-data";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { hasPermission } from "@/lib/permissions";
 import { formatDateTime } from "@/lib/format";
@@ -17,23 +16,42 @@ function dateLabel(value:string|null,withTime=false){
 }
 function startOfToday(){const date=new Date();date.setHours(0,0,0,0);return date}
 
-export async function getDashboardData():Promise<DashboardData>{
-  if(!isSupabaseConfigured())return {...demoDashboard,roleKey:"volunteer",attention:[],schedule:[],actionItems:[],widgets:[]};
-  const supabase=await createClient();
-  const{data:{user}}=await supabase.auth.getUser();
-  if(!user)return {...demoDashboard,roleKey:"volunteer",attention:[],schedule:[],actionItems:[],widgets:[]};
-  const{data:membership}=await supabase.from("organization_members").select("organization_id,role,status,finance_role").eq("user_id",user.id).eq("status","active").limit(1).maybeSingle();
-  if(!membership)return {...demoDashboard,name:user.email?.split("@")[0]??"Gebruiker",role:"In afwachting",roleKey:"pending",taskCount:0,inboxCount:0,projectCount:0,notificationCount:0,attentionCount:0,tasks:[],inbox:[],projects:[],attention:[],schedule:[],actionItems:[],widgets:[]};
+function unavailableDashboard(loadState: NonNullable<DashboardData["loadState"]>): DashboardData {
+  return {
+    loadState, name: "Gebruiker", role: "Niet beschikbaar", roleKey: "pending",
+    taskCount: 0, inboxCount: 0, projectCount: 0, notificationCount: 0, attentionCount: 0,
+    tasks: [], inbox: [], projects: [], attention: [], schedule: [], actionItems: [], widgets: [],
+  };
+}
+
+export async function getDashboardData(): Promise<DashboardData> {
+  if (!isSupabaseConfigured()) return unavailableDashboard("not_configured");
+  try {
+    return await loadDashboardData();
+  } catch {
+    // Never expose database details or turn transport failures into empty work.
+    return unavailableDashboard("unavailable");
+  }
+}
+
+async function loadDashboardData(): Promise<DashboardData> {
+  const supabase = await createClient();
+  const auth = await supabase.auth.getUser();
+  if (auth.error) return unavailableDashboard("unavailable");
+  const user = auth.data.user;
+  if (!user) return unavailableDashboard("no_access");
+  const membershipResult = await supabase.from("organization_members")
+    .select("organization_id,role,status,finance_role").eq("user_id", user.id)
+    .eq("status", "active").limit(1).maybeSingle();
+  if (membershipResult.error) return unavailableDashboard("unavailable");
+  const membership = membershipResult.data;
+  if (!membership) return unavailableDashboard("no_access");
   const orgId=membership.organization_id;
   const manager=["admin","board"].includes(membership.role);
   const finance=hasPermission(membership,"viewFinance");
   const now=new Date(),today=startOfToday(),inFourteenDays=new Date(now.getTime()+14*86400000);
 
-  const[
-    {data:profile},{data:taskRows},{data:projectRows},{data:inboxRows},
-    {count:notificationCount},{data:events},{data:meetings},{data:meetingActions},
-    {count:pendingExpenses},{count:openCompliance},
-  ]=await Promise.all([
+  const results=await Promise.all([
     supabase.from("profiles").select("display_name").eq("id",user.id).maybeSingle(),
     supabase.from("tasks").select("id,title,status,priority,due_at,created_by,projects(title),task_assignees(user_id)").eq("organization_id",orgId).is("deleted_at",null).not("status","in","(done,cancelled)").order("due_at",{ascending:true,nullsFirst:false}),
     supabase.from("projects").select("id,title,status,due_date,owner_id,project_members(user_id)").eq("organization_id",orgId).is("deleted_at",null).in("status",["planned","active","blocked"]).order("due_date",{ascending:true,nullsFirst:false}),
@@ -45,6 +63,23 @@ export async function getDashboardData():Promise<DashboardData>{
     finance?supabase.from("expenses").select("id",{count:"exact",head:true}).eq("organization_id",orgId).is("deleted_at",null).in("status",["requested","reimbursement_due"]):Promise.resolve({count:0}),
     manager?supabase.from("compliance_deadlines").select("id",{count:"exact",head:true}).eq("organization_id",orgId).is("deleted_at",null).in("status",["open","planned"]).lte("due_date",inFourteenDays.toISOString().slice(0,10)):Promise.resolve({count:0}),
   ]);
+  // Any failed required source makes the complete dashboard unavailable.
+  // Null data/count without an explicit error is not evidence of a genuine zero.
+  if (results.some(result => "error" in result && result.error)) {
+    return unavailableDashboard("unavailable");
+  }
+  const listIndexes = [1, 2, 3, 5, 6, 7];
+  const countIndexes = [4, 8, 9];
+  if (listIndexes.some(index => !("data" in results[index]) || !Array.isArray(results[index].data))
+    || countIndexes.some(index => !("count" in results[index]) || typeof results[index].count !== "number")) {
+    return unavailableDashboard("unavailable");
+  }
+  const[
+    {data:profile},{data:taskRows},{data:projectRows},{data:inboxRows},
+    {count:notificationCount},{data:events},{data:meetings},{data:meetingActions},
+    {count:pendingExpenses},{count:openCompliance},
+  ]=results;
+
 
   const personalTasks=((taskRows??[]) as unknown as TaskRow[]).filter(task=>{
     const assignees=task.task_assignees??[];
@@ -74,6 +109,7 @@ export async function getDashboardData():Promise<DashboardData>{
   ];
 
   return{
+    loadState: "ready",
     name:profile?.display_name||user.email?.split("@")[0]||"Gebruiker",role:roleLabels[membership.role]||"Teamlid",roleKey:membership.role,
     taskCount:personalTasks.length,inboxCount:inboxRows?.length??0,projectCount:personalProjects.length,notificationCount:notificationCount??0,attentionCount:attention.length,
     tasks:personalTasks.slice(0,5).map(task=>({id:task.id,title:task.title,project:task.projects?.title??"Zonder project",due:task.due_at?dateLabel(task.due_at):"Geen deadline",priority:task.priority,status:statusLabels[task.status]??task.status})),

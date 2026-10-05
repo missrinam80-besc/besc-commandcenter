@@ -49,6 +49,9 @@ export type RecordLink = {
 };
 
 export type RecordDocument = {
+  source_version?: string | null;
+  source_modified_at?: string | null;
+  source_checked_at?: string | null;
   id: string;
   name: string;
   web_url: string;
@@ -104,7 +107,7 @@ export async function loadDossierConnections(
       .order("created_at"),
     supabase
       .from("google_resource_links")
-      .select("id,name,web_url,mime_type,updated_at")
+      .select("id,name,web_url,mime_type,updated_at,source_version,source_modified_at,source_checked_at")
       .eq("organization_id", organizationId)
       .eq("entity_type", entityType)
       .eq("entity_id", entityId)

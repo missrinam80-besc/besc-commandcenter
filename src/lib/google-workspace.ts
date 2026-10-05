@@ -360,7 +360,7 @@ export type GoogleDriveFolder = {
   parents: string[];
 };
 
-const driveFolderFields = "id,name,mimeType,webViewLink,driveId,parents";
+const driveFolderFields = "id,name,mimeType,webViewLink,driveId,parents,trashed";
 
 export const googleDriveModuleFolders = {
   projects: "Projecten",
@@ -420,7 +420,9 @@ async function findGoogleDriveChildFolder(parentId: string, name: string) {
   const result = await googleJson<{ files: GoogleDriveFolder[] }>(
     `https://www.googleapis.com/drive/v3/files?${params}`,
   );
-  const existing = result.files?.[0];
+  if (!Array.isArray(result.files)) throw new Error("De mapzoekopdracht kon niet worden gecontroleerd.");
+  if (result.files.length > 1) throw new Error("Meerdere mappen met dezelfde naam gevonden. Koppel eerst de juiste map.");
+  const existing = result.files[0];
   if (existing) {
     return { ...existing, driveId: existing.driveId ?? config.sharedDriveId, parents: existing.parents ?? [parentId] };
   }
@@ -442,11 +444,46 @@ export async function ensureGoogleDriveEntityFolder(module: GoogleDriveModule, e
   return ensureGoogleDriveChildFolder(moduleFolder.id, entityTitle.trim());
 }
 
+export type GoogleDriveDocumentMetadata = {
+  id: string;
+  name: string;
+  mimeType: string;
+  webViewLink: string;
+  driveId: string | null;
+  parents: string[];
+  version?: string | null;
+  modifiedTime?: string | null;
+  checkedAt?: string | null;
+};
+
+export async function getGoogleDriveDocumentMetadata(fileId: string): Promise<GoogleDriveDocumentMetadata> {
+  const file = await googleJson<GoogleDriveDocumentMetadata & { trashed?: boolean }>(
+    `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?supportsAllDrives=true&fields=id,name,mimeType,webViewLink,driveId,parents,trashed,version,modifiedTime`,
+  );
+  if (file.id !== fileId || !file.name || !file.mimeType || file.trashed !== false) {
+    throw new Error("Het Google Drive-bestand kon niet worden gecontroleerd.");
+  }
+  if (["application/vnd.google-apps.folder", "application/vnd.google-apps.shortcut"].includes(file.mimeType)) {
+    throw new Error("Kies een bestand; geen map of snelkoppeling.");
+  }
+  return {
+    id: file.id,
+    name: file.name,
+    mimeType: file.mimeType,
+    webViewLink: file.webViewLink || `https://drive.google.com/file/d/${file.id}/view`,
+    driveId: file.driveId ?? null,
+    parents: file.parents ?? [],
+    version: file.version ?? null,
+    modifiedTime: file.modifiedTime ?? null,
+    checkedAt: new Date().toISOString(),
+  };
+}
+
 export async function getGoogleDriveFolder(fileId: string): Promise<GoogleDriveFolder> {
-  const folder = await googleJson<GoogleDriveFolder>(
+  const folder = await googleJson<GoogleDriveFolder & { trashed?: boolean }>(
     `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?supportsAllDrives=true&fields=${driveFolderFields}`,
   );
-  if (folder.mimeType !== "application/vnd.google-apps.folder") {
+  if (folder.id !== fileId || folder.mimeType !== "application/vnd.google-apps.folder" || folder.trashed !== false) {
     throw new Error("De gekozen Google Drive-link verwijst niet naar een map.");
   }
   return { ...folder, driveId: folder.driveId ?? null, parents: folder.parents ?? [] };
