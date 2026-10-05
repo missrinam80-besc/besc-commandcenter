@@ -5,12 +5,14 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requirePermission } from "@/lib/auth-context";
 import {
+  getGoogleDriveDocumentMetadata,
   createDocumentFromGoogleTemplate,
   createPresentationFromGoogleTemplate,
-  ensureEventDriveStructure,
-  ensureGoogleDriveEntityFolder,
-  googleDriveFileId,
 } from "@/lib/google-workspace";
+
+import { resolveDossierDriveFolder } from "@/lib/dossier-drive-folder";
+
+import { sourceObservation } from "@/lib/source-observation";
 
 type Context = Awaited<ReturnType<typeof requirePermission>>;
 type GeneratedDocument = Awaited<ReturnType<typeof createDocumentFromGoogleTemplate>>;
@@ -29,6 +31,7 @@ async function saveDocumentMetadata(input: {
   document: GeneratedDocument;
 }) {
   const { context, entityType, entityId, document } = input;
+  const observed = await getGoogleDriveDocumentMetadata(document.id);
   const { error } = await context.supabase.from("google_resource_links").insert({
     organization_id: context.membership.organization_id,
     entity_type: entityType,
@@ -40,6 +43,7 @@ async function saveDocumentMetadata(input: {
     web_url: document.webViewLink,
     drive_id: document.driveId,
     parent_id: document.parents[0] ?? null,
+    ...sourceObservation(observed),
     created_by: context.user.id,
     updated_at: new Date().toISOString(),
   });
@@ -57,7 +61,7 @@ export async function generateMeetingMinutes(formData: FormData) {
   ]);
   if (!meeting) redirect(`${path}?fout=document`);
   try {
-    const folder = await ensureGoogleDriveEntityFolder("meetings", meeting.title);
+    const folder = await resolveDossierDriveFolder({ supabase: context.supabase, organizationId: context.membership.organization_id, userId: context.user.id, entityType: "meeting", entityId: meeting.id, module: "meetings", title: meeting.title });
     const document = await createDocumentFromGoogleTemplate({
       template: "minutes",
       name: `Notulen - ${meeting.title}`,
@@ -92,7 +96,7 @@ export async function generateSponsorReport(formData: FormData) {
   ]);
   if (!partner) redirect(`${path}?fout=document`);
   try {
-    const folder = await ensureGoogleDriveEntityFolder("sponsors", partner.name);
+    const folder = await resolveDossierDriveFolder({ supabase: context.supabase, organizationId: context.membership.organization_id, userId: context.user.id, entityType: "partner", entityId: partner.id, module: "sponsors", title: partner.name });
     const document = await createDocumentFromGoogleTemplate({
       template: "sponsorReport",
       name: `Sponsorrapport - ${partner.name}`,
@@ -127,8 +131,7 @@ export async function generateEventDossier(formData: FormData) {
   const { data: event } = await context.supabase.from("events").select("*").eq("organization_id", context.membership.organization_id).eq("id", parsed.data.event_id).is("deleted_at", null).maybeSingle();
   if (!event) redirect(`${path}?fout=document`);
   try {
-    const existingId = event.drive_url ? googleDriveFileId(event.drive_url) : null;
-    const { eventFolder } = await ensureEventDriveStructure(event.title, existingId ?? undefined);
+    const eventFolder = await resolveDossierDriveFolder({ supabase: context.supabase, organizationId: context.membership.organization_id, userId: context.user.id, entityType: "event", entityId: event.id, module: "events", title: event.title, legacyDriveUrl: event.drive_url });
     const document = await createDocumentFromGoogleTemplate({
       template: "event",
       name: `Eventdossier - ${event.title}`,
@@ -154,5 +157,5 @@ export async function generateEventDossier(formData: FormData) {
   redirect(`${path}?succes=document`);
 }
 
-export async function generateSponsorPitchdeck(formData:FormData){const parsed=z.object({partner_id:z.string().uuid(),period_start:z.string().date(),period_end:z.string().date(),period_label:z.string().trim().min(2).max(100)}).safeParse(Object.fromEntries(formData));if(!parsed.success)redirect("/app/rapportage?fout=pitchdeck-velden");const path=`/app/rapportage/sponsors/${parsed.data.partner_id}`;const context=await requirePermission("manageOrganization",`${path}?fout=rechten`);const[partnerResult,campaignResult,kpiResult]=await Promise.all([context.supabase.from("partners").select("id,name,collaboration_type,estimated_value").eq("organization_id",context.membership.organization_id).eq("id",parsed.data.partner_id).is("deleted_at",null).maybeSingle(),context.supabase.from("campaigns").select("title,status,start_date,end_date,value,impressions,clicks").eq("organization_id",context.membership.organization_id).eq("partner_id",parsed.data.partner_id).is("deleted_at",null),context.supabase.from("kpi_records").select("metric,value,unit,source").eq("organization_id",context.membership.organization_id).eq("partner_id",parsed.data.partner_id).is("deleted_at",null).gte("period_end",parsed.data.period_start).lt("period_end",parsed.data.period_end)]);const partner=partnerResult.data;if(!partner)redirect(`${path}?fout=pitchdeck`);const campaigns=(campaignResult.data??[]).filter(item=>(!item.start_date||item.start_date<parsed.data.period_end)&&(!item.end_date||item.end_date>=parsed.data.period_start));try{const folder=await ensureGoogleDriveEntityFolder("sponsors",partner.name);const presentation=await createPresentationFromGoogleTemplate({template:"sponsor",name:`Pitchdeck - ${partner.name} - ${parsed.data.period_label}`,parentId:folder.id,replacements:{SPONSOR:partner.name,PERIODE:parsed.data.period_label,SAMENWERKING:partner.collaboration_type,GESCHATTE_WAARDE:partner.estimated_value==null?null:`€ ${Number(partner.estimated_value).toFixed(2)}`,CAMPAGNES:campaigns.map(x=>`${x.title} — ${x.status}`).join("\n"),GEREALISEERDE_WAARDE:`€ ${campaigns.reduce((sum,x)=>sum+Number(x.value??0),0).toFixed(2)}`,IMPRESSIES:campaigns.reduce((sum,x)=>sum+Number(x.impressions??0),0),KLIKS:campaigns.reduce((sum,x)=>sum+Number(x.clicks??0),0),KPI_RESULTATEN:(kpiResult.data??[]).map(x=>`${x.metric}: ${x.value} ${x.unit} (${x.source})`).join("\n")}});await saveDocumentMetadata({context,entityType:"partner",entityId:partner.id,document:presentation})}catch{redirect(`${path}?fout=pitchdeck-genereren`)}revalidatePath(path);redirect(`${path}?succes=pitchdeck`)}
+export async function generateSponsorPitchdeck(formData:FormData){const parsed=z.object({partner_id:z.string().uuid(),period_start:z.string().date(),period_end:z.string().date(),period_label:z.string().trim().min(2).max(100)}).safeParse(Object.fromEntries(formData));if(!parsed.success)redirect("/app/rapportage?fout=pitchdeck-velden");const path=`/app/rapportage/sponsors/${parsed.data.partner_id}`;const context=await requirePermission("manageOrganization",`${path}?fout=rechten`);const[partnerResult,campaignResult,kpiResult]=await Promise.all([context.supabase.from("partners").select("id,name,collaboration_type,estimated_value").eq("organization_id",context.membership.organization_id).eq("id",parsed.data.partner_id).is("deleted_at",null).maybeSingle(),context.supabase.from("campaigns").select("title,status,start_date,end_date,value,impressions,clicks").eq("organization_id",context.membership.organization_id).eq("partner_id",parsed.data.partner_id).is("deleted_at",null),context.supabase.from("kpi_records").select("metric,value,unit,source").eq("organization_id",context.membership.organization_id).eq("partner_id",parsed.data.partner_id).is("deleted_at",null).gte("period_end",parsed.data.period_start).lt("period_end",parsed.data.period_end)]);const partner=partnerResult.data;if(!partner)redirect(`${path}?fout=pitchdeck`);const campaigns=(campaignResult.data??[]).filter(item=>(!item.start_date||item.start_date<parsed.data.period_end)&&(!item.end_date||item.end_date>=parsed.data.period_start));try{const folder=await resolveDossierDriveFolder({supabase:context.supabase,organizationId:context.membership.organization_id,userId:context.user.id,entityType:"partner",entityId:partner.id,module:"sponsors",title:partner.name});const presentation=await createPresentationFromGoogleTemplate({template:"sponsor",name:`Pitchdeck - ${partner.name} - ${parsed.data.period_label}`,parentId:folder.id,replacements:{SPONSOR:partner.name,PERIODE:parsed.data.period_label,SAMENWERKING:partner.collaboration_type,GESCHATTE_WAARDE:partner.estimated_value==null?null:`€ ${Number(partner.estimated_value).toFixed(2)}`,CAMPAGNES:campaigns.map(x=>`${x.title} — ${x.status}`).join("\n"),GEREALISEERDE_WAARDE:`€ ${campaigns.reduce((sum,x)=>sum+Number(x.value??0),0).toFixed(2)}`,IMPRESSIES:campaigns.reduce((sum,x)=>sum+Number(x.impressions??0),0),KLIKS:campaigns.reduce((sum,x)=>sum+Number(x.clicks??0),0),KPI_RESULTATEN:(kpiResult.data??[]).map(x=>`${x.metric}: ${x.value} ${x.unit} (${x.source})`).join("\n")}});await saveDocumentMetadata({context,entityType:"partner",entityId:partner.id,document:presentation})}catch{redirect(`${path}?fout=pitchdeck-genereren`)}revalidatePath(path);redirect(`${path}?succes=pitchdeck`)}
 

@@ -10,7 +10,9 @@ import {
   dossierPath,
   type DossierEntityType,
 } from "@/lib/dossier-relations";
-import { googleDriveFileId } from "@/lib/google-workspace";
+import { getGoogleDriveDocumentMetadata, googleDriveFileId } from "@/lib/google-workspace";
+
+import { sourceObservation } from "@/lib/source-observation";
 
 const entityTypeSchema = z.enum(dossierEntityTypes);
 const baseSchema = z.object({
@@ -130,18 +132,36 @@ export async function addRecordDocument(formData: FormData) {
   if (!["project", "event", "campaign", "partner"].includes(parsed.data.entity_type)) {
     finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-module");
   }
+  const url = new URL(parsed.data.url);
+  if (url.protocol !== "https:" || !["drive.google.com", "docs.google.com"].includes(url.hostname) || url.username || url.password) {
+    finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-link");
+  }
   const googleId = googleDriveFileId(parsed.data.url);
   if (!googleId) finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-link");
   const { supabase, user, membership } = await context(parsed.data.entity_type, parsed.data.entity_id);
+  const config = dossierEntityConfig[parsed.data.entity_type];
+  const { data: dossier, error: dossierError } = await supabase.from(config.table).select("id")
+    .eq("organization_id", membership.organization_id).eq("id", parsed.data.entity_id)
+    .is("deleted_at", null).maybeSingle();
+  if (dossierError || !dossier) finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-koppelen");
+  let file: Awaited<ReturnType<typeof getGoogleDriveDocumentMetadata>>;
+  try {
+    file = await getGoogleDriveDocumentMetadata(googleId);
+  } catch {
+    finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-controleren");
+  }
   const { error } = await supabase.from("google_resource_links").insert({
     organization_id: membership.organization_id,
     entity_type: parsed.data.entity_type,
     entity_id: parsed.data.entity_id,
     resource_type: "document",
-    google_id: googleId,
+    google_id: file.id,
     name: parsed.data.name,
-    mime_type: "application/vnd.google-apps.document",
-    web_url: parsed.data.url,
+    mime_type: file.mimeType,
+    web_url: file.webViewLink,
+    drive_id: file.driveId,
+    parent_id: file.parents[0] ?? null,
+    ...sourceObservation(file),
     created_by: user.id,
   });
   finish(parsed.data.entity_type, parsed.data.entity_id, error ? "fout" : "succes", error ? "document-koppelen" : "document-gekoppeld");

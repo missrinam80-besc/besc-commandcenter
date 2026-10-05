@@ -7,6 +7,7 @@ export type ActionView = { id: string; title: string; meeting: string; href: str
 export type DashboardWidget = { label: string; value: number; description: string; href: string; tone: "orange" | "violet" | "green" | "red" };
 
 export type DashboardData = {
+  loadState?: "ready" | "unavailable" | "not_configured" | "no_access";
   name: string;
   role: string;
   roleKey: string;

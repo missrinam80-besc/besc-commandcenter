@@ -23,7 +23,10 @@ const schema = z.object({
   drive_url: z.string().url().optional().or(z.literal("")),
   eventbrite_url: z.string().url().optional().or(z.literal("")),
   stream_url: z.string().url().optional().or(z.literal("")),
-  expected_attendees: z.coerce.number().int().min(0).optional(),
+  expected_attendees: z.preprocess(
+    (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
+    z.coerce.number().int().min(0).optional(),
+  ),
   cancelled_calendar_action: z.enum(["keep", "remove"]).default("keep"),
 });
 
