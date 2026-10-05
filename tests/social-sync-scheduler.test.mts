@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
-// @ts-expect-error Node's test runner loads TypeScript source directly.
 import { handleScheduledSocialSync, isScheduledAccountDue, loadScheduledAccounts } from "../src/lib/social-sync-scheduler.ts";
 
 const now = Date.parse("2026-10-02T04:15:00Z");

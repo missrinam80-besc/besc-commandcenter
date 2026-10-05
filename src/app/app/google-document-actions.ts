@@ -12,6 +12,8 @@ import {
 
 import { resolveDossierDriveFolder } from "@/lib/dossier-drive-folder";
 
+import { formatEventEndpoint } from "@/lib/format";
+
 import { sourceObservation } from "@/lib/source-observation";
 
 type Context = Awaited<ReturnType<typeof requirePermission>>;
@@ -141,8 +143,8 @@ export async function generateEventDossier(formData: FormData) {
         DATUM: displayDate(new Date().toISOString()),
         TYPE: event.event_type,
         STATUS: event.status,
-        START: displayDate(event.start_at, true),
-        EINDE: displayDate(event.end_at, true),
+        START: formatEventEndpoint(event, "start"),
+        EINDE: formatEventEndpoint(event, "end"),
         LOCATIE: event.is_online ? "Online" : event.location,
         ROL_BESC: event.role_besc,
         BESCHRIJVING: event.description,

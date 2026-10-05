@@ -9,7 +9,7 @@ function load(path:string,overrides:Record<string,unknown>={},globals:Record<str
   const source=readFileSync(new URL(`../${path}`,import.meta.url),"utf8");
   const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
   const compiled={exports:{} as Record<string,unknown>};
-  runInNewContext(code,{module:compiled,exports:compiled.exports,require:(id:string)=>id==="@/lib/source-observation"?load("src/lib/source-observation.ts"):id in overrides?overrides[id]:require(id),URL,URLSearchParams,Date,...globals});
+  runInNewContext(code,{module:compiled,exports:compiled.exports,require:(id:string)=>id==="@/lib/source-observation"?load("src/lib/source-observation.ts"):id==="@/lib/format"?load("src/lib/format.ts"):id in overrides?overrides[id]:require(id),URL,URLSearchParams,Date,Intl,...globals});
   return compiled.exports;
 }
 const folder={id:"fixture-folder-id",name:"Hernoemde map",mimeType:"application/vnd.google-apps.folder",webViewLink:"https://drive.google.com/drive/folders/fixture-folder-id",driveId:"fixture-drive",parents:["fixture-parent"]};

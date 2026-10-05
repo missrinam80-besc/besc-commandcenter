@@ -3,9 +3,7 @@ import test from "node:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
-// @ts-expect-error Node executes the TypeScript source directly.
 import { socialMcpConfig, parseAuthorization, registerMcpClient, clientRedirects, consentTicket, readConsentTicket, issueMcpCode, exchangeMcpToken, tokenHash, randomToken, oauthMetadata, protectedResourceMetadata, mcpChallenge, createMcpLimiter, type OAuthStore, type McpGrant } from "../src/lib/social-mcp-oauth.ts";
-// @ts-expect-error Node executes the TypeScript source directly.
 import { handleSocialMcp, type McpServerDependencies } from "../src/lib/social-mcp-server.ts";
 
 const env = { SOCIAL_MCP_ENABLED: "true", SOCIAL_MCP_ORIGIN: "https://besc.example", SOCIAL_MCP_SIGNING_KEY: "mcp-signing-test-only-".repeat(3), SOCIAL_EXPORT_ORGANIZATION_ID: "11111111-1111-4111-8111-111111111111" };

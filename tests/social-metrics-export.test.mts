@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
-// @ts-expect-error Node's test runner loads TypeScript source directly.
 import { handleSocialMetricsExport, createExportRateLimiter, type MetricSnapshot, type ExportQuery } from "../src/lib/social-metrics-export.ts";
-// @ts-expect-error Node's test runner loads TypeScript source directly.
 import { readSocialMetricsExportPage } from "../src/lib/social-metrics-export-query.ts";
 
 const apiKey = "private-export-key-".repeat(4);

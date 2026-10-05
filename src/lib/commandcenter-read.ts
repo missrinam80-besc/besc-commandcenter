@@ -7,7 +7,7 @@ export const entities = {
   tasks: { title: "title", path: "/app/taken", fields: "status,priority,project_id,content_id,due_at" },
   inbox_items: { title: "title", path: "/app/inbox", fields: "status,priority,converted_project_id" },
   content_items: { title: "title", path: "/app/content", fields: "status,content_type,priority,owner_id,project_id,campaign_id,deadline,approval_status" },
-  events: { title: "title", path: "/app/events", fields: "status,event_type,owner_id,project_id,start_at,end_at" },
+  events: { title: "title", path: "/app/events", fields: "status,event_type,owner_id,project_id,start_date,end_date,start_at,end_at" },
   partners: { title: "name", path: "/app/sponsors", fields: "status,partner_type,owner_id" },
   campaigns: { title: "title", path: "/app/campagnes", fields: "status,campaign_type,owner_id,project_id,partner_id,start_date,end_date" },
   community_people: { title: "display_name", path: "/app/community", fields: "status,person_type,onboarding_status,owner_id" },

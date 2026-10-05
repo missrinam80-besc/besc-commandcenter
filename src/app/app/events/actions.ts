@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireActiveMembership } from "@/lib/auth-context";
-import { localDateTimeToIso } from "@/lib/format";
+import { eventTimingValues } from "@/lib/format";
 import { syncLinkedEvent } from "@/lib/linked-calendar-sync";
 
 const schema = z.object({
@@ -17,6 +17,12 @@ const schema = z.object({
   project_id: z.string().uuid().optional().or(z.literal("")),
   start_at: z.string().optional(),
   end_at: z.string().optional(),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+  start_time: z.string().optional(),
+  end_time: z.string().optional(),
+  original_start_at: z.string().optional(),
+  original_end_at: z.string().optional(),
   location: z.string().trim().max(250).optional(),
   is_online: z.string().optional(),
   role_besc: z.enum(["organizer", "partner", "promoter", "participant"]),
@@ -28,6 +34,10 @@ const schema = z.object({
     z.coerce.number().int().min(0).optional(),
   ),
   cancelled_calendar_action: z.enum(["keep", "remove"]).default("keep"),
+}).superRefine((input, context) => {
+  try { eventTimingValues(input); } catch {
+    context.addIssue({ code: "custom", message: "Controleer de datums en tijden.", path: ["start_date"] });
+  }
 });
 
 async function manager() {
@@ -39,15 +49,15 @@ async function manager() {
 }
 
 function values(input: z.infer<typeof schema>) {
-  const { cancelled_calendar_action: _cancelledCalendarAction, ...eventInput } = input;
+  const { cancelled_calendar_action: _cancelledCalendarAction, start_time: _startTime, end_time: _endTime, original_start_at: _originalStart, original_end_at: _originalEnd, ...eventInput } = input;
   void _cancelledCalendarAction;
+  void _startTime; void _endTime; void _originalStart; void _originalEnd;
   return {
     ...eventInput,
     title: input.title || "Naamloos event",
     description: input.description || null,
     project_id: input.project_id || null,
-    start_at: localDateTimeToIso(input.start_at),
-    end_at: localDateTimeToIso(input.end_at),
+    ...eventTimingValues(input),
     location: input.location || null,
     is_online: input.is_online === "on",
     drive_url: input.drive_url || null,

@@ -29,8 +29,8 @@ test("documentregister zoekt ook in bron en status", () => {
 });
 
 const generated: GeneratedDocumentRecord[] = [
-  { id: "meeting:1", entityId: "1", title: "Notulen - Bestuur", module: "meetings", moduleLabel: "Vergaderingen", documentType: "minutes", documentTypeLabel: "Notulen", status: "available", sourceStatus: "completed", sourceHref: "/meeting", driveUrl: "https://docs.google.com/1", updatedAt: "2026-07-28" },
-  { id: "event:1", entityId: "1", title: "Eventdossier - Community Night", module: "events", moduleLabel: "Events", documentType: "event_dossier", documentTypeLabel: "Eventdossier", status: "missing", sourceStatus: "confirmed", sourceHref: "/event", driveUrl: null, updatedAt: "2026-07-29" },
+  { id: "meeting:1", entityId: "1", documentLinkId: "fixture-link", title: "Notulen - Bestuur", module: "meetings", moduleLabel: "Vergaderingen", documentType: "minutes", documentTypeLabel: "Notulen", status: "available", sourceStatus: "completed", sourceHref: "/meeting", driveUrl: "https://docs.google.com/1", updatedAt: "2026-07-28" },
+  { id: "event:1", entityId: "1", documentLinkId: null, title: "Eventdossier - Community Night", module: "events", moduleLabel: "Events", documentType: "event_dossier", documentTypeLabel: "Eventdossier", status: "missing", sourceStatus: "confirmed", sourceHref: "/event", driveUrl: null, updatedAt: "2026-07-29" },
 ];
 
 test("gegenereerde documenten filteren op module, type en ontbrekende status", () => {

@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-// @ts-expect-error Node's test runner loads TypeScript source directly.
 import { fetchFacebookInsightMeasurements, metaSyncWindow, socialMetricLabel } from "../src/lib/meta-insights.ts";
 
 const window = metaSyncWindow(new Date("2026-10-02T13:55:29Z"));

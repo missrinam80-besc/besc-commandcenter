@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { hasPermission } from "@/lib/permissions";
-import { formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime, formatDateTimeLocal } from "@/lib/format";
 import type { AttentionView, DashboardData, DashboardWidget, ScheduleView } from "@/lib/types";
 
 const statusLabels:Record<string,string>={todo:"Te doen",doing:"Bezig",waiting:"Wachten",review:"Review",done:"Afgerond"};
@@ -12,6 +12,7 @@ type ProjectRow={id:string;title:string;status:string;due_date:string|null;owner
 
 function dateLabel(value:string|null,withTime=false){
   if(!value)return "Nog te plannen";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${formatDate(value)} · Tijd onbekend`;
   return withTime ? formatDateTime(value, "Nog te plannen") : new Intl.DateTimeFormat("nl-BE", { day: "numeric", month: "long", timeZone: "Europe/Brussels" }).format(new Date(value));
 }
 function startOfToday(){const date=new Date();date.setHours(0,0,0,0);return date}
@@ -57,7 +58,7 @@ async function loadDashboardData(): Promise<DashboardData> {
     supabase.from("projects").select("id,title,status,due_date,owner_id,project_members(user_id)").eq("organization_id",orgId).is("deleted_at",null).in("status",["planned","active","blocked"]).order("due_date",{ascending:true,nullsFirst:false}),
     manager?supabase.from("inbox_items").select("id,title,source,created_at").eq("organization_id",orgId).is("deleted_at",null).in("status",["new","reviewing"]).order("created_at",{ascending:false}).limit(4):Promise.resolve({data:[]}),
     supabase.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",user.id).is("read_at",null),
-    supabase.from("events").select("id,title,start_at,status,owner_id").eq("organization_id",orgId).is("deleted_at",null).gte("start_at",now.toISOString()).lte("start_at",inFourteenDays.toISOString()).not("status","in","(completed,cancelled,archived)").order("start_at").limit(5),
+    supabase.from("events").select("id,title,start_at,start_date,status,owner_id").eq("organization_id",orgId).is("deleted_at",null).gte("start_date",formatDateTimeLocal(now).slice(0,10)).lte("start_date",formatDateTimeLocal(inFourteenDays).slice(0,10)).not("status","in","(completed,cancelled,archived)").order("start_date").limit(5),
     manager?supabase.from("meetings").select("id,title,meeting_at,status").eq("organization_id",orgId).is("deleted_at",null).gte("meeting_at",now.toISOString()).not("status","in","(completed,cancelled,archived)").order("meeting_at").limit(5):Promise.resolve({data:[]}),
     manager?supabase.from("meeting_action_items").select("id,title,status,task_id,meeting_id,meetings(title)").eq("organization_id",orgId).in("status",["todo","doing"]).order("created_at",{ascending:false}):Promise.resolve({data:[]}),
     finance?supabase.from("expenses").select("id",{count:"exact",head:true}).eq("organization_id",orgId).is("deleted_at",null).in("status",["requested","reimbursement_due"]):Promise.resolve({count:0}),
@@ -96,7 +97,7 @@ async function loadDashboardData(): Promise<DashboardData> {
   ].slice(0,6);
 
   const schedule:ScheduleView[]=[
-    ...(events??[]).map(event=>({id:`event-${event.id}`,title:event.title,kind:"Event",at:event.start_at,href:`/app/events/${event.id}`})),
+    ...(events??[]).map(event=>({id:`event-${event.id}`,title:event.title,kind:"Event",at:event.start_at || event.start_date,href:`/app/events/${event.id}`})),
     ...(meetings??[]).map(meeting=>({id:`meeting-${meeting.id}`,title:meeting.title,kind:"Vergadering",at:meeting.meeting_at,href:`/app/vergaderingen/${meeting.id}`})),
   ].sort((a,b)=>new Date(a.at).getTime()-new Date(b.at).getTime()).slice(0,6)
     .map(({at,...item})=>({...item,when:dateLabel(at,true)}));
