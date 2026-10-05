@@ -6,6 +6,8 @@ import { runInNewContext } from "node:vm";
 import ts from "typescript";
 const require=createRequire(import.meta.url);
 const id="11111111-1111-4111-8111-111111111111";
+const timingModule={exports:{} as Record<string,unknown>};
+runInNewContext(ts.transpileModule(readFileSync(new URL("../src/lib/format.ts",import.meta.url),"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{module:timingModule,exports:timingModule.exports,Date,Intl});
 function fixture(update=false) {
   const writes:Record<string,unknown>[]=[];const filters:unknown[][]=[];
   let calendarCalls=0;
@@ -21,7 +23,7 @@ function fixture(update=false) {
   const overrides:Record<string,unknown>={
     "next/cache":{revalidatePath:()=>undefined},"next/navigation":{redirect:(url:string)=>{throw Error(url);}},
     "@/lib/auth-context":{requireActiveMembership:async()=>({supabase,user:{id:"fixture-owner"},membership:{role:"admin",organization_id:"fixture-org"}})},
-    "@/lib/format":{localDateTimeToIso:()=>null},"@/lib/linked-calendar-sync":{syncLinkedEvent:async()=>{calendarCalls++;}},
+    "@/lib/format":timingModule.exports,"@/lib/linked-calendar-sync":{syncLinkedEvent:async()=>{calendarCalls++;}},
   };
   runInNewContext(code,{module:compiled,exports:compiled.exports,require:(key:string)=>key in overrides?overrides[key]:require(key),Date});
   return {writes,filters,calendarCalls:()=>calendarCalls,run:(value?:string)=>{

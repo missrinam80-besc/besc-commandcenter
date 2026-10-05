@@ -14,7 +14,7 @@ import { FinancialSummaryPanel } from "@/components/financial-summary-panel";
 import { OperationalRecordForm } from "@/components/operational-record-form";
 import { PeopleAssignmentsPanel } from "@/components/people-assignments-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatEventEndpoint } from "@/lib/format";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
 import { previewEventDriveStructure } from "@/lib/google-workspace";
 import { saveEvent } from "../actions";
@@ -112,7 +112,7 @@ export default async function Event({
           {!documentRow && <form action={generateEventDossier}><input type="hidden" name="event_id" value={id}/><button><FilePlus2 size={16}/>Genereer eventdossier</button></form>}
           <form action={syncEventToGoogleCalendar}>
             <input type="hidden" name="event_id" value={id}/>
-            <button><CalendarSync size={16}/>{calendar ? "Kalender bijwerken" : "Naar Google Calendar"}</button>
+            <button disabled={!e.start_at || !e.end_at}><CalendarSync size={16}/>{calendar ? "Kalender bijwerken" : "Naar Google Calendar"}</button>
           </form>
           {canManage && !["cancelled", "archived", "completed"].includes(e.status) && <form action={cancelEvent}><input type="hidden" name="id" value={id}/><ConfirmSubmitButton className="danger-button" message="Dit event annuleren? Het event blijft bewaard en wordt als geannuleerd zichtbaar in Google Calendar.">Event annuleren</ConfirmSubmitButton></form>}
           <Link href="?nieuw=taak">Taak toevoegen</Link>
@@ -140,8 +140,8 @@ export default async function Event({
             { label: "Status", value: eventStatuses[e.status as keyof typeof eventStatuses] },
             { label: "Prioriteit", value: ({ low: "Laag", normal: "Normaal", high: "Hoog", urgent: "Urgent" } as Record<string, string>)[e.priority] ?? e.priority },
             { label: "Rol BESC", value: ({ organizer: "Organisator", partner: "Partner", promoter: "Promotor", participant: "Deelnemer" } as Record<string, string>)[e.role_besc] ?? e.role_besc },
-            { label: "Start", value: formatDateTime(e.start_at, e.status === "completed" ? "Datum onbekend" : "Niet gepland") },
-            { label: "Einde", value: formatDateTime(e.end_at, e.status === "completed" ? "Datum onbekend" : "Niet gepland") },
+            { label: "Start", value: formatEventEndpoint(e, "start", e.status === "completed" ? "Datum onbekend" : "Niet gepland") },
+            { label: "Einde", value: formatEventEndpoint(e, "end", e.status === "completed" ? "Datum onbekend" : "Niet gepland") },
             { label: "Locatie", value: e.is_online ? (e.location ? `Online · ${e.location}` : "Online") : e.location ?? "Niet bepaald" },
             { label: "Verwachte deelnemers", value: e.expected_attendees ?? "Niet bepaald" },
             { label: "Project", value: project ? <Link href={`/app/projecten/${project.id}`}>{project.title}</Link> : "Geen project" },
@@ -164,9 +164,10 @@ export default async function Event({
           ) : (
             <p>Dit event staat nog niet in de gedeelde BESC-kalender. Start- en eindtijd zijn verplicht.</p>
           )}
+          {(!e.start_at || !e.end_at) && <p className="form-hint">Datum kan zonder tijd worden bewaard. Google Calendar wordt pas bijgewerkt als beide tijden bekend zijn; een bestaande afspraak blijft behouden.</p>}
           <form className="drive-organize-action" action={syncEventToGoogleCalendar}>
             <input type="hidden" name="event_id" value={id}/>
-            <button><CalendarSync size={15}/>{calendar ? "Opnieuw synchroniseren" : "Publiceren naar Google Calendar"}</button>
+            <button disabled={!e.start_at || !e.end_at}><CalendarSync size={15}/>{calendar ? "Opnieuw synchroniseren" : "Publiceren naar Google Calendar"}</button>
           </form>
         </section>
         <section className="form-card">

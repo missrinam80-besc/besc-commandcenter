@@ -87,6 +87,9 @@ export async function syncLinkedEvent(
     if (error) throw error;
     return true;
   }
+  // Saving a dossier does not publish a new calendar item. Unknown times are
+  // neither midnight nor an all-day event; keep any existing appointment intact.
+  if (!link || !event.start_at || !event.end_at) return false;
   const result = await syncGoogleCalendarEvent({
     id: event.id,
     organizationId: context.organizationId,

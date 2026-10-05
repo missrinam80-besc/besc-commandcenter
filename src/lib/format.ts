@@ -56,6 +56,45 @@ export function formatDateTimeLocal(value?: string | Date | null) {
   return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 }
 
+/** Dates can be known without a clock time. Never invent midnight for an event. */
+export function eventDateFields(event: Record<string, unknown>, prefix: "start" | "end") {
+  const stamp = event[`${prefix}_at`] as string | null | undefined;
+  const local = formatDateTimeLocal(stamp);
+  return { date: local.slice(0, 10) || (event[`${prefix}_date`] as string | null) || "", time: local.slice(11) };
+}
+
+type EventTimingInput = Partial<Record<"start_date" | "end_date" | "start_time" | "end_time" | "start_at" | "end_at" | "original_start_at" | "original_end_at", string>>;
+
+export function eventTimingValues(input: EventTimingInput) {
+  const endpoint = (prefix: "start" | "end") => {
+    // Keep compatibility with callers that still submit the combined field.
+    const legacy = input[`${prefix}_at`];
+    const local = formatDateTimeLocal(localDateTimeToIso(legacy));
+    const date = input[`${prefix}_date`] ?? local.slice(0, 10);
+    const time = input[`${prefix}_time`] ?? local.slice(11);
+    if (date && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || new Date(`${date}T12:00:00Z`).toISOString().slice(0, 10) !== date)) throw new Error("Ongeldige datum");
+    if (time && (!date || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time))) throw new Error("Een tijd heeft een geldige datum nodig");
+    if (!date || !time) return { date: date || null, at: null };
+    const combined = `${date}T${time}`;
+    const original = input[`original_${prefix}_at`];
+    // Preserve seconds and the original offset during unchanged edits, including the repeated DST hour.
+    const at = original && formatDateTimeLocal(original) === combined ? new Date(original).toISOString() : localDateTimeToIso(combined);
+    if (!at || formatDateTimeLocal(at) !== combined) throw new Error("Deze tijd bestaat niet in Europe/Brussels");
+    return { date, at };
+  };
+  const start = endpoint("start"), end = endpoint("end");
+  if (start.date && end.date && end.date < start.date) throw new Error("Einddatum ligt vóór startdatum");
+  if (start.at && end.at && end.at < start.at) throw new Error("Eindtijd ligt vóór starttijd");
+  return { start_date: start.date, end_date: end.date, start_at: start.at, end_at: end.at };
+}
+
+export function formatEventEndpoint(event: Record<string, unknown>, prefix: "start" | "end", fallback = "Datum onbekend") {
+  const stamp = event[`${prefix}_at`] as string | null;
+  if (stamp) return formatDateTime(stamp, fallback);
+  const date = event[`${prefix}_date`] as string | null;
+  return date ? `${formatDate(date)} · Tijd onbekend` : fallback;
+}
+
 export function localDateTimeToIso(value?: string | null, timeZone = "Europe/Brussels") {
   if (!value) return null;
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);

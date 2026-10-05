@@ -54,7 +54,7 @@ test("events en campagnes gebruiken dezelfde metadata- en datumstandaard", async
     source("src/components/operational-record-detail.tsx"),
   ]);
   assert.match(event, /RecordMetadata/);
-  assert.match(event, /formatDateTime\(e\.start_at/);
+  assert.match(event, /formatEventEndpoint\(e, "start"/);
   assert.doesNotMatch(eventForm, /<label>Drive-map/);
   assert.match(operational, /campaignMetadata/);
   assert.match(operational, /formatCurrency/);

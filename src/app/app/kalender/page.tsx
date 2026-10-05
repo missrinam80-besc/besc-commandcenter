@@ -72,7 +72,7 @@ export default async function CalendarPage({
     supabase.from("projects").select("id,title,due_date,owner_id,project_members(user_id)").eq("organization_id", organizationId).is("deleted_at", null).gte("due_date", start).lt("due_date", end).not("status", "in", "(done,archived)"),
     supabase.from("content_items").select("id,title,deadline,owner_id").eq("organization_id", organizationId).is("deleted_at", null).gte("deadline", start).lt("deadline", end).not("status", "in", "(completed,archived)"),
     supabase.from("content_items").select("id,title,publication_at,owner_id").eq("organization_id", organizationId).is("deleted_at", null).gte("publication_at", start).lt("publication_at", end).not("status", "eq", "archived"),
-    supabase.from("events").select("id,title,start_at,owner_id").eq("organization_id", organizationId).is("deleted_at", null).gte("start_at", start).lt("start_at", end).not("status", "in", "(cancelled,archived)"),
+    supabase.from("events").select("id,title,start_at,start_date,owner_id").eq("organization_id", organizationId).is("deleted_at", null).gte("start_date", start).lt("start_date", end).not("status", "in", "(cancelled,archived)"),
     supabase.from("meetings").select("id,title,meeting_at,created_by").eq("organization_id", organizationId).is("deleted_at", null).gte("meeting_at", start).lt("meeting_at", end).not("status", "in", "(cancelled,archived)"),
     supabase.from("social_posts").select("id,title,scheduled_at,platform").eq("organization_id", organizationId).is("deleted_at", null).gte("scheduled_at", start).lt("scheduled_at", end).not("status", "eq", "archived"),
     supabase.from("campaigns").select("id,title,end_date,owner_id").eq("organization_id", organizationId).is("deleted_at", null).gte("end_date", start).lt("end_date", end).not("status", "in", "(completed,cancelled,archived)"),
@@ -109,8 +109,8 @@ export default async function CalendarPage({
         label: calendarLabels.publication, href: `/app/content/${item.id}`, timed: true, personal: item.owner_id === user.id,
       })),
       ...(events.data ?? []).map((item) => ({
-        id: `event-${item.id}`, title: item.title, date: item.start_at!, kind: "event" as const,
-        label: calendarLabels.event, href: `/app/events/${item.id}`, timed: true, personal: item.owner_id === user.id,
+        id: `event-${item.id}`, title: item.title, date: item.start_at || item.start_date!, kind: "event" as const,
+        label: calendarLabels.event, href: `/app/events/${item.id}`, timed: Boolean(item.start_at), personal: item.owner_id === user.id,
       })),
       ...(meetings.data ?? []).map((item) => ({
         id: `meeting-${item.id}`, title: item.title, date: item.meeting_at!, kind: "meeting" as const,

@@ -6,7 +6,7 @@ import { FormModal } from "@/components/form-modal";
 import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { hasPermission } from "@/lib/permissions";
-import { formatLocalDate } from "@/lib/format";
+import { formatDate, formatLocalDate } from "@/lib/format";
 import { saveEvent } from "./actions";
 
 const PAGE_SIZE = 25;
@@ -17,6 +17,7 @@ type Row = {
   event_type: string;
   status: string;
   start_at: string | null;
+  start_date: string | null;
   location: string | null;
   is_online: boolean;
   projects: { title: string } | null;
@@ -38,12 +39,12 @@ export default async function Events({
   const page = Math.max(1, Number.parseInt(params.pagina ?? "1", 10) || 1);
   const { supabase, membership, user } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageEvents");
-  const orderColumn = sort === "title" ? "title" : sort === "date" ? "start_at" : "created_at";
+  const orderColumn = sort === "title" ? "title" : sort === "date" ? "start_date" : "created_at";
   const ascending = sort === "date" || sort === "oldest" || sort === "title";
 
   let query = supabase
     .from("events")
-    .select("id,title,event_type,status,start_at,location,is_online,projects(title)", {
+    .select("id,title,event_type,status,start_at,start_date,location,is_online,projects(title)", {
       count: "exact",
     })
     .eq("organization_id", membership.organization_id)
@@ -147,7 +148,7 @@ export default async function Events({
                 {eventStatuses[event.status as keyof typeof eventStatuses]}
               </span>
               <span className="content-date">
-                {formatLocalDate(event.start_at, event.status === "completed" ? "Datum onbekend" : "Niet gepland")}
+                {event.start_at ? formatLocalDate(event.start_at) : formatDate(event.start_date, event.status === "completed" ? "Datum onbekend" : "Niet gepland")}
               </span>
               <span />
               <Link className="row-action" href={`/app/events/${event.id}`}>Openen</Link>
