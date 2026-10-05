@@ -8,7 +8,7 @@ import {
   ensureEventDriveStructure,
   getGoogleDriveFolder,
   googleDriveFileId,
-  moveGoogleDriveFolderToModule,
+  completeEventDriveStructure,
 } from "@/lib/google-workspace";
 
 const path = (id: string) => `/app/events/${id}`;
@@ -82,7 +82,7 @@ export async function createEventFolder(formData: FormData) {
       ? googleDriveFileId(context.event.drive_url)
       : null;
     if (parsed.data.mode === "existing" && !existingId) throw new Error("Ongeldige Drive-maplink.");
-    const { eventFolder } = await ensureEventDriveStructure(context.event.title, existingId ?? undefined);
+    const eventFolder = existingId ? await getGoogleDriveFolder(existingId) : (await ensureEventDriveStructure(context.event.title)).eventFolder;
     await saveEventDriveLink({
       eventId: context.event.id,
       folder: eventFolder,
@@ -107,7 +107,7 @@ export async function linkEventFolder(formData: FormData) {
   if (!fileId) redirect(`${path(parsed.data.event_id)}?fout=drive-link`);
   const context = await eventContext(parsed.data.event_id);
   try {
-    const { eventFolder } = await ensureEventDriveStructure(context.event.title, fileId);
+    const eventFolder = await getGoogleDriveFolder(fileId);
     await saveEventDriveLink({
       eventId: context.event.id,
       folder: eventFolder,
@@ -123,7 +123,10 @@ export async function linkEventFolder(formData: FormData) {
 }
 
 export async function organizeEventFolder(formData: FormData) {
-  const parsed = z.object({ event_id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
+  const parsed = z.object({ event_id: z.string().uuid(), confirm_structure: z.literal("yes"), expected_folder_id: z.string().min(1), expected_missing: z.string().transform((value, ctx) => {
+    try { const names: unknown = JSON.parse(value); if (Array.isArray(names) && names.every(name => typeof name === "string")) return names as string[]; } catch {}
+    ctx.addIssue({ code: "custom", message: "Controleer eerst het overzicht." }); return z.NEVER;
+  }) }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/events?fout=drive-velden");
   const context = await eventContext(parsed.data.event_id);
   const { data: link } = await context.supabase
@@ -135,11 +138,9 @@ export async function organizeEventFolder(formData: FormData) {
     .eq("resource_type", "folder")
     .maybeSingle();
   if (!link?.google_id) redirect(`${path(context.event.id)}?fout=drive-ontbreekt`);
-  let folderMoved = false;
+  if (link.google_id !== parsed.data.expected_folder_id) redirect(`${path(context.event.id)}?fout=drive-gewijzigd`);
   try {
-    const moved = await moveGoogleDriveFolderToModule(link.google_id, "events");
-    folderMoved = moved.moved;
-    const { eventFolder } = await ensureEventDriveStructure(context.event.title, moved.id);
+    const eventFolder = await completeEventDriveStructure(link.google_id, parsed.data.expected_missing);
     await saveEventDriveLink({
       eventId: context.event.id,
       folder: eventFolder,
@@ -148,8 +149,8 @@ export async function organizeEventFolder(formData: FormData) {
       userId: context.user.id,
     });
   } catch {
-    redirect(`${path(context.event.id)}?fout=drive-verplaatsen`);
+    redirect(`${path(context.event.id)}?fout=drive-aanvullen`);
   }
   revalidatePath(path(context.event.id));
-  redirect(`${path(context.event.id)}?succes=${folderMoved ? "drive-geordend" : "drive-al-geordend"}`);
+  redirect(`${path(context.event.id)}?succes=drive-aangevuld`);
 }

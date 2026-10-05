@@ -16,7 +16,7 @@ import { PeopleAssignmentsPanel } from "@/components/people-assignments-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatDateTime } from "@/lib/format";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
-import { eventDriveSubfolders } from "@/lib/google-workspace";
+import { previewEventDriveStructure } from "@/lib/google-workspace";
 import { saveEvent } from "../actions";
 import { createOperationalRecord } from "../../operations/actions";
 import { createEventFolder, linkEventFolder, organizeEventFolder } from "./actions";
@@ -28,6 +28,7 @@ import { cancelEvent } from "../actions";
 
 type DriveLink = {
   web_url: string;
+  google_id: string;
 };
 
 type CalendarLink = {
@@ -41,8 +42,9 @@ const driveErrors: Record<string, string> = {
   "drive-bestaande-link": "De bestaande Drive-map is niet bereikbaar voor de BESC Google-koppeling. Deel de map met het Google-serviceaccount of maak een nieuwe eventmap.",
   "drive-aanmaken": "De eventmap kon niet worden aangemaakt. Controleer de Google Workspace-integratie en rechten op de BESC-hoofdmap.",
   "drive-link": "De opgegeven Drive-link bevat geen herkenbaar map-ID.",
-  "drive-koppelen": "De gekozen map kon niet worden gekoppeld of de basisstructuur kon niet worden gemaakt.",
-  "drive-verplaatsen": "De eventmap kon niet onder de modulemap Events worden geplaatst.",
+  "drive-koppelen": "De gekozen map kon niet worden gelezen of geregistreerd. Er zijn geen basismappen aangemaakt.",
+  "drive-gewijzigd": "De gekoppelde map is gewijzigd. Bekijk het overzicht opnieuw vóór aanmaak.",
+  "drive-aanvullen": "De basismappen konden niet volledig worden aangevuld of geregistreerd. Bekijk het overzicht opnieuw; eventueel reeds aangemaakte mappen blijven behouden. De eventmap is niet verplaatst.",
   "document-genereren": "Het eventdossier kon niet vanuit het Google-template worden gegenereerd.",
   "kalender-tijden": "Vul eerst een geldige start- én eindtijd in. De eindtijd moet na de starttijd liggen.",
   "kalender-sync": "Het event kon niet met Google Calendar worden gesynchroniseerd. Controleer de kalenderrechten en probeer opnieuw.",
@@ -81,6 +83,11 @@ export default async function Event({
     loadRelationOptions(supabase, membership.organization_id, "event", id),
   ]);
   const drive = driveRow as DriveLink | null;
+  let structurePreview: Awaited<ReturnType<typeof previewEventDriveStructure>> | null = null;
+  let structureError = false;
+  if (canManage && q.drivePreview === "1" && drive?.google_id) {
+    try { structurePreview = await previewEventDriveStructure(drive.google_id); } catch { structureError = true; }
+  }
   const project = (projects ?? []).find((item) => item.id === e.project_id);
   const driveUrl = drive?.web_url || e.drive_url;
   const calendar = calendarRow as CalendarLink | null;
@@ -115,7 +122,7 @@ export default async function Event({
         </div>
       </header>
       <div className="project-detail-body">
-        {q.succes && <div className="success">{q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : "Event opgeslagen."}</div>}
+        {q.succes && <div className="success">{q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
         {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
         {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
         {q.bewerken && (
@@ -133,8 +140,8 @@ export default async function Event({
             { label: "Status", value: eventStatuses[e.status as keyof typeof eventStatuses] },
             { label: "Prioriteit", value: ({ low: "Laag", normal: "Normaal", high: "Hoog", urgent: "Urgent" } as Record<string, string>)[e.priority] ?? e.priority },
             { label: "Rol BESC", value: ({ organizer: "Organisator", partner: "Partner", promoter: "Promotor", participant: "Deelnemer" } as Record<string, string>)[e.role_besc] ?? e.role_besc },
-            { label: "Start", value: formatDateTime(e.start_at, "Niet gepland") },
-            { label: "Einde", value: formatDateTime(e.end_at, "Niet gepland") },
+            { label: "Start", value: formatDateTime(e.start_at, e.status === "completed" ? "Datum onbekend" : "Niet gepland") },
+            { label: "Einde", value: formatDateTime(e.end_at, e.status === "completed" ? "Datum onbekend" : "Niet gepland") },
             { label: "Locatie", value: e.is_online ? (e.location ? `Online · ${e.location}` : "Online") : e.location ?? "Niet bepaald" },
             { label: "Verwachte deelnemers", value: e.expected_attendees ?? "Niet bepaald" },
             { label: "Project", value: project ? <Link href={`/app/projecten/${project.id}`}>{project.title}</Link> : "Geen project" },
@@ -168,11 +175,18 @@ export default async function Event({
              {driveUrl && <a className="row-action" href={driveUrl} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Open map</a>}
           </div>
           {drive ? (
-            <div className="drive-connected-row"><div><strong>Drive-map gekoppeld</strong><p>Basismappen: {eventDriveSubfolders.join(", ")}.</p></div><form action={organizeEventFolder}><input type="hidden" name="event_id" value={id}/><button><FolderInput size={15}/>Mapstructuur controleren</button></form></div>
+            <div><strong>Drive-map gekoppeld</strong><p>De bestaande map en haar inhoud blijven op hun huidige plek.</p>
+              {canManage && <Link href="?drivePreview=1"><FolderInput size={15}/>Ontbrekende basismappen bekijken</Link>}
+              {structureError && <p className="error-note">De mapinhoud kon niet worden gecontroleerd. Er is niets aangemaakt.</p>}
+              {structurePreview && <div><p>{structurePreview.missing.length ? "Na bevestiging worden uitsluitend deze basismappen toegevoegd:" : "Alle basismappen zijn aanwezig. Er is niets aan te maken."}</p>
+                <ul>{structurePreview.missing.map(name => <li key={name}>{name}</li>)}</ul>
+                {!!structurePreview.missing.length && <form action={organizeEventFolder}><input type="hidden" name="event_id" value={id}/><input type="hidden" name="confirm_structure" value="yes"/><input type="hidden" name="expected_folder_id" value={structurePreview.folder.id}/><input type="hidden" name="expected_missing" value={JSON.stringify(structurePreview.missing)}/><ConfirmSubmitButton message={`Basismappen toevoegen: ${structurePreview.missing.join(", ")}? De bestaande map wordt niet verplaatst.`}>Deze basismappen aanmaken</ConfirmSubmitButton></form>}
+              </div>}
+            </div>
           ) : (
             <div className="drive-link-options">
               <div>
-                <p>{e.drive_url ? "Registreer de oudere eventmap en voeg de ontbrekende basismappen toe." : "Maak een eventmap met Planning, Communicatie, Partners, Financiën en Evaluatie."}</p>
+                <p>{e.drive_url ? "Registreer de oudere eventmap zonder bestanden of mappen te wijzigen." : "Maak een eventmap met Planning, Communicatie, Partners, Financiën en Evaluatie."}</p>
                 <form action={createEventFolder}>
                   <input type="hidden" name="event_id" value={id}/>
                   <input type="hidden" name="mode" value={e.drive_url ? "existing" : "new"}/>
@@ -187,11 +201,11 @@ export default async function Event({
                 )}
               </div>
               <div>
-                <p>Of koppel een andere bestaande Drive-map; ontbrekende basismappen worden automatisch toegevoegd.</p>
+                <p>Koppel een bestaande Drive-map zonder bestanden te verplaatsen of submappen aan te maken.</p>
                 <form className="milestone-add" action={linkEventFolder}>
                   <input type="hidden" name="event_id" value={id}/>
                   <input name="drive_folder" placeholder="Drive-maplink of map-ID" required/>
-                  <button><Link2 size={15}/>Koppelen</button>
+                  <button><Link2 size={15}/>Alleen koppelen</button>
                 </form>
               </div>
             </div>

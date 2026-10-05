@@ -502,6 +502,37 @@ export const eventDriveSubfolders = [
   "Evaluatie",
 ] as const;
 
+// Read the chosen folder's own drive, including every page; never create or move here.
+export async function previewEventDriveStructure(folderId: string) {
+  const folder = await getGoogleDriveFolder(folderId);
+  const names = new Set<string>();
+  let pageToken: string | undefined;
+  const seen = new Set<string>();
+  do {
+    const params = new URLSearchParams({
+      q: `'${driveQueryValue(folder.id)}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+      fields: "nextPageToken,incompleteSearch,files(name)", pageSize: "1000", supportsAllDrives: "true", includeItemsFromAllDrives: "true",
+    });
+    if (folder.driveId) { params.set("corpora", "drive"); params.set("driveId", folder.driveId); }
+    if (pageToken) params.set("pageToken", pageToken);
+    const page = await googleJson<{files: {name: string}[]; nextPageToken?: string; incompleteSearch?: boolean}>(`https://www.googleapis.com/drive/v3/files?${params}`);
+    if (page.incompleteSearch || !Array.isArray(page.files)) throw new Error("De mapinhoud kon niet worden gecontroleerd.");
+    for (const child of page.files) names.add(child.name);
+    pageToken = page.nextPageToken;
+    if (pageToken && seen.has(pageToken)) throw new Error("De mapinhoud is onvolledig.");
+    if (pageToken) seen.add(pageToken);
+  } while (pageToken);
+  return {folder, missing: eventDriveSubfolders.filter(name => !names.has(name))};
+}
+
+export async function completeEventDriveStructure(folderId: string, expectedMissing: string[]) {
+  const preview = await previewEventDriveStructure(folderId);
+  if (new Set(expectedMissing).size !== preview.missing.length || preview.missing.some(name => !expectedMissing.includes(name))) throw new Error("De ontbrekende basismappen zijn gewijzigd. Bekijk het overzicht opnieuw.");
+  // Recheck at execution time; preserve existing children and the original parent.
+  for (const name of preview.missing) await createGoogleDriveFolder(name, preview.folder.id);
+  return preview.folder;
+}
+
 export async function ensureEventDriveStructure(eventTitle: string, eventFolderId?: string) {
   const moduleFolder = await ensureGoogleDriveModuleFolder("events");
   const eventFolder = eventFolderId

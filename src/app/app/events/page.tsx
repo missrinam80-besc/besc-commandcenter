@@ -147,7 +147,7 @@ export default async function Events({
                 {eventStatuses[event.status as keyof typeof eventStatuses]}
               </span>
               <span className="content-date">
-                {formatLocalDate(event.start_at, "Niet gepland")}
+                {formatLocalDate(event.start_at, event.status === "completed" ? "Datum onbekend" : "Niet gepland")}
               </span>
               <span />
               <Link className="row-action" href={`/app/events/${event.id}`}>Openen</Link>
