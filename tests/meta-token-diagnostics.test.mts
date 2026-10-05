@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-// @ts-expect-error Node's test runner loads TypeScript source directly.
 import { inspectMetaToken, metaPermissionSummary } from "../src/lib/meta-token-diagnostics.ts";
 
 const config = { appId: "test-app", appSecret: "secret-not-for-ui", apiVersion: "v25.0" };

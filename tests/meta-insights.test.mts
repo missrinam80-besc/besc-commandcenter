@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-// @ts-expect-error Node's test runner loads TypeScript source directly.
 import { instagramInsightParameters, numericInsights, MetaApiError, isMetaPermissionError } from "../src/lib/meta-insights.ts";
 
 test("Instagram-aanvraag bevat total_value en behoudt de periode", () => {

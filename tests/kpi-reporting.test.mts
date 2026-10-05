@@ -6,7 +6,8 @@ import { isActiveSponsor, isActiveStreamTeamMember } from "../src/lib/reporting-
 test("rapportages selecteren alleen actieve streamteamleden en sponsors", () => {
   assert.equal(isActiveStreamTeamMember({ status: "active", roles: [{ role: "streamteam" }] }), true);
   assert.equal(isActiveStreamTeamMember({ status: "active", roles: [{ role: "streamer" }] }), false);
-  assert.equal(isActiveStreamTeamMember({ status: "active", roles: [{ role: "streamteam" }], streamteam_level: "" }), true);
+  const legacyPerson = { status: "active", roles: [{ role: "streamteam" }], streamteam_level: "" };
+  assert.equal(isActiveStreamTeamMember(legacyPerson), true);
   assert.equal(isActiveStreamTeamMember({ status: "inactive", roles: [{ role: "streamteam" }] }), false);
   assert.equal(isActiveStreamTeamMember({ status: "active", roles: [{ role: "volunteer" }] }), false);
   assert.equal(isActiveSponsor({ partner_type: "sponsor", status: "active" }), true);

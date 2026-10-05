@@ -3,7 +3,6 @@ import test from "node:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
-// @ts-expect-error Node executes the TypeScript source directly.
 import { commandcenterMcpConfig, parseAuthorization, registerMcpClient, clientRedirects, consentTicket, readConsentTicket, issueMcpCode, exchangeMcpToken, tokenHash, randomToken, oauthMetadata, protectedResourceMetadata, mcpChallenge, type OAuthStore, type McpGrant } from "../src/lib/commandcenter-mcp-oauth.ts";
 
 const env = { COMMANDCENTER_MCP_ENABLED: "true", COMMANDCENTER_MCP_ORIGIN: "https://besc.example", COMMANDCENTER_MCP_SIGNING_KEY: "mcp-signing-test-only-".repeat(3), COMMANDCENTER_MCP_ORGANIZATION_ID: "11111111-1111-4111-8111-111111111111" };

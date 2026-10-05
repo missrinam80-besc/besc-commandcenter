@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-// @ts-expect-error Direct Node security tests require the source extension.
 import { capabilities, readInput, readRecords, type ReadDependencies } from "./commandcenter-read.ts";
 
 export type Dependencies = {
