@@ -7,8 +7,11 @@ import { TECHNICAL_AGENT_ID, agentResultInput } from "../src/lib/commandcenter-a
 import { parseAuthorization, oauthMetadata, issueMcpCode, AGENT_COMBINED_SCOPE, type OAuthStore } from "../src/lib/commandcenter-mcp-oauth.ts";
 import { handleCommandCenterMcp, type Dependencies } from "../src/lib/commandcenter-mcp-server.ts";
 import { technicalChannelConfig,triggerTechnicalAgent } from "../src/lib/commandcenter-agent-trigger.ts";
+import { createAgentJobForm } from "../src/lib/commandcenter-agent-job-form.ts";
+import { z } from "zod";
 
-const org=randomUUID(),user=randomUUID(),other=randomUUID(),otherOrg=randomUUID(),grant=randomUUID(),readGrant=randomUUID(),source=randomUUID();
+const legacyGrant="12345678-1234-1234-5234-123456789abc";
+const org=randomUUID(),user=randomUUID(),other=randomUUID(),otherOrg=randomUUID(),grant=legacyGrant,readGrant=randomUUID(),source=randomUUID();
 const version="2026-10-05T12:00:00.000Z";
 const config={origin:"https://besc.example",resource:"https://besc.example/mcp/commandcenter",organizationId:org,
   signingKey:"fixture-only".repeat(4),redirects:["https://chatgpt.com/connector_platform_oauth_redirect"],agentResultsEnabled:true};
@@ -23,10 +26,24 @@ test("explicit write consent is feature-gated and existing read grants retain th
   params.set("scope","agent_results:write commandcenter:read");assert.equal(parseAuthorization(params,config).scope,AGENT_COMBINED_SCOPE);params.set("scope",AGENT_COMBINED_SCOPE);
   assert.deepEqual(oauthMetadata(config).scopes_supported,["commandcenter:read","agent_results:write"]);
   let scope="";
-  const store={createCode:async (input:Parameters<OAuthStore["createCode"]>[0])=>{scope=input.grant.scope;}} as OAuthStore;
+  const store={createCode:async (input:Parameters<OAuthStore["createCode"]>[0])=>{scope=input.grant.scope;assert.equal(z.uuid().safeParse(input.grant.id).success,true);}} as OAuthStore;
   await issueMcpCode(parseAuthorization(params,config),user,config,store);assert.equal(scope,AGENT_COMBINED_SCOPE);
   params.set("scope","commandcenter:read");await issueMcpCode(parseAuthorization(params,config),user,config,store);assert.equal(scope,"commandcenter:read");
   for(const value of ["agent_results:write","commandcenter:read agent_results:write delete:all","commandcenter:read commandcenter:read"]){params.set("scope",value);assert.throws(()=>parseAuthorization(params,config));}
+});
+
+test("job form accepts existing PostgreSQL grant IDs while retaining other input boundaries",()=>{
+  const input={grant_id:legacyGrant,idempotency_key:randomUUID(),
+    request:"Controleer uitsluitend dossiermetadata",source_entity:"events",source_id:randomUUID(),
+    source_version:"2026-10-05T21:44:44.343+00:00"};
+  assert.equal(z.uuid().safeParse(input.grant_id).success,false);
+  assert.equal(createAgentJobForm.safeParse(input).success,true);
+  assert.equal(createAgentJobForm.safeParse({...input,grant_id:randomUUID()}).success,true);
+  for(const grant_id of ["", "not-a-uuid", input.grant_id+"extra",input.grant_id.replace("a","g")])
+    assert.equal(createAgentJobForm.safeParse({...input,grant_id}).success,false);
+  for(const invalid of [{idempotency_key:input.grant_id},{source_id:input.grant_id},{request:"x"},
+    {request:"x".repeat(4001)},{source_entity:"tasks"},{source_version:"yesterday"}])
+    assert.equal(createAgentJobForm.safeParse({...input,...invalid}).success,false);
 });
 
 test("durable PostgreSQL job, result, audit and access boundaries",async t=>{
@@ -52,7 +69,7 @@ test("durable PostgreSQL job, result, audit and access boundaries",async t=>{
       const p={actor:user,org,grant,agent:TECHNICAL_AGENT_ID,key,request:"Evalueer de metadata van deze TESTFIXTURE",entity:"projects",source,version,...overrides};
       return (await db.query<{job:Record<string,unknown>}>("select public.create_commandcenter_agent_job($1,$2,$3,$4,$5,$6,$7,$8,$9) as job",Object.values(p))).rows[0].job;
     };
-    const submit=async(jobId:string,result=payload,k=randomUUID(),actor=user,organization=org,g=grant)=>
+    const submit=async(jobId:string,result=payload,k=randomUUID(),actor:string=user,organization:string=org,g:string=grant)=>
       (await db.query<{result:Record<string,unknown>}>("select public.submit_commandcenter_agent_result($1,$2,$3,$4,$5,$6) as result",[actor,organization,g,jobId,k,result])).rows[0].result;
     let job:Record<string,unknown>;
     await t.test("service role can create and read a durable, projected job",async()=>{

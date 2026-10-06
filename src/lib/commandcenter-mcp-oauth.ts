@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 
 export const COMMANDCENTER_MCP_SCOPE = "commandcenter:read";
 export const AGENT_RESULT_SCOPE = "agent_results:write";
@@ -117,7 +117,7 @@ export function authorizationRedirect(request: AuthorizationRequest, config: Mcp
 }
 export async function issueMcpCode(request: AuthorizationRequest, userId: string, config: McpConfig, store: OAuthStore, now = Date.now()) {
   const code = randomToken();
-  const grant: McpGrant = { id: randomBytes(16).toString("hex").replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, "$1-$2-$3-$4-$5"),
+  const grant: McpGrant = { id: randomUUID(),
     user_id: userId, organization_id: config.organizationId, client_id: request.clientId, resource: config.resource,
     scope: request.scope, expires_at: new Date(now + 30 * 86_400_000).toISOString(), revoked_at: null };
   await store.createCode({ grant, redirectUri: request.redirectUri, challenge: request.challenge, codeHash: tokenHash(code), codeExpiresAt: new Date(now + 300_000).toISOString() });
