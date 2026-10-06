@@ -5,6 +5,7 @@ import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
 import React from "react";
+import { hasPermission } from "../src/lib/permissions.ts";
 import { renderToStaticMarkup } from "react-dom/server";
 
 const require = createRequire(import.meta.url);
@@ -34,7 +35,7 @@ function selectedValue(html: string, name: string) {
   assert.ok(selected, `select ${name} has a selected option`);
   return selected[1];
 }
-async function fixture(detail: boolean, unavailable = false) {
+async function fixture(detail: boolean, unavailable = false, role = "admin", capabilities: string[] = []) {
   const queries: { table: string; fields: string; organization?: string; active?: boolean }[] = [];
   const record = { id, title: "TESTFIXTURE", description: null, content_type: "social_post",
     status: "idea", priority: "normal", project_id: null, campaign_id: campaignId, partner_id: partnerId,
@@ -60,8 +61,8 @@ async function fixture(detail: boolean, unavailable = false) {
   const passthrough = ({ children }: { children?: React.ReactNode }) => React.createElement("div", null, children);
   const overrides: Record<string, unknown> = {
     "next/link": { default: passthrough }, "next/navigation": { notFound: () => { throw Error("not found"); } },
-    "@/lib/auth-context": { requireActiveMembership: async () => ({ supabase, membership: { organization_id: "fixture-org" }, user: { id: "fixture-user" } }) },
-    "@/lib/permissions": { hasPermission: () => true }, "@/lib/format": { formatDateTime: () => "" },
+    "@/lib/auth-context": { requireActiveMembership: async () => ({ supabase, membership: { organization_id: "fixture-org", role, capabilities, finance_role: "none" }, user: { id: "fixture-user" } }) },
+    "@/lib/permissions": { hasPermission }, "@/lib/format": { formatDateTime: () => "" },
     "@/components/content-form": { ContentForm: form },
     "./actions": { createContent: () => {} }, "../actions": { updateContent: () => {} },
     "./constants": constants, "../constants": constants,
@@ -81,7 +82,7 @@ async function fixture(detail: boolean, unavailable = false) {
 async function save(campaign: string, partner: string) {
   const writes: Record<string, unknown>[] = [];
   const query = { update: (value: Record<string, unknown>) => { writes.push(value); return query; },
-    eq: () => query, is: () => query,
+    eq: () => query, is: () => query, select: () => query, maybeSingle: async () => ({ data: { id }, error: null }),
     then: (resolve: (result: unknown) => unknown) => Promise.resolve({ error: null }).then(resolve) };
   const actions = load("src/app/app/content/actions.ts", {
     "next/cache": { revalidatePath: () => {} }, "next/navigation": { redirect: (url: string) => { throw Error(url); } },
@@ -115,4 +116,16 @@ test("Bewust een andere campagne kiezen behoudt de partner", async () => {
   const replacement = "44444444-4444-4444-8444-444444444444";
   const written = await save(replacement, partnerId);
   assert.equal(written.campaign_id, replacement); assert.equal(written.partner_id, partnerId);
+});
+
+for (const role of ["admin", "board", "member", "volunteer"]) test(`Content-schermen volgen manageContent voor ${role}`, async () => {
+  const allowed = role !== "volunteer";
+  const listing = await fixture(false, false, role);
+  assert.equal(listing.html.includes('name="campaign_id"'), allowed);
+  const detail = await fixture(true, false, role);
+  assert.equal(detail.html.includes('name="campaign_id"'), allowed);
+  assert.equal(detail.html.includes("Bewerken"), allowed);
+});
+test("Content-schermen tonen beheer bij expliciete Content-bevoegdheid", async () => {
+  for (const detail of [false, true]) assert.ok((await fixture(detail, false, "volunteer", ["manageContent"])).html.includes('name="campaign_id"'));
 });
