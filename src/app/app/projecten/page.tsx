@@ -30,6 +30,13 @@ const projectStatusLabels = Object.fromEntries(
   projectStatuses.map(({ value, label }) => [value, label]),
 );
 
+const successMessages = new Map<string, string>([
+  ["aangemaakt", "Het project werd aangemaakt."],
+  ["gearchiveerd", "Het project werd gearchiveerd."],
+  ["hersteld", "Het project werd hersteld."],
+  ["verwijderd", "Het project werd verwijderd uit de werkweergaven."],
+]);
+
 export default async function ProjectsPage({
   searchParams,
 }: {
@@ -91,7 +98,7 @@ export default async function ProjectsPage({
         resultCount={projects.length}
       >
         {params.fout && <div className="error-note">Het project kon niet worden opgeslagen.</div>}
-        {params.succes && <div className="success">Het project werd aangemaakt.</div>}
+        {params.succes && <div className="success">{successMessages.get(params.succes) ?? "Wijziging opgeslagen."}</div>}
         {params.nieuw && canManage && (
           <EntityForm title="Nieuw project" action={createProject}>
             <ProjectOutcomeFields evaluation={false}/>
