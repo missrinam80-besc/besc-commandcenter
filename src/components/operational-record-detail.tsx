@@ -104,7 +104,20 @@ export async function OperationalRecordDetail({
     module === "campagnes" ? supabase.from("community_people").select("id,display_name,handle").eq("organization_id", org).is("deleted_at", null).order("display_name") : Promise.resolve({ data: [] }),
   ]);
 
-  if (!recordResult.data) notFound();
+  if (!recordResult.data) {
+    if (query.fout) {
+      return <AppShell active={config.label}>
+        <header className="page-header">
+          <h1>Dossier niet beschikbaar</h1>
+        </header>
+        <div className="error-note" role="alert">
+          De actie kon niet worden afgerond. Het dossier is niet meer beschikbaar of je hebt geen toegang.
+        </div>
+        <Link href={`/app/${module}`}>Terug naar {config.label}</Link>
+      </AppShell>;
+    }
+    notFound();
+  }
   const record = recordResult.data as Row;
   const connectionEntity = module === "campagnes" ? "campaign" : module === "sponsors" ? "partner" : module === "community" ? "community_person" : null;
   const [connections, relationOptions] = connectionEntity ? await Promise.all([
