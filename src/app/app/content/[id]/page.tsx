@@ -23,6 +23,8 @@ type Content = {
   status: string;
   priority: string;
   project_id: string | null;
+  campaign_id: string | null;
+  partner_id: string | null;
   primary_channel: string | null;
   channels: string[];
   deadline: string | null;
@@ -45,11 +47,13 @@ export default async function ContentDetail({
   const query = await searchParams;
   const { supabase, membership } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageContent");
-  const [{ data }, { data: projects }, { data: source }, { data: memberRows }] = await Promise.all([
-    supabase.from("content_items").select("id,title,description,content_type,status,priority,project_id,primary_channel,channels,deadline,publication_at,drive_url,canva_url,publication_url,approval_status,projects(title)").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
+  const [{ data }, { data: projects }, { data: source }, { data: memberRows }, { data: campaigns }, { data: partners }] = await Promise.all([
+    supabase.from("content_items").select("id,title,description,content_type,status,priority,project_id,campaign_id,partner_id,primary_channel,channels,deadline,publication_at,drive_url,canva_url,publication_url,approval_status,projects(title)").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
     supabase.from("migration_source_links").select("source_url").eq("target_table", "content_items").eq("target_id", id).limit(1).maybeSingle(),
     supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", membership.organization_id).eq("status", "active"),
+    supabase.from("campaigns").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
+    supabase.from("partners").select("id,name").eq("organization_id", membership.organization_id).is("deleted_at", null).order("name"),
   ]);
   if (!data) notFound();
   const item = data as unknown as Content;
@@ -73,7 +77,7 @@ export default async function ContentDetail({
       <div className="project-detail-body">
         {query.fout && <div className="error-note">Wijziging mislukt ({query.fout}).</div>}
         {query.succes && <div className="success">{query.succes === "goedkeuring-aangevraagd" ? "Ter goedkeuring voorgelegd." : "Contentitem opgeslagen."}</div>}
-        {query.bewerken && <FormModal title="Content bewerken"><ContentForm action={updateContent} content={item} projects={projects ?? []}/></FormModal>}
+        {query.bewerken && <FormModal title="Content bewerken"><ContentForm action={updateContent} content={item} projects={projects ?? []} campaigns={campaigns ?? []} partners={partners ?? []}/></FormModal>}
         {query.nieuw === "taak" ? <TaskCreateModal returnTo={`/app/content/${id}`} projects={projects ?? []} people={people} defaultProjectId={item.project_id} contextEntityType="content" contextEntityId={id}/> : null}
         <section className="content-summary">
           <article><span>Type</span><strong>{contentTypes[item.content_type as keyof typeof contentTypes] ?? item.content_type}</strong></article>
