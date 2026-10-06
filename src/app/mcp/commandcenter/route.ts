@@ -1,5 +1,6 @@
 import { getMcpConfig, mcpRequestLimit, oauthReply } from "@/lib/commandcenter-mcp-runtime";
-import { clientRedirects, mcpChallenge, tokenHash, COMMANDCENTER_MCP_SCOPE } from "@/lib/commandcenter-mcp-oauth";
+import { clientRedirects, mcpChallenge, tokenHash, allowedMcpScope, AGENT_COMBINED_SCOPE } from "@/lib/commandcenter-mcp-oauth";
+import { createAgentTools } from "@/lib/commandcenter-agent-store";
 import { createMcpStore, canReadMcpCommandCenter } from "@/lib/commandcenter-mcp-store";
 import { handleCommandCenterMcp } from "@/lib/commandcenter-mcp-server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -12,10 +13,11 @@ async function handle(request:Request) {
     authenticate:async token=>{
       const grant=await createMcpStore().findAccess(tokenHash(token));
       if(!grant || grant.revoked_at || Date.parse(grant.expires_at)<=Date.now() || grant.organization_id!==config.organizationId
-        || grant.resource!==config.resource || grant.scope!==COMMANDCENTER_MCP_SCOPE)return null;
+        || grant.resource!==config.resource || !allowedMcpScope(grant.scope,config))return null;
       try{clientRedirects(grant.client_id,config);}catch{return null;}
-      return await canReadMcpCommandCenter(grant.user_id,config.organizationId)?{userId:grant.user_id}:null;
+      return await canReadMcpCommandCenter(grant.user_id,config.organizationId)?{userId:grant.user_id,grantId:grant.id,agentResultsWrite:grant.scope===AGENT_COMBINED_SCOPE}:null;
     },
+    agentTools:(userId,grantId)=>createAgentTools({userId,grantId,organizationId:config.organizationId}),
     reader:userId=>({organizationId:config.organizationId,userId,origin:config.origin,signingKey:config.signingKey,
       dataState:process.env.COMMANDCENTER_MCP_DATA_STATE??"test",
       readPage:async q=>{

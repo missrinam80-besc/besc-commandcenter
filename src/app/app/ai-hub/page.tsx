@@ -68,6 +68,7 @@ export default async function Page({
         )}
       </header>
       <div className="module-body">
+        {manager && <p><Link href="/app/ai-hub/agents">BESC-agentopdrachten en ontvangen resultaten</Link></p>}
         <p className="lead">
           Centraliseer herbruikbare prompts, modelkeuzes en generatiehistoriek
           voor BESC.

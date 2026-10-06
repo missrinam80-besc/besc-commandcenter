@@ -34,6 +34,9 @@ jobs:
       - name: Rechten- en auditcontroles uitvoeren
         run: pnpm test
 
+      - name: DEV-tokenopslag bewaken
+        run: python3 tests/test_besc_dev_agent_token.py
+
       - name: Codekwaliteit controleren
         run: pnpm run lint
 
