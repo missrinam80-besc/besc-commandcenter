@@ -14,6 +14,15 @@ import {
 
 const path = (id: string) => `/app/projecten/${id}`;
 
+async function requireManagedProject(projectId: string) {
+  const context = await requirePermission("manageProjects", `${path(projectId)}?fout=rechten`);
+  const { data, error } = await context.supabase.from("projects").select("id")
+    .eq("organization_id", context.membership.organization_id).eq("id", projectId)
+    .is("deleted_at", null).maybeSingle();
+  if (error || !data) redirect(`${path(projectId)}?fout=project`);
+  return context;
+}
+
 async function saveProjectDriveLink(input: {
   projectId: string;
   folder: Awaited<ReturnType<typeof getGoogleDriveFolder>>;
@@ -190,7 +199,7 @@ export async function updateProject(formData: FormData) {
     "manageProjects",
     `${path(parsed.data.id)}?fout=rechten`,
   );
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("projects")
     .update({
       ...parsed.data,
@@ -200,8 +209,8 @@ export async function updateProject(formData: FormData) {
       due_date: parsed.data.due_date || null,
     })
     .eq("organization_id", membership.organization_id)
-    .eq("id", parsed.data.id);
-  if (error) redirect(`${path(parsed.data.id)}?fout=opslaan`);
+    .eq("id", parsed.data.id).is("deleted_at", null).select("id").maybeSingle();
+  if (error || !data) redirect(`${path(parsed.data.id)}?fout=opslaan`);
   await supabase.from("activity_events").insert({
     organization_id: membership.organization_id,
     entity_type: "project",
@@ -220,17 +229,14 @@ export async function addMilestone(formData: FormData) {
     due_date: z.string().optional(),
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/projecten?fout=mijlpaal");
-  const { supabase, user } = await requirePermission(
-    "manageProjects",
-    `${path(parsed.data.project_id)}?fout=rechten`,
-  );
-  const { error } = await supabase.from("project_milestones").insert({
+  const { supabase, user } = await requireManagedProject(parsed.data.project_id);
+  const { data, error } = await supabase.from("project_milestones").insert({
     project_id: parsed.data.project_id,
     title: parsed.data.title,
     due_date: parsed.data.due_date || null,
     created_by: user.id,
-  });
-  if (error) redirect(`${path(parsed.data.project_id)}?fout=mijlpaal`);
+  }).select("id").single();
+  if (error || !data) redirect(`${path(parsed.data.project_id)}?fout=mijlpaal`);
   revalidatePath(path(parsed.data.project_id));
 }
 
@@ -241,15 +247,13 @@ export async function toggleMilestone(formData: FormData) {
     is_done: z.enum(["true", "false"]),
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/projecten?fout=mijlpaal");
-  const { supabase } = await requirePermission(
-    "manageProjects",
-    `${path(parsed.data.project_id)}?fout=rechten`,
-  );
-  await supabase
+  const { supabase } = await requireManagedProject(parsed.data.project_id);
+  const { data, error } = await supabase
     .from("project_milestones")
     .update({ is_done: parsed.data.is_done === "true" })
     .eq("project_id", parsed.data.project_id)
-    .eq("id", parsed.data.id);
+    .eq("id", parsed.data.id).select("id").maybeSingle();
+  if (error || !data) redirect(`${path(parsed.data.project_id)}?fout=mijlpaal-opslaan`);
   revalidatePath(path(parsed.data.project_id));
 }
 
@@ -261,16 +265,13 @@ export async function updateMilestone(formData: FormData) {
     due_date: z.string().optional(),
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/projecten?fout=mijlpaal");
-  const { supabase } = await requirePermission(
-    "manageProjects",
-    `${path(parsed.data.project_id)}?fout=rechten`,
-  );
-  const { error } = await supabase
+  const { supabase } = await requireManagedProject(parsed.data.project_id);
+  const { data, error } = await supabase
     .from("project_milestones")
     .update({ title: parsed.data.title, due_date: parsed.data.due_date || null })
     .eq("project_id", parsed.data.project_id)
-    .eq("id", parsed.data.id);
-  if (error) redirect(`${path(parsed.data.project_id)}?fout=mijlpaal-opslaan`);
+    .eq("id", parsed.data.id).select("id").maybeSingle();
+  if (error || !data) redirect(`${path(parsed.data.project_id)}?fout=mijlpaal-opslaan`);
   revalidatePath(path(parsed.data.project_id));
   redirect(`${path(parsed.data.project_id)}?succes=mijlpaal`);
 }
@@ -281,16 +282,13 @@ export async function deleteMilestone(formData: FormData) {
     id: z.string().uuid(),
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/projecten?fout=mijlpaal");
-  const { supabase } = await requirePermission(
-    "manageProjects",
-    `${path(parsed.data.project_id)}?fout=rechten`,
-  );
-  const { error } = await supabase
+  const { supabase } = await requireManagedProject(parsed.data.project_id);
+  const { data, error } = await supabase
     .from("project_milestones")
     .delete()
     .eq("project_id", parsed.data.project_id)
-    .eq("id", parsed.data.id);
-  if (error) redirect(`${path(parsed.data.project_id)}?fout=mijlpaal-verwijderen`);
+    .eq("id", parsed.data.id).select("id").maybeSingle();
+  if (error || !data) redirect(`${path(parsed.data.project_id)}?fout=mijlpaal-verwijderen`);
   revalidatePath(path(parsed.data.project_id));
   redirect(`${path(parsed.data.project_id)}?succes=mijlpaal-verwijderd`);
 }
@@ -302,21 +300,24 @@ export async function setProjectMember(formData: FormData) {
     enabled: z.enum(["true", "false"]),
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/projecten?fout=team");
-  const { supabase } = await requirePermission(
-    "manageProjects",
-    `${path(parsed.data.project_id)}?fout=rechten`,
-  );
+  const { supabase, membership } = await requireManagedProject(parsed.data.project_id);
   if (parsed.data.enabled === "true") {
-    await supabase.from("project_members").upsert({
+    const { data: candidate, error: candidateError } = await supabase.from("organization_members")
+      .select("user_id").eq("organization_id", membership.organization_id)
+      .eq("user_id", parsed.data.user_id).eq("status", "active").maybeSingle();
+    if (candidateError || !candidate) redirect(`${path(parsed.data.project_id)}?fout=team`);
+    const { data, error } = await supabase.from("project_members").upsert({
       project_id: parsed.data.project_id,
       user_id: parsed.data.user_id,
-    });
+    }).select("project_id,user_id").single();
+    if (error || !data) redirect(`${path(parsed.data.project_id)}?fout=team`);
   } else {
-    await supabase
+    const { data, error } = await supabase
       .from("project_members")
       .delete()
       .eq("project_id", parsed.data.project_id)
-      .eq("user_id", parsed.data.user_id);
+      .eq("user_id", parsed.data.user_id).select("project_id,user_id").maybeSingle();
+    if (error || !data) redirect(`${path(parsed.data.project_id)}?fout=team`);
   }
   revalidatePath(path(parsed.data.project_id));
 }

@@ -50,8 +50,8 @@ export async function createProject(formData: FormData) {
   const parsed = baseSchema.extend({ priority, start_date: z.string().optional(), due_date: z.string().optional(), drive_url: z.string().url().optional().or(z.literal("")) }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/projecten?nieuw=1&fout=velden");
   const { supabase, user, membership } = await requirePermission("manageProjects", "/app/projecten?fout=geen-toegang");
-  const { error } = await supabase.from("projects").insert({ ...parsed.data, title: parsed.data.title || "Naamloos project", start_date: parsed.data.start_date || null, due_date: parsed.data.due_date || null, drive_url: parsed.data.drive_url || null, organization_id: membership.organization_id, owner_id: user.id, created_by: user.id, status: "planned" });
-  if (error) redirect("/app/projecten?nieuw=1&fout=opslaan");
+  const { data, error } = await supabase.from("projects").insert({ ...parsed.data, title: parsed.data.title || "Naamloos project", start_date: parsed.data.start_date || null, due_date: parsed.data.due_date || null, drive_url: parsed.data.drive_url || null, organization_id: membership.organization_id, owner_id: user.id, created_by: user.id, status: "planned" }).select("id").single();
+  if (error || !data) redirect("/app/projecten?nieuw=1&fout=opslaan");
   revalidatePath("/app"); revalidatePath("/app/projecten"); redirect("/app/projecten?succes=aangemaakt");
 }
 
