@@ -9,12 +9,10 @@ import { assertAgentAccess } from "@/lib/commandcenter-agent-store";
 import { TECHNICAL_AGENT_ID } from "@/lib/commandcenter-agent-contract";
 import { canReadMcpCommandCenter } from "@/lib/commandcenter-mcp-store";
 import { technicalChannelConfig,triggerTechnicalAgent } from "@/lib/commandcenter-agent-trigger";
+import { createAgentJobForm } from "@/lib/commandcenter-agent-job-form";
 
-const createSchema=z.object({ grant_id:z.string().uuid(),idempotency_key:z.string().uuid(),
-  request:z.string().trim().min(5).max(4000),source_entity:z.enum(["projects","events"]),
-  source_id:z.string().uuid(),source_version:z.iso.datetime({offset:true}) });
 export async function createAgentJob(form:FormData) {
-  const parsed=createSchema.safeParse(Object.fromEntries(form));
+  const parsed=createAgentJobForm.safeParse(Object.fromEntries(form));
   if(!parsed.success)redirect("/app/ai-hub/agents?fout=velden");
   const {user,membership}=await requireActiveMembership();
   let failed=false;
