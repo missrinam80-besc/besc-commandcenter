@@ -61,8 +61,8 @@ export async function updateTaskStatus(formData: FormData) {
   const parsed = z.object({ id: z.string().uuid(), status: z.enum(["todo","doing","waiting","review","done","cancelled"]), return_to: z.string().optional() }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/taken?fout=velden");
   const { supabase, membership } = await requireActiveMembership();
-  const { error } = await supabase.from("tasks").update({ status: parsed.data.status, completed_at: parsed.data.status === "done" ? new Date().toISOString() : null }).eq("id", parsed.data.id).eq("organization_id", membership.organization_id);
-  if (error) redirect("/app/taken?fout=opslaan");
+  const { data, error } = await supabase.from("tasks").update({ status: parsed.data.status, completed_at: parsed.data.status === "done" ? new Date().toISOString() : null }).eq("id", parsed.data.id).eq("organization_id", membership.organization_id).is("deleted_at", null).select("id").maybeSingle();
+  if (error || !data) redirect("/app/taken?fout=opslaan");
   revalidatePath("/app"); revalidatePath("/app/taken");
   if (parsed.data.return_to?.startsWith("/app/projecten/")) { revalidatePath(parsed.data.return_to); redirect(parsed.data.return_to); }
 }

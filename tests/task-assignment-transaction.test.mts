@@ -1,0 +1,47 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import {readFileSync} from "node:fs";
+import {PGlite} from "@electric-sql/pglite";
+const actor="10000000-0000-4000-8000-000000000001",old="10000000-0000-4000-8000-000000000002",next="10000000-0000-4000-8000-000000000003",outside="10000000-0000-4000-8000-000000000004";
+const org="20000000-0000-4000-8000-000000000001",other="20000000-0000-4000-8000-000000000002",task="30000000-0000-4000-8000-000000000001";
+test("Echte Postgres-toewijzing behoudt oude waarden bij fouten en respecteert RLS",async()=>{
+ const db=new PGlite();try{
+ await db.exec(`create role authenticated;create role anon;create schema auth;create schema private;
+ create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+ grant usage on schema auth,private to authenticated;
+ create table public.organization_members(organization_id uuid,user_id uuid,status text);
+ create table public.tasks(id uuid primary key,organization_id uuid,deleted_at timestamptz);
+ create table public.task_assignees(task_id uuid references public.tasks(id),user_id uuid,primary key(task_id,user_id));
+ create function private.is_active_member(org_id uuid) returns boolean language sql stable security definer set search_path='' as $$select exists(select 1 from public.organization_members where organization_id=org_id and user_id=auth.uid() and status='active')$$;
+ grant execute on function private.is_active_member(uuid) to authenticated;
+ alter table public.tasks enable row level security;alter table public.task_assignees enable row level security;alter table public.organization_members enable row level security;
+ grant select,update on public.tasks to authenticated;grant select,insert,delete on public.task_assignees to authenticated;grant select on public.organization_members to authenticated;
+ create policy member_read on public.organization_members for select to authenticated using(private.is_active_member(organization_id));
+ create policy task_read on public.tasks for select to authenticated using(private.is_active_member(organization_id));
+ create policy task_write on public.tasks for update to authenticated using(private.is_active_member(organization_id)) with check(private.is_active_member(organization_id));
+ create policy assignee_read on public.task_assignees for select to authenticated using(exists(select 1 from public.tasks t where t.id=task_id and private.is_active_member(t.organization_id)));
+ create policy assignee_insert on public.task_assignees for insert to authenticated with check(exists(select 1 from public.tasks t where t.id=task_id and private.is_active_member(t.organization_id)));
+ create policy assignee_delete on public.task_assignees for delete to authenticated using(exists(select 1 from public.tasks t where t.id=task_id and private.is_active_member(t.organization_id)));
+ insert into public.organization_members values('${org}','${actor}','active'),('${org}','${old}','active'),('${org}','${next}','active'),('${other}','${outside}','active');
+ insert into public.tasks values('${task}','${org}',null);insert into public.task_assignees values('${task}','${old}');`);
+ await db.exec(readFileSync(new URL('../supabase/migrations/20261006185257_atomic_task_assignment.sql',import.meta.url),'utf8'));
+ await db.exec(`set role authenticated;set request.jwt.claim.sub='${actor}';`);
+ const call=(user:string|null,selectedOrg=org)=>db.query(`select public.replace_task_assignee('${task}','${selectedOrg}',${user?`'${user}'`:'null'})`);
+ const users=async()=> (await db.query<{user_id:string}>(`select user_id from public.task_assignees order by user_id`)).rows.map(r=>r.user_id);
+ await assert.rejects(call(outside));assert.deepEqual(await users(),[old]);
+ await assert.rejects(call(next,other));assert.deepEqual(await users(),[old]);
+ await db.exec(`reset role;create function public.reject_fixture_assignment() returns trigger language plpgsql as $$begin raise exception 'fixture insert failure';end$$;create trigger reject_fixture before insert on public.task_assignees for each row execute function public.reject_fixture_assignment();set role authenticated;`);
+ await assert.rejects(call(next),/fixture insert failure/);assert.deepEqual(await users(),[old]);
+ await db.exec(`reset role;drop trigger reject_fixture on public.task_assignees;alter policy assignee_delete on public.task_assignees using(false);set role authenticated;`);
+ await assert.rejects(call(next),/task_assignment_not_replaced/);assert.deepEqual(await users(),[old]);
+ await db.exec(`reset role;alter policy assignee_delete on public.task_assignees using(exists(select 1 from public.tasks t where t.id=task_id and private.is_active_member(t.organization_id)));set role authenticated;`);
+ await call(next);assert.deepEqual(await users(),[next]);await call(old);assert.deepEqual(await users(),[old]);
+ await db.exec(`reset role;update public.organization_members set status='inactive' where user_id='${next}';set role authenticated;`);
+ await assert.rejects(call(next));assert.deepEqual(await users(),[old]);
+ await call(null);assert.deepEqual(await users(),[]);await call(old);
+ await db.exec(`reset role;update public.tasks set deleted_at=now();set role authenticated;`);await assert.rejects(call(next));assert.deepEqual(await users(),[old]);
+ await db.exec(`reset role;update public.tasks set deleted_at=null;update public.organization_members set status='inactive' where user_id='${actor}';set role authenticated;`);await assert.rejects(call(next));
+ await db.exec(`reset role;`);assert.deepEqual(await users(),[old]);
+ const rights=await db.query<{safe:boolean}>(`select not p.prosecdef and has_function_privilege('authenticated',p.oid,'EXECUTE') and not has_function_privilege('anon',p.oid,'EXECUTE') as safe from pg_proc p where oid='public.replace_task_assignee(uuid,uuid,uuid)'::regprocedure`);assert.equal(rights.rows[0].safe,true);
+ }finally{await db.close();}
+});
