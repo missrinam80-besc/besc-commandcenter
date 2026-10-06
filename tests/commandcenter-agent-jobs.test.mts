@@ -162,17 +162,29 @@ test("existing-agent trigger uses official endpoint, stable keys, safe receipt a
   await assert.rejects(()=>triggerTechnicalAgent(channel,job,async()=>Response.json({conversation_url:"https://chatgpt.com.evil.example/c/fixture"},{status:202})));
 });
 
-test("MCP old connections cannot discover or invoke write tools; explicit consent exposes bounded tools",async()=>{
+test("MCP discovers enabled write tools but requires explicit consent before any agent operation",async()=>{
   const token="a".repeat(43);
   const request=(method:string,params:unknown={})=>new Request(config.resource,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json",Accept:"application/json, text/event-stream"},body:JSON.stringify({jsonrpc:"2.0",id:1,method,params})});
-  let writes=0;
+  let writes=0,factories=0;
   const d:Dependencies={origin:config.origin,challenge:"Bearer",allowRequest:()=>true,authenticate:async()=>({userId:user}),
     reader:()=>({organizationId:org,userId:user,origin:config.origin,signingKey:config.signingKey,dataState:"ready",readPage:async()=>[]}),
-    agentTools:()=>({readJob:async()=>({coverage:"header_metadata_only"}),submitResult:async()=>{writes++;return {dossierChanged:false};}})};
+    agentTools:()=>{factories++;return {readJob:async()=>({coverage:"header_metadata_only"}),submitResult:async()=>{writes++;return {dossierChanged:false};}};}};
   const list=await(await handleCommandCenterMcp(request("tools/list"),d)).json();assert.equal(list.result.tools.length,3);
   const denied=await(await handleCommandCenterMcp(request("tools/call",{name:"submit_commandcenter_agent_result",arguments:{jobId:randomUUID(),idempotencyKey:randomUUID(),payload}}),d)).json();
   assert.ok(denied.error||denied.result?.isError);assert.equal(writes,0);
-  const enabled={...d,authenticate:async()=>({userId:user,grantId:grant,agentResultsWrite:true})};
+  const discoverable={...d,agentResultsEnabled:true};
+  const advertised=(await(await handleCommandCenterMcp(request("tools/list"),discoverable)).json()).result.tools;
+  assert.equal(advertised.length,5);
+  assert.deepEqual(advertised.find((x:{name:string})=>x.name==="submit_commandcenter_agent_result").securitySchemes,[{type:"oauth2",scopes:["commandcenter:read","agent_results:write"]}]);
+  for(const name of ["get_commandcenter_agent_job","submit_commandcenter_agent_result"]){
+    const argumentsValue=name==="get_commandcenter_agent_job"?{jobId:randomUUID()}:{jobId:randomUUID(),idempotencyKey:randomUUID(),payload};
+    const response=(await(await handleCommandCenterMcp(request("tools/call",{name,arguments:argumentsValue}),discoverable)).json()).result;
+    assert.equal(response.isError,true);
+    assert.match(response._meta["mcp/www_authenticate"][0],/scope="commandcenter:read agent_results:write"/);
+    assert.match(response._meta["mcp/www_authenticate"][0],/error="insufficient_scope"/);
+  }
+  assert.equal(writes,0);assert.equal(factories,0);
+  const enabled={...discoverable,authenticate:async()=>({userId:user,grantId:grant,agentResultsWrite:true})};
   const tools=(await(await handleCommandCenterMcp(request("tools/list"),enabled)).json()).result.tools;
   assert.equal(tools.length,5);assert.equal(tools.find((x:{name:string})=>x.name==="submit_commandcenter_agent_result").annotations.readOnlyHint,false);
   const ok=await(await handleCommandCenterMcp(request("tools/call",{name:"submit_commandcenter_agent_result",arguments:{jobId:randomUUID(),idempotencyKey:randomUUID(),payload}}),enabled)).json();
