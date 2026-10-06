@@ -12,6 +12,8 @@ import {
   moveGoogleDriveFolderToModule,
 } from "@/lib/google-workspace";
 
+import { missingProjectOutcomes, projectOutcomeShape } from "@/lib/project-outcomes";
+
 const path = (id: string) => `/app/projecten/${id}`;
 
 async function requireManagedProject(projectId: string) {
@@ -184,6 +186,7 @@ export async function organizeProjectFolder(formData: FormData) {
 
 export async function updateProject(formData: FormData) {
   const parsed = z.object({
+    ...projectOutcomeShape,
     id: z.string().uuid(),
     title: z.string().trim().min(3).max(180),
     description: z.string().trim().max(5000).optional(),
@@ -199,6 +202,17 @@ export async function updateProject(formData: FormData) {
     "manageProjects",
     `${path(parsed.data.id)}?fout=rechten`,
   );
+  if (parsed.data.status === "done") {
+    const { data: existing, error: lookupError } = await supabase.from("projects")
+      .select("status,goal,deliverables,acceptance_criteria,closure_evaluation")
+      .eq("organization_id", membership.organization_id).eq("id", parsed.data.id)
+      .is("deleted_at", null).maybeSingle();
+    if (lookupError || !existing) redirect(`${path(parsed.data.id)}?bewerken=1&fout=opslaan`);
+    const outcomes = Object.fromEntries(Object.entries(parsed.data).filter(([, value]) => value !== undefined));
+    if (existing.status !== "done" && missingProjectOutcomes({ ...existing, ...outcomes }).length) {
+      redirect(`${path(parsed.data.id)}?bewerken=1&fout=afsluiting`);
+    }
+  }
   const { data, error } = await supabase
     .from("projects")
     .update({
@@ -210,6 +224,9 @@ export async function updateProject(formData: FormData) {
     })
     .eq("organization_id", membership.organization_id)
     .eq("id", parsed.data.id).is("deleted_at", null).select("id").maybeSingle();
+  if (error?.code === "23514" && error.message?.includes("project_closure_required")) {
+    redirect(`${path(parsed.data.id)}?bewerken=1&fout=afsluiting`);
+  }
   if (error || !data) redirect(`${path(parsed.data.id)}?fout=opslaan`);
   await supabase.from("activity_events").insert({
     organization_id: membership.organization_id,

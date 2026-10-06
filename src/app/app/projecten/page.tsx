@@ -1,3 +1,4 @@
+import { ProjectOutcomeFields } from "@/components/project-outcome-fields";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ModulePage } from "@/components/module-page";
@@ -93,6 +94,7 @@ export default async function ProjectsPage({
         {params.succes && <div className="success">Het project werd aangemaakt.</div>}
         {params.nieuw && canManage && (
           <EntityForm title="Nieuw project" action={createProject}>
+            <ProjectOutcomeFields evaluation={false}/>
             <div className="form-row">
               <label>
                 Startdatum
