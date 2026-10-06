@@ -10,6 +10,7 @@ async function handle(request:Request) {
   const config=getMcpConfig(); if(!config)return oauthReply({error:"mcp_not_configured"},503);
   return handleCommandCenterMcp(request,{
     origin:config.origin,challenge:mcpChallenge(config),allowRequest:mcpRequestLimit,
+    agentResultsEnabled:config.agentResultsEnabled,
     authenticate:async token=>{
       const grant=await createMcpStore().findAccess(tokenHash(token));
       if(!grant || grant.revoked_at || Date.parse(grant.expires_at)<=Date.now() || grant.organization_id!==config.organizationId
