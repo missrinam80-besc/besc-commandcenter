@@ -13,16 +13,16 @@ function fixture(update=false) {
   let calendarCalls=0;
   const supabase={from:(table:string)=>{
     const q:Record<string,unknown>={then:(yes:(v:unknown)=>unknown)=>Promise.resolve({error:null}).then(yes)};
-    for(const method of ["select","eq"])q[method]=(...args:unknown[])=>{filters.push([table,method,...args]);return q;};
+    for(const method of ["select","eq","is"])q[method]=(...args:unknown[])=>{filters.push([table,method,...args]);return q;};
     for(const method of ["insert","update"])q[method]=(row:Record<string,unknown>)=>{writes.push(row);return q;};
-    q.single=async()=>({data:{id},error:null});return q;
+    q.maybeSingle=q.single=async()=>({data:{id},error:null});return q;
   }};
   const source=readFileSync(new URL("../src/app/app/events/actions.ts",import.meta.url),"utf8");
   const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
   const compiled={exports:{} as Record<string,unknown>};
   const overrides:Record<string,unknown>={
     "next/cache":{revalidatePath:()=>undefined},"next/navigation":{redirect:(url:string)=>{throw Error(url);}},
-    "@/lib/auth-context":{requireActiveMembership:async()=>({supabase,user:{id:"fixture-owner"},membership:{role:"admin",organization_id:"fixture-org"}})},
+    "@/lib/auth-context":{requirePermission:async()=>({supabase,user:{id:"fixture-owner"},membership:{role:"admin",organization_id:"fixture-org"}})},
     "@/lib/format":timingModule.exports,"@/lib/linked-calendar-sync":{syncLinkedEvent:async()=>{calendarCalls++;}},
   };
   runInNewContext(code,{module:compiled,exports:compiled.exports,require:(key:string)=>key in overrides?overrides[key]:require(key),Date});
