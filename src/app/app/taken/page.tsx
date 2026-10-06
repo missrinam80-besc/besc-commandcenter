@@ -66,6 +66,13 @@ function TaskList({ tasks, completed = false }: { tasks: TaskRow[]; completed?: 
   );
 }
 
+const successMessages = new Map<string, string>([
+  ["aangemaakt", "De taak werd aangemaakt."],
+  ["taak-aangemaakt", "De taak werd aangemaakt."],
+  ["taak", "De taak werd bijgewerkt."],
+  ["verwijderd", "De taak werd verwijderd uit de werkvoorraad."],
+]);
+
 export default async function TasksPage({
   searchParams,
 }: {
@@ -170,7 +177,7 @@ export default async function TasksPage({
         resultCount={tasks.length + completed.length}
       >
         {params.fout && <div className="error-note">De taak kon niet worden opgeslagen.</div>}
-        {params.succes && <div className="success">De taak werd aangemaakt.</div>}
+        {params.succes && <div className="success">{successMessages.get(params.succes) ?? "Wijziging opgeslagen."}</div>}
         {overdue && <div className="permission-note">Je ziet nu alleen taken waarvan de deadline verstreken is. <Link href="/app/taken?van_mij=1">Toon al mijn taken</Link></div>}
         {openOnly && <div className="permission-note">Je ziet nu alleen open taken. <Link href="/app/taken">Toon ook de historiek</Link></div>}
         {params.nieuw && (
