@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireActiveMembership } from "@/lib/auth-context";
+import { requirePermission } from "@/lib/auth-context";
 import { eventTimingValues } from "@/lib/format";
 import { syncLinkedEvent } from "@/lib/linked-calendar-sync";
 
@@ -41,11 +41,7 @@ const schema = z.object({
 });
 
 async function manager() {
-  const context = await requireActiveMembership();
-  if (!["admin", "board"].includes(context.membership.role)) {
-    redirect("/app/events?fout=geen-toegang");
-  }
-  return context;
+  return requirePermission("manageEvents", "/app/events?fout=geen-toegang");
 }
 
 function values(input: z.infer<typeof schema>) {
@@ -75,12 +71,15 @@ export async function saveEvent(formData: FormData) {
   }
   const { supabase, user, membership } = await manager();
   if (parsed.data.id) {
-    const { error } = await supabase
+    const { data: saved, error } = await supabase
       .from("events")
       .update(values(parsed.data))
       .eq("organization_id", membership.organization_id)
-      .eq("id", parsed.data.id);
-    if (error) redirect(`/app/events/${parsed.data.id}?fout=opslaan`);
+      .eq("id", parsed.data.id)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle();
+    if (error || !saved) redirect(`/app/events/${parsed.data.id}?fout=opslaan`);
     let calendarWarning = false;
     try {
       await syncLinkedEvent({
@@ -114,12 +113,15 @@ export async function cancelEvent(formData: FormData) {
   const parsed = z.object({ id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/events?fout=velden");
   const { supabase, user, membership } = await manager();
-  const { error } = await supabase
+  const { data: saved, error } = await supabase
     .from("events")
     .update({ status: "cancelled", updated_at: new Date().toISOString() })
     .eq("organization_id", membership.organization_id)
-    .eq("id", parsed.data.id);
-  if (error) redirect(`/app/events/${parsed.data.id}?fout=opslaan`);
+    .eq("id", parsed.data.id)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
+  if (error || !saved) redirect(`/app/events/${parsed.data.id}?fout=opslaan`);
   let calendarWarning = false;
   try {
     await syncLinkedEvent({ supabase, organizationId: membership.organization_id, createdBy: user.id }, parsed.data.id, "keep");

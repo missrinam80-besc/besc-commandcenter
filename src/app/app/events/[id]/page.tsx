@@ -118,14 +118,14 @@ export default async function Event({
           <Link href="?nieuw=taak">Taak toevoegen</Link>
           {canManageCampaigns && <Link href="?nieuw=campagne">Campagne toevoegen</Link>}
           {canManageCampaigns && <Link href={`/app/rapportage/events/${id}`}>Eventrapport</Link>}
-          <Link className="primary" href="?bewerken=1">Bewerken</Link>
+          {canManage && <Link className="primary" href="?bewerken=1">Bewerken</Link>}
         </div>
       </header>
       <div className="project-detail-body">
         {q.succes && <div className="success">{q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
         {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
         {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
-        {q.bewerken && (
+        {q.bewerken && canManage && (
           <FormModal title="Event bewerken">
             <EventForm action={saveEvent} event={{...e, calendar_removed: calendar?.name.startsWith("[VERWIJDERD]")}} projects={projects ?? []}/>
           </FormModal>

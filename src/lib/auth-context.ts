@@ -9,7 +9,7 @@ export const requireActiveMembership = cache(async function requireActiveMembers
   if (!user) redirect("/login");
   const enriched = await supabase
     .from("organization_members")
-    .select("organization_id,role,status,finance_role,access_role_id,organization_access_roles(capabilities)")
+    .select("organization_id,role,status,finance_role,access_role_id,organization_access_roles(organization_id,deleted_at,capabilities)")
     .eq("user_id", user.id)
     .eq("status", "active")
     .limit(1)
@@ -24,8 +24,11 @@ export const requireActiveMembership = cache(async function requireActiveMembers
       .maybeSingle()
     : enriched;
   if (!membership) redirect("/wachten-op-goedkeuring");
-  const customRole = (membership as { organization_access_roles?: { capabilities?: string[] | null } | null }).organization_access_roles;
-  return { supabase, user, membership: { ...membership, capabilities: customRole?.capabilities ?? null } };
+  const customRole = (membership as { organization_access_roles?: { organization_id: string; deleted_at: string | null; capabilities?: string[] | null } | null }).organization_access_roles;
+  const capabilities = customRole && customRole.organization_id === membership.organization_id && customRole.deleted_at === null
+    ? customRole.capabilities ?? null
+    : null;
+  return { supabase, user, membership: { ...membership, capabilities } };
 });
 
 export async function requirePermission(capability: Capability, fallback = "/app?fout=geen-toegang") {
