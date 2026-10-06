@@ -139,22 +139,26 @@ export async function loadDossierConnections(
       .from(config.table)
       .select(`id,${config.titleColumn}`)
       .eq("organization_id", organizationId)
+      .is("deleted_at", null)
       .in("id", [...ids]);
     for (const row of (data ?? []) as unknown as NamedRow[]) {
       names.set(`${type}:${row.id}`, String(row[config.titleColumn] ?? config.label));
     }
   }));
 
-  const resolved: ResolvedRelationship[] = relationships.map((relation, index) => {
+  const resolved: ResolvedRelationship[] = relationships.flatMap((relation, index) => {
     const counterpart = counterparts[index];
-    return {
+    const label = names.get(`${counterpart.type}:${counterpart.id}`);
+    // Keep historical relationships stored, but only link to available dossiers.
+    if (label === undefined) return [];
+    return [{
       id: relation.id,
       relationship_type: relation.relationship_type,
       entityType: counterpart.type,
       entityId: counterpart.id,
-      label: names.get(`${counterpart.type}:${counterpart.id}`) ?? `${dossierEntityConfig[counterpart.type].label} (niet meer beschikbaar)`,
+      label,
       href: dossierPath(counterpart.type, counterpart.id),
-    };
+    }];
   });
 
   return {
