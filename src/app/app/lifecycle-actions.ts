@@ -52,11 +52,9 @@ export async function changeRecordLifecycle(formData: FormData) {
   query = parsed.data.action === "restore"
     ? query.eq("status", config.archiveStatus).is("deleted_at", null)
     : query.is("deleted_at", null);
-  const { data, error } = ["content", "project"].includes(parsed.data.entity)
-    ? await query.select("id").maybeSingle()
-    : await query;
+  const { data, error } = await query.select("id").maybeSingle();
 
-  if (error || (["content", "project"].includes(parsed.data.entity) && !data)) {
+  if (error || !data) {
     redirect(`${config.detailPath}/${parsed.data.id}?fout=lifecycle`);
   }
 
