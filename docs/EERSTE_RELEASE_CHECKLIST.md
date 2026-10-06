@@ -7,11 +7,12 @@ Doel voor v1: de app moet met echte BESC-data werken, de kernflows moeten bruikb
 ## Werkwijze
 
 - Werk module per module af.
-- Gebruik eerst lokale ontwikkeling op `http://localhost:3001`.
+- Ontwikkel en test wijzigingen lokaal; Cloud Supabase en de bestaande DEV-server zijn het acceptatiedoel voor V1.
 - Voeg echte data gecontroleerd toe via de templates in `docs/data-templates`.
 - Test per module minstens: openen, zoeken/filteren, record aanmaken, record bewerken, koppelen, archiveren/inactiveren en rechtencontrole.
 - Na elke afgeronde technische stap: lint/test draaien, commit maken en pushen naar GitHub.
-- Productie/VPS komt pas nadat de v1-flow lokaal en/of in preview klopt.
+- Releasevolgorde: GitHub-PR → goedgekeurde merge → geslaagde DEV-imagebouw → eventuele Cloud DEV-migratie → deploy via het bestaande server-script → live acceptatie. Bouw geen image op de server uit losse lokale code.
+- Productie-inrichting valt buiten de huidige DEV-acceptatie; zij is geen blokkade voor deze V1-ronde.
 
 ## Statuslegende
 
@@ -19,22 +20,22 @@ Doel voor v1: de app moet met echte BESC-data werken, de kernflows moeten bruikb
 - [ ] Nog te doen
 - [~] In uitvoering of gedeeltelijk klaar
 
-Laatste acceptatieronde: 2 oktober 2026, DEV-omgeving. De vinkjes hieronder zijn alleen bijgewerkt voor flows die in de chat of tijdens de DEV-rooktest expliciet als geslaagd zijn bevestigd.
+Laatste aanvulling: 6 oktober 2026, DEV. De herstelproeven van 6 oktober zijn uitgevoerd met wegwerpdata en de beheerdersaccount. Oudere vinkjes blijven historische bevestigingen van 2 oktober; zij bewijzen geen recente hertest van alle rollen of integraties. Alleen specifiek genoemde controles zijn bijgewerkt. De vier nieuwe herstelpunten in deze PR zijn lokaal getest; hun migratie, deploy en live acceptatie staan nog open.
 
-## 1. Lokale basis en bronbeheer
+## 1. Ontwikkeling, bronbeheer en DEV
 
-- [x] Project staat op de D-schijf: `D:\BESC\Command Center`.
-- [x] Docker Desktop werkt.
-- [x] Webapp draait lokaal via Docker op `http://localhost:3001`.
-- [x] Supabase draait lokaal.
-- [x] Lokale database is bijgewerkt met de nieuwste migraties.
-- [x] Adminaccount werkt.
-- [x] Vrijwilligersaccount werkt.
-- [x] Sponsorportaal-testaccount werkt.
-- [x] Test-sponsor `GameGear` bestaat lokaal.
-- [x] Werk gebeurt op een aparte branch.
-- [x] Afgeronde codewijzigingen worden naar GitHub gepusht.
-- [ ] Voor v1 een releasebranch of pull request naar `main` voorbereiden.
+- [x] Bronrepository: `missrinam80-besc/besc-commandcenter` op GitHub.
+- [x] Bestaande ontwikkelrepository: `D:\CODING\besc-commandcenter`; herstelwerk gebeurt in een aparte werkcheckout en branch.
+- [x] Cloud Supabase is het DEV-databasedoel: `sjvzrsmrtcxxtmaxigtn`.
+- [x] DEV-app: `https://cc-dev.belgianstreamerscommunity.be`.
+- [x] Servercheckout: `/opt/besc-dev/command-center`; deploy gebruikt `docker-compose.server.yml`.
+- [x] Image komt uit de GitHub-build: `ghcr.io/missrinam80-besc/besc-commandcenter:dev`.
+- [x] Beheerdersaccount werkt bij de DEV-proeven van 6 oktober.
+- [x] Wijzigingen worden via afzonderlijke PR's beoordeeld en naar `main` gemerged.
+- [x] Communityrollen-migratie en PR #50 zijn gedeployed; de afgesproken beheerderproeven zijn geslaagd.
+- [ ] Na deze PR: nieuwe campagne-/relatiemigratie toepassen, image deployen en live acceptatie uitvoeren.
+
+Lokale Docker-/databasechecks en de GameGear-portaaltest uit de oude checklist zijn historische controles. Een lokaal draaiende Supabase is niet het huidige DEV-doel.
 
 ## 2. Echte basisdata
 
@@ -87,8 +88,8 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 - [ ] Inboxitem omzetten naar event.
 - [ ] Inboxitem omzetten naar campagne.
 - [ ] Inboxitem omzetten naar content.
-- [ ] Taak aanmaken en toewijzen.
-- [ ] Taakstatus aanpassen.
+- [x] Taak aanmaken en aan eigen account toewijzen met wegwerpdata (6 oktober, beheerder; PR #45/#46).
+- [x] Taakstatus aanpassen en heropenen met wegwerpdata (6 oktober, beheerder; PR #45).
 - [x] Kalenderitem vanuit event controleren.
 - [x] Goedkeuringsflow testen met echte gebruiker.
 - [ ] UI-polish: lege staten, knoppen, spacing en mobiele weergave controleren.
@@ -113,7 +114,9 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 - [ ] Event koppelen aan campagne en content.
 - [ ] Campagne aanmaken met sponsor, doel, planning en resultatenvelden.
 - [ ] Social post plannen vanuit campagne/content.
-- [ ] Archiveren/inactiveren testen waar voorzien.
+- [x] Campagne en content archiveren, herstellen en verwijderen met wegwerpdata (6 oktober, beheerder).
+- [x] Project afsluiten alleen na ingevulde doel/resultaat/evaluatievelden; heropenen gecontroleerd (PR #43).
+- [x] Gewone campagnewijziging bevestigd; verouderd formulier na verwijdering geweigerd met beschikbaarheidsmelding (PR #48/#49).
 - [ ] Bestuur kan bewerken maar niet ongecontroleerd verwijderen.
 - [ ] Medewerker kan samenwerken maar gevoelige acties blijven beperkt.
 - [ ] UI-polish: detailpagina's, tabellen en formulieren nalopen.
@@ -128,6 +131,7 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 
 ### V1-check
 
+- [x] Communityprofiel met meerdere rollen aanmaken, naam/rollen wijzigen, rollen leegmaken en verouderd formulier afwijzen (6 oktober, beheerder; PR #50).
 - [ ] Communitypersoon aanmaken met echte rol en contactgegevens.
 - [ ] Vrijwilliger/streamer correct onderscheiden.
 - [ ] Sponsor aanmaken met contactpersoon.
@@ -149,8 +153,12 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 ### V1-check
 
 - [ ] Contentitem aanmaken vanuit inbox.
-- [ ] Content koppelen aan project/event/campagne/sponsor.
-- [ ] Contentstatus en goedkeuring testen.
+- [x] Gewone contenttekstwijziging behoudt bestaande relaties (door gebruiker bevestigd na PR #38).
+- [x] Content aan tijdelijk communityprofiel koppelen; oude koppelkeuze na profielverwijdering afwijzen (PR #50).
+- [x] Verwijderde gerelateerde taak verdwijnt uit dossierweergave (PR #47).
+- [ ] Content koppelen aan project/event/campagne/sponsor met echte gegevens en relevante gebruikersrollen.
+- [x] Content aanmaken, bewerken, archiveren, herstellen en verwijderen met wegwerpdata (beheerder; PR #41).
+- [ ] Contentstatus en goedkeuring testen met relevante gebruikersrollen.
 - [ ] Shopproduct of merchandise-item aanmaken.
 - [ ] Nieuwsbriefsjabloon aanmaken of aanpassen.
 - [ ] Nieuwsbriefvoorbeeld bekijken.
@@ -240,7 +248,8 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 - [ ] Rechtenmatrix opnieuw controleren na echte rollen.
 - [ ] Gebruikersbeheer met echte accounts testen.
 - [ ] Activiteitenlog controleren.
-- [ ] Archief en herstel/raadpleging testen.
+- [x] Archief/herstel van campagne en content gecontroleerd met wegwerpdata als beheerder.
+- [ ] Archief en herstel/raadpleging over overige modules en gebruikersrollen testen.
 - [ ] Historiekweergave controleren.
 - [ ] UI-polish: beheerpagina's, tabellen en mobiele overflow controleren.
 
@@ -259,11 +268,12 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 - [x] `pnpm run lint`
 - [x] `pnpm test`
 - [x] `pnpm run build`
-- [ ] Docker build controleren.
+- [x] GitHub DEV-imagebouw en serverdeploy tot en met PR #50 geslaagd.
+- [ ] Nieuwe DEV-image van deze PR na merge controleren.
 - [x] Korte browsercontrole op desktop.
 - [ ] Korte browsercontrole op mobiel formaat.
 - [ ] Dark mode volledige app nalopen.
-- [x] Geen fouten bij de gecontroleerde kernflows tijdens de DEV-rooktest.
+- [x] Afgesproken herstelproeven tot en met PR #50 geslaagd binnen hun beschreven scope; dit is geen volledige app-audit.
 - [ ] Geen ontbrekende env-variabelen voor actieve v1-modules.
 - [ ] Databasebackup maken.
 - [ ] Restore-test uitvoeren.
@@ -273,15 +283,16 @@ Gebruik hiervoor de CSV-templates in `docs/data-templates`.
 - [x] DEV-deployprocedure uitvoeren.
 - [ ] Productierooktest uitvoeren.
 
-## Eerste focusronde
+## Eerstvolgende herstel- en acceptatieronde
 
-Deze ronde werken we eerst aan:
+1. Deze PR reviewen en mergen; wachten op de geslaagde GitHub-imagebouw.
+2. `20261006205557_atomic_campaign_and_relationships.sql` op Cloud DEV toepassen en controleren.
+3. DEV deployen en de [campagne-/relatieproeven](campaign-links-release-dev-rollout.md) uitvoeren.
+4. Daarna de open rechtenproeven met bestuur, medewerker, vrijwilliger en portaalgebruiker uitvoeren.
+5. Integraties opnieuw controleren vóór echte-data-invoer en brede acceptatie.
+6. Echte basisdata verzamelen, gecontroleerd invoeren en de kernflows met die gegevens testen; desktop, mobiel en dark mode beoordelen.
 
-1. Echte basisdata verzamelen via de templates.
-2. Gebruikers en rollen valideren.
-3. Sponsors, streamers, projecten, events, campagnes en materialen invoeren.
-4. Kernflows testen met die echte data.
-5. UI-polish oplossen op schermen die tijdens het testen zichtbaar fout lopen.
+Productiepunten hierboven zijn voorbereiding voor een latere productieronde, geen afgeronde DEV-controles.
 
 ## Data-aanlevering
 
@@ -296,4 +307,4 @@ Vul bij voorkeur eerst deze bestanden aan:
 - `docs/data-templates/materials.csv`
 - `docs/data-templates/knowledge.csv`
 
-Stuur de ingevulde bestanden terug of plak de inhoud in de chat. Daarna zet ik de data gecontroleerd in de lokale database en testen we module per module.
+Stuur de ingevulde bestanden terug of plak de inhoud in de chat. Daarna bereiden we gecontroleerde invoer naar Cloud DEV voor en testen we module per module. Echte-data-invoer blijft een afzonderlijk goedgekeurde stap.

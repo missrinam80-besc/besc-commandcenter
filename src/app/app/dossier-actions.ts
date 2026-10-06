@@ -60,7 +60,7 @@ export async function updateRecordLink(formData: FormData) {
   const parsed = linkSchema.extend({ id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app?fout=ongeldige-link");
   const { supabase, membership } = await context(parsed.data.entity_type, parsed.data.entity_id);
-  const { error } = await supabase.from("record_links").update({
+  const { data: changed, error } = await supabase.from("record_links").update({
     label: parsed.data.label,
     url: parsed.data.url,
     link_type: parsed.data.link_type,
@@ -68,20 +68,20 @@ export async function updateRecordLink(formData: FormData) {
   }).eq("organization_id", membership.organization_id)
     .eq("entity_type", parsed.data.entity_type)
     .eq("entity_id", parsed.data.entity_id)
-    .eq("id", parsed.data.id);
-  finish(parsed.data.entity_type, parsed.data.entity_id, error ? "fout" : "succes", error ? "link-opslaan" : "link-opgeslagen");
+    .eq("id", parsed.data.id).select("id").maybeSingle();
+  finish(parsed.data.entity_type, parsed.data.entity_id, error || !changed || changed.id !== parsed.data.id ? "fout" : "succes", error || !changed || changed.id !== parsed.data.id ? "link-opslaan" : "link-opgeslagen");
 }
 
 export async function deleteRecordLink(formData: FormData) {
   const parsed = baseSchema.extend({ id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app?fout=ongeldige-link");
   const { supabase, membership } = await context(parsed.data.entity_type, parsed.data.entity_id);
-  const { error } = await supabase.from("record_links").delete()
+  const { data: changed, error } = await supabase.from("record_links").delete()
     .eq("organization_id", membership.organization_id)
     .eq("entity_type", parsed.data.entity_type)
     .eq("entity_id", parsed.data.entity_id)
-    .eq("id", parsed.data.id);
-  finish(parsed.data.entity_type, parsed.data.entity_id, error ? "fout" : "succes", error ? "link-verwijderen" : "link-verwijderd");
+    .eq("id", parsed.data.id).select("id").maybeSingle();
+  finish(parsed.data.entity_type, parsed.data.entity_id, error || !changed || changed.id !== parsed.data.id ? "fout" : "succes", error || !changed || changed.id !== parsed.data.id ? "link-verwijderen" : "link-verwijderd");
 }
 
 export async function addRecordRelationship(formData: FormData) {
@@ -120,11 +120,11 @@ export async function deleteRecordRelationship(formData: FormData) {
   const parsed = baseSchema.extend({ id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app?fout=ongeldige-relatie");
   const { supabase, membership } = await context(parsed.data.entity_type, parsed.data.entity_id);
-  const { error } = await supabase.from("record_relationships").delete()
+  const { data: changed, error } = await supabase.from("record_relationships").delete()
     .eq("organization_id", membership.organization_id)
     .eq("id", parsed.data.id)
-    .or(`and(source_type.eq.${parsed.data.entity_type},source_id.eq.${parsed.data.entity_id}),and(target_type.eq.${parsed.data.entity_type},target_id.eq.${parsed.data.entity_id})`);
-  finish(parsed.data.entity_type, parsed.data.entity_id, error ? "fout" : "succes", error ? "relatie-verwijderen" : "relatie-verwijderd");
+    .or(`and(source_type.eq.${parsed.data.entity_type},source_id.eq.${parsed.data.entity_id}),and(target_type.eq.${parsed.data.entity_type},target_id.eq.${parsed.data.entity_id})`).select("id").maybeSingle();
+  finish(parsed.data.entity_type, parsed.data.entity_id, error || !changed || changed.id !== parsed.data.id ? "fout" : "succes", error || !changed || changed.id !== parsed.data.id ? "relatie-verwijderen" : "relatie-verwijderd");
 }
 
 export async function addRecordDocument(formData: FormData) {
@@ -175,11 +175,11 @@ export async function deleteRecordDocument(formData: FormData) {
   const parsed = baseSchema.extend({ id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app?fout=ongeldig-document");
   const { supabase, membership } = await context(parsed.data.entity_type, parsed.data.entity_id);
-  const { error } = await supabase.from("google_resource_links").delete()
+  const { data: changed, error } = await supabase.from("google_resource_links").delete()
     .eq("organization_id", membership.organization_id)
     .eq("entity_type", parsed.data.entity_type)
     .eq("entity_id", parsed.data.entity_id)
     .eq("resource_type", "document")
-    .eq("id", parsed.data.id);
-  finish(parsed.data.entity_type, parsed.data.entity_id, error ? "fout" : "succes", error ? "document-verwijderen" : "document-verwijderd");
+    .eq("id", parsed.data.id).select("id").maybeSingle();
+  finish(parsed.data.entity_type, parsed.data.entity_id, error || !changed || changed.id !== parsed.data.id ? "fout" : "succes", error || !changed || changed.id !== parsed.data.id ? "document-verwijderen" : "document-verwijderd");
 }
