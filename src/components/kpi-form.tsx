@@ -1,6 +1,8 @@
 import { saveKpi, updateKpi } from "@/app/app/rapportage/actions";
 import { MarkdownField } from "@/components/markdown-field";
 
+import { KpiMeasurementFields } from "@/components/kpi-measurement-fields";
+
 type Option = { id: string; title?: string | null; name?: string | null };
 export type KpiOptions = {
   projects: Option[];
@@ -37,8 +39,9 @@ export function KpiForm({ record = {}, options }: { record?: Record<string, unkn
     <div className="form-row">
       <label>Domein<select name="domain" defaultValue={String(record.domain ?? "community")}>{Object.entries(domains).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
       <label>Metric<input name="metric" required placeholder="Bereik, leden, views..." defaultValue={String(record.metric ?? "")}/></label>
-      <label>Waarde<input type="number" step="0.0001" name="value" required defaultValue={String(record.value ?? "")}/></label>
+      <KpiMeasurementFields value={record.value} status={String(record.measurement_status ?? "measured")}/>
       <label>Doel<input type="number" step="0.0001" name="target" defaultValue={record.target == null ? "" : String(record.target)}/></label>
+      <label>Doelrichting<select name="target_direction" defaultValue={String(record.target_direction ?? "unknown")}><option value="unknown">Nog niet vastgelegd</option><option value="higher">Hoger is beter</option><option value="lower">Lager is beter</option></select></label>
       <label>Eenheid<select name="unit" defaultValue={String(record.unit ?? "number")}><option value="number">Aantal</option><option value="percent">Percentage</option><option value="currency">Euro</option><option value="minutes">Minuten</option><option value="hours">Uren</option><option value="days">Dagen</option></select></label>
       <label>Periode start<input type="date" name="period_start" defaultValue={record.period_start ? String(record.period_start) : ""}/></label>
       <label>Periode einde<input type="date" name="period_end" defaultValue={record.period_end ? String(record.period_end) : ""}/></label>

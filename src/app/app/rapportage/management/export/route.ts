@@ -1,5 +1,5 @@
 import { requireActiveMembership } from "@/lib/auth-context";
-import { managementPeriod, type ReportPeriod } from "@/lib/management-report";
+import { managementPeriod, type ReportPeriod, kpiTargetLabel, targetDirectionLabels, measuredValue } from "@/lib/management-report";
 
 const csvCell = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
 
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       supabase.from("expenses").select("title,amount,status,expense_date").eq("organization_id", organizationId).is("deleted_at", null).gte("expense_date", start.slice(0, 10)).lt("expense_date", end.slice(0, 10)),
       supabase.from("income_entries").select("title,amount,status,expected_date").eq("organization_id", organizationId).is("deleted_at", null).gte("expected_date", start.slice(0, 10)).lt("expected_date", end.slice(0, 10)),
       supabase.from("budget_envelopes").select("name,planned_amount,status").eq("organization_id", organizationId).is("deleted_at", null),
-      supabase.from("kpi_records").select("domain,name,metric,value,target,unit,period_start,period_end").eq("organization_id", organizationId).is("deleted_at", null).gte("period_end", start.slice(0, 10)).lt("period_end", end.slice(0, 10)),
+      supabase.from("kpi_records").select("domain,name,metric,value,target,measurement_status,target_direction,unit,period_start,period_end").eq("organization_id", organizationId).is("deleted_at", null).gte("period_end", start.slice(0, 10)).lt("period_end", end.slice(0, 10)),
     ]);
 
   const rows: unknown[][] = [["Onderdeel", "Naam", "Status/metric", "Waarde", "Doel/detail", "Datum"]];
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
   for (const item of expenses.data ?? []) rows.push(["Kost", item.title, item.status, item.amount, "", item.expense_date]);
   for (const item of income.data ?? []) rows.push(["Inkomst", item.title, item.status, item.amount, "", item.expected_date]);
   for (const item of budgets.data ?? []) rows.push(["Budget", item.name, item.status, item.planned_amount, "", ""]);
-  for (const item of kpis.data ?? []) rows.push(["KPI", item.name, `${item.domain}: ${item.metric}`, item.value, item.target ?? "", `${item.period_start} - ${item.period_end}`]);
+  for (const item of kpis.data ?? []) rows.push(["KPI", item.name, `${item.domain}: ${item.metric}`, measuredValue(item) ?? "Ontbrekende meting", `${item.target ?? ""} · ${targetDirectionLabels[item.target_direction] ?? targetDirectionLabels.unknown} · ${kpiTargetLabel(item)}`, `${item.period_start} - ${item.period_end}`]);
 
   const body = `\uFEFF${rows.map((row) => row.map(csvCell).join(";")).join("\r\n")}`;
   return new Response(body, {

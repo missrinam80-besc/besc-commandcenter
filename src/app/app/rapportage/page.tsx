@@ -1,3 +1,4 @@
+import { kpiTargetLabel, targetDirectionLabels, targetScore, measuredValue } from "@/lib/management-report";
 import Link from "next/link";
 import { BarChart3, ExternalLink, Handshake, Target, TrendingUp, UserRoundSearch } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -31,8 +32,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   ]);
   const options: KpiOptions = { projects: projects.data ?? [], campaigns: campaigns.data ?? [], events: events.data ?? [], content: content.data ?? [], partners: partners.data ?? [], tasks: tasks.data ?? [], people: people.data ?? [], social: social.data ?? [] };
   const rows = records.data ?? [];
-  const targets = rows.filter((item) => item.target !== null && Number(item.target) !== 0);
-  const reached = targets.filter((item) => Number(item.value) >= Number(item.target)).length;
+  const score = targetScore(rows);
   const exportQuery = new URLSearchParams({ jaar: String(year) });
   if (q.domein) exportQuery.set("domein", q.domein);
   return <AppShell active="Rapportage & KPI">
@@ -47,9 +47,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
         <Link href="/app/rapportage/sponsors"><Handshake/><div><span>Sponsorrapportage</span><strong>Kies sponsor</strong></div></Link>
         <Link href="/app/rapportage/creators"><UserRoundSearch/><div><span>Streamerrapportage</span><strong>Kies streamer</strong></div></Link>
       </section>
-      <section className="report-kpi-summary"><article><BarChart3/><div><span>Registraties</span><strong>{rows.length}</strong></div></article><article><Target/><div><span>Doelen behaald</span><strong>{reached} / {targets.length}</strong></div></article><article><TrendingUp/><div><span>Domeinen</span><strong>{new Set(rows.map((item) => item.domain)).size}</strong></div></article></section>
+      <section className="report-kpi-summary"><article><BarChart3/><div><span>Registraties</span><strong>{rows.length}</strong></div></article><article><Target/><div><span>Doelen behaald</span><strong>{score.reached} / {score.total}</strong><small>{score.unassessed} niet te beoordelen</small></div></article><article><TrendingUp/><div><span>Domeinen</span><strong>{new Set(rows.map((item) => item.domain)).size}</strong></div></article></section>
       <form className="report-filter"><label>Jaar<input type="number" name="jaar" defaultValue={year}/></label><label>Domein<select name="domein" defaultValue={q.domein ?? ""}><option value="">Alle domeinen</option>{Object.entries(domains).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><button>Filter</button><Link href="/app/rapportage">Wissen</Link></form>
-      <section className="report-kpi-grid">{rows.map((item) => { const goal = item.target === null ? null : Number(item.target); const progress = goal ? Math.min(100, Math.max(0, Number(item.value) / goal * 100)) : null; return <article key={item.id}><div><span>{domains[item.domain]}</span><b>{item.metric}</b></div><h2>{format(Number(item.value), item.unit)}</h2>{goal !== null && <><div className="report-progress"><i style={{ width: `${progress}%` }}/></div><small>Doel: {format(goal, item.unit)} · {progress?.toFixed(0)}%</small></>}<p>{item.name}</p><small>{methods[item.collection_method] ?? "Handmatig"} · {item.source}</small><footer><time>{item.period_start || "Geen start"} — {item.period_end || "Geen einde"}</time><div>{item.source_url && <a href={item.source_url} target="_blank" rel="noreferrer"><ExternalLink size={13}/>Bron</a>}<Link href={`/app/rapportage/${item.id}`}>Openen</Link></div></footer></article>; })}{!rows.length && <div className="empty">Nog geen KPI-registraties voor deze selectie.</div>}</section>
+      <section className="report-kpi-grid">{rows.map((item) => { const goal = item.target === null ? null : Number(item.target); const value = measuredValue(item); return <article key={item.id}><div><span>{domains[item.domain]}</span><b>{item.metric}</b></div><h2>{value === null ? "Ontbrekende meting" : format(value, item.unit)}</h2>{goal !== null && <><small>Doel: {format(goal, item.unit)} · {targetDirectionLabels[item.target_direction] ?? targetDirectionLabels.unknown} · {kpiTargetLabel(item)}</small></>}<p>{item.name}</p><small>{methods[item.collection_method] ?? "Handmatig"} · {item.source}</small><footer><time>{item.period_start || "Geen start"} — {item.period_end || "Geen einde"}</time><div>{item.source_url && <a href={item.source_url} target="_blank" rel="noreferrer"><ExternalLink size={13}/>Bron</a>}<Link href={`/app/rapportage/${item.id}`}>Openen</Link></div></footer></article>; })}{!rows.length && <div className="empty">Nog geen KPI-registraties voor deze selectie.</div>}</section>
     </div>
   </AppShell>;
 }

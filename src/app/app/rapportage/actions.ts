@@ -5,6 +5,10 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireActiveMembership } from "@/lib/auth-context";
 
+const optionalNumber = z.preprocess((value) => {
+  if (value == null || (typeof value === "string" && value.trim() === "")) return null;
+  return typeof value === "string" ? Number(value) : value;
+}, z.number().finite().nullable());
 const optionalDate = z.string().date().optional().or(z.literal(""));
 const kpiSchema = z.object({
   name: z.string().trim().min(2).max(180),
@@ -20,8 +24,10 @@ const kpiSchema = z.object({
     "other",
   ]),
   metric: z.string().trim().min(2).max(100),
-  value: z.coerce.number(),
-  target: z.string().optional(),
+  value: optionalNumber,
+  target: optionalNumber,
+  measurement_status: z.enum(["measured", "missing"]).default("measured"),
+  target_direction: z.enum(["unknown", "higher", "lower"]).default("unknown"),
   unit: z.enum(["number", "percent", "currency", "minutes", "hours", "days"]),
   period_start: optionalDate,
   period_end: optionalDate,
@@ -38,11 +44,15 @@ const kpiSchema = z.object({
   task_id: z.string().uuid().optional().or(z.literal("")),
   community_person_id: z.string().uuid().optional().or(z.literal("")),
   social_post_id: z.string().uuid().optional().or(z.literal("")),
+}).superRefine((values, context) => {
+  if ((values.measurement_status === "measured") !== (values.value !== null)) {
+    context.addIssue({ code: "custom", path: ["value"], message: "Vul een meetwaarde in of kies Ontbrekende meting." });
+  }
 });
 
 const optionalValues = (values: z.infer<typeof kpiSchema>) => ({
   ...values,
-  target: values.target ? Number(values.target) : null,
+  target: values.target,
   period_start: values.period_start || null,
   period_end: values.period_end || null,
   source_url: values.source_url || null,
@@ -77,7 +87,7 @@ export async function saveKpi(formData: FormData) {
 
 export async function updateKpi(formData: FormData) {
   const parsed = kpiSchema
-    .extend({ id: z.string().uuid() })
+    .safeExtend({ id: z.string().uuid() })
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/rapportage?fout=velden");
   const { supabase, membership } = await requireActiveMembership();
