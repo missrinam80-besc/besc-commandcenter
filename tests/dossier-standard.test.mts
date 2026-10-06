@@ -140,19 +140,21 @@ test("één communitypersoon ondersteunt meerdere rollen en een optionele accoun
 });
 
 test("de gedeelde taakmodal ondersteunt project, verantwoordelijke, checklist en dossierrelatie", async () => {
-  const [modal, actions, event, content, operational, task] = await Promise.all([
+  const [modal, actions, event, content, operational, task, bundle] = await Promise.all([
     source("src/components/task-create-modal.tsx"),
     source("src/app/app/actions.ts"),
     source("src/app/app/events/[id]/page.tsx"),
     source("src/app/app/content/[id]/page.tsx"),
     source("src/components/operational-record-detail.tsx"),
     source("src/app/app/taken/[id]/page.tsx"),
+    source("supabase/migrations/20261006192630_atomic_task_create.sql"),
   ]);
   assert.match(modal, /name="assignee_id"/);
   assert.match(modal, /name="checklist"/);
   assert.match(modal, /context_entity_type/);
-  assert.match(actions, /task_checklist_items/);
-  assert.match(actions, /record_relationships/);
+  assert.match(actions, /rpc\("create_task_bundle"/);
+  assert.match(bundle, /task_checklist_items/);
+  assert.match(bundle, /record_relationships/);
   assert.match(event, /TaskCreateModal/);
   assert.match(content, /TaskCreateModal/);
   assert.match(operational, /TaskCreateModal/);
