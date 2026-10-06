@@ -73,11 +73,11 @@ export async function updateContent(formData: FormData) {
   const channels = formData.getAll("channels").map(String).filter((item) => contentChannels.includes(item as never));
   if (!parsed.success) redirect(`/app/content/${String(formData.get("id"))}?bewerken=1&fout=velden`);
   const { supabase, membership } = await manager();
-  const { error } = await supabase.from("content_items").update(values(parsed.data, channels))
+  const { data, error } = await supabase.from("content_items").update(values(parsed.data, channels))
     .eq("organization_id", membership.organization_id)
     .eq("id", parsed.data.id)
-    .is("deleted_at", null);
-  if (error) redirect(`/app/content/${parsed.data.id}?bewerken=1&fout=opslaan`);
+    .is("deleted_at", null).select("id").maybeSingle();
+  if (error || !data) redirect(`/app/content/${parsed.data.id}?bewerken=1&fout=opslaan`);
   revalidatePath("/app/content");
   revalidatePath(`/app/content/${parsed.data.id}`);
   redirect(`/app/content/${parsed.data.id}?succes=bijgewerkt`);

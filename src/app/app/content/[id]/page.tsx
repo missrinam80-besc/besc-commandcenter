@@ -71,13 +71,13 @@ export default async function ContentDetail({
           {item.canva_url && <a href={item.canva_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Canva</a>}
           {source?.source_url && <a href={source.source_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>monday</a>}
           <Link href="?nieuw=taak">Taak toevoegen</Link>
-          <Link className="primary" href="?bewerken=1">Bewerken</Link>
+          {canManage && <Link className="primary" href="?bewerken=1">Bewerken</Link>}
         </div>
       </header>
       <div className="project-detail-body">
         {query.fout && <div className="error-note">Wijziging mislukt ({query.fout}).</div>}
         {query.succes && <div className="success">{query.succes === "goedkeuring-aangevraagd" ? "Ter goedkeuring voorgelegd." : "Contentitem opgeslagen."}</div>}
-        {query.bewerken && <FormModal title="Content bewerken"><ContentForm action={updateContent} content={item} projects={projects ?? []} campaigns={campaigns ?? []} partners={partners ?? []}/></FormModal>}
+        {query.bewerken && canManage && <FormModal title="Content bewerken"><ContentForm action={updateContent} content={item} projects={projects ?? []} campaigns={campaigns ?? []} partners={partners ?? []}/></FormModal>}
         {query.nieuw === "taak" ? <TaskCreateModal returnTo={`/app/content/${id}`} projects={projects ?? []} people={people} defaultProjectId={item.project_id} contextEntityType="content" contextEntityId={id}/> : null}
         <section className="content-summary">
           <article><span>Type</span><strong>{contentTypes[item.content_type as keyof typeof contentTypes] ?? item.content_type}</strong></article>
