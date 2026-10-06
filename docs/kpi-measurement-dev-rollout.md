@@ -36,4 +36,4 @@ De migratie behoudt RLS, rechten en audittriggers. Ongeldige combinaties en niet
 
 ## Lokale validatie
 
-403 Node-tests geslaagd, waaronder echte Postgres-migratiecontrole met PGlite: bestaande nul behouden, beide meetstatussen, ongeldige combinaties/NaN geweigerd, RLS/policy/audittrigger behouden. TypeScript en lint op gewijzigde bestanden geslaagd. Geen live migratie, deployment of betaalde agentrun uitgevoerd tijdens deze voorbereiding.
+403 Node-tests geslaagd, waaronder echte Postgres-migratiecontrole met PGlite: bestaande nul behouden, beide meetstatussen, ongeldige combinaties/NaN geweigerd, RLS/policy/audittrigger behouden. TypeScript, lint op gewijzigde bestanden en lokale Next.js-productiebuild geslaagd (met de niet-geheime testconfiguratie van de kwaliteitsworkflow). GitHub rapporteerde bij voorbereiding nog geen kwaliteitsrun voor deze PR. Geen live migratie, deployment of betaalde agentrun uitgevoerd tijdens deze voorbereiding.
