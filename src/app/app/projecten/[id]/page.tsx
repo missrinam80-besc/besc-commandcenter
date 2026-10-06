@@ -1,3 +1,5 @@
+import { ProjectOutcomeFields } from "@/components/project-outcome-fields";
+import { missingProjectOutcomes, projectOutcomeLabels, type ProjectOutcomes } from "@/lib/project-outcomes";
 import Link from "next/link";
 import { ExternalLink, FolderInput, FolderPlus, Link2, Pencil, Plus } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -33,7 +35,7 @@ import {
   updateProject,
 } from "./actions";
 
-type Project = {
+type Project = ProjectOutcomes & {
   id: string;
   title: string;
   description: string | null;
@@ -76,6 +78,7 @@ const labels: Record<string, string> = {
   urgent: "Urgent",
 };
 const driveErrors: Record<string, string> = {
+  "afsluiting": "Vul projectdoel, op te leveren resultaten, oplevercriteria en afsluitevaluatie in voordat je het project afrondt.",
   "drive-bestaande-link": "De bestaande Drive-map is niet bereikbaar voor de BESC Google-koppeling. Deel de map met de Google-koppeling of maak een nieuwe projectmap.",
   "drive-aanmaken": "De nieuwe projectmap kon niet worden aangemaakt. Controleer de Google Workspace-integratie en rechten op de BESC-hoofdmap.",
   "drive-link": "De opgeslagen Drive-link bevat geen herkenbaar map-ID.",
@@ -109,7 +112,7 @@ export default async function ProjectPage({ params, searchParams }: {
     { data: assignmentRows },
     { data: centralPeopleRows },
   ] = await Promise.all([
-    supabase.from("projects").select("id,title,description,status,priority,owner_id,start_date,due_date,drive_url,organization_id").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
+    supabase.from("projects").select("id,title,description,status,priority,owner_id,start_date,due_date,drive_url,organization_id,goal,deliverables,acceptance_criteria,closure_evaluation").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("tasks").select("id,title,description,status,priority,due_at").eq("project_id", id).is("deleted_at", null).order("due_at", { ascending: true, nullsFirst: false }).order("created_at", { ascending: true }),
     supabase.from("project_milestones").select("id,title,due_date,is_done").eq("project_id", id).order("due_date", { ascending: true, nullsFirst: false }),
     supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", membership.organization_id).eq("status", "active"),
@@ -174,7 +177,9 @@ export default async function ProjectPage({ params, searchParams }: {
             <form action={updateProject}>
               <input type="hidden" name="id" value={id}/>
               <label>Titel<input name="title" defaultValue={project.title}/></label>
-              <MarkdownField name="description" label="Beschrijving en doel" rows={6} defaultValue={project.description}/>
+              <MarkdownField name="description" label="Beschrijving" rows={6} defaultValue={project.description}/>
+              {query.fout === "afsluiting" ? <p className="error-note">{driveErrors.afsluiting}</p> : null}
+              <ProjectOutcomeFields project={project}/>
               <div className="form-row">
                 <label>Status<select name="status" defaultValue={project.status}><option value="idea">Idee</option><option value="planned">Gepland</option><option value="active">Actief</option><option value="blocked">Geblokkeerd</option><option value="done">Afgerond</option><option value="archived">Gearchiveerd</option></select></label>
                 <label>Prioriteit<select name="priority" defaultValue={project.priority}><option value="low">Laag</option><option value="normal">Normaal</option><option value="high">Hoog</option><option value="urgent">Urgent</option></select></label>
@@ -232,7 +237,7 @@ export default async function ProjectPage({ params, searchParams }: {
 
         <section className="form-card record-overview">
           <div className="form-heading"><div><span className="eyebrow">OVERZICHT</span><h2>Projectgegevens</h2></div></div>
-          {project.description ? <MarkdownContent>{project.description}</MarkdownContent> : <p>Nog geen beschrijving of projectdoel toegevoegd.</p>}
+          {project.description ? <MarkdownContent>{project.description}</MarkdownContent> : <p>Nog geen beschrijving toegevoegd.</p>}
           <RecordMetadata items={[
             { label: "Status", value: labels[project.status] ?? project.status },
             { label: "Prioriteit", value: labels[project.priority] ?? project.priority },
@@ -241,6 +246,15 @@ export default async function ProjectPage({ params, searchParams }: {
             { label: "Deadline", value: formatDate(project.due_date) },
             { label: "Projectteam", value: `${teamIds.size} ${teamIds.size === 1 ? "persoon" : "personen"}` },
           ]}/>
+        </section>
+
+        <section className="form-card">
+          <div className="form-heading"><div><span className="eyebrow">RESULTAAT & AFSLUITING</span><h2>Doel en oplevering</h2></div></div>
+          {Object.entries(projectOutcomeLabels).map(([key, label]) => <div key={key}>
+            <h3>{label}</h3>
+            {project[key as keyof ProjectOutcomes]?.trim() ? <MarkdownContent>{project[key as keyof ProjectOutcomes]}</MarkdownContent> : <p>Nog niet ingevuld.</p>}
+          </div>)}
+          {missingProjectOutcomes(project).length ? <p>Voor een nieuwe afsluiting ontbreken: {missingProjectOutcomes(project).join(", ")}. {project.status === "done" ? "Dit eerder afgeronde project behoudt zijn status." : "Je kunt het dossier alvast verder voorbereiden."}</p> : <p>De afsluitinformatie is ingevuld. De bevoegde projectbeheerder beoordeelt de uitkomst; de app bevestigt niet automatisch dat het doel is behaald.</p>}
         </section>
 
         <RecordConnectionsPanel entityType="project" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} modal={query.koppeling} selectedLinkId={query.link}/>
