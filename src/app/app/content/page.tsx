@@ -57,7 +57,7 @@ export default async function ContentPage({
   if (mine) query = query.eq("owner_id", user.id);
 
   const from = (page - 1) * PAGE_SIZE;
-  const [{ data, count }, { data: allRows }, { data: projects }] = await Promise.all([
+  const [{ data, count }, { data: allRows }, { data: projects }, { data: campaigns }, { data: partners }] = await Promise.all([
     query.range(from, from + PAGE_SIZE - 1),
     supabase
       .from("content_items")
@@ -70,6 +70,8 @@ export default async function ContentPage({
       .eq("organization_id", membership.organization_id)
       .is("deleted_at", null)
       .order("title"),
+    supabase.from("campaigns").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
+    supabase.from("partners").select("id,name").eq("organization_id", membership.organization_id).is("deleted_at", null).order("name"),
   ]);
   const rows = (data ?? []) as unknown as Row[];
   const total = count ?? 0;
@@ -126,7 +128,7 @@ export default async function ContentPage({
         )}
         {params.nieuw && canManage && (
           <FormModal title="Nieuw contentitem">
-            <ContentForm action={createContent} projects={projects ?? []} />
+            <ContentForm action={createContent} projects={projects ?? []} campaigns={campaigns ?? []} partners={partners ?? []} />
           </FormModal>
         )}
         <form className="history-filters extended-filters" method="get">
