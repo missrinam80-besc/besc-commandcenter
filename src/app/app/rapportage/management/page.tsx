@@ -15,12 +15,7 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { ManagementReportActions } from "@/components/management-report-actions";
 import { requireActiveMembership } from "@/lib/auth-context";
-import {
-  managementPeriod,
-  percentageDelta,
-  targetScore,
-  type ReportPeriod,
-} from "@/lib/management-report";
+import { managementPeriod, percentageDelta, targetScore, type ReportPeriod } from "@/lib/management-report";
 import {
   projectProgress,
   sponsorPerformance,
@@ -33,7 +28,7 @@ function money(value: number) {
 
 function Delta({ current, previous }: { current: number; previous: number }) {
   const delta = percentageDelta(current, previous);
-  if (delta === null) return <span className="management-delta neutral"><Minus size={12}/>Nieuwe activiteit</span>;
+  if (delta === null) return <span className="management-delta neutral"><Minus size={12}/>Niet berekenbaar</span>;
   if (delta === 0) return <span className="management-delta neutral"><Minus size={12}/>Ongewijzigd</span>;
   return <span className={`management-delta ${delta > 0 ? "up" : "down"}`}>{delta > 0 ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>}{Math.abs(delta)}% t.o.v. vorige periode</span>;
 }
@@ -87,7 +82,7 @@ export default async function ManagementReportPage({
     supabase.from("expenses").select("amount,status").eq("organization_id", organizationId).is("deleted_at", null).gte("expense_date", start.slice(0, 10)).lt("expense_date", end.slice(0, 10)).not("status", "in", "(rejected,cancelled,archived)"),
     supabase.from("income_entries").select("amount,status").eq("organization_id", organizationId).is("deleted_at", null).gte("expected_date", start.slice(0, 10)).lt("expected_date", end.slice(0, 10)).not("status", "in", "(cancelled,archived)"),
     supabase.from("budget_envelopes").select("planned_amount,status").eq("organization_id", organizationId).is("deleted_at", null).not("status", "in", "(rejected,archived)"),
-    supabase.from("kpi_records").select("value,target,domain,metric,name").eq("organization_id", organizationId).is("deleted_at", null).gte("period_end", start.slice(0, 10)).lt("period_end", end.slice(0, 10)),
+    supabase.from("kpi_records").select("value,target,measurement_status,target_direction,domain,metric,name").eq("organization_id", organizationId).is("deleted_at", null).gte("period_end", start.slice(0, 10)).lt("period_end", end.slice(0, 10)),
     supabase.from("tasks").select("id,title,due_at").eq("organization_id", organizationId).is("deleted_at", null).lt("due_at", today).not("status", "in", "(done,cancelled)").order("due_at").limit(5),
     supabase.from("projects").select("id,title,due_date").eq("organization_id", organizationId).is("deleted_at", null).eq("status", "blocked").order("due_date").limit(5),
     supabase.from("partners").select("id,name,next_follow_up").eq("organization_id", organizationId).is("deleted_at", null).lt("next_follow_up", todayDate).not("status", "in", "(inactive,rejected,archived)").order("next_follow_up").limit(5),
@@ -114,7 +109,7 @@ export default async function ManagementReportPage({
   const expenseTotal = (expenses.data ?? []).reduce((sum, item) => sum + Number(item.amount), 0);
   const incomeTotal = (income.data ?? []).reduce((sum, item) => sum + Number(item.amount), 0);
   const budgetTotal = (budgets.data ?? []).reduce((sum, item) => sum + Number(item.planned_amount), 0);
-  const kpiScore = targetScore((kpis.data ?? []).map((item) => ({ value: Number(item.value), target: item.target === null ? null : Number(item.target) })));
+  const kpiScore = targetScore(kpis.data ?? []);
   const riskCount = (overdueTasksCount.count ?? 0) + projectRows.filter((project) => project.status === "blocked").length + (overduePartnerCount.count ?? 0) + (overdueComplianceCount.count ?? 0);
   const progressRows = projectProgress(
     projectRows,
@@ -236,7 +231,7 @@ export default async function ManagementReportPage({
           </section>
           <section className="panel management-kpis">
             <div className="panel-head"><div><span className="eyebrow">KPI & DOELEN</span><h3>Doelrealisatie</h3></div><Link href="/app/rapportage">Alle KPI’s</Link></div>
-            <div className="management-target-score"><div style={{ "--score": `${kpiScore.percentage}%` } as CSSProperties}><strong>{kpiScore.percentage}%</strong></div><span><b>{kpiScore.reached} van {kpiScore.total}</b> KPI-doelen behaald in deze periode</span></div>
+            <div className="management-target-score"><div style={{ "--score": `${kpiScore.percentage ?? 0}%` } as CSSProperties}><strong>{kpiScore.percentage === null ? "—" : `${kpiScore.percentage}%`}</strong></div><span><b>{kpiScore.reached} van {kpiScore.total}</b> KPI-doelen behaald in deze periode · {kpiScore.unassessed} niet te beoordelen</span></div>
           </section>
         </div>
 

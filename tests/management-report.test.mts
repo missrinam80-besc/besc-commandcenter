@@ -20,12 +20,12 @@ test("kwartaalrapport respecteert kwartaalgrenzen", () => {
 
 test("procentuele ontwikkeling behandelt een lege vergelijkingsperiode", () => {
   assert.equal(percentageDelta(12, 10), 20);
-  assert.equal(percentageDelta(0, 0), 0);
+  assert.equal(percentageDelta(0, 0), null);
   assert.equal(percentageDelta(4, 0), null);
 });
 
 test("doelscore telt alleen KPI's met een doel", () => {
-  assert.deepEqual(targetScore([{ value: 10, target: 8 }, { value: 4, target: 5 }, { value: 3, target: null }]), { reached: 1, total: 2, percentage: 50 });
+  assert.deepEqual(targetScore([{ value: 10, target: 8, target_direction: "higher" }, { value: 4, target: 5, target_direction: "higher" }, { value: 3, target: null }]), { reached: 1, total: 2, unassessed: 0, percentage: 50 });
 });
 
 test("managementoverzicht markeert het eigen navigatie-item als actief", async () => {
