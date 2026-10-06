@@ -19,10 +19,13 @@ function load(path: string, overrides: Record<string, unknown>) {
   return compiled.exports;
 }
 
-function fixture(outcome: "saved" | "missing" | "error", denied = false) {
+function fixture(outcome: "saved" | "missing" | "error", denied = false, returned?: unknown) {
   const calls: unknown[][] = [], invalidations: string[] = [];
   const response = { data: outcome === "saved" ? { id } : null, error: outcome === "error" ? { message: "TESTFIXTURE" } : null };
-  const supabase = { from(table: string) {
+  const supabase = { rpc: async (name: string, args: unknown) => {
+    calls.push([name, "rpc", args]);
+    return { data: returned === undefined ? (outcome === "saved" ? id : null) : returned, error: response.error };
+  }, from(table: string) {
     const query: Record<string, unknown> = {};
     for (const method of ["update", "eq", "is", "select", "delete", "insert"]) {
       query[method] = (...args: unknown[]) => { calls.push([table, method, ...args]); return query; };
@@ -64,7 +67,10 @@ for (const [module, config] of Object.entries(operationalModules)) {
         for (const [key, value] of Object.entries({ module, id, title: "TESTFIXTURE", type: Object.keys(config.types)[0], status: Object.keys(config.statuses)[0] })) form.set(key, value);
         form.append("roles", "volunteer");
         await assert.rejects(f.operational[mode](form), outcome === "saved" ? /succes=bijgewerkt/ : /fout=(opslaan|status-opslaan)/);
-        assertScope(f.calls, config.table);
+        if (module === "community" && mode === "updateOperationalRecord") {
+          assert.equal(f.calls[0][0], "save_community_person_bundle");
+          assert.equal(f.calls.length, 1);
+        } else assertScope(f.calls, config.table);
         if (outcome !== "saved") {
           assert.equal(f.invalidations.length, 0);
           assert.equal(f.calls.filter(call => call[0] === "community_person_roles").length, 0);
@@ -97,6 +103,39 @@ test("permission denial and missing deletion confirmation prevent all writes", a
     for (const [key, value] of Object.entries({ entity: "partner", id, action: "delete", confirmation: "" })) form.set(key, value);
     await assert.rejects(f.lifecycle.changeRecordLifecycle(form), denied ? /fout=geen-toegang/ : /fout=bevestiging/);
     assert.equal(f.calls.length, 0);
+    assert.equal(f.invalidations.length, 0);
+  }
+});
+
+test("community creation and editing validate roles before one bundle RPC", async () => {
+  for (const mode of ["createOperationalRecord", "updateOperationalRecord"]) {
+    for (const invalid of [false, true]) {
+      const f = fixture("saved");
+      const form = new FormData();
+      for (const [key, value] of Object.entries({ module: "community", id, title: "TESTFIXTURE", type: "volunteer", status: "candidate" })) form.set(key, value);
+      form.append("roles", invalid ? "unknown" : "volunteer");
+      form.append("roles", "volunteer");
+      await assert.rejects(f.operational[mode](form), invalid ? /fout=rollen/ : /succes=/);
+      if (invalid) { assert.equal(f.calls.length, 0); assert.equal(f.invalidations.length, 0); }
+      else {
+        assert.equal(f.calls.length, 1);
+        const args = f.calls[0][2] as { p_roles: string[]; p_values: Record<string, unknown>; p_person_id: string | null; p_organization_id: string };
+        assert.equal(JSON.stringify(args.p_roles), '["volunteer"]');
+        assert.equal(args.p_person_id, mode === "createOperationalRecord" ? null : id);
+        assert.equal(args.p_organization_id, "fixture-org");
+        assert.equal(args.p_values.display_name, "TESTFIXTURE");
+        for (const key of ["organization_id", "owner_id", "created_by", "updated_at"]) assert.equal(key in args.p_values, false);
+      }
+    }
+  }
+});
+
+test("community RPC needs a valid confirmation and editing needs the requested ID", async () => {
+  for (const [mode, returned] of [["createOperationalRecord", {}], ["createOperationalRecord", "invalid"], ["updateOperationalRecord", "22222222-2222-4222-8222-222222222222"]] as const) {
+    const f = fixture("saved", false, returned);
+    const form = new FormData();
+    for (const [key, value] of Object.entries({ module: "community", id, title: "TESTFIXTURE", type: "volunteer", status: "candidate" })) form.set(key, value);
+    await assert.rejects(f.operational[mode](form), /fout=opslaan/);
     assert.equal(f.invalidations.length, 0);
   }
 });

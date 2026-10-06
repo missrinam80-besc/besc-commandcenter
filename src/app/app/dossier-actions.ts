@@ -90,10 +90,14 @@ export async function addRecordRelationship(formData: FormData) {
   const [targetTypeValue, targetId] = parsed.data.target.split(":");
   const targetType = entityTypeSchema.parse(targetTypeValue);
   const { supabase, user, membership } = await context(parsed.data.entity_type, parsed.data.entity_id);
+  const sourceConfig = dossierEntityConfig[parsed.data.entity_type];
+  const { data: source, error: sourceError } = await supabase.from(sourceConfig.table).select("id")
+    .eq("organization_id", membership.organization_id).eq("id", parsed.data.entity_id).is("deleted_at", null).maybeSingle();
+  if (sourceError || !source) finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "relatie-bron");
   const targetConfig = dossierEntityConfig[targetType];
-  const { data: target } = await supabase.from(targetConfig.table).select("id")
-    .eq("organization_id", membership.organization_id).eq("id", targetId).maybeSingle();
-  if (!target) finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "relatie-doel");
+  const { data: target, error: targetError } = await supabase.from(targetConfig.table).select("id")
+    .eq("organization_id", membership.organization_id).eq("id", targetId).is("deleted_at", null).maybeSingle();
+  if (targetError || !target) finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "relatie-doel");
 
   const left = `${parsed.data.entity_type}:${parsed.data.entity_id}`;
   const right = `${targetType}:${targetId}`;
