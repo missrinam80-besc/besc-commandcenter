@@ -15,6 +15,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    services:
+      postgres-concurrency:
+        image: postgres:17.6
+        env:
+          POSTGRES_DB: besc_concurrency_fixture
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: fixture-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d besc_concurrency_fixture"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
     steps:
       - name: Repository ophalen
         uses: actions/checkout@v4
@@ -33,6 +46,15 @@ jobs:
 
       - name: Rechten- en auditcontroles uitvoeren
         run: pnpm test
+
+      - name: Gelijktijdige dossierkoppeling en verwijdering controleren
+        run: node tests/relationship-concurrency.mjs
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGDATABASE: besc_concurrency_fixture
+          PGUSER: postgres
+          PGPASSWORD: fixture-only
 
       - name: DEV-tokenopslag bewaken
         run: python3 tests/test_besc_dev_agent_token.py

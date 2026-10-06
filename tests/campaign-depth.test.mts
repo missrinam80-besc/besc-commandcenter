@@ -17,16 +17,19 @@ test("ieder campagnetype heeft een herbruikbaar briefing-, deliverable- en evalu
 });
 
 test("een nieuwe campagne kan een sjabloon toepassen zonder het oude deliverable-tekstveld", async () => {
-  const [form, actions] = await Promise.all([
+  const [form, actions, bundle] = await Promise.all([
     source("src/components/operational-record-form.tsx"),
     source("src/app/app/operations/actions.ts"),
+    source("supabase/migrations/20261006205557_atomic_campaign_and_relationships.sql"),
   ]);
   assert.match(form, /name="apply_template"/);
   assert.match(form, /name="channels"/);
   assert.match(form, /name="event_id"/);
   assert.doesNotMatch(form, /label="Deliverables-overzicht"/);
   assert.match(actions, /campaignTemplates/);
-  assert.match(actions, /campaign_deliverables/);
+  assert.match(actions, /rpc\("create_campaign_bundle"/);
+  assert.match(actions, /p_deliverables:template\?\[\.\.\.template\.deliverables\]/);
+  assert.match(bundle, /insert into public\.campaign_deliverables/);
   assert.match(actions, /values\.channels/);
   assert.match(actions, /values\.event_id/);
 });
