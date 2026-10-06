@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getMcpConfig } from "@/lib/commandcenter-mcp-runtime";
-import { consentTicket, parseAuthorization, type AuthorizationRequest } from "@/lib/commandcenter-mcp-oauth";
+import { consentTicket, parseAuthorization, AGENT_COMBINED_SCOPE, type AuthorizationRequest } from "@/lib/commandcenter-mcp-oauth";
 import { canReadMcpCommandCenter } from "@/lib/commandcenter-mcp-store";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -38,11 +38,14 @@ export default async function McpConsent({ searchParams }: { searchParams: Promi
   if (!await canReadMcpCommandCenter(user.id, config.organizationId)) return <main className="module-body"><h1>Geen toegang tot Command Center-dossiers</h1><p>Alleen actieve BESC-beheerders, bestuursleden  kunnen deze koppeling toestaan.</p></main>;
   if (request) return <main className="module-body"><section className="login-card"><h1>ChatGPT toegang geven?</h1>
     <p>Je bent aangemeld als {user.email}. Je staat deze verbinding toe om toegestane dossiermetadata van BESC te lezen.</p>
-    <p>Recht: <strong>commandcenter:read</strong>. Geen wijzigingen, synchronisaties of e-mails. Geen mailinhoud, contactgegevens of financiële bedragen. In testmodus zijn dossierreads geblokkeerd.</p>
+    <p>Rechten: <strong>{request.scope}</strong>. Geen mailinhoud, contactgegevens of financiële bedragen. In testmodus zijn dossierreads en agentresultaten geblokkeerd.</p>
+    {request.scope === AGENT_COMBINED_SCOPE
+      ? <p>Je geeft daarnaast toestemming om eigen agentopdrachten te lezen en hun evaluaties, voorstellen en concepten terug te schrijven. Geen dossierwijzigingen, publicaties of e-mails. Deze toestemming bewijst de identiteit van je verbinding; zij bewijst niet zelfstandig welke agent de tekst maakte.</p>
+      : <p>Alleen lezen. Geen wijzigingen, synchronisaties of e-mails.</p>}
     <p>Terugkeeradres: <code>{request.redirectUri}</code></p>
     <p>Deze toestemming verloopt na 30 dagen. Je kunt ze eerder intrekken op deze pagina.</p>
     <form action={decideMcpConsent}><input type="hidden" name="ticket" value={ticket}/>
-      <button type="submit" name="decision" value="approve" className="login-submit">Alleen-lezen toegang toestaan</button>
+      <button type="submit" name="decision" value="approve" className="login-submit">{request.scope === AGENT_COMBINED_SCOPE ? "Lezen en agentresultaten opslaan toestaan" : "Alleen-lezen toegang toestaan"}</button>
       <button type="submit" name="decision" value="deny">Weigeren</button></form></section></main>;
   const { data: grants, error } = await createAdminClient().from("commandcenter_mcp_oauth_grants").select("id,created_at,expires_at")
     .eq("user_id", user.id).eq("organization_id", config.organizationId).is("revoked_at", null)

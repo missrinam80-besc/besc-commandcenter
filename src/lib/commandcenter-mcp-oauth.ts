@@ -1,8 +1,18 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 export const COMMANDCENTER_MCP_SCOPE = "commandcenter:read";
+export const AGENT_RESULT_SCOPE = "agent_results:write";
+export const AGENT_COMBINED_SCOPE = `${COMMANDCENTER_MCP_SCOPE} ${AGENT_RESULT_SCOPE}`;
 export const COMMANDCENTER_MCP_CLIENT = "besc-commandcenter-chatgpt";
-export type McpConfig = { origin: string; resource: string; organizationId: string; signingKey: string; redirects: string[] };
+export type McpConfig = { origin: string; resource: string; organizationId: string; signingKey: string; redirects: string[]; agentResultsEnabled?: boolean };
+export function allowedMcpScope(scope: string, config: McpConfig) {
+  return normalizedMcpScope(scope,config)!==null;
+}
+function normalizedMcpScope(scope:string,config:McpConfig) {
+  if(scope===COMMANDCENTER_MCP_SCOPE)return COMMANDCENTER_MCP_SCOPE;
+  if(config.agentResultsEnabled && (scope===AGENT_COMBINED_SCOPE || scope===`${AGENT_RESULT_SCOPE} ${COMMANDCENTER_MCP_SCOPE}`))return AGENT_COMBINED_SCOPE;
+  return null;
+}
 export type McpGrant = { id: string; user_id: string; organization_id: string; client_id: string; resource: string; scope: string; expires_at: string; revoked_at: string | null };
 export type AuthorizationRequest = { clientId: string; redirectUri: string; resource: string; scope: string; challenge: string; state: string };
 export type OAuthStore = {
@@ -34,7 +44,8 @@ export function commandcenterMcpConfig(env: Record<string, string | undefined>):
       const redirect = new URL(value);
       return redirect.protocol !== "https:" || redirect.username || redirect.password || redirect.hash || redirect.search;
     })) return null;
-    return { origin: url.origin, resource: `${url.origin}/mcp/commandcenter`, organizationId, signingKey, redirects };
+    return { origin: url.origin, resource: `${url.origin}/mcp/commandcenter`, organizationId, signingKey, redirects,
+      agentResultsEnabled: env.COMMANDCENTER_AGENT_RESULTS_ENABLED === "true" };
   } catch { return null; }
 }
 
@@ -66,12 +77,12 @@ export function registerMcpClient(body: unknown, config: McpConfig) {
   if (!Array.isArray(redirects) || !redirects.length || redirects.length > 10
     || !redirects.every(uri => typeof uri === "string" && config.redirects.includes(uri))
     || (input.token_endpoint_auth_method !== undefined && input.token_endpoint_auth_method !== "none")
-    || (input.scope !== undefined && input.scope !== COMMANDCENTER_MCP_SCOPE)
+    || (input.scope !== undefined && (typeof input.scope !== "string" || !allowedMcpScope(input.scope, config)))
     || (input.grant_types !== undefined && (!Array.isArray(input.grant_types) || !input.grant_types.every(value => ["authorization_code", "refresh_token"].includes(value))))
     || (input.response_types !== undefined && (!Array.isArray(input.response_types) || input.response_types.length !== 1 || input.response_types[0] !== "code"))) throw new OAuthError("invalid_client_metadata");
   return { client_id: `besc.${signed({ kind: "client", redirects, nonce: randomToken() }, config.signingKey)}`,
     client_name: "BESC Command Center", client_id_issued_at: Math.floor(Date.now() / 1000), redirect_uris: redirects,
-    token_endpoint_auth_method: "none", grant_types: ["authorization_code", "refresh_token"], response_types: ["code"], scope: COMMANDCENTER_MCP_SCOPE };
+    token_endpoint_auth_method: "none", grant_types: ["authorization_code", "refresh_token"], response_types: ["code"], scope: normalizedMcpScope(input.scope as string ?? COMMANDCENTER_MCP_SCOPE,config) };
 }
 export function parseAuthorization(params: URLSearchParams, config: McpConfig): AuthorizationRequest {
   // Optional language preference is not an authorization input; accept but ignore it.
@@ -85,8 +96,8 @@ export function parseAuthorization(params: URLSearchParams, config: McpConfig): 
   if (params.get("response_type") !== "code" || params.get("code_challenge_method") !== "S256"
     || !/^[A-Za-z0-9_-]{43}$/.test(challenge) || !state || state.length > 1024
     || params.get("resource") !== config.resource) throw new OAuthError("invalid_request");
-  const scope = params.get("scope") ?? COMMANDCENTER_MCP_SCOPE;
-  if (scope !== COMMANDCENTER_MCP_SCOPE) throw new OAuthError("invalid_scope");
+  const scope = normalizedMcpScope(params.get("scope") ?? COMMANDCENTER_MCP_SCOPE,config);
+  if (!scope) throw new OAuthError("invalid_scope");
   return { clientId, redirectUri, resource: config.resource, scope, challenge, state };
 }
 export function consentTicket(request: AuthorizationRequest, config: McpConfig, now = Date.now()) {
@@ -108,7 +119,7 @@ export async function issueMcpCode(request: AuthorizationRequest, userId: string
   const code = randomToken();
   const grant: McpGrant = { id: randomBytes(16).toString("hex").replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, "$1-$2-$3-$4-$5"),
     user_id: userId, organization_id: config.organizationId, client_id: request.clientId, resource: config.resource,
-    scope: COMMANDCENTER_MCP_SCOPE, expires_at: new Date(now + 30 * 86_400_000).toISOString(), revoked_at: null };
+    scope: request.scope, expires_at: new Date(now + 30 * 86_400_000).toISOString(), revoked_at: null };
   await store.createCode({ grant, redirectUri: request.redirectUri, challenge: request.challenge, codeHash: tokenHash(code), codeExpiresAt: new Date(now + 300_000).toISOString() });
   return authorizationRedirect(request, config, { code });
 }
@@ -117,7 +128,7 @@ export async function exchangeMcpToken(params: URLSearchParams, config: McpConfi
   const clientId = params.get("client_id") ?? "";
   clientRedirects(clientId, config);
   if (params.get("resource") !== config.resource) throw new OAuthError("invalid_target");
-  if (params.has("scope") && params.get("scope") !== COMMANDCENTER_MCP_SCOPE) throw new OAuthError("invalid_scope");
+  if (params.has("scope") && !allowedMcpScope(params.get("scope")!, config)) throw new OAuthError("invalid_scope");
   const kind = params.get("grant_type") === "authorization_code" ? "code" : params.get("grant_type") === "refresh_token" ? "refresh" : null;
   if (!kind) throw new OAuthError("unsupported_grant_type");
   const raw = params.get(kind === "code" ? "code" : "refresh_token") ?? "";
@@ -129,22 +140,23 @@ export async function exchangeMcpToken(params: URLSearchParams, config: McpConfi
   const grant = await store.exchange({ tokenHash: tokenHash(raw), kind, clientId, redirectUri, resource: config.resource,
     challenge: createHash("sha256").update(verifier).digest("base64url"), accessHash: tokenHash(access), refreshHash: tokenHash(refresh) });
   if (!grant || grant.organization_id !== config.organizationId || grant.resource !== config.resource
-    || grant.scope !== COMMANDCENTER_MCP_SCOPE || grant.revoked_at || Date.parse(grant.expires_at) <= Date.now()
+    || !allowedMcpScope(grant.scope, config) || (params.has("scope") && normalizedMcpScope(params.get("scope")!,config) !== grant.scope)
+    || grant.revoked_at || Date.parse(grant.expires_at) <= Date.now()
     || !await canRead(grant.user_id)) {
     if (grant) await store.revoke(tokenHash(refresh), clientId);
     throw new OAuthError("invalid_grant");
   }
-  return { access_token: access, token_type: "Bearer", expires_in: Math.min(900, Math.max(0, Math.floor((Date.parse(grant.expires_at) - Date.now()) / 1000))), refresh_token: refresh, scope: COMMANDCENTER_MCP_SCOPE };
+  return { access_token: access, token_type: "Bearer", expires_in: Math.min(900, Math.max(0, Math.floor((Date.parse(grant.expires_at) - Date.now()) / 1000))), refresh_token: refresh, scope: grant.scope };
 }
 export function oauthMetadata(config: McpConfig) {
   return { issuer: `${config.origin}/mcp/commandcenter`, authorization_endpoint: `${config.origin}/mcp/commandcenter/authorize`, token_endpoint: `${config.origin}/mcp/commandcenter/token`,
     registration_endpoint: `${config.origin}/mcp/commandcenter/register`, revocation_endpoint: `${config.origin}/mcp/commandcenter/revoke`,
-    scopes_supported: [COMMANDCENTER_MCP_SCOPE], response_types_supported: ["code"], grant_types_supported: ["authorization_code", "refresh_token"],
+    scopes_supported: config.agentResultsEnabled ? [COMMANDCENTER_MCP_SCOPE, AGENT_RESULT_SCOPE] : [COMMANDCENTER_MCP_SCOPE], response_types_supported: ["code"], grant_types_supported: ["authorization_code", "refresh_token"],
     token_endpoint_auth_methods_supported: ["none"], code_challenge_methods_supported: ["S256"], authorization_response_iss_parameter_supported: true };
 }
 export function protectedResourceMetadata(config: McpConfig) {
   return { resource: config.resource, resource_name: "BESC Command Center", authorization_servers: [`${config.origin}/mcp/commandcenter`],
-    scopes_supported: [COMMANDCENTER_MCP_SCOPE], bearer_methods_supported: ["header"] };
+    scopes_supported: config.agentResultsEnabled ? [COMMANDCENTER_MCP_SCOPE, AGENT_RESULT_SCOPE] : [COMMANDCENTER_MCP_SCOPE], bearer_methods_supported: ["header"] };
 }
 export function mcpChallenge(config: McpConfig) {
   return `Bearer resource_metadata="${config.origin}/.well-known/oauth-protected-resource/mcp/commandcenter", scope="${COMMANDCENTER_MCP_SCOPE}"`;
