@@ -7,6 +7,7 @@ import ts from "typescript";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { hasPermission } from "../src/lib/permissions.ts";
+import { toPersonPickerOptions } from "../src/lib/person-picker.ts";
 const require=createRequire(import.meta.url);
 function load(path:string, overrides:Record<string,unknown>){
  const compiled={exports:{} as Record<string,unknown>};
@@ -57,6 +58,7 @@ test("Projectscherm en directe bewerklink respecteren rollen voor team en mijlpa
   const src=readFileSync(new URL("../src/app/app/projecten/[id]/page.tsx",import.meta.url),"utf8");
   for(const match of src.matchAll(/import \{([^}]+)\} from "(@\/components\/[^"]+)"/g)){const exports:Record<string,unknown>={};for(const name of match[1].split(',').map(n=>n.trim()))exports[name]=({children}:React.PropsWithChildren)=>React.createElement('section',null,children);stubs[match[2]]=exports;}
   for(const key of ["../../actions","../../operations/actions","../../taken/[id]/actions","./actions"])stubs[key]=new Proxy({},{get:()=>noop});
+  stubs["@/lib/person-picker"]={toPersonPickerOptions};
   const page=load("src/app/app/projecten/[id]/page.tsx",stubs).default as(p:unknown)=>Promise<React.ReactNode>;
   const html=renderToStaticMarkup(await page({params:Promise.resolve({id}),searchParams:Promise.resolve({bewerken:"1",mijlpaal:id})}));
   assert.equal(html.includes('name="title"'),c.allowed,`${c.role} direct form`);
