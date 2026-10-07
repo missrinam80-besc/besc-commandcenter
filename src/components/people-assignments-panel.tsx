@@ -14,7 +14,7 @@ type Assignment = {
 
 const statusLabels: Record<string, string> = { planned: "Gepland", confirmed: "Bevestigd", completed: "Afgerond", cancelled: "Geannuleerd" };
 
-export function PeopleAssignmentsPanel({ entityType, entityId, assignments, people, canManage, selected, peopleError = false }: {
+export function PeopleAssignmentsPanel({ entityType, entityId, assignments, people, canManage, selected, peopleError = false, closeHref = "?" }: {
   entityType: "project" | "event";
   entityId: string;
   assignments: Assignment[];
@@ -22,7 +22,9 @@ export function PeopleAssignmentsPanel({ entityType, entityId, assignments, peop
   canManage: boolean;
   selected?: string;
   peopleError?: boolean;
+  closeHref?: string;
 }) {
+  const queryPrefix = closeHref === "?" ? "?" : `${closeHref}&`;
   const basePath = entityType === "project" ? `/app/projecten/${entityId}` : `/app/events/${entityId}`;
   const current = assignments.find((item) => item.id === selected);
   const form = (assignment?: Assignment) => <form action={assignment ? updatePersonAssignment : createPersonAssignment}>
@@ -33,9 +35,9 @@ export function PeopleAssignmentsPanel({ entityType, entityId, assignments, peop
   </form>;
 
   return <section className="form-card relation-wide">
-    <div className="form-heading"><div><span className="eyebrow">MENSEN</span><h2>Betrokkenen en rollen</h2></div>{canManage && <Link className="row-action" href="?betrokkene=nieuw"><Plus size={14}/>Toevoegen</Link>}</div>
-    <div className="relation-list">{assignments.map((assignment) => <article key={assignment.id}><div><Link href={`/app/community/${assignment.person_id}`}>{assignment.community_people?.display_name || "Onbekende persoon"}</Link><span>{assignment.role_name} · {statusLabels[assignment.status] ?? assignment.status}{assignment.starts_at ? ` · ${formatDateTime(assignment.starts_at)}` : ""}</span></div>{canManage && <Link className="row-action" aria-label={`${assignment.role_name} bewerken`} href={`?betrokkene=${assignment.id}`}><Pencil size={14}/></Link>}</article>)}{!assignments.length && <div className="empty">Nog geen personen aan dit dossier gekoppeld.</div>}</div>
-    {selected === "nieuw" && canManage ? <FormModal title="Persoon koppelen">{form()}</FormModal> : null}
-    {current && canManage ? <FormModal title="Betrokkene bewerken">{form(current)}<form className="modal-danger-zone" action={deletePersonAssignment}><input type="hidden" name="id" value={current.id}/><input type="hidden" name="entity_type" value={entityType}/><input type="hidden" name="entity_id" value={entityId}/><input type="hidden" name="return_to" value={basePath}/><ConfirmSubmitButton className="danger-button" message="Deze persoon uit dit dossier verwijderen?"><Trash2 size={14}/>Koppeling verwijderen</ConfirmSubmitButton></form></FormModal> : null}
+    <div className="form-heading"><div><span className="eyebrow">MENSEN</span><h2>Betrokkenen en rollen</h2></div>{canManage && <Link className="row-action" href={`${queryPrefix}betrokkene=nieuw`}><Plus size={14}/>Toevoegen</Link>}</div>
+    <div className="relation-list">{assignments.map((assignment) => <article key={assignment.id}><div><Link href={`/app/community/${assignment.person_id}`}>{assignment.community_people?.display_name || "Onbekende persoon"}</Link><span>{assignment.role_name} · {statusLabels[assignment.status] ?? assignment.status}{assignment.starts_at ? ` · ${formatDateTime(assignment.starts_at)}` : ""}</span></div>{canManage && <Link className="row-action" aria-label={`${assignment.role_name} bewerken`} href={`${queryPrefix}betrokkene=${assignment.id}`}><Pencil size={14}/></Link>}</article>)}{!assignments.length && <div className="empty">Nog geen personen aan dit dossier gekoppeld.</div>}</div>
+    {selected === "nieuw" && canManage ? <FormModal closeHref={closeHref} title="Persoon koppelen">{form()}</FormModal> : null}
+    {current && canManage ? <FormModal closeHref={closeHref} title="Betrokkene bewerken">{form(current)}<form className="modal-danger-zone" action={deletePersonAssignment}><input type="hidden" name="id" value={current.id}/><input type="hidden" name="entity_type" value={entityType}/><input type="hidden" name="entity_id" value={entityId}/><input type="hidden" name="return_to" value={basePath}/><ConfirmSubmitButton className="danger-button" message="Deze persoon uit dit dossier verwijderen?"><Trash2 size={14}/>Koppeling verwijderen</ConfirmSubmitButton></form></FormModal> : null}
   </section>;
 }

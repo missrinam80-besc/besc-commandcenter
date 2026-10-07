@@ -6,6 +6,7 @@ Werkwijze en inhoudelijke richtlijnen voor projecten, events, content, nieuwsbri
 
 ## Handleidingen
 
+- [Eventfiche en tabbladen](Eventfiche.md)
 - [Richtlijnen Projecten en Campagnes](../RICHTLIJNEN_PROJECTEN_EN_CAMPAGNES.md)
 - [Richtlijnen Events en Sponsorcommunicatie](../RICHTLIJNEN_EVENTS_EN_SPONSORCOMMUNICATIE.md)
 - [Richtlijnen Content en Social Posts](../RICHTLIJNEN_CONTENT_EN_SOCIAL_POSTS.md)

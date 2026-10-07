@@ -4,15 +4,16 @@ import { FormModal } from "@/components/form-modal";
 import { MarkdownField } from "@/components/markdown-field";
 import type { DossierEntityType } from "@/lib/dossier-relations";
 
-export function TaskCreateModal({ returnTo, projects, people, defaultProjectId, contextEntityType, contextEntityId }: {
+export function TaskCreateModal({ returnTo, projects, people, defaultProjectId, contextEntityType, contextEntityId, closeHref = "?" }: {
   returnTo: string;
+  closeHref?: string;
   projects: { id: string; title: string }[];
   people: { id: string; label: string }[];
   defaultProjectId?: string | null;
   contextEntityType?: DossierEntityType;
   contextEntityId?: string;
 }) {
-  return <FormModal title="Nieuwe taak" closeHref="?">
+  return <FormModal title="Nieuwe taak" closeHref={closeHref}>
     <form action={createTask}>
       <input type="hidden" name="return_to" value={returnTo}/>
       {contextEntityType ? <input type="hidden" name="context_entity_type" value={contextEntityType}/> : null}
@@ -26,7 +27,7 @@ export function TaskCreateModal({ returnTo, projects, people, defaultProjectId, 
         <label>Prioriteit<select name="priority" defaultValue="normal"><option value="low">Laag</option><option value="normal">Normaal</option><option value="high">Hoog</option><option value="urgent">Urgent</option></select></label>
       </div>
       <label>Checklist (één punt per regel)<textarea name="checklist" rows={4}/></label>
-      <div className="form-actions"><Link href="?">Annuleren</Link><button className="primary">Taak opslaan</button></div>
+      <div className="form-actions"><Link href={closeHref}>Annuleren</Link><button className="primary">Taak opslaan</button></div>
     </form>
   </FormModal>;
 }
