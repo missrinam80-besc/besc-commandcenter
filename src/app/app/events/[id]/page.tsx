@@ -1,4 +1,5 @@
 import { eventDossierTabs, resolveEventDossierTab } from "@/lib/event-dossier-tabs";
+import { EventSchedulePanel } from "@/components/event-schedule-panel";
 import { EventMaterialsPanel } from "@/components/event-materials-panel";
 import { toPersonPickerOptions } from "@/lib/person-picker";
 import Link from "next/link";
@@ -42,6 +43,9 @@ type CalendarLink = {
 };
 
 const driveErrors: Record<string, string> = {
+  "schema-velden": "Controleer de titel en tijden. De eindtijd moet na de starttijd liggen.",
+  "schema-opslaan": "Het onderdeel kon niet worden opgeslagen. Controleer of het event en de toegewezen persoon nog beschikbaar zijn.",
+  "schema-verwijderen": "Het onderdeel kon niet worden verwijderd. Het schema is mogelijk ondertussen gewijzigd.",
   "materiaal-velden": "Controleer de naam, het aantal en de geplande ophaal- en retourtijd.",
   "materiaal-opslaan": "Het materiaal kon niet worden opgeslagen. Controleer of het event, registeritem en de verantwoordelijke nog beschikbaar zijn.",
   "materiaal-verwijderen": "Het materiaal kon niet worden verwijderd. De lijst is mogelijk ondertussen gewijzigd.",
@@ -122,7 +126,7 @@ export default async function Event({
         {eventDossierTabs.map(tab => <Link key={tab.id} href={`?tab=${tab.id}`} scroll={false} aria-current={activeTab === tab.id ? "page" : undefined}>{tab.label}</Link>)}
       </nav>
       <div className="project-detail-body event-dossier">
-        {q.succes && <div className="success">{q.succes === "materiaal-opgeslagen" ? "Materiaal op de eventlijst opgeslagen." : q.succes === "materiaal-verwijderd" ? "Materiaal van de eventlijst verwijderd." : q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
+        {q.succes && <div className="success">{q.succes === "schema-opgeslagen" ? "Schemaonderdeel opgeslagen." : q.succes === "schema-verwijderd" ? "Schemaonderdeel verwijderd." : q.succes === "materiaal-opgeslagen" ? "Materiaal op de eventlijst opgeslagen." : q.succes === "materiaal-verwijderd" ? "Materiaal van de eventlijst verwijderd." : q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
         {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
         {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
         {q.bewerken && canManage && (
@@ -154,7 +158,7 @@ export default async function Event({
         {activeTab === "planning" && <>
           <div className="event-tab-actions"><Link href="?tab=planning&nieuw=taak">Taak toevoegen</Link>{canManageCampaigns && <Link href="?tab=planning&nieuw=campagne">Campagne toevoegen</Link>}</div>
         <PeopleAssignmentsPanel entityType="event" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)} canManage={canManage} closeHref="?tab=planning" selected={q.betrokkene}/>
-          <section className="form-card event-tab-placeholder"><h2>Schema en shifts</h2><p>Hier komen het dagschema, streamschema, draaiboek en de crewshifts. Je kunt nu al betrokkenen en hun rollen beheren.</p></section>
+          <EventSchedulePanel eventId={id} selected={q.schema} kind={q.schema_type} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>
         </>}
         {activeTab === "materialen" && <EventMaterialsPanel eventId={id} selected={q.materiaal} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>}
         {activeTab === "giveaways" && <section className="form-card event-tab-placeholder"><h2>Giveaway-items</h2><p>Het beheer van items, aantallen en uitdeling wordt in een volgende stap toegevoegd.</p></section>}
