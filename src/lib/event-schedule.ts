@@ -6,6 +6,36 @@ export type EventScheduleItem = {
   location: string | null; notes: string | null;
 };
 
+const agendaDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels", year: "numeric", month: "2-digit", day: "2-digit" });
+const agendaDateLabel = new Intl.DateTimeFormat("nl-BE", { timeZone: "Europe/Brussels", weekday: "long", day: "numeric", month: "long", year: "numeric" });
+const agendaTime = new Intl.DateTimeFormat("nl-BE", { timeZone: "Europe/Brussels", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+
+export function scheduleDayKey(stamp: string): string {
+  const parts = agendaDay.formatToParts(new Date(stamp));
+  return ["year", "month", "day"].map(type => parts.find(part => part.type === type)?.value).join("-");
+}
+
+export function scheduleAgendaDays(rows: EventScheduleItem[]): { key: string; label: string; items: EventScheduleItem[] }[] {
+  const groups = new Map<string, { key: string; label: string; items: EventScheduleItem[] }>();
+  const sorted = [...rows].sort((a, b) => (a.starts_at ? Date.parse(a.starts_at) : Infinity) - (b.starts_at ? Date.parse(b.starts_at) : Infinity));
+  for (const row of sorted) {
+    const key = row.starts_at ? scheduleDayKey(row.starts_at) : "unplanned";
+    if (!groups.has(key)) groups.set(key, { key, label: row.starts_at ? agendaDateLabel.format(new Date(row.starts_at)) : "Nog niet ingepland", items: [] });
+    groups.get(key)!.items.push(row);
+  }
+  return [...groups.values()];
+}
+
+export function scheduleAgendaTime(stamp: string | null, startsAt?: string | null): string {
+  if (!stamp) return "Onbekend";
+  const time = agendaTime.format(new Date(stamp));
+  // Night shifts keep the end date explicit rather than appearing to end before they start.
+  if (startsAt && scheduleDayKey(stamp) !== scheduleDayKey(startsAt)) {
+    return `${new Intl.DateTimeFormat("nl-BE", { timeZone: "Europe/Brussels", day: "numeric", month: "short", year: "numeric" }).format(new Date(stamp))} · ${time}`;
+  }
+  return time;
+}
+
 // Adjacent shifts are allowed. Cancelled or untimed entries cannot establish a conflict.
 export function scheduleConflicts(rows: EventScheduleItem[]): Set<string> {
   const conflicts = new Set<string>();

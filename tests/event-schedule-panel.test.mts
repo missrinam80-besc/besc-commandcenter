@@ -7,7 +7,7 @@ import ts from "typescript";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { hasPermission } from "../src/lib/permissions.ts";
-import { scheduleKinds, scheduleStatuses, scheduleConflicts } from "../src/lib/event-schedule.ts";
+import { scheduleKinds, scheduleStatuses, scheduleConflicts, scheduleAgendaDays, scheduleAgendaTime } from "../src/lib/event-schedule.ts";
 import { formatDateTime } from "../src/lib/format.ts";
 
 async function render(role="member", failure="", selected?:string, kind?:string) {
@@ -20,7 +20,7 @@ async function render(role="member", failure="", selected?:string, kind?:string)
   const overrides:Record<string,unknown>={
     "next/link":{default:({children,scroll,...props}:React.PropsWithChildren<Record<string,unknown>>)=>{void scroll;return React.createElement("a",props,children);}},
     "@/lib/auth-context":{requireActiveMembership:async()=>({supabase,membership:{role,organization_id:"fixture-org"}})},
-    "@/lib/permissions":{hasPermission},"@/lib/event-schedule":{scheduleKinds,scheduleStatuses,scheduleConflicts},"@/lib/format":{formatDateTime},
+    "@/lib/permissions":{hasPermission},"@/lib/event-schedule":{scheduleKinds,scheduleStatuses,scheduleConflicts,scheduleAgendaDays,scheduleAgendaTime},"@/lib/format":{formatDateTime},
     "@/components/form-modal":{FormModal:container},"@/components/confirm-submit-button":{ConfirmSubmitButton:container},
     "@/components/event-schedule-form":{EventScheduleForm:()=>React.createElement("div",{"data-editor":"yes"})},
     "@/app/app/events/[id]/schedule-actions":{deleteEventSchedule:()=>undefined},
@@ -34,3 +34,5 @@ async function render(role="member", failure="", selected?:string, kind?:string)
 test("schemaqueryfout toont geen leeg of bewerkbaar schema",async()=>{const html=await render("member","items");assert.ok(html.includes("schema kon niet worden geladen"));assert.ok(!html.includes("Nog geen schema"));assert.ok(!html.includes("Onderdeel toevoegen"));});
 test("personenfout behoudt de lijst maar blokkeert de editor",async()=>{const html=await render("member","people","nieuw");assert.ok(html.includes("TESTFIXTURE stream"));assert.ok(html.includes("personenlijst kon niet"));assert.ok(!html.includes('data-editor="yes"'));});
 test("beheerder bewerkt, vrijwilliger bekijkt en filters beperken de weergave",async()=>{const allowed=await render("member","","fixture-row"),denied=await render("volunteer","","fixture-row");assert.ok(allowed.includes('data-editor="yes"'));assert.ok(denied.includes("TESTFIXTURE stream"));assert.ok(!denied.includes('data-editor="yes"'));const filtered=await render("member","",undefined,"shift");assert.ok(!filtered.includes("TESTFIXTURE stream"));assert.ok(filtered.includes("Geen onderdelen voor dit filter"));});
+
+test("agenda toont onbekende tijden apart en behoudt tekstuele type- en statuslabels",async()=>{const html=await render();assert.ok(html.includes("Eventagenda"));assert.ok(html.includes("Nog niet ingepland"));assert.ok(html.includes("Tijd onbekend"));assert.ok(html.includes('data-kind="stream"'));assert.ok(html.includes("Voorstel"));assert.ok(html.includes("TESTFIXTURE stream"));});
