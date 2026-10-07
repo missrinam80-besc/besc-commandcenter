@@ -14,6 +14,7 @@ import { RecordConnectionsPanel } from "@/components/record-connections-panel";
 import { RecordMetadata, type MetadataItem } from "@/components/record-metadata";
 import { TaskCreateModal } from "@/components/task-create-modal";
 import { FinancialSummaryPanel } from "@/components/financial-summary-panel";
+import { SponsorDocumentTools } from "@/components/sponsor-document-tools";
 import {
   CampaignSections,
   CommunitySections,
@@ -198,6 +199,7 @@ export async function OperationalRecordDetail({
             {module === "campagnes" && <section className="form-card record-notes"><div className="form-heading"><h2>Resultaten en evaluatie</h2></div>{record.results_summary ? <MarkdownContent>{String(record.results_summary)}</MarkdownContent> : <p>Nog geen evaluatie toegevoegd.</p>}</section>}
             {module === "sponsors" && <ApprovalPanel entityType="partner" entityId={id} sourceHref={`/app/sponsors/${id}`} title="Sponsorafspraak goedkeuren"/>}
             {module === "sponsors" && <PartnerSections id={id} contacts={(contactsResult.data ?? []) as unknown as RelatedRow[]} interactions={(interactionsResult.data ?? []) as unknown as RelatedRow[]} campaigns={(partnerCampaignsResult.data ?? []) as unknown as RelatedRow[]} events={[]} content={[]}/>}
+            {module === "sponsors" && <SponsorDocumentTools partnerId={id}/>}
             {module === "campagnes" && <CampaignSections id={id} deliverables={(deliverablesResult.data ?? []) as unknown as RelatedRow[]} social={(socialResult.data ?? []) as unknown as RelatedRow[]} content={((contentResult.data ?? []).filter((item) => item.campaign_id === id)) as unknown as RelatedRow[]} people={(communityOptionsResult.data ?? []) as unknown as RelatedRow[]}/>}
             {module === "community" && <CommunitySections id={id} onboarding={(onboardingResult.data ?? []) as unknown as RelatedRow[]} assignments={(assignmentsResult.data ?? []) as unknown as RelatedRow[]} events={(eventsResult.data ?? []) as unknown as RelatedRow[]} projects={(projectsResult.data ?? []) as unknown as RelatedRow[]}/>}
             {module === "social" && <SocialRelations record={record} variants={(variantsResult.data ?? []) as unknown as RelatedRow[]}/>}

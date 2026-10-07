@@ -1,5 +1,4 @@
 import { OperationalRecordDetail } from "@/components/operational-record-detail";
-import { SponsorDocumentTools } from "@/components/sponsor-document-tools";
 
 export default async function Page({
   params,
@@ -10,13 +9,10 @@ export default async function Page({
 }) {
   const { id } = await params;
   return (
-    <>
       <OperationalRecordDetail
         module="sponsors"
         params={Promise.resolve({ id })}
         searchParams={searchParams}
       />
-      <SponsorDocumentTools partnerId={id} />
-    </>
   );
 }
