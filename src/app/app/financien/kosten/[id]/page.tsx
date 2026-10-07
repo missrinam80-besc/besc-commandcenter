@@ -5,6 +5,7 @@ import { updateExpenseWorkflow } from "@/app/app/financien/actions";
 import { AppShell } from "@/components/app-shell";
 import { ApprovalPanel } from "@/components/approval-panel";
 import { ExpenseForm } from "@/components/finance-forms";
+import { hasPermission } from "@/lib/permissions";
 import { requireActiveMembership } from "@/lib/auth-context";
 
 export default async function Page({
@@ -16,10 +17,13 @@ export default async function Page({
 }) {
   const { id } = await params;
   const query = await searchParams;
-  const { supabase, membership } = await requireActiveMembership();
+  const { supabase, membership, user } = await requireActiveMembership();
   const organizationId = membership.organization_id;
+  const canViewOverview = hasPermission(membership, "viewFinance");
+  const expenseQuery = supabase.from("expenses").select("*,budget_envelopes(name),projects(title),events(title),campaigns(title),partners(name),merch_launches(title)").eq("organization_id", organizationId).eq("id", id).is("deleted_at", null);
+  if (!canViewOverview) expenseQuery.eq("submitted_by", user.id);
   const [expenseResult, budgets, projects, events, campaigns, partners, launches, audit] = await Promise.all([
-    supabase.from("expenses").select("*,budget_envelopes(name),projects(title),events(title),campaigns(title),partners(name),merch_launches(title)").eq("organization_id", organizationId).eq("id", id).is("deleted_at", null).maybeSingle(),
+    expenseQuery.maybeSingle(),
     supabase.from("budget_envelopes").select("id,name").eq("organization_id", organizationId).is("deleted_at", null).order("name"),
     supabase.from("projects").select("id,title").eq("organization_id", organizationId).is("deleted_at", null).order("title"),
     supabase.from("events").select("id,title").eq("organization_id", organizationId).is("deleted_at", null).order("title"),
@@ -53,7 +57,7 @@ export default async function Page({
     <AppShell active="Financiën">
       <header className="project-detail-head">
         <div>
-          <Link href="/app/financien">← Terug naar financiën</Link>
+          <Link href={canViewOverview ? "/app/financien" : "/app/financien?nieuw=kost"}>{canViewOverview ? "← Terug naar financiën" : "← Nieuwe kost indienen"}</Link>
           <span className="eyebrow">KOSTENREGISTRATIE</span>
           <h1>{expense.title}</h1>
           <p>{expense.category} · {expense.status}</p>
