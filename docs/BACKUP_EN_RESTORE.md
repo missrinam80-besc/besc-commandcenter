@@ -2,6 +2,30 @@
 
 Deze gids legt uit hoe je lokaal een veilige databasebackup maakt en hoe dezelfde aanpak later op de VPS of productieomgeving gebruikt wordt.
 
+## Actuele Cloud DEV-route — 7 oktober 2026
+
+Het huidige DEV-doel is Cloud Supabase `sjvzrsmrtcxxtmaxigtn`, PostgreSQL 17.6, met de app op `/opt/besc-dev/command-center`. Het Free-plan heeft momenteel geen beheerde back-ups; de lokale instructies verderop zijn historische uitleg en maken geen back-up van Cloud DEV.
+
+Status: het exportscript is lokaal op shellsyntaxis gecontroleerd. Een echte Cloud-export en herstelproef zijn nog niet uitgevoerd. Dit PostgreSQL-archief is geen automatisch importeerbaar Supabase-project: beheerde schema's, rollen en encryptiesleutels moeten bij herstel afzonderlijk worden beoordeeld. Bij een rechtenfout stopt het script; een onvolledige export geldt niet als back-up.
+
+Na review/merge en de bestaande GitHub-releaseprocedure, haal de nieuwe servercheckout op. Voer als root in Termius uit:
+
+```bash
+cd /opt/besc-dev/command-center
+git pull --ff-only origin main
+bash ops/backup-cloud-dev.sh
+```
+
+Stop bij een fout. Het script vraagt het databasewachtwoord zonder zichtbare invoer. Plak het wachtwoord niet in chat, een opdrachtregel of een `.env` die naar Git gaat. De sessiepooler op poort 5432 gebruikt de bestaande gratis IPv4-proxy; geen betaald IPv4-add-on nodig. PostgreSQL-client 17 komt uit het officiële Docker-image; er start geen extra databaseservice.
+
+De export gebruikt uitsluitend leestransacties en bewaart een gecomprimeerd databasearchief, globale roldefinities zonder rolwachtwoorden, een kopie van de serverconfiguratie en controlehashes in een unieke afgeschermde map onder `/var/backups/besc-command-center/dev`. Auth-gebruikersdata valt onder de database-export. Alle gegevens en configuratiekopieën zijn vertrouwelijk en blijven buiten Git. Fouten laten gedeeltelijke bestanden zonder voltooiingsmarkering achter; het tijdelijke wachtwoordbestand wordt verwijderd.
+
+Een leesbare archiefinhoud en geldige hashes zijn **geen herstelproef**. Opslagbestanden staan buiten de database en moeten afzonderlijk gekopieerd worden; de live controle vond één object in `profile-avatars`. Maak daarna een afgeschermde kopie buiten de VPS. De serverconfiguratie en het archief moeten samen naar een passende geïsoleerde Supabase-testomgeving worden hersteld en gecontroleerd op gebruikers, rollen, dossiers, relaties en bestanden. Vault-/OAuth-geheimen en externe Google-bronnen vereisen eigen herstelcontrole. Dit script herstelt niets en overschrijft geen DEV-data.
+
+Kosten: deze route voegt geen betaald Supabase-plan, PITR-add-on of agentrun toe. Het gebruikt bestaande serveropslag en een tijdelijk clientcontainerproces. Een afzonderlijke betaalde opslagdienst of cloud-testomgeving wordt pas gekozen na een apart kostenbesluit.
+
+Bronnen: [Supabase-back-ups](https://supabase.com/docs/guides/platform/backups), [backup/restore](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore), [pg_dump](https://www.postgresql.org/docs/17/app-pgdump.html) en [pgpass](https://www.postgresql.org/docs/17/libpq-pgpass.html).
+
 ## 1. Wat wordt geback-upt?
 
 Voor het BESC Command Center zijn er drie soorten gegevens:
