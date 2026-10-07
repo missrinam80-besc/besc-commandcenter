@@ -1,3 +1,4 @@
+import { MemberRoleFields } from "@/components/member-role-fields";
 import { AppShell } from "@/components/app-shell";
 import Link from "next/link";
 import { FormModal } from "@/components/form-modal";
@@ -32,25 +33,6 @@ const statusLabels: Record<string, string> = {
   suspended: "Geschorst",
 };
 
-const accessLevels = [
-  {
-    title: "Beheerder",
-    description: "Volledige toegang, inclusief gebruikers, rollen en organisatie-instellingen.",
-  },
-  {
-    title: "Bestuur",
-    description: "Beheert operationele modules, projecten, content, events en rapportage, maar geen gebruikersrollen.",
-  },
-  {
-    title: "Teamlid",
-    description: "Werkt met toegewezen werk, taken en beschikbare informatie zonder organisatiebrede instellingen te wijzigen.",
-  },
-  {
-    title: "Vrijwilliger",
-    description: "Beperkte werktoegang voor concrete taken en samenwerking binnen BESC.",
-  },
-];
-
 export default async function UsersPage({
   searchParams,
 }: {
@@ -70,10 +52,10 @@ export default async function UsersPage({
   const portalUser=query.portaal?members.find(member=>member.user_id===query.portaal):null;
 
   return (
-    <AppShell active="Gebruikers & toegang" role="Beheerder">
+    <AppShell active="Gebruikers & toegang" role="Admin">
       <header className="topbar module-top">
         <div><p>BEHEER</p><h1>Gebruikers en toegang</h1></div>
-        <span className="badge">{members.length} accounts</span>
+        <div className="project-actions"><Link href="/app/beheer/rechten">Rechtencontrole</Link><a href="https://github.com/missrinam80-besc/besc-commandcenter/blob/main/docs/wiki/Rollen-en-profielen.md" target="_blank" rel="noreferrer">Wiki</a><span className="badge">{members.length} accounts</span></div>
       </header>
       <div className="module-body">
         <p className="lead">
@@ -81,25 +63,7 @@ export default async function UsersPage({
         </p>
         {query.fout && <div className="error-note">Wijziging mislukt: {query.fout}.</div>}
         {query.succes && <div className="success">De gebruikerstoegang werd bijgewerkt.</div>}
-        {portalUser&&<FormModal title={`Portaaltoegang · ${portalUser.profiles?.display_name||"Naamloos account"}`}><div className="relation-list">{(accessRows??[]).filter(item=>item.user_id===portalUser.user_id).map(item=>{const partner=item.partners as unknown as {name?:string}|null,person=item.community_people as unknown as {display_name?:string}|null;return <article key={item.id}><div><strong>{item.access_type==="sponsor"?"Sponsorviewer":"Streamerportaal"}</strong><span>{partner?.name||person?.display_name||"Onbekend dossier"} · {item.status}</span></div><form action={revokePortalAccess}><input type="hidden" name="id" value={item.id}/><input type="hidden" name="user_id" value={portalUser.user_id}/><button>Intrekken</button></form></article>})}</div><form action={savePortalAccess}><input type="hidden" name="user_id" value={portalUser.user_id}/><input type="hidden" name="access_type" value="sponsor"/><label>Sponsorviewer toevoegen<select name="target_id" required><option value="">Kies sponsor</option>{(partners??[]).map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><button>Toegang geven</button></form><form action={savePortalAccess}><input type="hidden" name="user_id" value={portalUser.user_id}/><input type="hidden" name="access_type" value="streamer"/><label>Streamerportaal toevoegen<select name="target_id" required><option value="">Kies persoon</option>{(people??[]).map(item=><option key={item.id} value={item.id}>{item.display_name}</option>)}</select></label><button>Toegang geven</button></form></FormModal>}
-
-        <section aria-labelledby="access-title">
-          <div className="section-heading">
-            <div><span>Rechtenmodel</span><h2 id="access-title">Wie mag wat?</h2></div>
-          </div>
-          <div className="permission-grid">
-            {accessLevels.map((level) => (
-              <article className="permission-card" key={level.title}>
-                <strong>{level.title}</strong>
-                <p>{level.description}</p>
-              </article>
-            ))}
-          </div>
-          <p className="field-help">
-            Financiële rollen staan los van de algemene rol. Zo kan iemand bijvoorbeeld teamlid én
-            kostenindiener zijn zonder toegang tot alle financiële instellingen.
-          </p>
-        </section>
+        {portalUser&&<FormModal title={`Portaaltoegang · ${portalUser.profiles?.display_name||"Naamloos account"}`}><div className="relation-list">{(accessRows??[]).filter(item=>item.user_id===portalUser.user_id).map(item=>{const partner=item.partners as unknown as {name?:string}|null,person=item.community_people as unknown as {display_name?:string}|null;return <article key={item.id}><div><strong>{item.access_type==="sponsor"?"Sponsor":"Streamteam"}</strong><span>{partner?.name||person?.display_name||"Onbekend dossier"} · {statusLabels[item.status] || item.status}</span></div><form action={revokePortalAccess}><input type="hidden" name="id" value={item.id}/><input type="hidden" name="user_id" value={portalUser.user_id}/><button>Intrekken</button></form></article>})}</div><form action={savePortalAccess}><input type="hidden" name="user_id" value={portalUser.user_id}/><input type="hidden" name="access_type" value="sponsor"/><label>Sponsor toevoegen<select name="target_id" required><option value="">Kies sponsor</option>{(partners??[]).map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><button>Toegang geven</button></form><form action={savePortalAccess}><input type="hidden" name="user_id" value={portalUser.user_id}/><input type="hidden" name="access_type" value="streamer"/><label>Streamteam toevoegen<select name="target_id" required><option value="">Kies persoon</option>{(people??[]).map(item=><option key={item.id} value={item.id}>{item.display_name}</option>)}</select></label><button>Toegang geven</button></form></FormModal>}
 
         <div className="member-grid">
           {members.map((member) => (
@@ -111,31 +75,15 @@ export default async function UsersPage({
                 <div>
                   <strong>{member.profiles?.display_name || "Naamloos account"}</strong>
                   <span>
-                    {statusLabels[member.status] || member.status} · {organizationRoleLabels[member.role]} ·{" "}
-                    {financeRoleLabels[member.finance_role]}
+                    {statusLabels[member.status] || member.status} · {organizationRoleLabels[member.role]}
+                    {member.finance_role !== "none" && <> · {financeRoleLabels[member.finance_role]}</>}
+                    {(accessRows ?? []).filter(item => item.user_id === member.user_id).map(item => <b className="badge" key={item.id}>{item.access_type === "sponsor" ? "Sponsor" : "Streamteam"}</b>)}
                   </span>
                 </div>
               </div>
               <form action={updateMemberAccess}>
                 <input type="hidden" name="user_id" value={member.user_id}/>
-                <label>
-                  <span>Algemene rol</span>
-                  <select name="role" defaultValue={member.role}>
-                    <option value="admin">Beheerder</option>
-                    <option value="board">Bestuur</option>
-                    <option value="member">Teamlid</option>
-                    <option value="volunteer">Vrijwilliger</option>
-                  </select>
-                </label>
-                <label>
-                  <span>Financiële rol</span>
-                  <select name="finance_role" defaultValue={member.finance_role}>
-                    <option value="none">Geen financiële rol</option>
-                    <option value="submitter">Kostenindiener</option>
-                    <option value="approver">Goedkeurder</option>
-                    <option value="treasurer">Penningmeester</option>
-                  </select>
-                </label>
+                <MemberRoleFields role={member.role} financeRole={member.finance_role}/>
                 <label>
                   <span>Rolprofiel</span>
                   <select name="access_role_id" defaultValue={member.access_role_id ?? ""}>

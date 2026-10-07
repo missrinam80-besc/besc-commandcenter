@@ -31,9 +31,10 @@ export function canReviewApproval(
   membership: MembershipAccess,
   entityType: ApprovalEntityType,
 ) {
-  if (membership.role === "admin" || membership.role === "board") return true;
+  if (membership.role === "admin") return true;
+  if (membership.role === "board" && ["approver", "approver_treasurer"].includes(membership.finance_role)) return true;
   return entityType === "expense" &&
-    (membership.finance_role === "approver" || membership.finance_role === "treasurer");
+    (membership.finance_role === "approver" || membership.finance_role === "treasurer" || membership.finance_role === "approver_treasurer");
 }
 
 export function approvalCounts(

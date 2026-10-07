@@ -1,3 +1,4 @@
+import { hasPermission } from "@/lib/permissions";
 import Link from "next/link";
 import { CheckCircle2, Download, ExternalLink, FileWarning } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -41,8 +42,7 @@ export default async function Page({
     : "all";
   const { supabase, membership } = await requireActiveMembership();
   const mayManage =
-    ["admin", "board"].includes(membership.role) ||
-    ["approver", "treasurer"].includes(membership.finance_role);
+    hasPermission(membership, "manageFinance");
 
   if (!mayManage) {
     return (

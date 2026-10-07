@@ -6,7 +6,7 @@ import { requirePermission } from "@/lib/auth-context";
 import { capabilities } from "@/lib/permissions";
 
 export async function updateMemberAccess(formData: FormData) {
-  const parsed=z.object({user_id:z.string().uuid(),role:z.enum(["admin","board","member","volunteer"]),status:z.enum(["pending","active","suspended"]),finance_role:z.enum(["none","submitter","approver","treasurer"]),access_role_id:z.string().uuid().optional().or(z.literal(""))}).safeParse(Object.fromEntries(formData));
+  const parsed=z.object({user_id:z.string().uuid(),role:z.enum(["admin","board","member","volunteer"]),status:z.enum(["pending","active","suspended"]),finance_role:z.enum(["none","submitter","approver","treasurer","approver_treasurer"]),access_role_id:z.string().uuid().optional().or(z.literal(""))}).safeParse(Object.fromEntries(formData));
   if(!parsed.success) redirect("/app/beheer/gebruikers?fout=velden");
   const {supabase,user,membership}=await requirePermission("manageUsers");
   if(parsed.data.user_id===user.id && (parsed.data.status!=="active"||parsed.data.role!=="admin")) redirect("/app/beheer/gebruikers?fout=eigen-account");
@@ -20,14 +20,14 @@ const accessRoleSchema = z.object({
   name: z.string().trim().min(1),
   description: z.string().trim().optional(),
   base_role: z.enum(["admin","board","member","volunteer"]),
-  finance_role: z.enum(["none","submitter","approver","treasurer"]),
+  finance_role: z.enum(["none","submitter","approver","treasurer","approver_treasurer"]),
 });
 
 export async function saveAccessRole(formData: FormData) {
   const parsed = accessRoleSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/beheer/rechten?fout=velden");
   const { supabase, user, membership } = await requirePermission("manageUsers", "/app/beheer/rechten?fout=geen-toegang");
-  const selectedCapabilities = capabilities.filter((capability) => formData.getAll("capabilities").includes(capability));
+  const selectedCapabilities = capabilities.filter((capability) => !["manageUsers", "manageIntegrations", "manageFinance"].includes(capability) && formData.getAll("capabilities").includes(capability));
   const values = {
     name: parsed.data.name,
     description: parsed.data.description || null,

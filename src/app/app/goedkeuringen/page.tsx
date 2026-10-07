@@ -39,7 +39,7 @@ export default async function ApprovalsPage({
 }) {
   const query = await searchParams;
   const { supabase, user, membership } = await requireActiveMembership();
-  const isManager = ["admin", "board"].includes(membership.role) || ["approver", "treasurer"].includes(membership.finance_role);
+  const isManager = ["admin", "board"].includes(membership.role) || ["approver", "treasurer", "approver_treasurer"].includes(membership.finance_role);
   const status = query.status && query.status in approvalStatusLabels ? query.status : isManager ? "pending" : "all";
   const moduleFilter = query.module && query.module in approvalModuleLabels ? query.module : "all";
   const scope = query.scope === "mine" ? "mine" : query.scope === "all" ? "all" : isManager ? "all" : "mine";

@@ -1,3 +1,4 @@
+import { hasPermission } from "@/lib/permissions";
 import { requireActiveMembership } from "@/lib/auth-context";
 
 const cell = (value: unknown) =>
@@ -56,8 +57,7 @@ export async function GET(request: Request) {
   const { supabase, membership } = await requireActiveMembership();
 
   const mayExport =
-    ["admin", "board"].includes(membership.role) ||
-    ["approver", "treasurer"].includes(membership.finance_role);
+    hasPermission(membership, "manageFinance");
 
   if (!mayExport) {
     return new Response("Geen toegang", { status: 403 });

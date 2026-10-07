@@ -1,4 +1,4 @@
-import { Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
@@ -9,21 +9,18 @@ import {
   accessMatrixForProfile,
   accessMatrixForRole,
   accessRoleLabels,
-  accessSummaryForRole,
   type AccessDecision,
   type AccessRoleKey,
 } from "@/lib/access-matrix";
-import { capabilities, financeRoleLabels, organizationRoleLabels, type Capability } from "@/lib/permissions";
+import { capabilities, type Capability } from "@/lib/permissions";
 
 const roles: AccessRoleKey[] = [
   "admin",
   "board",
-  "volunteer",
   "member",
-  "portal",
-  "expense_submitter",
-  "approver",
-  "treasurer",
+  "volunteer",
+  "streamteam",
+  "sponsor",
 ];
 
 const decisionLabels: Record<AccessDecision, string> = {
@@ -64,7 +61,7 @@ function decisionClass(decision: AccessDecision) {
 }
 
 function Decision({ value }: { value: AccessDecision }) {
-  return <span className={decisionClass(value)}>{decisionLabels[value]}</span>;
+  return <span role="cell" className={decisionClass(value)}>{decisionLabels[value]}</span>;
 }
 
 function RoleForm({ role }: { role?: CustomRoleRow }) {
@@ -74,7 +71,7 @@ function RoleForm({ role }: { role?: CustomRoleRow }) {
       {role?.id && <input type="hidden" name="id" value={role.id}/>}
       <label>
         <span>Naam</span>
-        <input name="name" defaultValue={role?.name ?? ""} placeholder="Bijvoorbeeld Content lead"/>
+        <input name="name" defaultValue={role?.name ?? ""} placeholder="Bijvoorbeeld Contentverantwoordelijke"/>
       </label>
       <label>
         <span>Beschrijving</span>
@@ -85,24 +82,25 @@ function RoleForm({ role }: { role?: CustomRoleRow }) {
           <span>Basisrol</span>
           <select name="base_role" defaultValue={role?.base_role ?? "volunteer"}>
             <option value="volunteer">Vrijwilliger</option>
-            <option value="member">Teamlid</option>
+            <option value="member">Crew</option>
             <option value="board">Bestuur</option>
-            <option value="admin">Beheerder</option>
+            <option value="admin">Admin</option>
           </select>
         </label>
         <label>
-          <span>Financiële basisrol</span>
+          <span>Bestuursfunctie voor de voorvertoning</span>
           <select name="finance_role" defaultValue={role?.finance_role ?? "none"}>
             <option value="none">Geen financiële rol</option>
             <option value="submitter">Kostenindiener</option>
             <option value="approver">Goedkeurder</option>
-            <option value="treasurer">Penningmeester</option>
+            <option value="treasurer">Boekhouder</option>
+            <option value="approver_treasurer">Goedkeurder en Boekhouder</option>
           </select>
         </label>
       </div>
       <fieldset className="capability-picker">
         <legend>Extra rechten</legend>
-        {capabilities.map((capability) => (
+        {capabilities.filter((capability) => !["manageUsers", "manageIntegrations", "manageFinance"].includes(capability)).map((capability) => (
           <label key={capability}>
             <input type="checkbox" name="capabilities" value={capability} defaultChecked={selected.has(capability)}/>
             <span>{capabilityLabels[capability]}</span>
@@ -117,9 +115,9 @@ function RoleForm({ role }: { role?: CustomRoleRow }) {
 export default async function AccessControlPage({
   searchParams,
 }: {
-  searchParams: Promise<{ rol?: string; nieuw?: string; bewerken?: string; fout?: string; succes?: string }>;
+  searchParams: Promise<{ rol?: string; functie?: string; nieuw?: string; bewerken?: string; fout?: string; succes?: string }>;
 }) {
-  const { supabase, membership } = await requirePermission("manageOrganization", "/app?fout=geen-toegang");
+  const { supabase, membership } = await requirePermission("manageUsers", "/app?fout=geen-toegang");
   const query = await searchParams;
   const { data: customRoleRows } = await supabase
     .from("organization_access_roles")
@@ -135,10 +133,10 @@ export default async function AccessControlPage({
   const activeRole = !activeCustomRole && roles.includes(query.rol as AccessRoleKey)
     ? query.rol as AccessRoleKey
     : "admin";
+  const financeRole = activeRole === "board" && ["approver", "treasurer", "approver_treasurer"].includes(query.functie ?? "") ? query.functie! : "none";
   const rows = activeCustomRole
     ? accessMatrixForProfile({ role: activeCustomRole.base_role, finance_role: activeCustomRole.finance_role, capabilities: activeCustomRole.capabilities ?? [] })
-    : accessMatrixForRole(activeRole);
-  const summaries = roles.map(accessSummaryForRole);
+    : activeRole === "board" ? accessMatrixForProfile({ role: "board", finance_role: financeRole }) : accessMatrixForRole(activeRole);
 
   return (
     <AppShell active="Rechtencontrole">
@@ -148,6 +146,8 @@ export default async function AccessControlPage({
           <h1>Rechtencontrole</h1>
         </div>
         <div className="project-actions">
+          <Link href="/app/beheer/gebruikers">Gebruikers</Link>
+          <a href="https://github.com/missrinam80-besc/besc-commandcenter/blob/main/docs/wiki/Rollen-en-profielen.md" target="_blank" rel="noreferrer">Wiki</a>
           <Link className="primary" href="/app/beheer/rechten?nieuw=rol"><Plus size={16}/>Rolprofiel toevoegen</Link>
         </div>
       </header>
@@ -171,63 +171,26 @@ export default async function AccessControlPage({
           </div>
         </FormModal>}
 
-        <section className="panel">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">V1-controle</span>
-              <h2>Rollenmatrix</h2>
-            </div>
-            <span>8 rollen</span>
-          </div>
-          <p className="lead">
-            Dit overzicht controleert wie mag aanmaken, bewerken, archiveren,
-            verwijderen, exporteren, goedkeuren en welke data zichtbaar is.
-            Portalgebruikers blijven buiten de interne app en zien alleen hun eigen portaal.
-          </p>
-          <div className="permission-system-note">
-            <ShieldCheck size={18}/>
-            <div>
-              <strong>Vaste systeemrollen zijn beveiligd</strong>
-              <span>
-                Admin, Bestuur, Member, Vrijwilliger en de finance-baselines blijven vaste basisrollen.
-                Maak een custom rolprofiel aan om rechten toe te voegen, te wijzigen of later te verwijderen.
-              </span>
-            </div>
-            <Link href="/app/beheer/rechten?nieuw=rol">Nieuw rolprofiel</Link>
-          </div>
-          <div className="permission-role-tabs">
-            {summaries.map((summary) => (
-              <a
-                className={summary.role === activeRole ? "active" : ""}
-                href={`/app/beheer/rechten?rol=${summary.role}`}
-                key={summary.role}
-              >
-                <ShieldCheck size={15}/>
-                <strong>{summary.label}</strong>
-                <span>{summary.canView} zichtbaar · systeemrol · niet verwijderbaar</span>
-              </a>
-            ))}
-            {customRoles.map((role) => (
-              <a
-                className={activeCustomRole?.id === role.id ? "active" : ""}
-                href={`/app/beheer/rechten?rol=custom:${role.id}`}
-                key={role.id}
-              >
-                <ShieldCheck size={15}/>
-                <strong>{role.name}</strong>
-                <span>{organizationRoleLabels[role.base_role as keyof typeof organizationRoleLabels]} · {financeRoleLabels[role.finance_role as keyof typeof financeRoleLabels]}</span>
-              </a>
-            ))}
-          </div>
+        <section className="panel role-selection-panel">
+          <nav className="permission-role-tabs" aria-label="Basisrol">
+            {roles.map((role) => <Link key={role} className={!activeCustomRole && role === activeRole ? "active" : ""} aria-current={!activeCustomRole && role === activeRole ? "page" : undefined} href={`?rol=${role}`}>{accessRoleLabels[role]}</Link>)}
+          </nav>
+          {activeRole === "board" && !activeCustomRole && <form className="role-function-filter">
+            <input type="hidden" name="rol" value="board"/>
+            <label>Bestuursfunctie<select name="functie" defaultValue={financeRole}>
+              <option value="none">Geen extra functie</option><option value="approver">Goedkeurder</option><option value="treasurer">Boekhouder</option><option value="approver_treasurer">Beide functies</option>
+            </select></label><button>Toon rechten</button>
+          </form>}
         </section>
 
-        <section className="panel">
+        <details className="panel role-profiles-panel" open={Boolean(activeCustomRole || editingRole || query.nieuw === "rol")}>
+          <summary>Aanvullende rolprofielen · {customRoles.length}</summary>
           <div className="section-heading">
             <div>
               <span className="eyebrow">Beheer</span>
               <h2>Rolprofielen</h2>
             </div>
-            <span>{customRoles.length} custom</span>
+            <span>{customRoles.length} profielen</span>
           </div>
           <div className="access-role-list">
             {customRoles.map((role) => (
@@ -240,33 +203,33 @@ export default async function AccessControlPage({
                 <Link className="row-action" href={`/app/beheer/rechten?bewerken=${role.id}`}><Pencil size={13}/>Bewerken</Link>
               </article>
             ))}
-            {!customRoles.length && <div className="empty">Nog geen custom rolprofielen. De vaste systeemrollen hierboven zijn bewust niet bewerkbaar of verwijderbaar. Maak eerst een custom rolprofiel aan om bewerken en verwijderen te gebruiken.</div>}
+            {!customRoles.length && <div className="empty">Geen aanvullende rolprofielen.</div>}
           </div>
-        </section>
+        </details>
 
         <section className="panel">
           <div className="section-heading">
             <div>
               <span className="eyebrow">Actieve rol</span>
-              <h2>{activeCustomRole?.name ?? accessRoleLabels[activeRole]}</h2>
+              <h2 id="active-role-name">{activeCustomRole?.name ?? accessRoleLabels[activeRole]}</h2>
             </div>
-            <span>{rows.length} onderdelen</span>
+            <span>{rows.filter(row => row.view !== "no").length} zichtbaar · {rows.length} onderdelen</span>
           </div>
-          <div className="permissions-table">
-            <div className="permissions-head">
-              <span>Onderdeel</span>
-              <span>Zien</span>
-              <span>Aanmaken</span>
-              <span>Bewerken</span>
-              <span>Archiveren</span>
-              <span>Verwijderen</span>
-              <span>Exporteren</span>
-              <span>Goedkeuren</span>
-              <span>Data</span>
+          <div className="permissions-table" role="table" aria-labelledby="active-role-name" tabIndex={0}>
+            <div className="permissions-head" role="row">
+              <span role="columnheader">Onderdeel</span>
+              <span role="columnheader">Zien</span>
+              <span role="columnheader">Aanmaken</span>
+              <span role="columnheader">Bewerken</span>
+              <span role="columnheader">Archiveren</span>
+              <span role="columnheader">Verwijderen</span>
+              <span role="columnheader">Exporteren</span>
+              <span role="columnheader">Goedkeuren</span>
+
             </div>
             {rows.map((row) => (
-              <article key={row.key}>
-                <strong>{row.label}</strong>
+              <article key={row.key} role="row">
+                <strong role="rowheader">{row.label}</strong>
                 <Decision value={row.view}/>
                 <Decision value={row.create}/>
                 <Decision value={row.edit}/>
@@ -274,7 +237,7 @@ export default async function AccessControlPage({
                 <Decision value={row.delete}/>
                 <Decision value={row.export}/>
                 <Decision value={row.approve}/>
-                <p>{row.dataScope}</p>
+
               </article>
             ))}
           </div>

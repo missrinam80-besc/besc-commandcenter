@@ -1,7 +1,8 @@
 import type { Capability, MembershipAccess } from "./permissions";
 
 const adminOnlyPrefixes = [
-  "/app/beheer/gebruikers",
+  "/app/beheer",
+  "/app/integraties",
 ];
 
 const memberHiddenPrefixes = [
@@ -72,6 +73,7 @@ export function requiredCapabilityForQuery(
     return "manageFinance";
   }
 
+  if (pathname.startsWith("/app/beheer")) return "manageUsers";
   if (pathname.startsWith("/app/inbox")) return editMode ? "manageInbox" : null;
   if (pathname.startsWith("/app/projecten")) return "manageProjects";
   if (pathname.startsWith("/app/content")) return "manageContent";

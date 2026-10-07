@@ -6,6 +6,8 @@ Interne werkplek voor BESC vzw met ledenbeheer, planning, projecten, events, cam
 
 Open de [BESC Command Center-wiki](docs/wiki/README.md) voor handleidingen, integraties, agents, serverbeheer, importtemplates en historische uitrolnotities.
 
+Rollenbeheer, bestuursfuncties en portaalprofielen staan in [Rollen en profielen](docs/wiki/Rollen-en-profielen.md).
+
 ## Lokale ontwikkelomgeving
 
 De aanbevolen lokale setup draait op Windows met Docker Desktop en lokale Supabase:

@@ -7,10 +7,10 @@ const volunteer = {
   finance_role: "none",
 } as const;
 
-test("bestuurders kunnen alle goedkeuringen behandelen", () => {
-  assert.equal(canReviewApproval({ ...volunteer, role: "board" }, "content"), true);
-  assert.equal(canReviewApproval({ ...volunteer, role: "board" }, "partner"), true);
-  assert.equal(canReviewApproval({ ...volunteer, role: "board" }, "document"), true);
+test("bestuurders met de functie Goedkeurder kunnen alle goedkeuringen behandelen", () => {
+  assert.equal(canReviewApproval({ ...volunteer, role: "board", finance_role: "approver" }, "content"), true);
+  assert.equal(canReviewApproval({ ...volunteer, role: "board", finance_role: "approver" }, "partner"), true);
+  assert.equal(canReviewApproval({ ...volunteer, role: "board", finance_role: "approver" }, "document"), true);
 });
 
 test("financiële goedkeurders kunnen alleen kosten behandelen", () => {
