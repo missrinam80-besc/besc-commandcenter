@@ -529,3 +529,14 @@
 .member-grid .board-function-picker label{display:flex;align-items:center;gap:4px}
 .board-function-picker input{width:14px;height:14px;margin:0;accent-color:var(--besc-red)}
 @media(max-width:600px){.role-function-filter{flex-wrap:wrap}.board-function-picker{width:100%}}
+/* Keep member fields together on the left and both actions together on the right. */
+.member-grid .member-access-row{display:grid;grid-template-columns:160px minmax(0,1fr);align-items:center}
+.member-access-row .member-info{min-width:0}
+.member-access-row .member-info strong,.member-access-row .member-info span{overflow-wrap:anywhere}
+.member-access-row .avatar{flex-shrink:0}
+.member-grid .member-access-form{display:flex;align-items:center;gap:16px;width:100%}
+.member-access-fields{display:flex;flex:1 1 520px;flex-wrap:wrap;align-items:end;gap:8px;min-width:0}
+.member-access-actions{display:flex;flex:0 0 auto;align-items:center;justify-content:flex-end;gap:8px;margin-left:auto}
+.member-access-actions button,.member-access-actions .row-action{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:8px 10px;white-space:nowrap}
+@media(max-width:1400px){.member-grid .member-access-row{grid-template-columns:minmax(0,1fr);gap:12px}}
+@media(max-width:600px){.member-access-fields{flex-basis:100%}.member-access-actions{width:100%}.member-access-fields .board-function-picker label{width:auto}}

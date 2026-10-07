@@ -67,7 +67,7 @@ export default async function UsersPage({
 
         <div className="member-grid">
           {members.map((member) => (
-            <article key={member.user_id}>
+            <article key={member.user_id} className="member-access-row">
               <div className="member-info">
                 <div className="avatar">
                   {(member.profiles?.display_name || "?").slice(0, 2).toUpperCase()}
@@ -81,8 +81,9 @@ export default async function UsersPage({
                   </span>
                 </div>
               </div>
-              <form action={updateMemberAccess}>
+              <form action={updateMemberAccess} className="member-access-form">
                 <input type="hidden" name="user_id" value={member.user_id}/>
+                <div className="member-access-fields">
                 <MemberRoleFields role={member.role} financeRole={member.finance_role}/>
                 <label>
                   <span>Rolprofiel</span>
@@ -101,9 +102,12 @@ export default async function UsersPage({
                     <option value="suspended">Geschorst</option>
                   </select>
                 </label>
-                <button type="submit">Opslaan</button>
+                </div>
+                <div className="member-access-actions">
+                  <button type="submit">Opslaan</button>
+                  <Link className="row-action" href={`?portaal=${member.user_id}`}>Portaaltoegang</Link>
+                </div>
               </form>
-              <Link className="row-action" href={`?portaal=${member.user_id}`}>Portaaltoegang</Link>
             </article>
           ))}
         </div>
