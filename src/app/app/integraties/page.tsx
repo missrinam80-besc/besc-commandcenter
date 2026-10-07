@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle2, CloudCog, KeyRound, RefreshCw, TriangleAlert } from "lucide-react";
+import { CheckCircle2, CloudCog, RefreshCw, TriangleAlert } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { requireActiveMembership } from "@/lib/auth-context";
 import {
@@ -8,14 +8,12 @@ import {
   type WorkspaceResource,
 } from "@/lib/google-workspace";
 import { googleGmailConfiguration } from "@/lib/google-gmail";
+import SocialAccountsSection from "./social-accounts";
 import { saveIntegration, testGoogleWorkspaceConnection } from "./actions";
 
 const providers: Record<string, string> = {
   google_workspace: "Google Workspace",
   discord: "Discord",
-  vercel_ai_gateway: "Vercel AI Gateway",
-  openai: "OpenAI",
-  anthropic: "Claude / Anthropic",
   facebook: "Facebook",
   instagram: "Instagram",
   linkedin: "LinkedIn",
@@ -50,13 +48,13 @@ export default async function Page({
   if (!["admin", "board"].includes(membership.role)) {
     return <AppShell active="Integraties"><div className="module-body"><div className="permission-note">Alleen bestuur en beheerders kunnen integraties beheren.</div></div></AppShell>;
   }
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("integration_connections")
     .select("*")
     .eq("organization_id", membership.organization_id)
     .is("deleted_at", null)
     .order("provider");
-  const rows = data ?? [];
+  const rows = (data ?? []).filter((item) => !["vercel_ai_gateway", "openai", "anthropic"].includes(item.provider));
   const google = rows.find((item) => item.provider === "google_workspace");
   const resources = ((google?.configuration as { resources?: WorkspaceResource[] } | null)?.resources ?? []);
   const workspaceConfig = googleWorkspaceConfiguration();
@@ -66,28 +64,22 @@ export default async function Page({
     { name: "Google Workspace", configured: workspaceConfig.configured, variable: workspaceConfig.missing.join(", ") || "9 variabelen aanwezig" },
     { name: "Sponsor-pitchdeck", configured: Boolean(pitchdeckConfig.sponsor), variable: "GOOGLE_TEMPLATE_SPONSOR_PITCHDECK_ID" },
     { name: "Gmail-concepten", configured: gmailConfig.configured, variable: gmailConfig.configured ? gmailConfig.sender : "GOOGLE_GMAIL_SENDER" },
-    { name: "Vercel AI Gateway", configured: Boolean(process.env.VERCEL_OIDC_TOKEN || process.env.AI_GATEWAY_API_KEY), variable: "VERCEL_OIDC_TOKEN" },
-    { name: "OpenAI", configured: Boolean(process.env.OPENAI_API_KEY), variable: "OPENAI_API_KEY" },
-    { name: "Claude", configured: Boolean(process.env.ANTHROPIC_API_KEY), variable: "ANTHROPIC_API_KEY" },
   ];
 
   return (
     <AppShell active="Integraties">
       <header className="topbar module-top">
         <div><p>VERBINDINGEN & AUTOMATISERING</p><h1>Integraties</h1></div>
-        <div className="project-actions"><Link href="/app/integraties/social">Social accounts</Link><Link className="primary" href="?nieuw=1">Integratie registreren</Link></div>
+        <div className="project-actions"><Link href="/app/integraties/logs">Logs</Link><Link href="/app/rapportage/social">Socialrapportage</Link><Link href="?nieuw=integratie">Integratie registreren</Link><Link className="primary" href="?nieuw=social">Account registreren</Link></div>
       </header>
-      <div className="module-body">
-        <p className="lead">Beheer verbindingsmetadata en controleer serverconfiguratie zonder geheime sleutels in de database op te slaan.</p>
-        {query.fout && <div className="error-note">De verbindingstest of opslag is mislukt ({query.fout}). Controleer hieronder de foutmelding.</div>}
-        {query.succes === "google-verbonden" && <div className="success">Drive, Docs en Calendar zijn bereikbaar. Alleen metadata werd in Supabase geregistreerd.</div>}
+      <div className="module-body integration-overview">
+        {query.fout && <div className="error-note">De verbindingstest of opslag is mislukt ({query.fout}). </div>}
+        {query.succes === "google-verbonden" && <div className="success">Drive, Docs en Calendar zijn bereikbaar. </div>}
         {query.succes && query.succes !== "google-verbonden" && <div className="success">Integratie bijgewerkt.</div>}
 
-        <section className="integration-security">
-          <KeyRound/><div><strong>Geheimen blijven buiten Supabase</strong><span>Geheimen staan uitsluitend server-side in Docker environment variables of secrets.</span></div>
-        </section>
+        {error && <div className="error-note">Integraties konden niet worden geladen.</div>}
         <section className="integration-env-grid">
-          {envStatus.map((item) => <article key={item.name} className={item.configured ? "ready" : "missing"}>{item.configured ? <CheckCircle2/> : <TriangleAlert/>}<div><strong>{item.name}</strong><span>{item.configured ? "Serverconfiguratie gevonden" : `${item.variable} ontbreekt`}</span></div></article>)}
+          {envStatus.map((item) => <article key={item.name} className={item.configured ? "ready" : "missing"}>{item.configured ? <CheckCircle2/> : <TriangleAlert/>}<div><strong>{item.name}</strong><span>{item.configured ? "Ingesteld" : "Nog niet ingesteld"}</span></div></article>)}
         </section>
 
         <section className="form-card workspace-connection-card">
@@ -95,7 +87,7 @@ export default async function Page({
             <div><span className="eyebrow">GOOGLE WORKSPACE</span><h2>Verbinding en bronnen</h2></div>
             <span className={`integration-status ${google?.status ?? "not_configured"}`}>{statuses[google?.status ?? "not_configured"]}</span>
           </div>
-          <p>De test leest de ingestelde Drive, hoofdmap, agenda en drie templates. Google blijft verantwoordelijk voor alle toegangsrechten.</p>
+          <p>{google?.account_label || "Geen Google-account geregistreerd"}{google?.last_sync_at ? ` · getest ${new Intl.DateTimeFormat("nl-BE", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Brussels" }).format(new Date(google.last_sync_at))}` : ""}</p>
           {google?.last_error && <div className="error-note">{google.last_error}</div>}
           {resources.length > 0 && (
             <div className="workspace-resource-grid">
@@ -113,7 +105,7 @@ export default async function Page({
           </form>
         </section>
 
-        {query.nieuw && (
+        {["1", "integratie"].includes(query.nieuw ?? "") && (
           <section className="form-card">
             <div className="form-heading"><h2>Integratie registreren</h2><Link href="?">Sluiten</Link></div>
             <form action={saveIntegration}>
@@ -127,10 +119,11 @@ export default async function Page({
             </form>
           </section>
         )}
-        <section className="integration-list">
-          {rows.map((item) => <article key={item.id}><CloudCog/><div><strong>{item.display_name}</strong><span>{providers[item.provider]} · {item.account_label || "Geen accountlabel"}{item.last_sync_at ? ` · getest ${new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Brussels" }).format(new Date(item.last_sync_at))}` : ""}</span></div><b className={`integration-status ${item.status}`}>{statuses[item.status]}</b></article>)}
+        <SocialAccountsSection searchParams={Promise.resolve({ ...query, nieuw: query.nieuw === "social" ? "1" : undefined })}/>
+        {rows.some((item) => item.provider !== "google_workspace") && <section className="integration-list">
+          {rows.filter((item) => item.provider !== "google_workspace").map((item) => <article key={item.id}><CloudCog/><div><strong>{item.display_name}</strong><span>{providers[item.provider]} · {item.account_label || "Geen accountlabel"}{item.last_sync_at ? ` · getest ${new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Brussels" }).format(new Date(item.last_sync_at))}` : ""}</span></div><b className={`integration-status ${item.status}`}>{statuses[item.status]}</b></article>)}
           {!rows.length && <div className="empty">Nog geen integraties geregistreerd.</div>}
-        </section>
+        </section>}
       </div>
     </AppShell>
   );
