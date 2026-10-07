@@ -44,7 +44,7 @@ test("custom rolprofiel kan extra capabilities toevoegen bovenop de basisrol", (
 
 test("bestuur beheert de organisatie maar niet de gebruikers", () => {
   const actual = permittedCapabilities({ role: "board", finance_role: "none" });
-  assert.deepEqual(actual, capabilities.filter((capability) => capability !== "manageUsers"));
+  assert.deepEqual(actual, capabilities.filter((capability) => !["manageUsers", "manageIntegrations", "manageFinance"].includes(capability)));
 });
 
 test("medewerker kan samenwerken in planning, uitvoering en content", () => {

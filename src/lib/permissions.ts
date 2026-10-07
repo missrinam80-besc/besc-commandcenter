@@ -1,5 +1,5 @@
 export const organizationRoles = ["admin", "board", "member", "volunteer"] as const;
-export const financeRoles = ["none", "submitter", "approver", "treasurer"] as const;
+export const financeRoles = ["none", "submitter", "approver", "treasurer", "approver_treasurer"] as const;
 
 export type OrganizationRole = (typeof organizationRoles)[number];
 export type FinanceRole = (typeof financeRoles)[number];
@@ -29,9 +29,9 @@ export const capabilities = [
 export type Capability = (typeof capabilities)[number];
 
 export const organizationRoleLabels: Record<OrganizationRole, string> = {
-  admin: "Beheerder",
+  admin: "Admin",
   board: "Bestuur",
-  member: "Teamlid",
+  member: "Crew",
   volunteer: "Vrijwilliger",
 };
 
@@ -39,7 +39,8 @@ export const financeRoleLabels: Record<FinanceRole, string> = {
   none: "Geen financiële rol",
   submitter: "Kostenindiener",
   approver: "Goedkeurder",
-  treasurer: "Penningmeester",
+  treasurer: "Boekhouder",
+  approver_treasurer: "Goedkeurder en Boekhouder",
 };
 
 export function isAdmin(membership: MembershipAccess) {
@@ -55,13 +56,13 @@ export function isTeamMember(membership: MembershipAccess) {
 }
 
 export function hasPermission(membership: MembershipAccess, capability: Capability) {
+  // Technical administration cannot be delegated through a custom profile.
+  if (capability === "manageUsers" || capability === "manageIntegrations") return isAdmin(membership);
+  if (capability === "manageFinance") return isAdmin(membership) || ["approver", "treasurer", "approver_treasurer"].includes(membership.finance_role);
   if (membership.capabilities?.includes(capability)) return true;
   switch (capability) {
-    case "manageUsers":
-      return isAdmin(membership);
     case "manageOrganization":
     case "manageInbox":
-    case "manageIntegrations":
     case "manageKpis":
     case "manageAiTemplates":
       return isManager(membership);
@@ -69,8 +70,6 @@ export function hasPermission(membership: MembershipAccess, capability: Capabili
     case "manageContent":
     case "manageEvents":
       return isTeamMember(membership);
-    case "manageFinance":
-      return isManager(membership) || membership.finance_role === "approver" || membership.finance_role === "treasurer";
     case "viewFinance":
       return isManager(membership) || membership.finance_role !== "none";
     case "submitExpenses":

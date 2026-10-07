@@ -73,6 +73,6 @@ test("goedkeuringswerkvoorraad heeft een expliciete bekijkactie", () => {
 });
 
 test("alleen bestuur en beheerders kunnen e-mails beoordelen", () => {
-  assert.match(approvals, /membership\.role === "admin" \|\| membership\.role === "board"/);
+  assert.match(approvals, /membership\.role === "board" && \["approver", "approver_treasurer"\]/);
   assert.match(approvals, /return entityType === "expense"/);
 });

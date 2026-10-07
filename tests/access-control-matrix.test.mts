@@ -21,9 +21,9 @@ test("rechtenmatrix bevat alle v1-rollen inclusief finance en portaal", async ()
     assert.match(matrix, new RegExp(`${role}:`));
   }
   assert.match(matrix, /Portaalgebruiker/);
-  assert.match(matrix, /Expense submitter/);
-  assert.match(matrix, /Finance approver/);
-  assert.match(matrix, /Treasurer/);
+  assert.match(matrix, /Kostenindiener/);
+  assert.match(matrix, /Goedkeurder/);
+  assert.match(matrix, /Boekhouder/);
 });
 
 test("rechtenmatrix bewaakt aanmaken, bewerken, archiveren, verwijderen, exporteren, goedkeuren en datascope", async () => {
@@ -47,7 +47,7 @@ test("rechtenmatrix bewaakt aanmaken, bewerken, archiveren, verwijderen, exporte
   assert.match(matrix, new RegExp("Geen toegang tot /app"));
 });
 
-test("rechtencontrolepagina is zichtbaar voor bestuur en beheer en toont de matrix", async () => {
+test("rechtencontrolepagina is alleen zichtbaar voor Admin en toont de matrix", async () => {
   const [shell, page, actions, migration, users, authContext, proxy, styles] = await Promise.all([
     source("src/components/app-shell.tsx"),
     source("src/app/app/beheer/rechten/page.tsx"),
@@ -61,14 +61,14 @@ test("rechtencontrolepagina is zichtbaar voor bestuur en beheer en toont de matr
 
   assert.match(shell, /Rechtencontrole/);
   assert.match(shell, /\/app\/beheer\/rechten/);
-  assert.match(shell, /roles: \["admin", "board"\]/);
-  assert.match(page, /requirePermission\("manageOrganization"/);
+  assert.match(shell, /label: "Rechtencontrole"[^\n]+roles: \["admin"\]/);
+  assert.match(page, /requirePermission\("manageUsers"/);
   assert.match(page, /permission-role-tabs/);
   assert.match(page, /permissions-table/);
   assert.match(page, /Rolprofiel toevoegen/);
-  assert.match(page, /systeemrol/);
-  assert.match(page, /niet verwijderbaar/);
-  assert.match(page, /Maak eerst een custom rolprofiel/);
+  assert.match(page, /Geen aanvullende rolprofielen/);
+  assert.match(page, /Bestuursfunctie/);
+  assert.match(page, /Rollen-en-profielen/);
   assert.match(page, /capabilities/);
   assert.match(actions, /saveAccessRole/);
   assert.match(actions, /deleteAccessRole/);

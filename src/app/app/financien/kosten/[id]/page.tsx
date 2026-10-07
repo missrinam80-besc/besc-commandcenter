@@ -42,8 +42,7 @@ export default async function Page({
     partners: partners.data ?? [],
     launches: launches.data ?? [],
   };
-  const canManage = ["admin", "board"].includes(membership.role) ||
-    ["approver", "treasurer"].includes(membership.finance_role);
+  const canManage = hasPermission(membership, "manageFinance");
   const transition = (value: string, label: string) => (
     <form action={updateExpenseWorkflow}>
       <input type="hidden" name="id" value={id}/>

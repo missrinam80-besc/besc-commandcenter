@@ -6,6 +6,7 @@ Deze wiki bundelt de handleidingen uit de repository in een klikbaar overzicht. 
 
 - [Projectoverzicht en integratiebeheer](../../README.md)
 - [Gebruik en richtlijnen](Gebruik-en-richtlijnen.md)
+- [Rollen en profielen](Rollen-en-profielen.md)
 - [Integraties](Integraties.md)
 - [Agents en ChatGPT](Agents-en-ChatGPT.md)
 - [Ontwikkeling en beheer](Ontwikkeling-en-beheer.md)

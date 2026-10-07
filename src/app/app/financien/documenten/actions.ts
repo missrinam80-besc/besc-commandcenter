@@ -1,4 +1,5 @@
 "use server";
+import { hasPermission } from "@/lib/permissions";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -15,8 +16,7 @@ const optionalAmount = z.preprocess(
 async function requireFinanceManager() {
   const context = await requireActiveMembership();
   const mayManage =
-    ["admin", "board"].includes(context.membership.role) ||
-    ["approver", "treasurer"].includes(context.membership.finance_role);
+    hasPermission(context.membership, "manageFinance");
   if (!mayManage) redirect("/app/financien/documenten?fout=geen-toegang");
   return context;
 }

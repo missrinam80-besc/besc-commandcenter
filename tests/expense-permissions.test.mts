@@ -20,7 +20,7 @@ test("indieners kunnen geen goedkeuring, betaling of wijziging insturen", () => 
 });
 
 test("financiële beheerders behouden alle bestaande statusopties", () => {
-  for (const membership of [{role:"admin",finance_role:"none"}, {role:"board",finance_role:"none"}, {role:"member",finance_role:"approver"}, {role:"volunteer",finance_role:"treasurer"}]) {
+  for (const membership of [{role:"admin",finance_role:"none"}, {role:"board",finance_role:"approver_treasurer"}, {role:"member",finance_role:"approver"}, {role:"volunteer",finance_role:"treasurer"}]) {
     assert.equal(canManageExpenses(membership), true);
     for (const [status] of expenseStatusOptions) assert.equal(canSubmitExpense({status,id:"existing"}, true), true);
   }
@@ -36,6 +36,7 @@ test("saveExpense weigert vervalste formulierinzendingen voordat de database wor
   }).outputText;
   const dependencies: Record<string,unknown> = {
     "zod": {z},
+    "@/lib/permissions": {},
     "next/cache": {revalidatePath:()=>{}},
     "next/navigation": {redirect:(url:string)=>{throw new Error(`REDIRECT:${url}`);}},
     "@/lib/expense-permissions": {canManageExpenses,canSubmitExpense},

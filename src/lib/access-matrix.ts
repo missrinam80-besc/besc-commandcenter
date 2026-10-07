@@ -1,5 +1,6 @@
-import { hasPermission, type Capability, type FinanceRole, type MembershipAccess, type OrganizationRole } from "./permissions";
-import { canReviewApproval, type ApprovalEntityType } from "./approvals";
+import { hasPermission, type Capability, type FinanceRole, type MembershipAccess, type OrganizationRole } from "./permissions.ts";
+import { canViewInternalPath } from "./route-permissions.ts";
+import { canReviewApproval, type ApprovalEntityType } from "./approvals.ts";
 
 export type AccessRoleKey =
   | "admin"
@@ -7,6 +8,8 @@ export type AccessRoleKey =
   | "volunteer"
   | "member"
   | "portal"
+  | "streamteam"
+  | "sponsor"
   | "expense_submitter"
   | "approver"
   | "treasurer";
@@ -30,11 +33,13 @@ export const accessRoleLabels: Record<AccessRoleKey, string> = {
   admin: "Admin",
   board: "Bestuur",
   volunteer: "Vrijwilliger",
-  member: "Member",
+  member: "Crew",
   portal: "Portaalgebruiker",
-  expense_submitter: "Expense submitter",
-  approver: "Finance approver",
-  treasurer: "Treasurer",
+  streamteam: "Streamteam",
+  sponsor: "Sponsor",
+  expense_submitter: "Kostenindiener",
+  approver: "Goedkeurder",
+  treasurer: "Boekhouder",
 };
 
 const roleMemberships: Partial<Record<AccessRoleKey, MembershipAccess>> = {
@@ -43,8 +48,8 @@ const roleMemberships: Partial<Record<AccessRoleKey, MembershipAccess>> = {
   volunteer: { role: "volunteer", finance_role: "none" },
   member: { role: "member", finance_role: "none" },
   expense_submitter: { role: "member", finance_role: "submitter" },
-  approver: { role: "member", finance_role: "approver" },
-  treasurer: { role: "member", finance_role: "treasurer" },
+  approver: { role: "board", finance_role: "approver" },
+  treasurer: { role: "board", finance_role: "treasurer" },
 };
 
 type AreaPolicy = {
@@ -83,7 +88,9 @@ export const accessPolicies: AreaPolicy[] = [
   { key: "knowledge", label: "Kennisbank", manageCapability: "manageOrganization", activeMemberView: true, dataScope: "Interne handleidingen en procedures." },
   { key: "reports", label: "Rapportage & KPI", manageCapability: "manageKpis", activeMemberView: true, managerExport: true, dataScope: "KPI’s en rapporten; managementrapporten beperkt tot bestuur/beheer." },
   { key: "documents", label: "Documenten & Drive", manageCapability: "manageOrganization", activeMemberView: true, approvalEntity: "document", dataScope: "Alleen links en metadata; rechten blijven in Google Workspace." },
-  { key: "integrations", label: "Integraties", manageCapability: "manageIntegrations", dataScope: "Technische koppelingen en syncstatussen; beperkt tot bestuur/beheer." },
+  { key: "integrations", label: "Integraties", manageCapability: "manageIntegrations", dataScope: "Technische koppelingen en syncstatussen; alleen Admin." },
+  { key: "rights", label: "Rechtencontrole", manageCapability: "manageUsers", dataScope: "Rollen en profielen; alleen Admin." },
+  { key: "import", label: "CSV-import", manageCapability: "manageUsers", dataScope: "Gegevensimport; alleen Admin." },
   { key: "history", label: "Historiek, archief & activiteit", manageCapability: "manageOrganization", dataScope: "Migratiehistoriek, archief en auditlog; beperkt tot bestuur/beheer." },
   { key: "users", label: "Gebruikers & toegang", manageCapability: "manageUsers", dataScope: "Accounts, rollen en portaaltoegang; alleen admin." },
 ];
@@ -98,6 +105,15 @@ function isManagerLike(membership: MembershipAccess) {
 
 function canView(policy: AreaPolicy, membership: MembershipAccess | null): AccessDecision {
   if (!membership) return policy.key === "home" ? "no" : "no";
+  const paths: Record<string, string> = {
+    home: "/app", inbox: "/app/inbox", tasks: "/app/taken", projects: "/app/projecten", events: "/app/events",
+    campaigns: "/app/campagnes", social: "/app/social", community: "/app/community", sponsors: "/app/sponsors",
+    communication: "/app/communicatie", content: "/app/content", shop: "/app/shop", newsletters: "/app/nieuwsbrieven",
+    ai: "/app/ai-hub", meetings: "/app/vergaderingen", administration: "/app/administratie", finance: "/app/financien",
+    materials: "/app/materialen", knowledge: "/app/kennisbank", reports: "/app/rapportage", documents: "/app/documenten",
+    integrations: "/app/integraties", rights: "/app/beheer/rechten", import: "/app/beheer/import", history: "/app/historiek", users: "/app/beheer/gebruikers",
+  };
+  if (!canViewInternalPath(paths[policy.key] ?? "/app", membership)) return "no";
   if (policy.viewCapability) return hasPermission(membership, policy.viewCapability) ? "yes" : "no";
   if (policy.activeMemberView) return "yes";
   if (policy.manageCapability) return hasPermission(membership, policy.manageCapability) ? "yes" : "no";
@@ -114,7 +130,7 @@ function canCreate(policy: AreaPolicy, membership: MembershipAccess | null): Acc
 
 function canMutate(policy: AreaPolicy, membership: MembershipAccess | null, archiveOrDelete = false): AccessDecision {
   if (!membership) return "no";
-  if (policy.key === "tasks") return policy.activeMemberEdit ?? "own";
+  if (policy.key === "tasks") return membership.role === "admin" ? "yes" : policy.activeMemberEdit ?? "own";
   if (policy.key === "finance" && !archiveOrDelete && hasPermission(membership, "submitExpenses")) return hasPermission(membership, "manageFinance") ? "yes" : "own";
   if (policy.manageCapability && hasPermission(membership, policy.manageCapability)) return "yes";
   return "no";
@@ -138,10 +154,10 @@ function canApprove(policy: AreaPolicy, membership: MembershipAccess | null): Ac
 }
 
 export function accessMatrixForRole(role: AccessRoleKey): AccessArea[] {
-  if (role === "portal") {
+  if (["portal", "streamteam", "sponsor"].includes(role)) {
     return [{
       key: "portal",
-      label: "Extern portaal",
+      label: role === "streamteam" ? "Eigen Streamteam-profiel" : role === "sponsor" ? "Eigen sponsordossier" : "Eigen portaal",
       view: "limited",
       create: "no",
       edit: "no",
@@ -149,7 +165,7 @@ export function accessMatrixForRole(role: AccessRoleKey): AccessArea[] {
       delete: "no",
       export: "no",
       approve: "no",
-      dataScope: "Alleen eigen sponsor- of streamerportaal. Geen toegang tot /app.",
+      dataScope: "Alleen eigen sponsor- of streamerportaal. Geen toegang tot /app. De publieke websitekoppeling is nog afzonderlijk te realiseren.",
     }];
   }
 
@@ -158,8 +174,8 @@ export function accessMatrixForRole(role: AccessRoleKey): AccessArea[] {
     key: policy.key,
     label: policy.label,
     view: canView(policy, membership),
-    create: canCreate(policy, membership),
-    edit: canMutate(policy, membership),
+    create: policy.key === "finance" || canView(policy, membership) !== "no" ? canCreate(policy, membership) : "no",
+    edit: canView(policy, membership) !== "no" ? canMutate(policy, membership) : "no",
     archive: canMutate(policy, membership, true),
     delete: canDelete(policy, membership),
     export: canExport(policy, membership),
@@ -190,8 +206,8 @@ export function accessMatrixForProfile(profile: MembershipAccess): AccessArea[] 
     key: policy.key,
     label: policy.label,
     view: canView(policy, membership),
-    create: canCreate(policy, membership),
-    edit: canMutate(policy, membership),
+    create: policy.key === "finance" || canView(policy, membership) !== "no" ? canCreate(policy, membership) : "no",
+    edit: canView(policy, membership) !== "no" ? canMutate(policy, membership) : "no",
     archive: canMutate(policy, membership, true),
     delete: canDelete(policy, membership),
     export: canExport(policy, membership),

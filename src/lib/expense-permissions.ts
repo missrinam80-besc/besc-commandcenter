@@ -1,9 +1,8 @@
-import type { MembershipAccess } from "./permissions";
+import { hasPermission, type MembershipAccess } from "./permissions.ts";
 
 // Match the existing database finance-manager policy.
 export function canManageExpenses(membership: MembershipAccess) {
-  return ["admin", "board"].includes(membership.role) ||
-    ["approver", "treasurer"].includes(membership.finance_role);
+  return hasPermission(membership, "manageFinance");
 }
 
 export const expenseStatusOptions = [

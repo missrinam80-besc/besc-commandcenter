@@ -77,7 +77,7 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Vergaderingen & besluiten", href: "/app/vergaderingen", icon: Landmark, roles: ["admin", "board", "member"] },
       { label: "VZW-administratie", href: "/app/administratie", icon: Landmark, roles: ["admin", "board"] },
-      { label: "Financiën", href: "/app/financien", icon: CircleDollarSign, roles: ["admin", "board"], financeRoles: ["submitter", "approver", "treasurer"] },
+      { label: "Financiën", href: "/app/financien", icon: CircleDollarSign, roles: ["admin", "board"], financeRoles: ["submitter", "approver", "treasurer", "approver_treasurer"] },
       { label: "Materialen & resources", href: "/app/materialen", icon: Boxes, roles: ["admin", "board", "member"] },
       { label: "Kennisbank", href: "/app/kennisbank", icon: BookOpen },
     ],
@@ -97,9 +97,9 @@ const navigationGroups: NavigationGroup[] = [
     label: "Beheer",
     icon: CloudCog,
     items: [
-      { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin", "board"] },
-      { label: "CSV-import", href: "/app/beheer/import", icon: FolderKanban, roles: ["admin", "board"] },
-      { label: "Rechtencontrole", href: "/app/beheer/rechten", icon: ShieldCheck, roles: ["admin", "board"] },
+      { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin"] },
+      { label: "CSV-import", href: "/app/beheer/import", icon: FolderKanban, roles: ["admin"] },
+      { label: "Rechtencontrole", href: "/app/beheer/rechten", icon: ShieldCheck, roles: ["admin"] },
       { label: "Archief", href: "/app/archief", icon: Archive, roles: ["admin", "board", "member"] },
       { label: "Historiek", href: "/app/historiek", icon: Archive, roles: ["admin", "board", "member"] },
       { label: "Activiteit", href: "/app/activiteit", icon: Clock3, roles: ["admin", "board", "member"] },
@@ -143,6 +143,7 @@ const helpSearchByActive: Record<string, string> = {
 };
 
 function helpHref(active: string) {
+  if (["Rechtencontrole", "Gebruikers & toegang"].includes(active)) return "https://github.com/missrinam80-besc/besc-commandcenter/blob/main/docs/wiki/Rollen-en-profielen.md";
   const query = helpSearchByActive[active] || active || "Start hier";
   return `/app/kennisbank?zoeken=${encodeURIComponent(query)}`;
 }
@@ -236,7 +237,7 @@ export async function AppShell({
     .from("approval_requests")
     .select("id", { count: "exact", head: true })
     .eq("organization_id", membership.organization_id);
-  if (membership.role === "admin" || membership.role === "board" || ["approver", "treasurer"].includes(membership.finance_role)) {
+  if (membership.role === "admin" || membership.role === "board" || ["approver", "treasurer", "approver_treasurer"].includes(membership.finance_role)) {
     approvalCountQuery = approvalCountQuery.eq("status", "pending");
   } else {
     approvalCountQuery = approvalCountQuery.eq("requested_by", user.id).in("status", ["pending", "changes_requested"]);
@@ -251,7 +252,7 @@ export async function AppShell({
   const membershipRole = membership.role as OrganizationRole;
   const financeRole = membership.finance_role as FinanceRole;
   const name = providedName || profile?.display_name || user.email?.split("@")[0] || "Gebruiker";
-  const role = providedRole || organizationRoleLabels[membershipRole] || "Teamlid";
+  const role = providedRole || organizationRoleLabels[membershipRole] || "Crew";
 
   return (
     <main className="app-shell" data-role={membershipRole} data-active={active} data-theme={profile?.theme_preference || "system"}>
