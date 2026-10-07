@@ -2,8 +2,7 @@ import Link from "next/link";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { hasPermission } from "@/lib/permissions";
-import { scheduleKinds, scheduleStatuses, scheduleConflicts, type EventScheduleItem } from "@/lib/event-schedule";
-import { formatDateTime } from "@/lib/format";
+import { scheduleKinds, scheduleStatuses, scheduleConflicts, scheduleAgendaDays, scheduleAgendaTime, type EventScheduleItem } from "@/lib/event-schedule";
 import { EventScheduleForm } from "@/components/event-schedule-form";
 import { FormModal } from "@/components/form-modal";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
@@ -22,26 +21,29 @@ export async function EventSchedulePanel({ eventId, selected, people, peopleErro
   const visible = filter ? rows.filter(row => row.kind === filter) : rows;
   const canEdit = hasPermission(membership, "manageEvents") && !result.error && !peopleError;
   return <section className="form-card event-schedule-panel">
-    <div className="form-heading"><div><span className="eyebrow">PROGRAMMA EN INZET</span><h2>Schema en shifts</h2></div>
+    <div className="form-heading"><div><span className="eyebrow">PROGRAMMA EN INZET</span><h2>Eventagenda</h2></div>
       {canEdit && <Link className="row-action" href="?tab=planning&schema=nieuw"><Plus size={14}/>Onderdeel toevoegen</Link>}
     </div>
     <nav className="event-schedule-filters" aria-label="Schema filteren">
       <Link href="?tab=planning" scroll={false} aria-current={!filter ? "page" : undefined}>Alles</Link>
-      {Object.entries(scheduleKinds).map(([value, label]) => <Link key={value} href={`?tab=planning&schema_type=${value}`} scroll={false} aria-current={filter === value ? "page" : undefined}>{label}</Link>)}
+      {Object.entries(scheduleKinds).map(([value, label]) => <Link key={value} data-kind={value} href={`?tab=planning&schema_type=${value}`} scroll={false} aria-current={filter === value ? "page" : undefined}><span className="event-agenda-dot" aria-hidden="true"/>{label}</Link>)}
     </nav>
     {result.error ? <p className="error-note" role="alert">Het schema kon niet worden geladen. Probeer opnieuw; controleer bij ingebruikname of de inrichting is afgerond.</p> : <>
       {peopleError && <p className="error-note" role="alert">De personenlijst kon niet worden geladen. Wijzigen is tijdelijk niet beschikbaar.</p>}
       {conflicts.size > 0 && <p className="error-note" role="status">Er zijn overlappende toewijzingen in dit event. Controleer de gemarkeerde onderdelen.</p>}
-      <div className="event-schedule-list">{visible.map(row => <article key={row.id}>
-        <div className="event-schedule-time"><span>Start: {formatDateTime(row.starts_at, "Nog niet gepland")}</span><span>Einde: {formatDateTime(row.ends_at, "Nog niet gepland")}</span></div>
-        <div className="event-schedule-content"><strong>{row.title}</strong><span>{scheduleKinds[row.kind]}{row.location ? ` · ${row.location}` : ""}</span>
-          <span>{people.find(person => person.id === row.person_id)?.label || (row.person_id ? "Eerder toegewezen persoon" : "Nog niet toegewezen")}</span>
-          {conflicts.has(row.id) && <span className="error-note">Deze persoon heeft een overlappende toewijzing.</span>}
-          {row.notes && <p>{row.notes}</p>}
-        </div>
-        <span className="event-material-status">{scheduleStatuses[row.status]}</span>
-        {canEdit && <Link className="row-action" aria-label={`${row.title} bewerken`} href={`?tab=planning&schema=${row.id}`}><Pencil size={14}/></Link>}
-      </article>)}</div>
+      <div className="event-agenda">{scheduleAgendaDays(visible).map(day => <section className="event-agenda-day" key={day.key} aria-label={day.label}>
+        <h3>{day.label}</h3>
+        <div className="event-agenda-entries">{day.items.map(row => <article className="event-agenda-entry" data-kind={row.kind} data-status={row.status} key={row.id}>
+          <div className="event-agenda-time">{row.starts_at ? <><time dateTime={row.starts_at}>{scheduleAgendaTime(row.starts_at)}</time><span>tot {row.ends_at ? <time dateTime={row.ends_at}>{scheduleAgendaTime(row.ends_at, row.starts_at)}</time> : "einde onbekend"}</span></> : <span>Tijd onbekend</span>}</div>
+          <div className="event-agenda-card">
+            <div className="event-agenda-card-head"><span className="event-agenda-type">{scheduleKinds[row.kind]}</span><span className="event-agenda-status">{scheduleStatuses[row.status]}</span>{canEdit && <Link className="row-action" aria-label={`${row.title} bewerken`} href={`?tab=planning&schema=${row.id}`}><Pencil size={14}/></Link>}</div>
+            <strong>{row.title}</strong>
+            <div className="event-agenda-meta"><span>{people.find(person => person.id === row.person_id)?.label || (row.person_id ? "Eerder toegewezen persoon" : "Nog niet toegewezen")}</span>{row.location && <span>{row.location}</span>}</div>
+            {conflicts.has(row.id) && <p className="event-agenda-conflict">Deze persoon heeft een overlappende toewijzing.</p>}
+            {row.notes && <details className="event-agenda-notes"><summary>Praktische afspraken</summary><p>{row.notes}</p></details>}
+          </div>
+        </article>)}</div>
+      </section>)}</div>
       {!visible.length && <p className="empty-inline">{rows.length ? "Geen onderdelen voor dit filter." : "Nog geen schema of shifts toegevoegd."}</p>}
       {selected && selected !== "nieuw" && !current && <p className="error-note">Dit onderdeel staat niet meer in het schema.</p>}
     </>}

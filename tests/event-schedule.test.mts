@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { scheduleConflicts, type EventScheduleItem } from "../src/lib/event-schedule.ts";
+import { scheduleConflicts, scheduleAgendaDays, scheduleAgendaTime, type EventScheduleItem } from "../src/lib/event-schedule.ts";
 import { resolveEventDossierTab } from "../src/lib/event-dossier-tabs.ts";
 
 const item = (id: string, starts_at: string | null, ends_at: string | null, extra: Partial<EventScheduleItem> = {}): EventScheduleItem => ({
@@ -21,4 +21,12 @@ test("aansluitende, vervallen, ongetimede en niet-toegewezen onderdelen geven ge
 test("schema-modal, filter en actiefeedback behouden Planning & crew", () => {
   for (const query of [{ schema: "nieuw" }, { schema_type: "shift" }, { succes: "schema-opgeslagen" }, { fout: "schema-velden" }])
     assert.equal(resolveEventDossierTab(query), "planning");
+});
+
+test("agenda sorteert en groepeert op Belgische datum, niet UTC, met onbekende tijden achteraan",()=>{
+ const rows=[item("unknown",null,null),item("late","2026-10-08T22:30:00Z",null),item("early","2026-10-08T21:00:00Z",null),item("first","2026-10-08T20:00:00Z",null)];
+ const days=scheduleAgendaDays(rows);assert.deepEqual(days.map(day=>day.key),["2026-10-08","2026-10-09","unplanned"]);assert.deepEqual(days[0].items.map(row=>row.id),["first","early"]);assert.equal(rows[0].id,"unknown");assert.equal(days[2].label,"Nog niet ingepland");
+});
+test("agenda vermeldt de einddatum van nachtshiften en volgt de zomer-/wintertijd",()=>{
+ assert.equal(scheduleAgendaTime("2026-10-08T21:00:00Z"),"23:00");assert.equal(scheduleAgendaTime("2026-12-08T21:00:00Z"),"22:00");assert.match(scheduleAgendaTime("2026-10-09T01:00:00Z","2026-10-08T21:00:00Z"),/9.*2026.*03:00/);assert.equal(scheduleAgendaTime(null),"Onbekend");
 });
