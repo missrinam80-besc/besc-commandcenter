@@ -7,7 +7,7 @@ De eventfiche heeft acht tabbladen. De titel, status en knop **Bewerken** blijve
 | Tabblad | Huidige inhoud |
 |---|---|
 | Overzicht | Beschrijving, basisgegevens, annuleren en dossierbeheer. |
-| Planning & crew | Betrokken personen en rollen; acties voor een taak of campagne. Schema's en shifts volgen later. |
+| Planning & crew | Dagschema, streams, draaiboek en crew-/vrijwilligersshiften; betrokken personen en rollen; acties voor een taak of campagne. |
 | Materialen | Eventmaterialenlijst met registeritems of zelf omschreven materiaal, aantallen, herkomst, verantwoordelijke en opvolging. |
 | Giveaways | Voorbereide plek; registratie van items en uitdeling volgt later. |
 | Inschrijvingen | Bestaande Eventbrite-link indien geregistreerd. Werkwijze, capaciteit en eigen inschrijvingen volgen later. |
@@ -15,7 +15,7 @@ De eventfiche heeft acht tabbladen. De titel, status en knop **Bewerken** blijve
 | Documenten & koppelingen | Documenten, links, gerelateerde dossiers, eventmap, dossiergeneratie en Google Calendar. |
 | Communicatie | E-mailopvolging en Gmail-concepten. |
 
-Giveaways, schema's/shifts en inschrijvingsinstellingen hebben nog geen invoer of opgeslagen instellingen. Aan- of uitzetten per event wordt later toegevoegd. Een ontbrekende Eventbrite-link bewijst niet dat het event zonder inschrijvingen werkt.
+Giveaways en inschrijvingsinstellingen hebben nog geen invoer of opgeslagen instellingen. Aan- of uitzetten per event wordt later toegevoegd. Een ontbrekende Eventbrite-link bewijst niet dat het event zonder inschrijvingen werkt.
 
 ## Materialen per event
 
@@ -28,3 +28,11 @@ De lijst beschrijft de behoefte en opvolging voor dit event. Zij reserveert geen
 Een actief account met Events-bevoegdheid kan de lijst beheren. Actieve leden kunnen de lijst bekijken. Gegevens en verwijzingen blijven beperkt tot dezelfde organisatie. Voor ingebruikname is migratie `20261007193759_event_materials.sql` nodig; voer die op Cloud DEV uit vóór deployment van deze versie.
 
 Bestaande links voor personen, documenten en Drive blijven werken. Na zo'n actie verschijnt het passende tabblad. Toegangsrechten en bevestigingen voor wijzigingen blijven gelden.
+
+## Planning en crew
+
+Voeg een schemaonderdeel toe met een titel en type: Programma, Stream, Draaiboek of Crew / vrijwilliger. Gebruik start- en eindmomenten in Europe/Brussels, ook voor meerdaagse events en nachtshiften. Onbekende tijden mogen leeg blijven; een eindtijd vereist een eerdere starttijd. Kies eventueel een persoon uit het centrale personenregister, locatie/streamkanaal en praktische afspraken. Voor meerdere personen op dezelfde shift maak je per persoon een onderdeel.
+
+De lijst staat op starttijd; onderdelen zonder start staan onderaan. De filters tonen één type. Voorstel, Bevestigd, Uitgevoerd en Vervallen worden handmatig toegekend. Overlappende toewijzingen aan dezelfde persoon binnen dit event krijgen een waarschuwing, ook over verschillende types. Aansluitende shifts en vervallen onderdelen geven geen waarschuwing. Bij onbekende tijden is overlap niet te beoordelen. Controle tussen verschillende events en beschikbaarheidsbeheer volgen later.
+
+Schemaonderdelen wijzigen geen bestaande dossierrollen, taken of Google Calendar. Draaiboekinstructies kunnen als praktische afspraken worden ingevoerd; bestaande documenten blijven op Documenten & koppelingen staan. Actieve leden kunnen bekijken; Events-bevoegdheid is nodig om te beheren. Verwijderen verwijdert uitsluitend het schemaonderdeel. Migratie `20261007205415_event_schedule.sql` is nodig op Cloud DEV vóór deployment.
