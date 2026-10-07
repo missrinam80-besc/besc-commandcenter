@@ -38,6 +38,7 @@ const navigationGroups: NavigationGroup[] = [
       { label: "Mijn werk", href: "/app/taken", icon: CheckCircle2 },
       { label: "Inbox", href: "/app/inbox", icon: Inbox, roles: ["admin", "board", "member"], counter: "inbox" },
       { label: "Kalender", href: "/app/kalender", icon: CalendarDays },
+      { label: "Kost indienen", href: "/app/financien?nieuw=kost", icon: CircleDollarSign },
       { label: "Goedkeuringen", href: "/app/goedkeuringen", icon: CheckCircle2, roles: ["admin", "board", "member"], counter: "approvals" },
     ],
   },

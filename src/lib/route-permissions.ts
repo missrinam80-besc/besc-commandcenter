@@ -35,7 +35,8 @@ function startsWithAny(pathname: string, prefixes: string[]) {
 
 function canViewFinancePath(pathname: string, searchParams: URLSearchParams, membership: MembershipAccess) {
   if (membership.role === "admin" || membership.role === "board" || membership.finance_role !== "none") return true;
-  return pathname === "/app/financien" && searchParams.get("nieuw") === "kost";
+  return (pathname === "/app/financien" && searchParams.get("nieuw") === "kost") ||
+    (/^\/app\/financien\/kosten\/[^/]+$/.test(pathname) && !searchParams.has("bewerken") && !searchParams.has("nieuw"));
 }
 
 export function canViewInternalPath(pathname: string, membership: MembershipAccess, searchParams = new URLSearchParams()) {
@@ -43,6 +44,7 @@ export function canViewInternalPath(pathname: string, membership: MembershipAcce
   if (startsWithAny(pathname, adminOnlyPrefixes)) return false;
   if (membership.role === "board") return true;
   if (membership.role === "volunteer") {
+    if (pathname.startsWith("/app/financien")) return canViewFinancePath(pathname, searchParams, membership);
     return volunteerExactPaths.includes(pathname) || volunteerPrefixes.some((prefix) => pathname.startsWith(prefix));
   }
   if (membership.role === "member") {
