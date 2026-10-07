@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requirePermission } from "@/lib/auth-context";
 import {
   dossierEntityConfig,
@@ -40,10 +41,21 @@ function finish(entityType: DossierEntityType, entityId: string, result: "succes
   redirect(`${dossierPath(entityType, entityId)}?${result}=${code}`);
 }
 
+async function requireActiveLinkDossier(supabase: SupabaseClient, organizationId: string, entityType: DossierEntityType, entityId: string) {
+  const config = dossierEntityConfig[entityType];
+  const { data, error } = await supabase.from(config.table).select("id")
+    .eq("organization_id", organizationId).eq("id", entityId).is("deleted_at", null).maybeSingle();
+  if (error || !data || data.id !== entityId) {
+    revalidatePath(config.route);
+    redirect(`${config.route}?fout=${error ? "dossier-controleren" : "dossier-niet-beschikbaar"}`);
+  }
+}
+
 export async function addRecordLink(formData: FormData) {
   const parsed = linkSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app?fout=ongeldige-link");
   const { supabase, user, membership } = await context(parsed.data.entity_type, parsed.data.entity_id);
+  await requireActiveLinkDossier(supabase, membership.organization_id, parsed.data.entity_type, parsed.data.entity_id);
   const { error } = await supabase.from("record_links").insert({
     organization_id: membership.organization_id,
     entity_type: parsed.data.entity_type,
@@ -60,6 +72,7 @@ export async function updateRecordLink(formData: FormData) {
   const parsed = linkSchema.extend({ id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app?fout=ongeldige-link");
   const { supabase, membership } = await context(parsed.data.entity_type, parsed.data.entity_id);
+  await requireActiveLinkDossier(supabase, membership.organization_id, parsed.data.entity_type, parsed.data.entity_id);
   const { data: changed, error } = await supabase.from("record_links").update({
     label: parsed.data.label,
     url: parsed.data.url,
@@ -76,6 +89,7 @@ export async function deleteRecordLink(formData: FormData) {
   const parsed = baseSchema.extend({ id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app?fout=ongeldige-link");
   const { supabase, membership } = await context(parsed.data.entity_type, parsed.data.entity_id);
+  await requireActiveLinkDossier(supabase, membership.organization_id, parsed.data.entity_type, parsed.data.entity_id);
   const { data: changed, error } = await supabase.from("record_links").delete()
     .eq("organization_id", membership.organization_id)
     .eq("entity_type", parsed.data.entity_type)

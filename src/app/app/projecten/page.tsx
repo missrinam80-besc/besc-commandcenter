@@ -97,7 +97,7 @@ export default async function ProjectsPage({
         showMine
         resultCount={projects.length}
       >
-        {params.fout && <div className="error-note">Het project kon niet worden opgeslagen.</div>}
+        {params.fout && <div className="error-note">{params.fout === "dossier-niet-beschikbaar" ? "Het dossier is niet meer beschikbaar. De link werd niet gewijzigd." : params.fout === "dossier-controleren" ? "Het dossier kon niet worden gecontroleerd. De link werd niet gewijzigd. Probeer opnieuw." : "Het project kon niet worden opgeslagen."}</div>}
         {params.succes && <div className="success">{successMessages.get(params.succes) ?? "Wijziging opgeslagen."}</div>}
         {params.nieuw && canManage && (
           <EntityForm title="Nieuw project" action={createProject}>
