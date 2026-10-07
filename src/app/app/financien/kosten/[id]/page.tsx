@@ -62,16 +62,16 @@ export default async function Page({
           {expense.proof_url && <a href={expense.proof_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Open bewijsstuk</a>}
           {canManage && expense.status === "approved" && transition("pay", "Markeer betaald")}
           {canManage && expense.status === "reimbursement_due" && transition("reimburse", "Markeer terugbetaald")}
-          {!query.bewerken && <Link className="primary" href="?bewerken=1">Bewerken</Link>}
+          {canManage && !query.bewerken && <Link className="primary" href="?bewerken=1">Bewerken</Link>}
         </div>
       </header>
       <div className="project-detail-body">
         {query.succes && <div className="success">De financiële workflow is bijgewerkt.</div>}
         {query.fout && <div className="error-note">Actie mislukt: {query.fout}.</div>}
-        {query.bewerken ? (
+        {canManage && query.bewerken ? (
           <section className="form-card">
             <div className="form-heading"><h2>Kost bewerken</h2><Link href="?">Annuleren</Link></div>
-            <ExpenseForm record={expense} options={options}/>
+            <ExpenseForm record={expense} options={options} canManage={canManage}/>
           </section>
         ) : (
           <>
