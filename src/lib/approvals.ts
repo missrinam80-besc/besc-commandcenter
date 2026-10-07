@@ -43,7 +43,7 @@ export function approvalCounts(
   return {
     pending: rows.filter((row) => row.status === "pending").length,
     changesRequested: rows.filter((row) => row.status === "changes_requested").length,
-    mine: rows.filter((row) => row.requested_by === userId && row.status !== "approved").length,
+    mine: rows.filter((row) => row.requested_by === userId && ["pending", "changes_requested"].includes(row.status)).length,
     completed: rows.filter((row) => ["approved", "rejected"].includes(row.status)).length,
   };
 }

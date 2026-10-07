@@ -4,6 +4,7 @@ import { decideApproval } from "./actions";
 import { AppShell } from "@/components/app-shell";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatDateTime } from "@/lib/format";
+import { currentApprovalRequests } from "@/lib/approval-work-queue";
 import {
   approvalCounts,
   approvalEntityLabels,
@@ -48,7 +49,7 @@ export default async function ApprovalsPage({
     .select("id,entity_type,entity_id,title,module,source_href,status,requested_by,request_note,decision_note,requested_at,decided_at,requester:profiles!approval_requests_requested_by_fkey(display_name),reviewer:profiles!approval_requests_decided_by_fkey(display_name)")
     .eq("organization_id", membership.organization_id)
     .order("requested_at", { ascending: false });
-  const allRows = (data ?? []) as unknown as ApprovalRow[];
+  const allRows = await currentApprovalRequests(supabase, membership.organization_id, (data ?? []) as unknown as ApprovalRow[]);
   const counts = approvalCounts(allRows, user.id);
   const rows = allRows
     .filter((row) => status === "all" || row.status === status)
