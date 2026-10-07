@@ -210,7 +210,7 @@ export async function OperationalModulePage({
             <strong>{all.length - active}</strong>
           </article>
         </section>
-        {params.fout && <div className="error-note">Opslaan is mislukt ({params.fout}).</div>}
+        {params.fout && <div className="error-note">{params.fout === "dossier-niet-beschikbaar" ? "Het dossier is niet meer beschikbaar. De link werd niet gewijzigd." : params.fout === "dossier-controleren" ? "Het dossier kon niet worden gecontroleerd. De link werd niet gewijzigd. Probeer opnieuw." : `Opslaan is mislukt (${params.fout}).`}</div>}
         {params.succes && <div className="success">Wijziging opgeslagen.</div>}
         {params.nieuw && canManage && (
           <FormModal title={`Nieuwe ${config.singular}`}>

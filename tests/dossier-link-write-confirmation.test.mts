@@ -17,8 +17,8 @@ for(const [action,table,error] of [['updateRecordLink','record_links','link-opsl
   for(const result of ['saved','missing','error','wrong','denied']){
    const calls:unknown[][]=[];
    const supabase={from:(name:string)=>{
-    const query:Record<string,unknown>={};for(const method of ['update','delete','eq','or','select'])query[method]=(...args:unknown[])=>{calls.push([name,method,...args]);return query;};
-    query.maybeSingle=async()=>({data:result==='saved'?{id:row}:result==='wrong'?{id}:null,error:result==='error'?{message:'fixture'}:null});
+    const query:Record<string,unknown>={};for(const method of ['update','delete','eq','or','select','is'])query[method]=(...args:unknown[])=>{calls.push([name,method,...args]);return query;};
+    query.maybeSingle=async()=>name==='content_items'?{data:{id},error:null}:({data:result==='saved'?{id:row}:result==='wrong'?{id}:null,error:result==='error'?{message:'fixture'}:null});
     query.then=(resolve:(v:unknown)=>unknown)=>Promise.resolve({error:null}).then(resolve);return query;
    }};
    const actions=load("src/app/app/dossier-actions.ts",{

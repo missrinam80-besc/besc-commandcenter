@@ -176,7 +176,7 @@ export default async function TasksPage({
         showMine
         resultCount={tasks.length + completed.length}
       >
-        {params.fout && <div className="error-note">De taak kon niet worden opgeslagen.</div>}
+        {params.fout && <div className="error-note">{params.fout === "dossier-niet-beschikbaar" ? "Het dossier is niet meer beschikbaar. De link werd niet gewijzigd." : params.fout === "dossier-controleren" ? "Het dossier kon niet worden gecontroleerd. De link werd niet gewijzigd. Probeer opnieuw." : "De taak kon niet worden opgeslagen."}</div>}
         {params.succes && <div className="success">{successMessages.get(params.succes) ?? "Wijziging opgeslagen."}</div>}
         {overdue && <div className="permission-note">Je ziet nu alleen taken waarvan de deadline verstreken is. <Link href="/app/taken?van_mij=1">Toon al mijn taken</Link></div>}
         {openOnly && <div className="permission-note">Je ziet nu alleen open taken. <Link href="/app/taken">Toon ook de historiek</Link></div>}
