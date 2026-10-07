@@ -6,7 +6,7 @@ const migration = readFileSync("supabase/migrations/20260803163000_add_assets_an
 const assets = readFileSync("src/app/app/materialen/page.tsx", "utf8");
 const actions = readFileSync("src/app/app/materialen/actions.ts", "utf8");
 const legacyAssets = readFileSync("src/app/app/shop/activa/page.tsx", "utf8");
-const navigation = readFileSync("src/components/app-shell.tsx", "utf8");
+const navigation = readFileSync("src/components/persistent-app-shell.tsx", "utf8");
 const accessMatrix = readFileSync("src/lib/access-matrix.ts", "utf8");
 const forms = readFileSync("src/components/shop-forms.tsx", "utf8");
 

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const shell = readFileSync("src/components/app-shell.tsx", "utf8");
+const shell = readFileSync("src/components/persistent-app-shell.tsx", "utf8");
 const accountPage = readFileSync("src/app/app/account/page.tsx", "utf8");
 const accountActions = readFileSync("src/app/app/account/actions.ts", "utf8");
 const callback = readFileSync("src/app/auth/callback/route.ts", "utf8");
@@ -70,7 +70,8 @@ test("weergavevoorkeur volgt systeem, licht of donker en blijft per gebruiker be
   assert.match(accountPage, /name="theme_preference" value="light"/);
   assert.match(accountPage, /name="theme_preference" value="dark"/);
   assert.match(accountActions, /theme_preference: parsed\.data\.theme_preference/);
-  assert.match(shell, /data-theme=\{profile\?\.theme_preference \|\| "system"\}/);
+  assert.match(shell, /data-theme=\{data\.theme\}/);
+  assert.match(readFileSync("src/lib/app-shell-context.ts", "utf8"), /theme: profile\?\.theme_preference \|\| "system"/);
   assert.match(themeCss, /prefers-color-scheme:dark/);
   assert.match(themeCss, /color-scheme:dark/);
   assert.match(themeCss, /--theme-field:#1a1e1c/);

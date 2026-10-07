@@ -115,7 +115,7 @@ test("dossiers ondersteunen meerdere Drive-documenten zonder bestanden te kopië
 test("het centrale archief filtert alle kernmodules op status, periode en eigenaar", async () => {
   const [archive, shell] = await Promise.all([
     source("src/app/app/archief/page.tsx"),
-    source("src/components/app-shell.tsx"),
+    source("src/components/persistent-app-shell.tsx"),
   ]);
   assert.match(archive, /Centraal archief/);
   assert.match(archive, /name="owner"/);

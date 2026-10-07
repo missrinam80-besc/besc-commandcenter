@@ -49,7 +49,7 @@ test("rechtenmatrix bewaakt aanmaken, bewerken, archiveren, verwijderen, exporte
 
 test("rechtencontrolepagina is alleen zichtbaar voor Admin en toont de matrix", async () => {
   const [shell, page, actions, migration, users, authContext, proxy, styles] = await Promise.all([
-    source("src/components/app-shell.tsx"),
+    source("src/components/persistent-app-shell.tsx"),
     source("src/app/app/beheer/rechten/page.tsx"),
     source("src/app/app/beheer/actions.ts"),
     source("supabase/migrations/20260812110000_add_custom_access_roles.sql"),
