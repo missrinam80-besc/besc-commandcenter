@@ -3,7 +3,9 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const migration = readFileSync("supabase/migrations/20260803150500_add_social_integration_core.sql", "utf8");
-const page = readFileSync("src/app/app/integraties/social/page.tsx", "utf8");
+const page = readFileSync("src/app/app/integraties/social-accounts.tsx", "utf8");
+const logs = readFileSync("src/app/app/integraties/logs/page.tsx", "utf8");
+const readme = readFileSync("README.md", "utf8");
 const actions = readFileSync("src/app/app/integraties/social/actions.ts", "utf8");
 const connectorDefinitions = readFileSync("src/lib/social-connectors.ts", "utf8");
 const youtube = readFileSync("src/lib/youtube-integration.ts", "utf8");
@@ -75,8 +77,8 @@ test("beheer toont platformfasering, accountstatus en syncgeschiedenis", () => {
   assert.match(connectorDefinitions, /tiktok: \{[^\n]+state: "blocked"[^\n]+audit/);
   assert.match(connectorDefinitions, /x: \{[^\n]+state: "blocked"[^\n]+API-budget/);
   assert.match(page, /Geregistreerde kanalen/);
-  assert.match(page, /Recente synchronisaties/);
-  assert.match(page, /OAuth-tokens staan versleuteld in Vault/);
+  assert.match(logs, /Laatste 50 synchronisaties/);
+  assert.match(readme, /versleuteld in Supabase Vault/);
   assert.match(page, /changeSocialAccountState/);
 });
 
@@ -207,7 +209,7 @@ test("social koppelingen hebben auditregistratie en een interne quotarem", () =>
   assert.match(audit, /social_sync_runs: "Social synchronisatie"/);
 });
 
-test("social integraties hebben finale acceptatiecontrole en beslispoorten", () => {
+test("social integraties bewaren acceptatiecriteria en documenteren platformvoorwaarden buiten de beheerpagina", () => {
   for (const platform of ["youtube", "facebook", "instagram", "twitch"]) {
     assert.match(socialAcceptance, new RegExp(`${platform}: \\[`));
   }
@@ -219,10 +221,8 @@ test("social integraties hebben finale acceptatiecontrole en beslispoorten", () 
   assert.match(socialAcceptance, /platform: "LinkedIn"/);
   assert.match(socialAcceptance, /platform: "TikTok"/);
   assert.match(socialAcceptance, /platform: "X"/);
-  assert.match(page, /FINALE ACCEPTATIE/);
-  assert.match(page, /Platformtesten en synccontrole/);
-  assert.match(page, /Klaar voor finale controle/);
-  assert.match(page, /OAuth final test nodig/);
-  assert.match(page, /BESLISPOORTEN/);
-  assert.match(page, /Niet opnemen in v1/);
+  assert.doesNotMatch(page, /FINALE ACCEPTATIE|BESLISPOORTEN/);
+  assert.match(readme, /Threads, LinkedIn, TikTok en X/);
+  assert.match(readme, /Registratie betekent geen operationele ondersteuning/);
+  assert.match(readme, /platformrechten\/configuratie/);
 });

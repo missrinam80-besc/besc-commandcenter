@@ -8,3 +8,20 @@
 .ai-result-card .is-assistant>div{width:100%;line-height:1.65}
 .ai-result-card pre{max-width:100%;overflow:auto}
 .form-actions button:disabled{cursor:not-allowed;opacity:.5}
+
+/* Compact combined integration overview; preserve theme surfaces and mobile controls. */
+.integration-overview{display:grid;gap:14px}
+.integration-overview .integration-env-grid,.integration-overview .workspace-connection-card{margin-bottom:0}
+.integration-overview .form-card{padding:16px;background:var(--theme-surface,var(--card));border-color:var(--line)}
+.integration-overview .workspace-resource-grid{margin-top:10px;gap:6px}
+.integration-overview .workspace-resource-grid article{padding:8px}
+.integration-overview .social-integration-page{gap:0}
+.integration-overview .social-account-list article{gap:10px;padding:10px 0}
+.integration-overview .social-account-actions{max-width:280px;flex-wrap:wrap}
+.integration-overview .social-account-meta{font-size:10px}
+.integration-overview .social-sync-list small,.integration-overview .social-account-list small{overflow-wrap:anywhere}
+@media(max-width:1100px){.integration-overview .social-account-list article{grid-template-columns:24px minmax(0,1fr) auto}.integration-overview .social-account-actions{grid-column:2/-1;max-width:none;justify-content:flex-start}}
+@media(max-width:650px){.integration-overview .social-account-list article{grid-template-columns:24px minmax(0,1fr)}.integration-overview .social-account-meta{grid-column:2;text-align:left}.integration-overview .integration-env-grid{grid-template-columns:1fr}.integration-overview .social-sync-list article{grid-template-columns:24px minmax(0,1fr)}.integration-overview .social-sync-list article>b,.integration-overview .social-sync-list article>span{grid-column:2}}
+.integration-overview .integration-env-grid strong,.integration-overview .social-account-list strong{font-size:12px}
+.integration-overview .integration-env-grid span,.integration-overview .social-account-list span,.integration-overview .workspace-resource-grid strong{font-size:11px}
+.integration-overview .workspace-resource-grid span,.integration-overview .workspace-resource-grid a{font-size:10px}

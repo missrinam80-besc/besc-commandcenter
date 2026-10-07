@@ -34,7 +34,7 @@ function parseOptionalDate(value?: string) {
 
 export async function saveSocialAccount(formData: FormData) {
   const parsed = accountSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) redirect("/app/integraties/social?fout=velden");
+  if (!parsed.success) redirect("/app/integraties?fout=velden");
 
   const { supabase, user, membership } = await requireActiveMembership();
   if (!["admin", "board"].includes(membership.role)) redirect("/app?fout=rechten");
@@ -64,15 +64,15 @@ export async function saveSocialAccount(formData: FormData) {
     ? await supabase.from("social_accounts").update(record).eq("id", values.id).eq("organization_id", membership.organization_id)
     : await supabase.from("social_accounts").insert({ ...record, created_by: user.id });
 
-  if (result.error) redirect(`/app/integraties/social?fout=${encodeURIComponent(result.error.code || "opslaan")}`);
-  revalidatePath("/app/integraties/social");
-  redirect("/app/integraties/social?succes=opgeslagen");
+  if (result.error) redirect(`/app/integraties?fout=${encodeURIComponent(result.error.code || "opslaan")}`);
+  revalidatePath("/app/integraties");
+  redirect("/app/integraties?succes=opgeslagen");
 }
 
 export async function changeSocialAccountState(formData: FormData) {
   const id = z.string().uuid().safeParse(formData.get("id"));
   const status = z.enum(["disabled", "disconnected"]).safeParse(formData.get("status"));
-  if (!id.success || !status.success) redirect("/app/integraties/social?fout=velden");
+  if (!id.success || !status.success) redirect("/app/integraties?fout=velden");
 
   const { supabase, membership } = await requireActiveMembership();
   if (!["admin", "board"].includes(membership.role)) redirect("/app?fout=rechten");
@@ -82,72 +82,72 @@ export async function changeSocialAccountState(formData: FormData) {
     updated_at: new Date().toISOString(),
   }).eq("id", id.data).eq("organization_id", membership.organization_id);
 
-  if (error) redirect("/app/integraties/social?fout=status");
-  revalidatePath("/app/integraties/social");
-  redirect(`/app/integraties/social?succes=${status.data}`);
+  if (error) redirect("/app/integraties?fout=status");
+  revalidatePath("/app/integraties");
+  redirect(`/app/integraties?succes=${status.data}`);
 }
 
 export async function syncYouTubeAccount(formData: FormData) {
   const id = z.string().uuid().safeParse(formData.get("id"));
-  if (!id.success) redirect("/app/integraties/social?fout=account");
+  if (!id.success) redirect("/app/integraties?fout=account");
   const { supabase, user, membership } = await requireActiveMembership();
   if (!["admin", "board"].includes(membership.role)) redirect("/app?fout=rechten");
   const { data: account } = await supabase.from("social_accounts").select("id,platform,status").eq("id", id.data).eq("organization_id", membership.organization_id).eq("platform", "youtube").is("deleted_at", null).maybeSingle();
-  if (!account || account.status !== "connected") redirect("/app/integraties/social?fout=niet-verbonden");
+  if (!account || account.status !== "connected") redirect("/app/integraties?fout=niet-verbonden");
 
   try {
     await syncYouTubeAccountById(account.id, "manual", user.id);
   } catch {
-    redirect("/app/integraties/social?fout=youtube-sync");
+    redirect("/app/integraties?fout=youtube-sync");
   }
-  revalidatePath("/app/integraties/social");
+  revalidatePath("/app/integraties");
   revalidatePath("/app/rapportage/social");
-  redirect("/app/integraties/social?succes=youtube-sync");
+  redirect("/app/integraties?succes=youtube-sync");
 }
 
 export async function syncMetaAccount(formData: FormData) {
   const id = z.string().uuid().safeParse(formData.get("id"));
-  if (!id.success) redirect("/app/integraties/social?fout=account");
+  if (!id.success) redirect("/app/integraties?fout=account");
   const { supabase, user, membership } = await requireActiveMembership();
   if (!["admin", "board"].includes(membership.role)) redirect("/app?fout=rechten");
   const { data: account } = await supabase.from("social_accounts").select("id,platform,status").eq("id", id.data).eq("organization_id", membership.organization_id).in("platform", ["facebook", "instagram"]).is("deleted_at", null).maybeSingle();
-  if (!account || account.status !== "connected") redirect("/app/integraties/social?fout=niet-verbonden");
+  if (!account || account.status !== "connected") redirect("/app/integraties?fout=niet-verbonden");
   try {
     await syncMetaAccountById(account.id, "manual", user.id);
   } catch {
-    redirect("/app/integraties/social?fout=meta-sync");
+    redirect("/app/integraties?fout=meta-sync");
   }
-  revalidatePath("/app/integraties/social");
+  revalidatePath("/app/integraties");
   revalidatePath("/app/rapportage/social");
-  redirect("/app/integraties/social?succes=meta-sync");
+  redirect("/app/integraties?succes=meta-sync");
 }
 
 export async function syncThreadsAccount(formData: FormData) {
   const id = z.string().uuid().safeParse(formData.get("id"));
-  if (!id.success) redirect("/app/integraties/social?fout=account");
+  if (!id.success) redirect("/app/integraties?fout=account");
   const { supabase, user, membership } = await requireActiveMembership();
   if (!["admin", "board"].includes(membership.role)) redirect("/app?fout=rechten");
   const { data: account } = await supabase.from("social_accounts").select("id,status").eq("id", id.data).eq("organization_id", membership.organization_id).eq("platform", "threads").is("deleted_at", null).maybeSingle();
-  if (!account || account.status !== "connected") redirect("/app/integraties/social?fout=niet-verbonden");
+  if (!account || account.status !== "connected") redirect("/app/integraties?fout=niet-verbonden");
   try {
     await syncThreadsAccountById(account.id, "manual", user.id);
   } catch {
-    redirect("/app/integraties/social?fout=threads-sync");
+    redirect("/app/integraties?fout=threads-sync");
   }
-  revalidatePath("/app/integraties/social");
+  revalidatePath("/app/integraties");
   revalidatePath("/app/rapportage/social");
-  redirect("/app/integraties/social?succes=threads-sync");
+  redirect("/app/integraties?succes=threads-sync");
 }
 
 export async function syncTwitchAccount(formData: FormData) {
   const id = z.string().uuid().safeParse(formData.get("id"));
-  if (!id.success) redirect("/app/integraties/social?fout=account");
+  if (!id.success) redirect("/app/integraties?fout=account");
   const { supabase, user, membership } = await requireActiveMembership();
   if (!["admin", "board"].includes(membership.role)) redirect("/app?fout=rechten");
   const { data: account } = await supabase.from("social_accounts").select("id,status").eq("id", id.data).eq("organization_id", membership.organization_id).eq("platform", "twitch").is("deleted_at", null).maybeSingle();
-  if (!account || account.status !== "connected") redirect("/app/integraties/social?fout=niet-verbonden");
+  if (!account || account.status !== "connected") redirect("/app/integraties?fout=niet-verbonden");
   try { await syncTwitchAccountById(account.id, "manual", user.id); }
-  catch { redirect("/app/integraties/social?fout=twitch-sync"); }
-  revalidatePath("/app/integraties/social"); revalidatePath("/app/rapportage/social");
-  redirect("/app/integraties/social?succes=twitch-sync");
+  catch { redirect("/app/integraties?fout=twitch-sync"); }
+  revalidatePath("/app/integraties"); revalidatePath("/app/rapportage/social");
+  redirect("/app/integraties?succes=twitch-sync");
 }

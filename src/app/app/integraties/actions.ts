@@ -7,7 +7,7 @@ import { requireActiveMembership } from "@/lib/auth-context";
 import { testGoogleWorkspace } from "@/lib/google-workspace";
 
 const schema = z.object({
-  provider: z.enum(["google_workspace", "discord", "vercel_ai_gateway", "openai", "anthropic", "facebook", "instagram", "linkedin", "youtube", "twitch", "tiktok", "other"]),
+  provider: z.enum(["google_workspace", "discord", "facebook", "instagram", "linkedin", "youtube", "twitch", "tiktok", "other"]),
   display_name: z.string().trim().min(2).max(100),
   status: z.enum(["not_configured", "configured", "connected", "error", "disabled"]),
   account_label: z.string().trim().max(180).optional(),
