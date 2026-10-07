@@ -1,3 +1,4 @@
+import { eventDossierTabs, resolveEventDossierTab } from "@/lib/event-dossier-tabs";
 import { toPersonPickerOptions } from "@/lib/person-picker";
 import Link from "next/link";
 import { CalendarSync, ExternalLink, FilePlus2, FolderInput, FolderPlus, Link2 } from "lucide-react";
@@ -60,6 +61,8 @@ export default async function Event({
 }) {
   const { id } = await params;
   const q = await searchParams;
+  const activeTab = resolveEventDossierTab(q);
+  const closeHref = `?tab=${activeTab}`;
   const { supabase, membership } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageEvents");
   const canManageCampaigns = hasPermission(membership, "manageOrganization");
@@ -107,32 +110,25 @@ export default async function Event({
           <p>{eventTypes[e.event_type as keyof typeof eventTypes]} · {eventStatuses[e.status as keyof typeof eventStatuses]}</p>
         </div>
         <div className="project-actions">
-          {driveUrl && <a href={driveUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Drive</a>}
-          {e.eventbrite_url && <a href={e.eventbrite_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Eventbrite</a>}
-          {source?.source_url && <a href={source.source_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>monday</a>}
-          {!documentRow && <form action={generateEventDossier}><input type="hidden" name="event_id" value={id}/><button><FilePlus2 size={16}/>Genereer eventdossier</button></form>}
-          <form action={syncEventToGoogleCalendar}>
-            <input type="hidden" name="event_id" value={id}/>
-            <button disabled={!e.start_at || !e.end_at}><CalendarSync size={16}/>{calendar ? "Kalender bijwerken" : "Naar Google Calendar"}</button>
-          </form>
-          {canManage && !["cancelled", "archived", "completed"].includes(e.status) && <form action={cancelEvent}><input type="hidden" name="id" value={id}/><ConfirmSubmitButton className="danger-button" message="Dit event annuleren? Het event blijft bewaard en wordt als geannuleerd zichtbaar in Google Calendar.">Event annuleren</ConfirmSubmitButton></form>}
-          <Link href="?nieuw=taak">Taak toevoegen</Link>
-          {canManageCampaigns && <Link href="?nieuw=campagne">Campagne toevoegen</Link>}
           {canManageCampaigns && <Link href={`/app/rapportage/events/${id}`}>Eventrapport</Link>}
-          {canManage && <Link className="primary" href="?bewerken=1">Bewerken</Link>}
+          {canManage && <Link className="primary" href={`?tab=${activeTab}&bewerken=1`}>Bewerken</Link>}
         </div>
       </header>
+      <nav className="event-dossier-tabs" aria-label="Onderdelen van het event">
+        {eventDossierTabs.map(tab => <Link key={tab.id} href={`?tab=${tab.id}`} scroll={false} aria-current={activeTab === tab.id ? "page" : undefined}>{tab.label}</Link>)}
+      </nav>
       <div className="project-detail-body event-dossier">
         {q.succes && <div className="success">{q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
         {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
         {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
         {q.bewerken && canManage && (
-          <FormModal title="Event bewerken">
+          <FormModal title="Event bewerken" closeHref={closeHref}>
             <EventForm action={saveEvent} event={{...e, calendar_removed: calendar?.name.startsWith("[VERWIJDERD]")}} projects={projects ?? []}/>
           </FormModal>
         )}
-        {q.nieuw === "taak" ? <TaskCreateModal returnTo={`/app/events/${id}`} projects={projects ?? []} people={people} defaultProjectId={e.project_id} contextEntityType="event" contextEntityId={id}/> : null}
-        {q.nieuw === "campagne" && canManageCampaigns ? <FormModal title="Nieuwe campagne voor dit event"><OperationalRecordForm action={createOperationalRecord} module="campagnes" record={{ event_id: id, project_id: e.project_id }} projects={projects ?? []} partners={partners ?? []} events={[{ id, title: e.title }]} returnTo={`/app/events/${id}`}/></FormModal> : null}
+        {q.nieuw === "taak" ? <TaskCreateModal closeHref="?tab=planning" returnTo={`/app/events/${id}`} projects={projects ?? []} people={people} defaultProjectId={e.project_id} contextEntityType="event" contextEntityId={id}/> : null}
+        {q.nieuw === "campagne" && canManageCampaigns ? <FormModal title="Nieuwe campagne voor dit event" closeHref={closeHref}><OperationalRecordForm action={createOperationalRecord} module="campagnes" record={{ event_id: id, project_id: e.project_id }} projects={projects ?? []} partners={partners ?? []} events={[{ id, title: e.title }]} returnTo={`/app/events/${id}`}/></FormModal> : null}
+        {activeTab === "overzicht" && <>
         <section className="form-card record-overview">
           <div className="form-heading"><div><span className="eyebrow">OVERZICHT</span><h2>Eventgegevens</h2></div></div>
           {e.description ? <MarkdownContent>{e.description}</MarkdownContent> : <p>Nog geen eventbeschrijving.</p>}
@@ -148,9 +144,27 @@ export default async function Event({
             { label: "Project", value: project ? <Link href={`/app/projecten/${project.id}`}>{project.title}</Link> : "Geen project" },
           ]}/>
         </section>
-        <RecordConnectionsPanel entityType="event" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} modal={q.koppeling} selectedLinkId={q.link}/>
-        <PeopleAssignmentsPanel entityType="event" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)} canManage={canManage} selected={q.betrokkene}/>
+        <div className="event-tab-actions">{canManage && !["cancelled", "archived", "completed"].includes(e.status) && <form action={cancelEvent}><input type="hidden" name="id" value={id}/><ConfirmSubmitButton className="danger-button" message="Dit event annuleren? Het event blijft bewaard en wordt als geannuleerd zichtbaar in Google Calendar.">Event annuleren</ConfirmSubmitButton></form>}</div>
+        <RecordLifecyclePanel entity="event" id={id} label="Event" isArchived={e.status === "archived"} canManage={canManage}/>
+        </>}
+        {activeTab === "planning" && <>
+          <div className="event-tab-actions"><Link href="?tab=planning&nieuw=taak">Taak toevoegen</Link>{canManageCampaigns && <Link href="?tab=planning&nieuw=campagne">Campagne toevoegen</Link>}</div>
+        <PeopleAssignmentsPanel entityType="event" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)} canManage={canManage} closeHref="?tab=planning" selected={q.betrokkene}/>
+          <section className="form-card event-tab-placeholder"><h2>Schema en shifts</h2><p>Hier komen het dagschema, streamschema, draaiboek en de crewshifts. Je kunt nu al betrokkenen en hun rollen beheren.</p></section>
+        </>}
+        {activeTab === "materialen" && <section className="form-card event-tab-placeholder"><h2>Materialenlijst</h2><p>De materialenlijst per event wordt in de volgende stap toegevoegd.</p><Link className="row-action" href="/app/materialen">Materialenregister openen</Link></section>}
+        {activeTab === "giveaways" && <section className="form-card event-tab-placeholder"><h2>Giveaway-items</h2><p>Het beheer van items, aantallen en uitdeling wordt in een volgende stap toegevoegd.</p></section>}
+        {activeTab === "inschrijvingen" && <section className="form-card event-tab-placeholder"><h2>Inschrijvingen</h2>{e.eventbrite_url ? <><p>Er is een Eventbrite-link bij dit event geregistreerd.</p><a className="row-action" href={e.eventbrite_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Eventbrite openen</a></> : <p>Er is geen Eventbrite-link geregistreerd. De keuze om met of zonder inschrijvingen te werken wordt in een volgende stap toegevoegd.</p>}</section>}
+        {activeTab === "financien" && <>
         <FinancialSummaryPanel budgets={budgetRows ?? []} expenses={expenseRows ?? []} income={incomeRows ?? []}/>
+        </>}
+        {activeTab === "documenten" && <>
+          <div className="event-tab-actions">
+          {driveUrl && <a href={driveUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Drive</a>}
+          {source?.source_url && <a href={source.source_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>monday</a>}
+          {!documentRow && <form action={generateEventDossier}><input type="hidden" name="event_id" value={id}/><button><FilePlus2 size={16}/>Genereer eventdossier</button></form>}
+          </div>
+        <RecordConnectionsPanel entityType="event" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} queryContext="tab=documenten" modal={q.koppeling} selectedLinkId={q.link}/>
         <section className="form-card">
           <div className="form-heading">
             <div><span className="eyebrow">GOOGLE CALENDAR</span><h2>Kalendersynchronisatie</h2></div>
@@ -178,7 +192,7 @@ export default async function Event({
           </div>
           {drive ? (
             <div><strong>Drive-map gekoppeld</strong><p>De bestaande map en haar inhoud blijven op hun huidige plek.</p>
-              {canManage && <Link href="?drivePreview=1"><FolderInput size={15}/>Ontbrekende basismappen bekijken</Link>}
+              {canManage && <Link href="?tab=documenten&drivePreview=1"><FolderInput size={15}/>Ontbrekende basismappen bekijken</Link>}
               {structureError && <p className="error-note">De mapinhoud kon niet worden gecontroleerd. Er is niets aangemaakt.</p>}
               {structurePreview && <div><p>{structurePreview.missing.length ? "Na bevestiging worden uitsluitend deze basismappen toegevoegd:" : "Alle basismappen zijn aanwezig. Er is niets aan te maken."}</p>
                 <ul>{structurePreview.missing.map(name => <li key={name}>{name}</li>)}</ul>
@@ -213,8 +227,10 @@ export default async function Event({
             </div>
           )}
         </section>
+        </>}
+        {activeTab === "communicatie" && <>
         <EmailCommunicationPanel entityType="event" entityId={id}/>
-        <RecordLifecyclePanel entity="event" id={id} label="Event" isArchived={e.status === "archived"} canManage={canManage}/>
+        </>}
       </div>
     </AppShell>
   );

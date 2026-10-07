@@ -49,6 +49,7 @@ for(const role of ["member","volunteer"])test(`Event-scherm bewaakt bewerklink e
  overrides["@/components/form-modal"]={FormModal:passthrough};
  overrides["@/components/event-form"]={EventForm:()=>React.createElement("div",{"data-testid":"event-editor"}),eventStatuses:{idea:"Idee"},eventTypes:{community:"Community"}};
  overrides["@/lib/permissions"]={hasPermission};
+ overrides["@/lib/event-dossier-tabs"]={eventDossierTabs,resolveEventDossierTab};
  overrides["@/lib/dossier-relations"]={loadDossierConnections:async()=>({}),loadRelationOptions:async()=>[]};
  const supabase={from:(table:string)=>{
   let single=false;
@@ -61,6 +62,7 @@ for(const role of ["member","volunteer"])test(`Event-scherm bewaakt bewerklink e
  overrides["@/lib/auth-context"]={requireActiveMembership:async()=>({supabase,membership:{organization_id:org,role,finance_role:"none"}})};
  const page=load("src/app/app/events/[id]/page.tsx",overrides).default as(props:unknown)=>Promise<React.ReactNode>;
  const html=renderToStaticMarkup(await page({params:Promise.resolve({id:"fixture-event"}),searchParams:Promise.resolve({bewerken:"1"})}));
- assert.equal(html.includes('href="?bewerken=1"'),role==="member");
+ assert.equal(html.includes('href="?tab=overzicht&amp;bewerken=1"'),role==="member");
  assert.equal(html.includes('data-testid="event-editor"'),role==="member");
 });
+import { eventDossierTabs, resolveEventDossierTab } from "../src/lib/event-dossier-tabs.ts";
