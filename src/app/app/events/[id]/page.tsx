@@ -1,3 +1,4 @@
+import { toPersonPickerOptions } from "@/lib/person-picker";
 import Link from "next/link";
 import { CalendarSync, ExternalLink, FilePlus2, FolderInput, FolderPlus, Link2 } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -62,7 +63,7 @@ export default async function Event({
   const { supabase, membership } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageEvents");
   const canManageCampaigns = hasPermission(membership, "manageOrganization");
-  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }, { data: memberRows }, { data: budgetRows }, { data: expenseRows }, { data: incomeRows }, { data: partners }, { data: assignmentRows }, { data: centralPeopleRows }] = await Promise.all([
+  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }, { data: memberRows }, { data: budgetRows }, { data: expenseRows }, { data: incomeRows }, { data: partners }, { data: assignmentRows }, { data: centralPeopleRows, error: centralPeopleError }] = await Promise.all([
     supabase.from("events").select("*").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
     supabase.from("migration_source_links").select("source_url").eq("target_table", "events").eq("target_id", id).limit(1).maybeSingle(),
@@ -75,7 +76,7 @@ export default async function Event({
     supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("event_id", id).is("deleted_at", null).order("expected_date", { ascending: false }),
     supabase.from("partners").select("id,name").eq("organization_id", membership.organization_id).is("deleted_at", null).order("name"),
     supabase.from("community_assignments").select("id,person_id,role_name,status,starts_at,notes,community_people(display_name)").eq("organization_id", membership.organization_id).eq("event_id", id).order("starts_at", { ascending: true, nullsFirst: false }),
-    supabase.from("community_people").select("id,display_name").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name"),
+    supabase.from("community_people").select("id,display_name,handle,discord_handle,community_person_roles(role)").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name"),
   ]);
   if (!e) notFound();
   const [connections, relationOptions] = await Promise.all([
@@ -121,7 +122,7 @@ export default async function Event({
           {canManage && <Link className="primary" href="?bewerken=1">Bewerken</Link>}
         </div>
       </header>
-      <div className="project-detail-body">
+      <div className="project-detail-body event-dossier">
         {q.succes && <div className="success">{q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
         {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
         {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
@@ -148,7 +149,7 @@ export default async function Event({
           ]}/>
         </section>
         <RecordConnectionsPanel entityType="event" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} modal={q.koppeling} selectedLinkId={q.link}/>
-        <PeopleAssignmentsPanel entityType="event" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={(centralPeopleRows ?? []).map((person) => ({ id: person.id, label: person.display_name }))} canManage={canManage} selected={q.betrokkene}/>
+        <PeopleAssignmentsPanel entityType="event" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)} canManage={canManage} selected={q.betrokkene}/>
         <FinancialSummaryPanel budgets={budgetRows ?? []} expenses={expenseRows ?? []} income={incomeRows ?? []}/>
         <section className="form-card">
           <div className="form-heading">

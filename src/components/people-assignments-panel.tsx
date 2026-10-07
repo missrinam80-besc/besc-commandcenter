@@ -14,21 +14,22 @@ type Assignment = {
 
 const statusLabels: Record<string, string> = { planned: "Gepland", confirmed: "Bevestigd", completed: "Afgerond", cancelled: "Geannuleerd" };
 
-export function PeopleAssignmentsPanel({ entityType, entityId, assignments, people, canManage, selected }: {
+export function PeopleAssignmentsPanel({ entityType, entityId, assignments, people, canManage, selected, peopleError = false }: {
   entityType: "project" | "event";
   entityId: string;
   assignments: Assignment[];
   people: PersonPickerOption[];
   canManage: boolean;
   selected?: string;
+  peopleError?: boolean;
 }) {
   const basePath = entityType === "project" ? `/app/projecten/${entityId}` : `/app/events/${entityId}`;
   const current = assignments.find((item) => item.id === selected);
   const form = (assignment?: Assignment) => <form action={assignment ? updatePersonAssignment : createPersonAssignment}>
     <input type="hidden" name="entity_type" value={entityType}/><input type="hidden" name="entity_id" value={entityId}/><input type="hidden" name="return_to" value={basePath}/>
-    {assignment ? <><input type="hidden" name="id" value={assignment.id}/><input type="hidden" name="person_id" value={assignment.person_id}/><p className="form-help">Persoon: <strong>{assignment.community_people?.display_name || "Onbekende persoon"}</strong></p></> : <SearchablePersonPicker options={people}/>} 
+    {assignment ? <><input type="hidden" name="id" value={assignment.id}/><input type="hidden" name="person_id" value={assignment.person_id}/><p className="form-help">Persoon: <strong>{assignment.community_people?.display_name || "Onbekende persoon"}</strong></p></> : peopleError ? <p className="error-note" role="alert">De personenlijst kon niet worden geladen. Sluit dit venster en probeer opnieuw.</p> : <SearchablePersonPicker options={people}/>}
     <div className="form-row"><label>Rol of verantwoordelijkheid<input name="role_name" defaultValue={assignment?.role_name ?? ""}/></label><label>Status<select name="status" defaultValue={assignment?.status ?? "planned"}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>Startmoment<input type="datetime-local" name="starts_at" defaultValue={formatDateTimeLocal(assignment?.starts_at)}/></label></div>
-    <MarkdownField label="Notities" name="notes" rows={4} defaultValue={assignment?.notes}/><div className="form-actions"><button className="primary">Opslaan</button></div>
+    <MarkdownField label="Notities" name="notes" rows={4} defaultValue={assignment?.notes}/><div className="form-actions"><button className="primary" disabled={!assignment && peopleError}>Opslaan</button></div>
   </form>;
 
   return <section className="form-card relation-wide">

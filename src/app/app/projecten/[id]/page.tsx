@@ -1,3 +1,4 @@
+import { toPersonPickerOptions } from "@/lib/person-picker";
 import { ProjectOutcomeFields } from "@/components/project-outcome-fields";
 import { missingProjectOutcomes, projectOutcomeLabels, type ProjectOutcomes } from "@/lib/project-outcomes";
 import Link from "next/link";
@@ -110,7 +111,7 @@ export default async function ProjectPage({ params, searchParams }: {
     { data: partnerRows },
     { data: eventRows },
     { data: assignmentRows },
-    { data: centralPeopleRows },
+    { data: centralPeopleRows, error: centralPeopleError },
   ] = await Promise.all([
     supabase.from("projects").select("id,title,description,status,priority,owner_id,start_date,due_date,drive_url,organization_id,goal,deliverables,acceptance_criteria,closure_evaluation").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("tasks").select("id,title,description,status,priority,due_at").eq("project_id", id).is("deleted_at", null).order("due_at", { ascending: true, nullsFirst: false }).order("created_at", { ascending: true }),
@@ -126,7 +127,7 @@ export default async function ProjectPage({ params, searchParams }: {
     supabase.from("partners").select("id,name").eq("organization_id", membership.organization_id).is("deleted_at", null).order("name"),
     supabase.from("events").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
     supabase.from("community_assignments").select("id,person_id,role_name,status,starts_at,notes,community_people(display_name)").eq("organization_id", membership.organization_id).eq("project_id", id).order("starts_at", { ascending: true, nullsFirst: false }),
-    supabase.from("community_people").select("id,display_name").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name"),
+    supabase.from("community_people").select("id,display_name,handle,discord_handle,community_person_roles(role)").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name"),
   ]);
   if (!projectRow) notFound();
 
@@ -258,7 +259,7 @@ export default async function ProjectPage({ params, searchParams }: {
         </section>
 
         <RecordConnectionsPanel entityType="project" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} modal={query.koppeling} selectedLinkId={query.link}/>
-        <PeopleAssignmentsPanel entityType="project" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={(centralPeopleRows ?? []).map((person) => ({ id: person.id, label: person.display_name }))} canManage={canManage} selected={query.betrokkene}/>
+        <PeopleAssignmentsPanel entityType="project" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)} canManage={canManage} selected={query.betrokkene}/>
         <FinancialSummaryPanel budgets={budgetRows ?? []} expenses={expenseRows ?? []} income={incomeRows ?? []}/>
 
         <section className="form-card drive-card">
