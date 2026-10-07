@@ -1,5 +1,6 @@
 import { operationalModules, type OperationalModule } from "@/app/app/operations/config";
 import { MarkdownField } from "@/components/markdown-field";
+import { campaignTemplates } from "@/lib/campaign-templates";
 import { communityRoleLabels } from "@/lib/community-people";
 import { formatDateTimeLocal } from "@/lib/format";
 
@@ -33,6 +34,11 @@ export function OperationalRecordForm({
   returnTo?: string;
 }) {
   const config = operationalModules[module];
+  const campaignChannels = [...new Set([
+    ...platforms,
+    ...Object.values(campaignTemplates).flatMap((template) => template.channels),
+    ...(Array.isArray(record.channels) ? record.channels.filter((channel): channel is string => typeof channel === "string" && channel.length > 0) : []),
+  ])];
   const dateValue = record[config.dateColumn ?? ""]
     ? module === "social" ? formatDateTimeLocal(String(record[config.dateColumn ?? ""])) : String(record[config.dateColumn ?? ""]).slice(0, 10)
     : "";
@@ -105,7 +111,7 @@ export function OperationalRecordForm({
         </div>
       </> : <MarkdownField label="Notities / briefing" name="notes" rows={7} defaultValue={String(record.notes ?? "")}/>}
       {module === "campagnes" && <>
-        <fieldset className="channel-picker"><legend>Kanalen</legend>{platforms.map((channel) => <label key={channel}><input type="checkbox" name="channels" value={channel} defaultChecked={Array.isArray(record.channels) && record.channels.includes(channel)}/>{channel}</label>)}</fieldset>
+        <fieldset className="channel-picker"><legend>Kanalen</legend>{campaignChannels.map((channel) => <label key={channel}><input type="checkbox" name="channels" value={channel} defaultChecked={Array.isArray(record.channels) && record.channels.includes(channel)}/>{channel}</label>)}</fieldset>
         <p className="form-help">Deliverables worden als afzonderlijke, opvolgbare onderdelen in het campagnedossier beheerd.</p>
         <MarkdownField label="Resultaten en evaluatie" name="results_summary" rows={4} defaultValue={String(record.results_summary ?? "")}/>
         <div className="form-row">
