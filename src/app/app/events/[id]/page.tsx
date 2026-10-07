@@ -1,4 +1,5 @@
 import { eventDossierTabs, resolveEventDossierTab } from "@/lib/event-dossier-tabs";
+import { EventMaterialsPanel } from "@/components/event-materials-panel";
 import { toPersonPickerOptions } from "@/lib/person-picker";
 import Link from "next/link";
 import { CalendarSync, ExternalLink, FilePlus2, FolderInput, FolderPlus, Link2 } from "lucide-react";
@@ -41,6 +42,9 @@ type CalendarLink = {
 };
 
 const driveErrors: Record<string, string> = {
+  "materiaal-velden": "Controleer de naam, het aantal en de geplande ophaal- en retourtijd.",
+  "materiaal-opslaan": "Het materiaal kon niet worden opgeslagen. Controleer of het event, registeritem en de verantwoordelijke nog beschikbaar zijn.",
+  "materiaal-verwijderen": "Het materiaal kon niet worden verwijderd. De lijst is mogelijk ondertussen gewijzigd.",
   "drive-bestaande-link": "De bestaande Drive-map is niet bereikbaar voor de BESC Google-koppeling. Deel de map met het Google-serviceaccount of maak een nieuwe eventmap.",
   "drive-aanmaken": "De eventmap kon niet worden aangemaakt. Controleer de Google Workspace-integratie en rechten op de BESC-hoofdmap.",
   "drive-link": "De opgegeven Drive-link bevat geen herkenbaar map-ID.",
@@ -118,7 +122,7 @@ export default async function Event({
         {eventDossierTabs.map(tab => <Link key={tab.id} href={`?tab=${tab.id}`} scroll={false} aria-current={activeTab === tab.id ? "page" : undefined}>{tab.label}</Link>)}
       </nav>
       <div className="project-detail-body event-dossier">
-        {q.succes && <div className="success">{q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
+        {q.succes && <div className="success">{q.succes === "materiaal-opgeslagen" ? "Materiaal op de eventlijst opgeslagen." : q.succes === "materiaal-verwijderd" ? "Materiaal van de eventlijst verwijderd." : q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
         {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
         {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
         {q.bewerken && canManage && (
@@ -152,7 +156,7 @@ export default async function Event({
         <PeopleAssignmentsPanel entityType="event" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)} canManage={canManage} closeHref="?tab=planning" selected={q.betrokkene}/>
           <section className="form-card event-tab-placeholder"><h2>Schema en shifts</h2><p>Hier komen het dagschema, streamschema, draaiboek en de crewshifts. Je kunt nu al betrokkenen en hun rollen beheren.</p></section>
         </>}
-        {activeTab === "materialen" && <section className="form-card event-tab-placeholder"><h2>Materialenlijst</h2><p>De materialenlijst per event wordt in de volgende stap toegevoegd.</p><Link className="row-action" href="/app/materialen">Materialenregister openen</Link></section>}
+        {activeTab === "materialen" && <EventMaterialsPanel eventId={id} selected={q.materiaal} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>}
         {activeTab === "giveaways" && <section className="form-card event-tab-placeholder"><h2>Giveaway-items</h2><p>Het beheer van items, aantallen en uitdeling wordt in een volgende stap toegevoegd.</p></section>}
         {activeTab === "inschrijvingen" && <section className="form-card event-tab-placeholder"><h2>Inschrijvingen</h2>{e.eventbrite_url ? <><p>Er is een Eventbrite-link bij dit event geregistreerd.</p><a className="row-action" href={e.eventbrite_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Eventbrite openen</a></> : <p>Er is geen Eventbrite-link geregistreerd. De keuze om met of zonder inschrijvingen te werken wordt in een volgende stap toegevoegd.</p>}</section>}
         {activeTab === "financien" && <>

@@ -13,6 +13,8 @@ test("elk eventtabblad is rechtstreeks bereikbaar en onbekende tabs vallen terug
   for (const tab of eventDossierTabs) assert.equal(resolveEventDossierTab({ tab: tab.id }), tab.id);
   assert.equal(resolveEventDossierTab({}), "overzicht");
   assert.equal(resolveEventDossierTab({ tab: "onbekend" }), "overzicht");
+  assert.equal(resolveEventDossierTab({ materiaal: "nieuw" }), "materialen");
+  assert.equal(resolveEventDossierTab({ succes: "materiaal-opgeslagen" }), "materialen");
 });
 
 test("bestaande modal-URLs tonen hun bijbehorende onderdeel, ook bij een tegenstrijdig tabblad", () => {
@@ -75,7 +77,7 @@ test("eventpagina toont alleen de gekozen sectie en houdt titel, navigatie en be
     assert.ok(html.includes("TESTFIXTURE event"));
     assert.ok(html.includes(`?tab=${tab.id}&amp;bewerken=1`));
     assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
-    for (const [panel, owner] of [["PeopleAssignmentsPanel", "planning"], ["FinancialSummaryPanel", "financien"], ["RecordConnectionsPanel", "documenten"], ["EmailCommunicationPanel", "communicatie"], ["RecordLifecyclePanel", "overzicht"]]) {
+    for (const [panel, owner] of [["EventMaterialsPanel", "materialen"], ["PeopleAssignmentsPanel", "planning"], ["FinancialSummaryPanel", "financien"], ["RecordConnectionsPanel", "documenten"], ["EmailCommunicationPanel", "communicatie"], ["RecordLifecyclePanel", "overzicht"]]) {
       assert.equal(html.includes(`data-component="${panel}"`), tab.id === owner, `${panel} op ${tab.id}`);
     }
   }

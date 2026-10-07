@@ -58,3 +58,12 @@
 .event-tab-placeholder h2{font-size:18px;margin:0 0 8px}
 .event-tab-placeholder .row-action{display:inline-flex;gap:6px;align-items:center;margin-top:8px}
 @media(max-width:850px){.event-dossier-tabs{padding:14px 16px 0}.event-dossier-tabs a{font-size:11px;padding:7px 9px}}
+.event-material-list{display:grid}
+.event-material-list article{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto;gap:14px;align-items:start;padding:12px 0;border-bottom:1px solid var(--line)}
+.event-material-list article:last-child{border-bottom:0}
+.event-material-main,.event-material-logistics{display:grid;gap:4px;min-width:0;overflow-wrap:anywhere}
+.event-material-main strong{font-size:13px;line-height:1.45}
+.event-material-main span,.event-material-main a,.event-material-logistics span{color:var(--muted);font-size:11px;line-height:1.5}
+.event-material-logistics p{font-size:12px;line-height:1.5;margin:4px 0 0;white-space:pre-wrap}
+.event-material-status{border:1px solid var(--line);border-radius:7px;background:var(--theme-control);color:var(--ink);padding:5px 8px;font-size:11px;line-height:1.4}
+@media(max-width:700px){.event-material-list article{grid-template-columns:minmax(0,1fr) auto}.event-material-logistics{grid-column:1;grid-row:2}.event-material-status{grid-column:1;grid-row:3}.event-material-list article>.row-action{grid-column:2;grid-row:1}}
