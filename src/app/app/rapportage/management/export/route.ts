@@ -38,6 +38,11 @@ export async function GET(request: Request) {
       supabase.from("kpi_records").select("domain,name,metric,value,target,measurement_status,target_direction,unit,period_start,period_end").eq("organization_id", organizationId).is("deleted_at", null).gte("period_end", start.slice(0, 10)).lt("period_end", end.slice(0, 10)),
     ]);
 
+  if ([tasks, projects, content, events, campaigns, partners, deliverables, expenses, income, budgets, kpis].some((result) => result.error)) {
+    return new Response("De managementexport kon niet worden aangemaakt.", { status: 500 });
+  }
+  const activeCampaignIds = new Set((campaigns.data ?? []).map((item) => item.id));
+
   const rows: unknown[][] = [["Onderdeel", "Naam", "Status/metric", "Waarde", "Doel/detail", "Datum"]];
   const taskRows = tasks.data ?? [];
   rows.push(
@@ -50,7 +55,9 @@ export async function GET(request: Request) {
   for (const item of events.data ?? []) rows.push(["Event", item.title, item.status, item.expected_attendees ?? "", item.event_type, item.start_at]);
   for (const item of campaigns.data ?? []) rows.push(["Campagne", item.title, item.status, item.value ?? "", `${item.impressions ?? 0} impressies; ${item.clicks ?? 0} kliks`, ""]);
   for (const item of partners.data ?? []) rows.push(["Sponsor", item.name, item.status, item.estimated_value ?? "", "", ""]);
-  for (const item of deliverables.data ?? []) rows.push(["Deliverable", item.title, item.status, "", `Campagne ${item.campaign_id}`, item.due_date]);
+  for (const item of deliverables.data ?? []) {
+    if (activeCampaignIds.has(item.campaign_id)) rows.push(["Deliverable", item.title, item.status, "", `Campagne ${item.campaign_id}`, item.due_date]);
+  }
   for (const item of expenses.data ?? []) rows.push(["Kost", item.title, item.status, item.amount, "", item.expense_date]);
   for (const item of income.data ?? []) rows.push(["Inkomst", item.title, item.status, item.amount, "", item.expected_date]);
   for (const item of budgets.data ?? []) rows.push(["Budget", item.name, item.status, item.planned_amount, "", ""]);
