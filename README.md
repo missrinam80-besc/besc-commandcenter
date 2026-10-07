@@ -2,6 +2,10 @@
 
 Interne werkplek voor BESC vzw met ledenbeheer, planning, projecten, events, campagnes, content, sponsors, communicatie, rapportage, social inzichten en portalen.
 
+## Documentatiewiki
+
+Open de [BESC Command Center-wiki](docs/wiki/README.md) voor handleidingen, integraties, agents, serverbeheer, importtemplates en historische uitrolnotities.
+
 ## Lokale ontwikkelomgeving
 
 De aanbevolen lokale setup draait op Windows met Docker Desktop en lokale Supabase:
