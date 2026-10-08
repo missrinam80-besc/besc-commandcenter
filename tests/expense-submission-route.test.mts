@@ -43,6 +43,7 @@ function harness(role:string) {
     "@/lib/auth-context":{requireActiveMembership:async()=>({supabase:{from},membership,user:{id:"actor"}})},
     "@/lib/permissions":{hasPermission},
     "@/components/app-shell":{AppShell:passthrough},
+    "@/components/markdown-field":{MarkdownContent:passthrough},
     "@/components/finance-navigation":{FinanceNavigation:()=>null},
     "@/components/approval-panel":{ApprovalPanel:()=>null},
     "@/components/finance-forms":{BudgetForm:()=>null,IncomeForm:()=>null,ExpenseForm:()=>React.createElement("form",null,"Submission form")},

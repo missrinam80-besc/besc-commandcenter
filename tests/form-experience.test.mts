@@ -19,7 +19,7 @@ test("dossieraanmaak gebruikt de gezamenlijke editor; instellingen behouden hun 
   assert.match(workspace,/FullDossierCreate/);assert.match(create,/<dialog/);
 });
 
-test("lange tekstvelden blijven bewerkbaar; bestaande Markdownvoorbeelden blijven beschikbaar", async () => {
+test("lange tekstvelden blijven bewerkbaar; bestaande Markdown blijft ondersteund", async () => {
   const [field, task, content, event, meeting, operational] = await Promise.all([
     source("src/components/markdown-field.tsx"),
     source("src/app/app/taken/[id]/page.tsx"),
@@ -29,9 +29,9 @@ test("lange tekstvelden blijven bewerkbaar; bestaande Markdownvoorbeelden blijve
     source("src/components/operational-record-form.tsx"),
   ]);
   assert.match(field, /Streamdown/);
-  assert.match(field, /Voorbeeld/);
+  assert.match(field, /RichTextField/);
   assert.match(task,/dossierEditorGate/);
-  const editor=await source("src/components/dossier-editor.tsx");assert.match(editor,/<textarea/);
+  const editor=await source("src/components/dossier-editor.tsx");assert.match(editor,/RichTextField/);
   for (const file of [content, event, meeting, operational]) {
     assert.match(file, /MarkdownField/);
   }

@@ -10,6 +10,14 @@
 
 Deze werkwijze geldt voor taken, projecten, events, campagnes, sponsors, communitycontacten, social posts, content, vergaderingen, inbox, kennisartikelen, budgetten, kosten, inkomsten, producten, lanceringen, materialen, nieuwsbrieven, VZW-leden, mandaten, deadlines en administratieve documenten.
 
+## Tekst opmaken
+
+Grote beschrijvingen, notities en andere inhoudelijke tekstvelden hebben een visuele editor. Selecteer tekst en gebruik de werkbalk voor titels, vet, cursief, opsommingen, genummerde lijsten, citaten en links. Ongedaan maken en opnieuw uitvoeren werken binnen het veld. Dezelfde opmaak verschijnt in de leesweergave, in het lichte en donkere thema.
+
+De tekst blijft als Markdown opgeslagen. Bestaande Markdown blijft bruikbaar; bestaande gewone tekst krijgt pas opmaak wanneer je die zelf aanbrengt. Alleen openen verandert niets aan de opgeslagen tekst. Opmaak maakt deel uit van **Alles opslaan**, ook bij onderdelen binnen tabbladen. Technische invoer, korte namen en selecties blijven gewone velden.
+
+Er is geen externe editordienst of API nodig en er zijn geen extra credits voor het gebruik van de editor.
+
 ## Toevoegen, verwijderen en fouten
 
 Toevoegen en verwijderen binnen de editor verandert eerst alleen de invoer. **Verwijderen bij opslaan** kan worden teruggedraaid vóór de gezamenlijke opslag. Annuleren verwerpt de invoer. Een opslagfout bewaart de invoer in de editor en draait de volledige databasewijziging terug.

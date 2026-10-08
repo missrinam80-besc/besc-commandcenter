@@ -20,7 +20,7 @@ function load(path:string,dependencies:Record<string,unknown>){
 }
 test("Campagne-opleveringen en publicaties renderen afzonderlijk met behoud van toewijzing en links",()=>{
   const dependencies:Record<string,unknown>={
-    "@/components/partner-contacts-panel":{},"@/lib/format":format,
+    "./markdown-field":{MarkdownContent:({children}:React.PropsWithChildren)=>React.createElement("div",null,children),MarkdownField:()=>null},"@/components/partner-contacts-panel":{},"@/lib/format":format,
     "@/app/app/operations/relation-actions":new Proxy({},{get:()=>()=>null}),
     "next/link":{default:({children,...props}:React.PropsWithChildren<Record<string,unknown>>)=>React.createElement("a",props,children)},
   };
@@ -109,3 +109,4 @@ for(const selectedModule of ["projecten","campagnes"]){
     assert.match(edit,/GEZAMENLIJKE EDITOR/);assert.doesNotMatch(edit,/FINANCIEEL OVERZICHT|CONNECTIONS/);
   });
 }
+

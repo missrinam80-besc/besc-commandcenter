@@ -1,3 +1,4 @@
+import {MarkdownContent} from "@/components/markdown-field";
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
@@ -79,7 +80,7 @@ export default async function Page({
                 <div><dt>Betaaldatum</dt><dd>{expense.paid_at || "—"}</dd></div>
                 <div><dt>Goedgekeurd</dt><dd>{expense.approved_at ? String(expense.approved_at).slice(0, 16).replace("T", " ") : "—"}</dd></div>
                 <div><dt>Gerelateerd aan</dt><dd>{[expense.projects?.title, expense.events?.title, expense.campaigns?.title, expense.partners?.name, expense.merch_launches?.title].filter(Boolean).join(" · ") || "—"}</dd></div>
-                <div><dt>Notities</dt><dd>{expense.notes || "—"}</dd></div>
+                <div><dt>Notities</dt><dd><MarkdownContent>{expense.notes || "—"}</MarkdownContent></dd></div>
               </dl>
             </section>
             <ApprovalPanel entityType="expense" entityId={id} sourceHref={`/app/financien/kosten/${id}`} title="Kost goedkeuren"/>
