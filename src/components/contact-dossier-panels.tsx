@@ -30,7 +30,7 @@ export async function ContactDossierPanels({module,tab,record,org,supabase,canMa
   const editHref=`?tab=${tab}&bewerken=1`;
   const links=<RecordConnectionsPanel entityType={entityType} entityId={id} {...connections} options={options} canManage={canManage} queryContext={`tab=${tab}`} view={tab==="dossiers"?"relationships":"documents"} modal={query.koppeling} selectedLinkId={query.link}/>;
   if(tab==="documenten") return <>
-    <Card title="Documenten en bronnen">{record.drive_url?<a href={String(record.drive_url)} target="_blank" rel="noreferrer">Drive-map openen</a>:<p className="empty-inline">Nog geen Drive-map gekoppeld.</p>}{module==="sponsors"&&record.contract_url?<p><a href={String(record.contract_url)} target="_blank" rel="noreferrer">Contract openen</a></p>:null}</Card>
+    <Card title="Documenten en bronnen">{canManage&&<p><Link className="row-action" href={editHref}>Mapkoppeling beheren / ontkoppelen</Link></p>}{record.drive_url?<a href={String(record.drive_url)} target="_blank" rel="noreferrer">Drive-map openen</a>:<p className="empty-inline">Nog geen Drive-map gekoppeld.</p>}{module==="sponsors"&&record.contract_url?<p><a href={String(record.contract_url)} target="_blank" rel="noreferrer">Contract openen</a></p>:null}</Card>
     {links}{module==="sponsors"?<><Link href={`/app/rapportage/sponsors/${id}`}>Sponsorrapportage openen</Link><SponsorDocumentTools partnerId={id}/></>:roles.includes("streamteam")?<Link href={`/app/rapportage/creators/${id}`}>Streamerrapportage openen</Link>:null}
   </>;
   if(module==="sponsors") {

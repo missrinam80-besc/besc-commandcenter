@@ -22,6 +22,40 @@ type Change={id:string;new:boolean;values:Record<string,unknown>;base:Record<str
 type Bundle={kind:string;root:Change;parts:Change[]};
 const library=load("src/lib/dossier-editor-draft.ts") as unknown as {createDossierDraft:(kind:string,id:string,record:Record<string,unknown>|null,parts?:Record<string,Record<string,unknown>[]>)=>Draft;buildEditorBundle:(draft:Draft)=>Bundle;validateEditorBundle:(bundle:Bundle)=>string[];editorHasChanges:(draft:Draft)=>boolean};
 const id="11111111-1111-4111-8111-111111111111",child="22222222-2222-4222-8222-222222222222";
+test("Drive ontkoppelen bundelt beide verwijzingen en bewaart documenten en andere gegevens",()=>{
+ const unlink=load("src/lib/dossier-drive-unlink.ts") as unknown as {hasDossierDriveFolder:(d:Draft)=>boolean;unlinkDossierDriveFolder:(d:Draft)=>Draft};
+ for(const kind of ["event","project","campaign","partner","community","meeting"]){
+  const folder={id:child,resource_type:"folder",name:"TESTFIXTURE map",google_id:"fixture-folder",web_url:"https://drive.google.com/drive/folders/fixture-folder"};
+  const document={id:"33333333-3333-4333-8333-333333333333",resource_type:"document",name:"TESTFIXTURE document"};
+  const root=kind==="meeting"?{id,title:"TESTFIXTURE",minutes_url:"https://example.com/minutes"}:{id,title:"TESTFIXTURE",name:"TESTFIXTURE",display_name:"TESTFIXTURE",drive_url:folder.web_url};
+  const draft=library.createDossierDraft(kind,id,root,{google_resource_links:[folder,document]});
+  const changed=unlink.unlinkDossierDriveFolder(draft),bundle=library.buildEditorBundle(changed);
+  assert.equal(unlink.hasDossierDriveFolder(changed),false,kind);
+  assert.equal(unlink.hasDossierDriveFolder(draft),true,`${kind} original intact`);
+  assert.deepEqual(JSON.parse(JSON.stringify(bundle.root.values)),kind==="meeting"?{}:{drive_url:null},kind);
+  assert.equal(bundle.parts.length,1);assert.equal(bundle.parts[0].id,child);assert.equal(bundle.parts[0].delete,true);
+  assert.deepEqual(bundle.parts[0].base,folder);assert.equal(library.validateEditorBundle(bundle).length,0,kind);
+  assert.equal(changed.parts.google_resource_links[1].deleted,false);
+  assert.equal(changed.values.minutes_url,root.minutes_url);
+ }
+});
+test("Ook fiches met uitsluitend een Drive-link kunnen ontkoppelen zonder nieuwe registraties",()=>{
+ const unlink=load("src/lib/dossier-drive-unlink.ts") as unknown as {unlinkDossierDriveFolder:(d:Draft)=>Draft};
+ for(const kind of ["content","knowledge","launch","administration"]){
+  const draft=library.createDossierDraft(kind,id,{id,title:"TESTFIXTURE",document_type:"other",drive_url:"https://example.com/folder"});
+  const bundle=library.buildEditorBundle(unlink.unlinkDossierDriveFolder(draft));
+  assert.deepEqual(JSON.parse(JSON.stringify(bundle.root.values)),{drive_url:null},kind);assert.equal(bundle.parts.length,0);assert.equal(library.validateEditorBundle(bundle).length,0,kind);
+ }
+});
+test("Mapknop is bereikbaar in documenten en geblokkeerd zonder mapregistratierechten",()=>{
+ const Component=load("src/components/dossier-editor.tsx").DossierEditor as React.ComponentType<Record<string,unknown>>;
+ const props={kind:"event",id,mode:"edit",cancelHref:"/app",record:{id,title:"TESTFIXTURE",drive_url:"https://example.com/folder"},parts:{google_resource_links:[{id:child,resource_type:"folder",name:"TESTFIXTURE"}]},initialTab:"documenten"};
+ const denied=renderToStaticMarkup(React.createElement(Component,{...props,permissions:{google_resource_links:false}}));
+ const allowed=renderToStaticMarkup(React.createElement(Component,{...props,permissions:{google_resource_links:true}}));
+ assert.match(denied,/<button type="button" disabled="">Map ontkoppelen bij opslaan<\/button>/);
+ assert.match(allowed,/<button type="button">Map ontkoppelen bij opslaan<\/button>/);
+ assert.match(allowed,/afzonderlijk gekoppelde documenten blijven behouden/);
+});
 test("Eventmultiselect bewaart oude sponsor, inkomende koppelingen en overige relaties",()=>{
  const partners=load("src/lib/event-editor-partners.ts") as unknown as {eventPartnerIds:(draft:Draft)=>string[];selectEventPartners:(draft:Draft,ids:string[],newId:()=>string)=>Draft};
  const second="33333333-3333-4333-8333-333333333333",third="44444444-4444-4444-8444-444444444444";

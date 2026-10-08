@@ -215,6 +215,7 @@ export default async function ProjectPage({ params, searchParams }: {
         {activeTab === "documenten" && <>
         <section className="form-card drive-card">
           <div className="form-heading"><div><span className="eyebrow">GOOGLE WORKSPACE</span><h2>Projectmap</h2></div>{driveUrl ? <a className="row-action" href={driveUrl} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Open map</a> : null}</div>
+          {canManage&&driveUrl&&<p><Link className="row-action" href="?bewerken=1&tab=documenten">Mapkoppeling beheren / ontkoppelen</Link></p>}
           {drive ? (
             <div className="drive-connected-row"><div><strong>Drive-map gekoppeld</strong><p>De projectbestanden blijven in Google Drive onder de modulemap Projecten.</p></div><form action={organizeProjectFolder}><input type="hidden" name="project_id" value={id}/><button><FolderInput size={15}/>Mapstructuur controleren</button></form></div>
           ) : (
