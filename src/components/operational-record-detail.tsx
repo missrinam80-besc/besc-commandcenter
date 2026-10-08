@@ -5,29 +5,19 @@ import { contactTabs, resolveContactTab } from "@/lib/contact-dossier-tabs";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { notFound } from "next/navigation";
-import { updateOperationalRecord } from "@/app/app/operations/actions";
 import { operationalModules, type OperationalModule } from "@/app/app/operations/config";
 import { AppShell } from "@/components/app-shell";
-import { FormModal } from "@/components/form-modal";
 import { MarkdownContent } from "@/components/markdown-field";
-import { OperationalRecordForm } from "@/components/operational-record-form";
-import { ContentForm } from "@/components/content-form";
 import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { RecordConnectionsPanel } from "@/components/record-connections-panel";
 import { RecordMetadata, type MetadataItem } from "@/components/record-metadata";
-import { TaskCreateModal } from "@/components/task-create-modal";
 import { FinancialSummaryPanel } from "@/components/financial-summary-panel";
-import {
-  CampaignSections,
-  SocialRelations,
-} from "@/components/operational-sections";
+import { CampaignSections, SocialRelations, } from "@/components/operational-sections";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
 import { hasPermission } from "@/lib/permissions";
 import { communityRoleLabels } from "@/lib/community-people";
-import { createContent } from "@/app/app/content/actions";
-import { createOperationalRecord } from "@/app/app/operations/actions";
 
 type Row = {
   id: string;
@@ -65,35 +55,13 @@ export async function OperationalRecordDetail({
   const org = membership.organization_id;
   const requestedTab = module === "sponsors" || module === "community" ? resolveContactTab(module,query) : "";
 
-  const [
-    recordResult,
-    projectsResult,
-    partnersResult,
-    contentResult,
-    campaignOptionsResult,
-    eventsResult,
-    contactsResult,
-    interactionsResult,
-    deliverablesResult,
-    onboardingResult,
-    assignmentsResult,
-    socialResult,
-    partnerCampaignsResult,
-    variantsResult,
-    personRolesResult,
-    accountOptionsResult,
-    budgetResult,
-    expenseResult,
-    incomeResult,
-    communityOptionsResult,
-  ] = await Promise.all([
+  const [recordResult, projectsResult, partnersResult, contentResult, eventsResult, contactsResult, interactionsResult, deliverablesResult, onboardingResult, assignmentsResult, socialResult, partnerCampaignsResult, variantsResult, personRolesResult, accountOptionsResult, budgetResult, expenseResult, incomeResult, communityOptionsResult] = await Promise.all([
     supabase.from(config.table).select("*").eq("organization_id", org).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", org).is("deleted_at", null).order("title"),
     supabase.from("partners").select("id,name").eq("organization_id", org).is("deleted_at", null).order("name"),
     supabase.from("content_items").select("id,title,status,campaign_id").eq("organization_id", org).is("deleted_at", null).order("title"),
-    supabase.from("campaigns").select("id,title").eq("organization_id", org).is("deleted_at", null).order("title"),
     supabase.from("events").select("id,title").eq("organization_id", org).is("deleted_at", null).order("title"),
-    module === "sponsors" && ["algemeen","contacten"].includes(requestedTab) ? supabase.from("partner_contacts").select("*").eq("organization_id", org).eq("partner_id", id).order("is_primary", { ascending: false }) : Promise.resolve({ data: [] }),
+    module === "sponsors" && ["algemeen", "contacten"].includes(requestedTab) ? supabase.from("partner_contacts").select("*").eq("organization_id", org).eq("partner_id", id).order("is_primary", { ascending: false }) : Promise.resolve({ data: [] }),
     module === "sponsors" && requestedTab === "opvolging" ? supabase.from("partner_interactions").select("*").eq("organization_id", org).eq("partner_id", id).order("occurred_at", { ascending: false }) : Promise.resolve({ data: [] }),
     module === "campagnes" ? supabase.from("campaign_deliverables").select("*").eq("organization_id", org).eq("campaign_id", id).order("due_date") : Promise.resolve({ data: [] }),
     module === "community" && requestedTab === "intake" ? supabase.from("community_onboarding_items").select("*").eq("organization_id", org).eq("person_id", id).order("created_at") : Promise.resolve({ data: [] }),
@@ -106,7 +74,7 @@ export async function OperationalRecordDetail({
     module === "campagnes" ? supabase.from("budget_envelopes").select("id,name,planned_amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("created_at") : Promise.resolve({ data: [] }),
     module === "campagnes" ? supabase.from("expenses").select("id,title,amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("expense_date", { ascending: false }) : Promise.resolve({ data: [] }),
     module === "campagnes" ? supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("expected_date", { ascending: false }) : Promise.resolve({ data: [] }),
-    (module === "campagnes" || (module === "sponsors" && ["algemeen","contacten"].includes(requestedTab))) ? supabase.from("community_people").select("id,display_name,handle,email,account_user_id").eq("organization_id", org).is("deleted_at", null).order("display_name") : Promise.resolve({ data: [] }),
+    (module === "campagnes" || (module === "sponsors" && ["algemeen", "contacten"].includes(requestedTab))) ? supabase.from("community_people").select("id,display_name,handle,email,account_user_id").eq("organization_id", org).is("deleted_at", null).order("display_name") : Promise.resolve({ data: [] })
   ]);
 
   if (!recordResult.data) {
@@ -195,11 +163,7 @@ export async function OperationalRecordDetail({
       <DossierTabContent tab={activeTab}><div className={`project-detail-body ${isTabbedDossier ? "contact-dossier" : ""}`}>
         {query.fout && <div className="error-note">De wijziging kon niet worden opgeslagen ({query.fout}).</div>}
         {query.succes && <div className="success">De wijziging is opgeslagen.</div>}
-        {query.bewerken ? (
-          <FormModal title={`${title} bewerken`} closeHref={`?${isTabbedDossier ? `tab=${activeTab}` : ""}`}>
-            <OperationalRecordForm action={updateOperationalRecord} module={module} record={record} projects={projectsResult.data ?? []} partners={partnersResult.data ?? []} content={contentResult.data ?? []} campaigns={campaignOptionsResult.data ?? []} events={eventsResult.data ?? []} accountOptions={accountOptions} accountsUnavailable={Boolean(accountOptionsResult.error)} personRoles={personRoles}/>
-          </FormModal>
-        ) : (
+        {(
           isContactDossier ? <>
             <ContactDossierPanels module={module as "sponsors"|"community"} tab={activeTab} record={record} org={org} supabase={supabase} canManage={hasPermission(membership,"manageOrganization")} isAdmin={hasPermission(membership,"manageUsers")} query={query} connections={connections} options={relationOptions} accounts={accountOptions} accountError={Boolean(accountOptionsResult.error || ("error" in communityOptionsResult && communityOptionsResult.error) || ("error" in contactsResult && contactsResult.error))} loadError={panelError} roles={personRoles} contacts={(contactsResult.data??[]) as RelatedRow[]} interactions={(interactionsResult.data??[]) as RelatedRow[]} onboarding={(onboardingResult.data??[]) as RelatedRow[]} assignments={(assignmentsResult.data??[]) as RelatedRow[]} events={eventsResult.data??[]} projects={projectsResult.data??[]} campaigns={(partnerCampaignsResult.data??[]) as RelatedRow[]} people={communityOptionsResult.data??[]}/>
             <details className="contact-dossier-actions"><summary>Registratiegegevens</summary><RecordMetadata items={baseMetadata.filter(item=>["Aangemaakt","Laatst aangepast"].includes(item.label))}/></details>
@@ -230,9 +194,7 @@ export async function OperationalRecordDetail({
             />
           </>
         )}
-        {query.nieuw === "taak" && connectionEntity ? <TaskCreateModal closeHref={isTabbedDossier?"?tab=dossiers":"?"} returnTo={`/app/${module}/${id}`} projects={projectsResult.data ?? []} people={accountOptions} defaultProjectId={String(record.project_id ?? "") || null} contextEntityType={connectionEntity} contextEntityId={id}/> : null}
-        {module === "campagnes" && query.nieuw === "content" ? <FormModal closeHref="?tab=publicaties" title="Content voor deze campagne"><ContentForm action={createContent} content={{ campaign_id: id, project_id: String(record.project_id ?? "") || null, partner_id: String(record.partner_id ?? "") || null }} projects={projectsResult.data ?? []} campaigns={[{ id, title }]} partners={partnersResult.data ?? []}/></FormModal> : null}
-        {module === "campagnes" && query.nieuw === "social" ? <FormModal closeHref="?tab=publicaties" title="Social post voor deze campagne"><OperationalRecordForm action={createOperationalRecord} module="social" record={{ campaign_id: id, event_id: record.event_id, partner_id: record.partner_id }} content={contentResult.data ?? []} campaigns={[{ id, title }]} events={eventsResult.data ?? []} partners={partnersResult.data ?? []}/></FormModal> : null}
+
       </div></DossierTabContent>
     </AppShell>
   );

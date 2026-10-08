@@ -2,9 +2,7 @@ import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { Archive, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { AssetForm } from "@/components/asset-form";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
-import { FormModal } from "@/components/form-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { isManager } from "@/lib/permissions";
@@ -37,24 +35,11 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
 
   const { supabase, membership } = await requireActiveMembership();
   const org = membership.organization_id;
-  const [assetsResult, peopleResult, partnersResult, projectsResult, eventsResult, campaignsResult] = await Promise.all([
-    supabase.from("assets").select("*,community_people(display_name),partners(name),projects(title),events(title),campaigns(title)").eq("organization_id", org).is("deleted_at", null).order("name"),
-    supabase.from("community_people").select("id,display_name").eq("organization_id", org).is("deleted_at", null).order("display_name"),
-    supabase.from("partners").select("id,name").eq("organization_id", org).is("deleted_at", null).order("name"),
-    supabase.from("projects").select("id,title").eq("organization_id", org).is("deleted_at", null).order("title"),
-    supabase.from("events").select("id,title").eq("organization_id", org).is("deleted_at", null).order("title"),
-    supabase.from("campaigns").select("id,title").eq("organization_id", org).is("deleted_at", null).order("title"),
+  const [assetsResult] = await Promise.all([
+    supabase.from("assets").select("*,community_people(display_name),partners(name),projects(title),events(title),campaigns(title)").eq("organization_id", org).is("deleted_at", null).order("name")
   ]);
   const rows = assetsResult.data ?? [];
-  const editing = q.bewerken ? rows.find((item) => item.id === q.bewerken) : null;
   const canManage = isManager(membership);
-  const options = {
-    people: peopleResult.data ?? [],
-    partners: partnersResult.data ?? [],
-    projects: projectsResult.data ?? [],
-    events: eventsResult.data ?? [],
-    campaigns: campaignsResult.data ?? [],
-  };
 
   return (
     <AppShell active="Materialen & resources">
@@ -76,26 +61,6 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
         </p>
         {q.succes && <div className="success">De materialen- en resourceslijst is bijgewerkt.</div>}
         {q.fout && <div className="error-note">De actie is mislukt ({q.fout}).</div>}
-        {q.nieuw && canManage ? <FormModal title="Nieuw materiaal of resource"><AssetForm {...options}/></FormModal> : null}
-        {editing && canManage ? (
-          <FormModal title="Materiaal of resource bewerken">
-            <AssetForm record={editing} {...options}/>
-            <div className="modal-danger-zone">
-              <form action={removeAsset}>
-                <input type="hidden" name="id" value={editing.id}/>
-                <input type="hidden" name="mode" value="archive"/>
-                <button><Archive size={14}/>Archiveren</button>
-              </form>
-              <form action={removeAsset}>
-                <input type="hidden" name="id" value={editing.id}/>
-                <input type="hidden" name="mode" value="delete"/>
-                <ConfirmSubmitButton className="danger-button" message="Dit item verbergen uit de operationele inventaris?">
-                  <Trash2 size={14}/>Verwijderen
-                </ConfirmSubmitButton>
-              </form>
-            </div>
-          </FormModal>
-        ) : null}
 
         <section className="project-task-section">
           <div className="section-heading">
@@ -129,6 +94,16 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
                   <div>
                     {item.document_url && <a className="row-action" href={item.document_url} target="_blank" rel="noreferrer"><ExternalLink size={13}/></a>}
                     {canManage && <Link className="row-action" href={`?bewerken=${item.id}`}><Pencil size={13}/></Link>}
+                    {canManage && <details className="contact-dossier-actions"><summary>Acties</summary>
+                      <form action={removeAsset}>
+                        <input type="hidden" name="id" value={item.id}/><input type="hidden" name="mode" value="archive"/>
+                        <button><Archive size={14}/>Archiveren</button>
+                      </form>
+                      <form action={removeAsset}>
+                        <input type="hidden" name="id" value={item.id}/><input type="hidden" name="mode" value="delete"/>
+                        <ConfirmSubmitButton className="danger-button" message="Dit item verbergen uit de operationele inventaris?"><Trash2 size={14}/>Verwijderen</ConfirmSubmitButton>
+                      </form>
+                    </details>}
                   </div>
                 </article>
               );

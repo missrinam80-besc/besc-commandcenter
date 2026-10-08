@@ -1,8 +1,6 @@
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
-import { FormModal } from "@/components/form-modal";
-import { LaunchForm, ProductForm } from "@/components/shop-forms";
 import { requireActiveMembership } from "@/lib/auth-context";
 
 export default async function ShopPage({ searchParams }: { searchParams: Promise<Record<string,string|undefined>> }) {
@@ -10,16 +8,13 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   const unifiedEditor = await dossierEditorGate({group:"shop",query:q});
   if (unifiedEditor) return unifiedEditor;
  const { supabase, membership } = await requireActiveMembership(); const org = membership.organization_id;
-  const [productsResult, launchesResult, partnersResult, projectsResult, campaignsResult] = await Promise.all([
-    supabase.from("shop_products").select("*").eq("organization_id",org).is("deleted_at",null).order("created_at",{ascending:false}),
-    supabase.from("merch_launches").select("*").eq("organization_id",org).is("deleted_at",null).order("launch_date",{ascending:false}),
-    supabase.from("partners").select("id,name").eq("organization_id",org).is("deleted_at",null).order("name"),
-    supabase.from("projects").select("id,title").eq("organization_id",org).is("deleted_at",null).order("title"),
-    supabase.from("campaigns").select("id,title").eq("organization_id",org).is("deleted_at",null).order("title"),
+  const [productsResult, launchesResult] = await Promise.all([
+    supabase.from("shop_products").select("*").eq("organization_id", org).is("deleted_at", null).order("created_at", { ascending: false }),
+    supabase.from("merch_launches").select("*").eq("organization_id", org).is("deleted_at", null).order("launch_date", { ascending: false })
   ]);
-  const products=productsResult.data??[], launches=launchesResult.data??[], options={partners:partnersResult.data??[],projects:projectsResult.data??[],campaigns:campaignsResult.data??[]};
+  const products=productsResult.data??[], launches=launchesResult.data??[];
   return <AppShell active="Shop & merchandise"><header className="topbar module-top"><div><p>COMMERCIEEL & CREATIEF</p><h1>Shop & merchandise</h1></div><div className="project-actions"><Link href="?nieuw=product">Nieuw product</Link><Link className="primary" href="?nieuw=lancering">Nieuwe lancering</Link></div></header><div className="module-body"><p className="lead">Beheer digitale producten, merchandisecollecties en lanceringen op één plek. Materiaal en operationele resources staan onder Organisatie.</p>{q.fout&&<div className="error-note">Opslaan is mislukt ({q.fout}).</div>}<section className="history-stats"><article><span>Producten</span><strong>{products.length}</strong></article><article><span>Gepubliceerd</span><strong>{products.filter(item=>item.status==="published").length}</strong></article><article><span>Lanceringen</span><strong>{launches.length}</strong></article></section>
-  {q.nieuw&&<FormModal title={q.nieuw==="lancering"?"Nieuwe merchlancering":"Nieuw product"}>{q.nieuw==="lancering"?<LaunchForm options={options}/>:<ProductForm options={options}/>}</FormModal>}
+
   <section className="project-task-section"><div className="section-heading"><div><span className="eyebrow">CATALOGUS</span><h2>Producten</h2></div><span>{products.length} records</span></div><div className="operations-table"><div className="operations-head"><span>Product</span><span>Familie / type</span><span>Prijs / platformen</span><span>Status</span><span/></div>{products.map(item=><article key={item.id}><div><strong>{item.name}</strong><p>{item.description||"Geen beschrijving"}</p></div><span>{item.product_family==="merchandise"?"Merchandise":"Stream Graphics"} · {item.product_type}</span><span>{item.price!=null?`€ ${Number(item.price).toFixed(2)}`:"Geen prijs"} · {(item.platforms??[]).join(", ")||"—"}</span><span className="badge purple">{item.status}</span><Link className="row-action" href={`/app/shop/producten/${item.id}`}>Openen</Link></article>)}{!products.length&&<div className="empty">Nog geen producten.</div>}</div></section>
   <section className="project-task-section shop-section"><div className="section-heading"><div><span className="eyebrow">PLANNING</span><h2>Merchlanceringen</h2></div><span>{launches.length} records</span></div><div className="operations-table"><div className="operations-head"><span>Lancering</span><span>Collectie</span><span>Datum / timing</span><span>Status</span><span/></div>{launches.map(item=><article key={item.id}><div><strong>{item.title}</strong><p>{item.description||"Geen beschrijving"}</p></div><span>{item.collection_name||"—"}</span><span>{item.launch_date||item.timing||"Nog niet gepland"}</span><span className="badge purple">{item.status}</span><Link className="row-action" href={`/app/shop/lanceringen/${item.id}`}>Openen</Link></article>)}{!launches.length&&<div className="empty">Nog geen lanceringen.</div>}</div></section></div></AppShell>;
 }

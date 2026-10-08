@@ -4,6 +4,10 @@ node_modules
 
 # Next.js output
 .next
+.next-*
+**/__pycache__
+*.py[cod]
+supabase-backup-*.sql
 out
 build
 

@@ -13,19 +13,14 @@ import { AppShell } from "@/components/app-shell";
 import { EmailCommunicationPanel } from "@/components/email-communication-panel";
 import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { RecordConnectionsPanel } from "@/components/record-connections-panel";
-import { EventForm, eventStatuses, eventTypes } from "@/components/event-form";
-import { FormModal } from "@/components/form-modal";
+import { eventStatuses, eventTypes } from "@/components/event-form";
 import { MarkdownContent } from "@/components/markdown-field";
 import { RecordMetadata } from "@/components/record-metadata";
-import { TaskCreateModal } from "@/components/task-create-modal";
-import { OperationalRecordForm } from "@/components/operational-record-form";
 import { PeopleAssignmentsPanel } from "@/components/people-assignments-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatDateTime, formatEventEndpoint } from "@/lib/format";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
 import { previewEventDriveStructure } from "@/lib/google-workspace";
-import { saveEvent } from "../actions";
-import { createOperationalRecord } from "../../operations/actions";
 import { createEventFolder, linkEventFolder, organizeEventFolder } from "./actions";
 import { generateEventDossier } from "@/app/app/google-document-actions";
 import { syncEventToGoogleCalendar } from "../calendar-actions";
@@ -81,21 +76,18 @@ export default async function Event({
   if (unifiedEditor) return unifiedEditor;
 
   const activeTab = resolveEventDossierTab(q);
-  const closeHref = `?tab=${activeTab}`;
   const { supabase, membership } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageEvents");
   const canManageCampaigns = hasPermission(membership, "manageOrganization");
-  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }, { data: memberRows }, { data: partners }, { data: assignmentRows }, { data: centralPeopleRows, error: centralPeopleError }] = await Promise.all([
+  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }, { data: assignmentRows }, { data: centralPeopleRows, error: centralPeopleError }] = await Promise.all([
     supabase.from("events").select("*").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
     supabase.from("migration_source_links").select("source_url").eq("target_table", "events").eq("target_id", id).limit(1).maybeSingle(),
     supabase.from("google_resource_links").select("google_id,name,web_url,drive_id").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "folder").maybeSingle(),
     supabase.from("google_resource_links").select("name,web_url").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "document").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("google_resource_links").select("google_id,name,web_url,updated_at").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "calendar_event").maybeSingle(),
-    supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", membership.organization_id).eq("status", "active"),
-    supabase.from("partners").select("id,name").eq("organization_id", membership.organization_id).is("deleted_at", null).order("name"),
     supabase.from("community_assignments").select("id,person_id,role_name,status,starts_at,notes,community_people(display_name)").eq("organization_id", membership.organization_id).eq("event_id", id).order("starts_at", { ascending: true, nullsFirst: false }),
-    supabase.from("community_people").select("id,display_name,handle,discord_handle,community_person_roles(role)").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name"),
+    supabase.from("community_people").select("id,display_name,handle,discord_handle,community_person_roles(role)").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name")
   ]);
   if (!e) notFound();
   const [connections, relationOptions] = await Promise.all([
@@ -111,7 +103,6 @@ export default async function Event({
   const project = (projects ?? []).find((item) => item.id === e.project_id);
   const driveUrl = drive?.web_url || e.drive_url;
   const calendar = calendarRow as CalendarLink | null;
-  const people = (memberRows ?? []).map((member) => ({ id: member.user_id, label: (member.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account" }));
   const calendarIsCurrent = calendar
     ? new Date(calendar.updated_at).getTime() >= new Date(e.updated_at).getTime()
     : false;
@@ -137,13 +128,7 @@ export default async function Event({
         {q.succes && <div className="success">{q.succes === "inschrijving-opgeslagen" ? "Inschrijvingen bijgewerkt." : q.succes === "financieel-opgeslagen" ? "Financiële registratie opgeslagen." : q.succes === "giveaway-opgeslagen" ? "Giveaway-item opgeslagen." : q.succes === "giveaway-verwijderd" ? "Giveaway-item verwijderd." : q.succes === "schema-opgeslagen" ? "Schemaonderdeel opgeslagen." : q.succes === "schema-verwijderd" ? "Schemaonderdeel verwijderd." : q.succes === "materiaal-opgeslagen" ? "Materiaal op de eventlijst opgeslagen." : q.succes === "materiaal-verwijderd" ? "Materiaal van de eventlijst verwijderd." : q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
         {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
         {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
-        {q.bewerken && canManage && (
-          <FormModal title="Event bewerken" closeHref={closeHref}>
-            <EventForm action={saveEvent} event={{...e, calendar_removed: calendar?.name.startsWith("[VERWIJDERD]")}} projects={projects ?? []}/>
-          </FormModal>
-        )}
-        {q.nieuw === "taak" ? <TaskCreateModal closeHref="?tab=planning" returnTo={`/app/events/${id}`} projects={projects ?? []} people={people} defaultProjectId={e.project_id} contextEntityType="event" contextEntityId={id}/> : null}
-        {q.nieuw === "campagne" && canManageCampaigns ? <FormModal title="Nieuwe campagne voor dit event" closeHref={closeHref}><OperationalRecordForm action={createOperationalRecord} module="campagnes" record={{ event_id: id, project_id: e.project_id }} projects={projects ?? []} partners={partners ?? []} events={[{ id, title: e.title }]} returnTo={`/app/events/${id}`}/></FormModal> : null}
+
         {activeTab === "overzicht" && <>
         <section className="form-card record-overview">
           <div className="form-heading"><div><span className="eyebrow">OVERZICHT</span><h2>Eventgegevens</h2></div></div>

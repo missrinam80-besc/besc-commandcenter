@@ -1,15 +1,12 @@
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
-import { ProjectOutcomeFields } from "@/components/project-outcome-fields";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ModulePage } from "@/components/module-page";
-import { EntityForm } from "@/components/entity-form";
 import { SavedViews } from "@/components/saved-views";
 import { demoDashboard } from "@/lib/demo-data";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { hasPermission } from "@/lib/permissions";
-import { createProject } from "../actions";
 
 type ProjectRow = {
   id: string;
@@ -36,7 +33,7 @@ const successMessages = new Map<string, string>([
   ["gearchiveerd", "Het project werd gearchiveerd."],
   ["hersteld", "Het project werd hersteld."],
   ["verwijderd", "Het project werd verwijderd uit de werkweergaven."],
-]);
+  ]);
 
 export default async function ProjectsPage({
   searchParams,
@@ -103,34 +100,7 @@ export default async function ProjectsPage({
       >
         {params.fout && <div className="error-note">{params.fout === "dossier-niet-beschikbaar" ? "Het dossier is niet meer beschikbaar. De link werd niet gewijzigd." : params.fout === "dossier-controleren" ? "Het dossier kon niet worden gecontroleerd. De link werd niet gewijzigd. Probeer opnieuw." : "Het project kon niet worden opgeslagen."}</div>}
         {params.succes && <div className="success">{successMessages.get(params.succes) ?? "Wijziging opgeslagen."}</div>}
-        {params.nieuw && canManage && (
-          <EntityForm title="Nieuw project" action={createProject}>
-            <ProjectOutcomeFields evaluation={false}/>
-            <div className="form-row">
-              <label>
-                Startdatum
-                <input type="date" name="start_date" />
-              </label>
-              <label>
-                Deadline
-                <input type="date" name="due_date" />
-              </label>
-            </div>
-            <label>
-              Google Drive-map
-              <input type="url" name="drive_url" placeholder="https://drive.google.com/..." />
-            </label>
-            <label>
-              Prioriteit
-              <select name="priority" defaultValue="normal">
-                <option value="low">Laag</option>
-                <option value="normal">Normaal</option>
-                <option value="high">Hoog</option>
-                <option value="urgent">Urgent</option>
-              </select>
-            </label>
-          </EntityForm>
-        )}
+
         <SavedViews
           module="projects"
           path="/app/projecten"

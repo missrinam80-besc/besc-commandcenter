@@ -15,7 +15,7 @@ import {toPersonPickerOptions} from "../src/lib/person-picker.ts";
 const id="11111111-1111-4111-8111-111111111111";
 function load(path:string,dependencies:Record<string,unknown>){
   const require=createRequire(import.meta.url),compiled={exports:{} as Record<string,unknown>};
-  runInNewContext(ts.transpileModule(readFileSync(path,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,{module:compiled,exports:compiled.exports,FormData,require:(name:string)=>name==="@/components/dossier-editor-gate"?{dossierEditorGate:async()=>null}:name in dependencies?dependencies[name]:require(name)});
+  runInNewContext(ts.transpileModule(readFileSync(path,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,{module:compiled,exports:compiled.exports,FormData,require:(name:string)=>name in dependencies?dependencies[name]:name==="@/components/dossier-editor-gate"?{dossierEditorGate:async()=>null}:require(name)});
   return compiled.exports;
 }
 test("Campagne-opleveringen en publicaties renderen afzonderlijk met behoud van toewijzing en links",()=>{
@@ -55,7 +55,7 @@ test("Project- en campagnetabs normaliseren oude actielinks en weigeren vreemde 
 });
 
 for(const selectedModule of ["projecten","campagnes"]){
-  test(`${selectedModule}: render alle tabbladen met afgescheiden inhoud en behoud volledige bewerkformulieren`,async()=>{
+  test(`${selectedModule}: render alle tabbladen met afgescheiden inhoud en routes naar de gezamenlijke editor`,async()=>{
     const source=selectedModule==="projecten"?"src/app/app/projecten/[id]/page.tsx":"src/components/operational-record-detail.tsx";
     const pass=({children}:React.PropsWithChildren)=>React.createElement("section",null,children);
     const record={id,title:"TESTFIXTURE dossier",status:"planned",priority:"normal",description:"PROJECTBESCHRIJVING",goal:"PROJECTDOEL",notes:"CAMPAGNEBRIEFING",results_summary:"CAMPAGNEEVALUATIE",channels:["Twitch"],reporting_status:"todo"};
@@ -84,6 +84,7 @@ for(const selectedModule of ["projecten","campagnes"]){
     dependencies["@/components/financial-summary-panel"]={FinancialSummaryPanel:()=>React.createElement("p",null,"FINANCIEEL OVERZICHT")};
     dependencies["@/components/operational-sections"]={CampaignSections:({section}:{section:string})=>React.createElement("p",null,`CAMPAIGN ${section}`)};
     dependencies["@/components/operational-record-form"]={OperationalRecordForm:({record}:{record:Record<string,unknown>})=>React.createElement("p",null,`FORM ${JSON.stringify(record)}`)};
+    dependencies["@/components/dossier-editor-gate"]={dossierEditorGate:async()=>null};
     const exports=load(source,dependencies),render=(exports.default||exports.OperationalRecordDetail) as (p:unknown)=>Promise<React.ReactNode>;
     for(const tab of tabs.contactTabs(selectedModule)){
       const html=renderToStaticMarkup(await render({module:selectedModule,params:Promise.resolve({id}),searchParams:Promise.resolve({tab:tab.id})}));
@@ -102,7 +103,9 @@ for(const selectedModule of ["projecten","campagnes"]){
         assert.equal(html.includes("CAMPAIGN publicaties"),tab.id==="publicaties");
       }
     }
-    const edit=renderToStaticMarkup(await render({module:selectedModule,params:Promise.resolve({id}),searchParams:Promise.resolve({tab:"financien",bewerken:"1"})}));
-    if(selectedModule==="projecten")assert.match(edit,/name="title"/);else assert.match(edit,/CAMPAGNEBRIEFING.*CAMPAGNEEVALUATIE/);
+    dependencies["@/components/dossier-editor-gate"]={dossierEditorGate:async(props:Record<string,unknown>)=>{assert.equal(props.id,id);assert.equal((props.query as Record<string,string>).tab,"financien");return React.createElement("p",null,"GEZAMENLIJKE EDITOR");}};
+    const editRender=load(source,dependencies);const editPage=(editRender.default||editRender.OperationalRecordDetail) as (p:unknown)=>Promise<React.ReactNode>;
+    const edit=renderToStaticMarkup(await editPage({module:selectedModule,params:Promise.resolve({id}),searchParams:Promise.resolve({tab:"financien",bewerken:"1"})}));
+    assert.match(edit,/GEZAMENLIJKE EDITOR/);assert.doesNotMatch(edit,/FINANCIEEL OVERZICHT|CONNECTIONS/);
   });
 }

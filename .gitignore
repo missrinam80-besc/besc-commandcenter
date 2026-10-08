@@ -16,6 +16,10 @@
 
 # next.js
 /.next/
+/.next-*/
+**/__pycache__/
+*.py[cod]
+/supabase-backup-*.sql
 /out/
 
 # production

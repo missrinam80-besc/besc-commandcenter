@@ -25,10 +25,13 @@ const id="11111111-1111-4111-8111-111111111111",child="22222222-2222-4222-8222-2
 test("Bestaande aanmaak- en bewerklinks openen de gezamenlijke editor met dossiercontext",async()=>{
  const gate=load("src/components/dossier-editor-gate.tsx").dossierEditorGate as (props:unknown)=>Promise<React.ReactElement<{kind:string;id?:string;preset:Record<string,unknown>;context?:{id:string;type:string}}>|null>;
  assert.equal(await gate({kind:"event",id,query:{}}),null);
+ assert.equal(await gate({kind:"event",id,query:{bewerken:"1",fout:"opslaan"}}),null);
  const edit=await gate({kind:"event",id,query:{bewerken:"1"}});assert.equal(edit?.props.id,id);assert.equal(edit?.props.kind,"event");
  const task=await gate({kind:"event",id,query:{nieuw:"taak"}});assert.equal(task?.props.kind,"task");assert.equal(task?.props.id,undefined);assert.equal(task?.props.context?.id,id);assert.equal(task?.props.context?.type,"event");
  assert.equal((await gate({kind:"event",id,query:{schema:"nieuw",tab:"planning"}}))?.props.kind,"event");
  assert.equal(await gate({kind:"knowledge",query:{nieuw:"categorie"}}),null);
+ const campaign=await gate({kind:"project",id,query:{nieuw:"campagne"}});
+ assert.equal(campaign?.props.kind,"campaign");assert.equal(campaign?.props.preset.project_id,id);assert.equal(campaign?.props.context?.id,id);
  assert.equal((await gate({group:"finance",query:{nieuw:"kost"}}))?.props.kind,"expense");
  assert.equal((await gate({group:"administration",query:{bewerken:id,fiche:"member"}}))?.props.id,id);
 });

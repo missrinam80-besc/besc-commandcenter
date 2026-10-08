@@ -1,5 +1,15 @@
 /* eslint-disable @typescript-eslint/no-require-imports -- Build-time, fixed catalog compilation; not a user-supplied SQL generator. */
 const fs=require('node:fs');
+const path=require('node:path');
+const historicTarget='supabase/migrations/20261008094405_unified_dossier_editor.sql';
+const checking=process.argv.includes('--check');
+const outputIndex=process.argv.indexOf('--output');
+const target=outputIndex>=0?process.argv[outputIndex+1]:historicTarget;
+if(!checking){
+ if(outputIndex<0)throw Error('Historische migraties worden niet overschreven. Maak eerst een nieuwe lege migratie met supabase migration new en geef --output <bestand>.');
+ if(!target||path.dirname(path.resolve(target))!==path.resolve('supabase/migrations')||!/^\d{14}_[\w-]+\.sql$/.test(path.basename(target)))throw Error('Output moet een nieuwe migratie in supabase/migrations zijn.');
+ if(path.resolve(target)===path.resolve(historicTarget)||!fs.existsSync(target)||fs.statSync(target).size!==0)throw Error('Alleen een bestaand leeg, nieuw migratiebestand mag worden gevuld.');
+}
 const {tables,catalog}=require('./build-dossier-editor-schema.cjs');
 const referenceOverrides={person_id:'community_people',responsible_person_id:'community_people',community_person_id:'community_people',asset_id:'assets',owner_person_id:'community_people',member_id:'association_members'};
 function definition(cfg,capability){
@@ -11,5 +21,4 @@ function definition(cfg,capability){
 const fixed=Object.fromEntries(Object.entries(catalog).map(([kind,cfg])=>[kind,{...definition(cfg,cfg.capability),collections:cfg.collections.map(part=>definition(part,cfg.capability))}]));
 const template=fs.readFileSync('scripts/dossier-editor-transaction.sql','utf8');
 const sql=template.replace('__FIXED_CATALOG__',JSON.stringify(fixed).replaceAll("'","''"));
-const target='supabase/migrations/20261008094405_unified_dossier_editor.sql';
-if(process.argv.includes('--check')){if(fs.readFileSync(target,'utf8')!==sql)throw Error('Transaction catalog differs');}else fs.writeFileSync(target,sql);
+if(checking){if(fs.readFileSync(target,'utf8')!==sql)throw Error('Transaction catalog differs');}else fs.writeFileSync(target,sql);

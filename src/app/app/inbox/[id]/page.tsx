@@ -4,7 +4,7 @@ import { Archive, ArrowRight, Trash2 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/auth-context";
-import { archiveInboxItem, convertInboxItem, deleteInboxItem, updateInboxItem } from "./actions";
+import { archiveInboxItem, convertInboxItem, deleteInboxItem } from "./actions";
 
 const statusOptions = [
   ["new", "Nieuw"],
@@ -91,29 +91,14 @@ export default async function InboxItemPage({
               <button type="submit"><Archive size={16} />Archiveren</button>
             </form>
           )}
-          {!query.bewerken && <Link className="primary" href="?bewerken=1">Bewerken</Link>}
+          <Link className="primary" href="?bewerken=1">Bewerken</Link>
         </div>
       </header>
       <div className="project-detail-body">
         {query.fout && <div className="error-note">De actie is mislukt ({query.fout}).</div>}
         {query.succes && <div className="success">Het inboxitem werd bijgewerkt.</div>}
 
-        {query.bewerken ? (
-          <section className="form-card">
-            <div className="form-heading"><h2>Inboxitem bewerken</h2><Link href="?">Annuleren</Link></div>
-            <form action={updateInboxItem}>
-              <input type="hidden" name="id" value={item.id} />
-              <label>Titel<input name="title" defaultValue={item.title} required minLength={3} /></label>
-              <label>Beschrijving<textarea name="description" rows={6} defaultValue={item.description ?? ""} /></label>
-              <div className="form-row">
-                <label>Bron<input name="source" defaultValue={item.source} required /></label>
-                <label>Status<select name="status" defaultValue={item.status}>{statusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-                <label>Prioriteit<select name="priority" defaultValue={item.priority}><option value="low">Laag</option><option value="normal">Normaal</option><option value="high">Hoog</option><option value="urgent">Urgent</option></select></label>
-              </div>
-              <div className="form-actions"><Link href="?">Annuleren</Link><button className="primary">Opslaan</button></div>
-            </form>
-          </section>
-        ) : (
+        {(
           <>
             <section className="project-summary">
               <article><span>Status</span><strong>{statusLabels[item.status] ?? item.status}</strong></article>

@@ -1,14 +1,8 @@
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { CalendarDays, List, Search, X } from "lucide-react";
-import { createOperationalRecord } from "@/app/app/operations/actions";
-import {
-  operationalModules,
-  type OperationalModule,
-} from "@/app/app/operations/config";
+import { operationalModules, type OperationalModule, } from "@/app/app/operations/config";
 import { AppShell } from "@/components/app-shell";
-import { FormModal } from "@/components/form-modal";
-import { OperationalRecordForm } from "@/components/operational-record-form";
 import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { hasPermission } from "@/lib/permissions";
@@ -103,55 +97,14 @@ export async function OperationalModulePage({
   }
 
   const from = (page - 1) * PAGE_SIZE;
-  const [
-    rowsResult,
-    allResult,
-    projectsResult,
-    partnersResult,
-    contentResult,
-    campaignsResult,
-    eventsResult,
-    accountOptionsResult,
-  ] = await Promise.all([
+  const [rowsResult, allResult] = await Promise.all([
     query.range(from, from + PAGE_SIZE - 1),
     supabase
-      .from(config.table)
-      .select("status")
-      .eq("organization_id", org)
-      .is("deleted_at", null),
-    supabase
-      .from("projects")
-      .select("id,title")
-      .eq("organization_id", org)
-      .is("deleted_at", null)
-      .order("title"),
-    supabase
-      .from("partners")
-      .select("id,name")
-      .eq("organization_id", org)
-      .is("deleted_at", null)
-      .order("name"),
-    supabase
-      .from("content_items")
-      .select("id,title")
-      .eq("organization_id", org)
-      .is("deleted_at", null)
-      .order("title"),
-    supabase
-      .from("campaigns")
-      .select("id,title")
-      .eq("organization_id", org)
-      .is("deleted_at", null)
-      .order("title"),
-    supabase
-      .from("events")
-      .select("id,title")
-      .eq("organization_id", org)
-      .is("deleted_at", null)
-      .order("title"),
-    module === "community" ? supabase.from("organization_members").select("user_id,status,profiles(display_name)").eq("organization_id", org).in("status", ["active", "pending"]) : Promise.resolve({ data: [] }),
+        .from(config.table)
+        .select("status")
+        .eq("organization_id", org)
+        .is("deleted_at", null)
   ]);
-  const accountOptions = (accountOptionsResult.data ?? []).map((item) => ({ id: item.user_id, label: ((item.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account") + (item.status === "pending" ? " · In afwachting" : "") }));
 
   const rows = (rowsResult.data ?? []) as unknown as Row[];
   const all = allResult.data ?? [];
@@ -216,20 +169,7 @@ export async function OperationalModulePage({
         </section>
         {params.fout && <div className="error-note">{params.fout === "dossier-niet-beschikbaar" ? "Het dossier is niet meer beschikbaar. De link werd niet gewijzigd." : params.fout === "dossier-controleren" ? "Het dossier kon niet worden gecontroleerd. De link werd niet gewijzigd. Probeer opnieuw." : `Opslaan is mislukt (${params.fout}).`}</div>}
         {params.succes && <div className="success">Wijziging opgeslagen.</div>}
-        {params.nieuw && canManage && (
-          <FormModal title={`Nieuwe ${config.singular}`}>
-            <OperationalRecordForm
-              action={createOperationalRecord}
-              module={module}
-              projects={projectsResult.data ?? []}
-              partners={partnersResult.data ?? []}
-              content={contentResult.data ?? []}
-              campaigns={campaignsResult.data ?? []}
-              events={eventsResult.data ?? []}
-              accountOptions={accountOptions} accountsUnavailable={"error" in accountOptionsResult && Boolean(accountOptionsResult.error)}
-            />
-          </FormModal>
-        )}
+
         <div className="view-toolbar">
           <form className="history-filters extended-filters" method="get">
             {calendar && <input type="hidden" name="weergave" value="kalender" />}

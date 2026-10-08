@@ -2,12 +2,10 @@ import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import { AppShell } from "@/components/app-shell";
 import Link from "next/link";
 import { ModulePage } from "@/components/module-page";
-import { EntityForm } from "@/components/entity-form";
 import { SavedViews } from "@/components/saved-views";
 import { demoDashboard } from "@/lib/demo-data";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { requireActiveMembership } from "@/lib/auth-context";
-import { createInboxItem } from "../actions";
 
 type InboxRow = {
   id: string;
@@ -92,30 +90,7 @@ export default async function InboxPage({
           </div>
         )}
         {params.succes && <div className="success">Het inboxitem werd succesvol verwerkt.</div>}
-        {params.nieuw && (
-          <EntityForm title="Nieuw inboxitem" action={createInboxItem}>
-            <div className="form-row">
-              <label>
-                Bron
-                <select name="source" defaultValue="manual">
-                  <option value="manual">Handmatig</option>
-                  <option value="discord">Discord</option>
-                  <option value="email">E-mail</option>
-                  <option value="form">Formulier</option>
-                </select>
-              </label>
-              <label>
-                Prioriteit
-                <select name="priority" defaultValue="normal">
-                  <option value="low">Laag</option>
-                  <option value="normal">Normaal</option>
-                  <option value="high">Hoog</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </label>
-            </div>
-          </EntityForm>
-        )}
+
         <SavedViews
           module="inbox"
           path="/app/inbox"

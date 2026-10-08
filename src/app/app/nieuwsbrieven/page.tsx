@@ -2,12 +2,10 @@ import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { ListPlus, MailPlus, Newspaper, Users } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { renderEmailTemplate } from "@/lib/email-templates";
 import { googleGmailConfiguration } from "@/lib/google-gmail";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { isManager } from "@/lib/permissions";
-import { newsletterVariantLabels } from "@/lib/newsletter-html";
-import { saveMailingList, saveNewsletter } from "./actions";
+import { saveMailingList } from "./actions";
 
 const newsletterStatuses: Record<string,string> = {
   draft: "Concept", pending_approval: "Ter goedkeuring", changes_requested: "Wijzigingen",
@@ -19,30 +17,14 @@ export default async function NewsletterPage({ searchParams }: { searchParams: P
   const unifiedEditor = await dossierEditorGate({kind:"newsletter",query:query});
   if (unifiedEditor) return unifiedEditor;
 
-  const { supabase, membership, user } = await requireActiveMembership();
+  const { supabase, membership } = await requireActiveMembership();
   const org = membership.organization_id;
   if (!isManager(membership)) return <AppShell active="Nieuwsbrieven"><div className="module-body"><div className="permission-note">Alleen bestuur en beheerders kunnen mailinglijsten en nieuwsbrieven beheren.</div></div></AppShell>;
-  const [lists, subscribers, newsletters, templates, organization, profile] = await Promise.all([
+  const [lists, subscribers, newsletters] = await Promise.all([
     supabase.from("mailing_lists").select("*").eq("organization_id", org).order("name"),
     supabase.from("mailing_subscribers").select("mailing_list_id,status").eq("organization_id", org),
     supabase.from("newsletters").select("id,title,subject,status,recipient_count,sent_at,mailing_list_id,updated_at,list:mailing_lists(name)").eq("organization_id", org).order("updated_at", { ascending: false }),
-    supabase.from("email_templates").select("*").eq("organization_id", org).eq("category", "newsletter").eq("is_active", true).order("name"),
-    supabase.from("organizations").select("name").eq("id", org).maybeSingle(),
-    supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
   ]);
-  const activeLists = (lists.data ?? []).filter((item) => item.status === "active");
-  const selectedTemplate = (templates.data ?? []).find((item) => item.id === query.template) ?? templates.data?.[0];
-  const selectedList = query.lijst ?? activeLists[0]?.id ?? "";
-  const title = query.titel ?? "";
-  const templateContext = {
-    organisatie: organization.data?.name || "BESC vzw",
-    afzender: profile.data?.display_name || "BESC",
-    contact_naam: "",
-    nieuwsbrief_titel: title || "Nieuws van BESC",
-    nieuwsbrief_inhoud: "[Schrijf hier de inhoud van de nieuwsbrief]",
-  };
-  const subject = selectedTemplate ? renderEmailTemplate(selectedTemplate.subject_template, templateContext) : "";
-  const body = selectedTemplate ? renderEmailTemplate(selectedTemplate.body_template, templateContext) : "";
   const gmail = googleGmailConfiguration();
   return <AppShell active="Nieuwsbrieven">
     <header className="topbar module-top"><div><p>MAILINGLIJSTEN & GMAIL</p><h1>Nieuwsbrieven</h1></div><div className="project-actions"><Link href="?nieuwe_lijst=1"><ListPlus size={16}/>Nieuwe lijst</Link><Link className="primary" href="?nieuw=1"><MailPlus size={16}/>Nieuwe nieuwsbrief</Link></div></header>
@@ -52,27 +34,7 @@ export default async function NewsletterPage({ searchParams }: { searchParams: P
       {query.succes && <div className="success">De wijziging is opgeslagen.</div>}
       {!gmail.configured && <div className="error-note">Gmail is niet geconfigureerd; nieuwsbrieven kunnen nog niet als concept worden aangemaakt.</div>}
       {query.nieuwe_lijst && <section className="form-card"><div className="form-heading"><h2>Nieuwe mailinglijst</h2><Link href="/app/nieuwsbrieven">Sluiten</Link></div><form action={saveMailingList}><div className="form-row"><label>Naam<input name="name" required/></label><label>Status<select name="status"><option value="active">Actief</option><option value="paused">Gepauzeerd</option><option value="archived">Gearchiveerd</option></select></label><label>Publieke URL-code<input name="public_slug" placeholder="besc-nieuws" pattern="[a-z0-9-]{2,120}"/></label></div><label>Beschrijving<textarea name="description" rows={3}/></label><label className="inline-check"><input type="checkbox" name="public_signup_enabled"/><span>Publieke inschrijving na dubbele bevestiging toestaan</span></label><div className="form-actions"><button className="primary">Lijst opslaan</button></div></form></section>}
-      {query.nieuw && <section className="form-card">
-        <div className="form-heading"><div><span className="eyebrow">NIEUWSBRIEF</span><h2>Nieuw Gmail-concept</h2></div><Link href="/app/nieuwsbrieven">Sluiten</Link></div>
-        <form className="template-picker" method="get"><input type="hidden" name="nieuw" value="1"/><label>Sjabloon<select name="template" defaultValue={selectedTemplate?.id ?? ""}>{(templates.data ?? []).map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label><label>Titel voor variabelen<input name="titel" defaultValue={title}/></label><input type="hidden" name="lijst" value={selectedList}/><button>Automatisch invullen</button></form>
-        <form action={saveNewsletter}>
-          <input type="hidden" name="email_template_id" value={selectedTemplate?.id ?? ""}/>
-          <div className="form-row">
-            <label>Mailinglijst<select name="mailing_list_id" defaultValue={selectedList} required><option value="">Kies een lijst</option>{activeLists.map((item) => <option value={item.id} key={item.id}>{item.name} ({(subscribers.data ?? []).filter((subscriber) => subscriber.mailing_list_id === item.id && subscriber.status === "subscribed").length})</option>)}</select></label>
-            <label>Interne titel<input name="title" required defaultValue={title}/></label>
-            <label>Onderwerp<input name="subject" required defaultValue={subject}/></label>
-          </div>
-          <div className="form-row">
-            <label>Opmaak<select name="template_variant" defaultValue={selectedTemplate?.newsletter_variant ?? "besc"}>{Object.entries(newsletterVariantLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-            <label>Voorbeeldtekst inbox<input name="preheader" maxLength={300} placeholder="Korte samenvatting naast het onderwerp"/></label>
-            <label>Afbeelding (HTTPS)<input name="hero_image_url" type="url" defaultValue={selectedTemplate?.default_hero_image_url ?? ""} placeholder="https://..."/></label>
-          </div>
-          <label>Beschrijving afbeelding<input name="hero_image_alt" maxLength={300} defaultValue={selectedTemplate?.default_hero_image_alt ?? ""} placeholder="Beschrijf wat er op de afbeelding staat"/></label>
-          <label>Nieuwsbrieftekst<textarea name="body_text" rows={16} required defaultValue={body}/></label>
-          <p className="form-hint">De applicatie maakt automatisch veilige HTML én een tekstversie. Afbeeldingen moeten publiek bereikbaar zijn via HTTPS. De uitschrijfinstructie wordt automatisch toegevoegd.</p>
-          <div className="form-actions"><button className="primary" disabled={!gmail.configured || !activeLists.length}><Newspaper size={16}/>Gmail-concept aanmaken</button></div>
-        </form>
-      </section>}
+
       <section className="newsletter-stats">
         <article><Users/><div><span>Mailinglijsten</span><strong>{(lists.data ?? []).filter((item) => item.status !== "archived").length}</strong></div></article>
         <article><Users/><div><span>Actieve inschrijvingen</span><strong>{(subscribers.data ?? []).filter((item) => item.status === "subscribed").length}</strong></div></article>

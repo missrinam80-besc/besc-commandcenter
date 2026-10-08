@@ -2,7 +2,6 @@ import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import { DossierTabContent } from "@/components/dossier-tab-content";
 import { projectTabs, resolveContactTab } from "@/lib/contact-dossier-tabs";
 import { toPersonPickerOptions } from "@/lib/person-picker";
-import { ProjectOutcomeFields } from "@/components/project-outcome-fields";
 import { missingProjectOutcomes, projectOutcomeLabels, type ProjectOutcomes } from "@/lib/project-outcomes";
 import Link from "next/link";
 import { ExternalLink, FolderInput, FolderPlus, Link2, Pencil, Plus } from "lucide-react";
@@ -16,28 +15,15 @@ import { MarkdownContent, MarkdownField } from "@/components/markdown-field";
 import { RecordConnectionsPanel } from "@/components/record-connections-panel";
 import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { RecordMetadata } from "@/components/record-metadata";
-import { TaskCreateModal } from "@/components/task-create-modal";
 import { FinancialSummaryPanel } from "@/components/financial-summary-panel";
-import { OperationalRecordForm } from "@/components/operational-record-form";
 import { PeopleAssignmentsPanel } from "@/components/people-assignments-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatDate, formatDateTime, formatDateTimeLocal } from "@/lib/format";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
 import { hasPermission } from "@/lib/permissions";
 import { updateTaskStatus } from "../../actions";
-import { createOperationalRecord } from "../../operations/actions";
 import { updateTaskDetails } from "../../taken/[id]/actions";
-import {
-  addMilestone,
-  createProjectFolder,
-  deleteMilestone,
-  linkProjectFolder,
-  organizeProjectFolder,
-  setProjectMember,
-  toggleMilestone,
-  updateMilestone,
-  updateProject,
-} from "./actions";
+import { addMilestone, createProjectFolder, deleteMilestone, linkProjectFolder, organizeProjectFolder, setProjectMember, toggleMilestone, updateMilestone } from "./actions";
 
 type Project = ProjectOutcomes & {
   id: string;
@@ -104,23 +90,7 @@ export default async function ProjectPage({ params, searchParams }: {
   const closeHref = `?tab=${activeTab}`;
   const canManage = hasPermission(membership, "manageProjects");
   const canManageCampaigns = hasPermission(membership, "manageOrganization");
-  const [
-    { data: projectRow },
-    { data: taskRows },
-    { data: milestoneRows },
-    { data: memberRows },
-    { data: teamRows },
-    { data: commentRows },
-    { data: activityRows },
-    { data: driveRow },
-    { data: budgetRows },
-    { data: expenseRows },
-    { data: incomeRows },
-    { data: partnerRows },
-    { data: eventRows },
-    { data: assignmentRows },
-    { data: centralPeopleRows, error: centralPeopleError },
-  ] = await Promise.all([
+  const [{ data: projectRow }, { data: taskRows }, { data: milestoneRows }, { data: memberRows }, { data: teamRows }, { data: commentRows }, { data: activityRows }, { data: driveRow }, { data: budgetRows }, { data: expenseRows }, { data: incomeRows }, { data: assignmentRows }, { data: centralPeopleRows, error: centralPeopleError }] = await Promise.all([
     supabase.from("projects").select("id,title,description,status,priority,owner_id,start_date,due_date,drive_url,organization_id,goal,deliverables,acceptance_criteria,closure_evaluation").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("tasks").select("id,title,description,status,priority,due_at").eq("project_id", id).is("deleted_at", null).order("due_at", { ascending: true, nullsFirst: false }).order("created_at", { ascending: true }),
     supabase.from("project_milestones").select("id,title,due_date,is_done").eq("project_id", id).order("due_date", { ascending: true, nullsFirst: false }),
@@ -132,10 +102,8 @@ export default async function ProjectPage({ params, searchParams }: {
     supabase.from("budget_envelopes").select("id,name,planned_amount,status").eq("organization_id", membership.organization_id).eq("project_id", id).is("deleted_at", null).order("created_at"),
     supabase.from("expenses").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("project_id", id).is("deleted_at", null).order("expense_date", { ascending: false }),
     supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("project_id", id).is("deleted_at", null).order("expected_date", { ascending: false }),
-    supabase.from("partners").select("id,name").eq("organization_id", membership.organization_id).is("deleted_at", null).order("name"),
-    supabase.from("events").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
     supabase.from("community_assignments").select("id,person_id,role_name,status,starts_at,notes,community_people(display_name)").eq("organization_id", membership.organization_id).eq("project_id", id).order("starts_at", { ascending: true, nullsFirst: false }),
-    supabase.from("community_people").select("id,display_name,handle,discord_handle,community_person_roles(role)").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name"),
+    supabase.from("community_people").select("id,display_name,handle,discord_handle,community_person_roles(role)").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name")
   ]);
   if (!projectRow) notFound();
 
@@ -181,36 +149,6 @@ export default async function ProjectPage({ params, searchParams }: {
         {query.succes === "drive-geordend" ? <div className="success">De mapstructuur is gecontroleerd en de projectmap staat onder Google Drive → Projecten.</div> : null}
         {query.succes === "drive-al-geordend" ? <div className="success">De mapstructuur is gecontroleerd. De projectmap stond al onder Google Drive → Projecten.</div> : null}
         {query.succes && !query.succes.startsWith("drive-") ? <div className="success">Wijziging opgeslagen.</div> : null}
-
-        {query.bewerken && canManage ? (
-          <FormModal closeHref={closeHref} title="Project bewerken">
-            <form action={updateProject}>
-              <input type="hidden" name="id" value={id}/>
-              <label>Titel<input name="title" defaultValue={project.title}/></label>
-              <MarkdownField name="description" label="Beschrijving" rows={6} defaultValue={project.description}/>
-              {query.fout === "afsluiting" ? <p className="error-note">{driveErrors.afsluiting}</p> : null}
-              <ProjectOutcomeFields project={project}/>
-              <div className="form-row">
-                <label>Status<select name="status" defaultValue={project.status}><option value="idea">Idee</option><option value="planned">Gepland</option><option value="active">Actief</option><option value="blocked">Geblokkeerd</option><option value="done">Afgerond</option><option value="archived">Gearchiveerd</option></select></label>
-                <label>Prioriteit<select name="priority" defaultValue={project.priority}><option value="low">Laag</option><option value="normal">Normaal</option><option value="high">Hoog</option><option value="urgent">Urgent</option></select></label>
-                <label>Eigenaar<select name="owner_id" defaultValue={project.owner_id || ""}><option value="">Geen eigenaar</option>{people.map((person) => <option key={person.user_id} value={person.user_id}>{person.profiles?.display_name || "Naamloos account"}</option>)}</select></label>
-                <label>Start<input type="date" name="start_date" defaultValue={project.start_date || ""}/></label>
-                <label>Deadline<input type="date" name="due_date" defaultValue={project.due_date || ""}/></label>
-              </div>
-              <div className="form-actions"><Link href={closeHref}>Annuleren</Link><button className="primary">Opslaan</button></div>
-            </form>
-          </FormModal>
-        ) : null}
-
-        {query.nieuw === "taak" ? (
-          <TaskCreateModal closeHref={closeHref} returnTo={`/app/projecten/${id}`} defaultProjectId={id} projects={[{ id, title: project.title }]} people={people.map((person) => ({ id: person.user_id, label: person.profiles?.display_name || "Naamloos account" }))}/>
-        ) : null}
-
-        {query.nieuw === "campagne" && canManageCampaigns ? (
-          <FormModal closeHref={closeHref} title="Nieuwe campagne voor dit project">
-            <OperationalRecordForm action={createOperationalRecord} module="campagnes" record={{ project_id: id }} projects={[{ id, title: project.title }]} partners={partnerRows ?? []} events={eventRows ?? []} returnTo={`/app/projecten/${id}`}/>
-          </FormModal>
-        ) : null}
 
         {selectedTask ? (
           <FormModal closeHref={closeHref} title="Taak bewerken">

@@ -35,7 +35,7 @@ for(const roleData of [
  if(roleData.expected)await run("manageEvents");else await assert.rejects(run("manageEvents"),/geen-toegang/);
 });
 
-for(const role of ["member","volunteer"])test(`Event-scherm bewaakt bewerklink en rechtstreeks geopende editor voor ${role}`,async()=>{
+for(const role of ["member","volunteer"])test(`Event-scherm bewaakt bewerklink en toont geen oude editor op de leesfiche voor ${role}`,async()=>{
  const source=readFileSync(new URL("../src/app/app/events/[id]/page.tsx",import.meta.url),"utf8");
  const passthrough=({children}:{children?:React.ReactNode})=>React.createElement("div",null,children);
  const noop=()=>null;
@@ -63,6 +63,6 @@ for(const role of ["member","volunteer"])test(`Event-scherm bewaakt bewerklink e
  const page=load("src/app/app/events/[id]/page.tsx",overrides).default as(props:unknown)=>Promise<React.ReactNode>;
  const html=renderToStaticMarkup(await page({params:Promise.resolve({id:"fixture-event"}),searchParams:Promise.resolve({bewerken:"1"})}));
  assert.equal(html.includes('href="?tab=overzicht&amp;bewerken=1"'),role==="member");
- assert.equal(html.includes('data-testid="event-editor"'),role==="member");
+ assert.equal(html.includes('data-testid="event-editor"'),false);
 });
 import { eventDossierTabs, resolveEventDossierTab } from "../src/lib/event-dossier-tabs.ts";
