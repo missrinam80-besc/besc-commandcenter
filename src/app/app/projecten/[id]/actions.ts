@@ -1,4 +1,5 @@
 "use server";
+import { appendContactTab } from "@/lib/contact-dossier-tabs";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -83,13 +84,13 @@ export async function createProjectFolder(formData: FormData) {
     .eq("id", parsed.data.project_id)
     .is("deleted_at", null)
     .maybeSingle();
-  if (!project) redirect(`${path(parsed.data.project_id)}?fout=project`);
+  if (!project) redirect(appendContactTab(`${path(parsed.data.project_id)}?fout=project`,formData));
   try {
     const existingFolderId = parsed.data.mode === "existing" && project.drive_url
       ? googleDriveFileId(project.drive_url)
       : null;
     if (parsed.data.mode === "existing" && !existingFolderId) {
-      redirect(`${path(project.id)}?fout=drive-link`);
+      redirect(appendContactTab(`${path(project.id)}?fout=drive-link`,formData));
     }
     const folder = existingFolderId
       ? await getGoogleDriveFolder(existingFolderId)
@@ -114,10 +115,10 @@ export async function createProjectFolder(formData: FormData) {
       details: errorObject?.details ? String(errorObject.details) : undefined,
       hint: errorObject?.hint ? String(errorObject.hint) : undefined,
     });
-    redirect(`${path(project.id)}?fout=${parsed.data.mode === "existing" ? "drive-bestaande-link" : "drive-aanmaken"}`);
+    redirect(appendContactTab(`${path(project.id)}?fout=${parsed.data.mode === "existing" ? "drive-bestaande-link" : "drive-aanmaken"}`,formData));
   }
   revalidatePath(path(project.id));
-  redirect(`${path(project.id)}?succes=${parsed.data.mode === "existing" ? "drive-geregistreerd" : "drive-aangemaakt"}`);
+  redirect(appendContactTab(`${path(project.id)}?succes=${parsed.data.mode === "existing" ? "drive-geregistreerd" : "drive-aangemaakt"}`,formData));
 }
 
 export async function linkProjectFolder(formData: FormData) {
@@ -127,7 +128,7 @@ export async function linkProjectFolder(formData: FormData) {
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/projecten?fout=drive-velden");
   const fileId = googleDriveFileId(parsed.data.drive_folder);
-  if (!fileId) redirect(`${path(parsed.data.project_id)}?fout=drive-link`);
+  if (!fileId) redirect(appendContactTab(`${path(parsed.data.project_id)}?fout=drive-link`,formData));
   const context = await requirePermission("manageProjects", `${path(parsed.data.project_id)}?fout=rechten`);
   const { data: project } = await context.supabase
     .from("projects")
@@ -136,7 +137,7 @@ export async function linkProjectFolder(formData: FormData) {
     .eq("id", parsed.data.project_id)
     .is("deleted_at", null)
     .maybeSingle();
-  if (!project) redirect(`${path(parsed.data.project_id)}?fout=project`);
+  if (!project) redirect(appendContactTab(`${path(parsed.data.project_id)}?fout=project`,formData));
   try {
     const folder = await getGoogleDriveFolder(fileId);
     await saveProjectDriveLink({
@@ -147,10 +148,10 @@ export async function linkProjectFolder(formData: FormData) {
       userId: context.user.id,
     });
   } catch {
-    redirect(`${path(project.id)}?fout=drive-koppelen`);
+    redirect(appendContactTab(`${path(project.id)}?fout=drive-koppelen`,formData));
   }
   revalidatePath(path(project.id));
-  redirect(`${path(project.id)}?succes=drive-gekoppeld`);
+  redirect(appendContactTab(`${path(project.id)}?succes=drive-gekoppeld`,formData));
 }
 
 export async function organizeProjectFolder(formData: FormData) {
@@ -165,7 +166,7 @@ export async function organizeProjectFolder(formData: FormData) {
     .eq("entity_id", parsed.data.project_id)
     .eq("resource_type", "folder")
     .maybeSingle();
-  if (!link?.google_id) redirect(`${path(parsed.data.project_id)}?fout=drive-ontbreekt`);
+  if (!link?.google_id) redirect(appendContactTab(`${path(parsed.data.project_id)}?fout=drive-ontbreekt`,formData));
   let folderMoved = false;
   try {
     const folder = await moveGoogleDriveFolderToModule(link.google_id, "projects");
@@ -178,10 +179,10 @@ export async function organizeProjectFolder(formData: FormData) {
       userId: context.user.id,
     });
   } catch {
-    redirect(`${path(parsed.data.project_id)}?fout=drive-verplaatsen`);
+    redirect(appendContactTab(`${path(parsed.data.project_id)}?fout=drive-verplaatsen`,formData));
   }
   revalidatePath(path(parsed.data.project_id));
-  redirect(`${path(parsed.data.project_id)}?succes=${folderMoved ? "drive-geordend" : "drive-al-geordend"}`);
+  redirect(appendContactTab(`${path(parsed.data.project_id)}?succes=${folderMoved ? "drive-geordend" : "drive-al-geordend"}`,formData));
 }
 
 export async function updateProject(formData: FormData) {
@@ -207,10 +208,10 @@ export async function updateProject(formData: FormData) {
       .select("status,goal,deliverables,acceptance_criteria,closure_evaluation")
       .eq("organization_id", membership.organization_id).eq("id", parsed.data.id)
       .is("deleted_at", null).maybeSingle();
-    if (lookupError || !existing) redirect(`${path(parsed.data.id)}?bewerken=1&fout=opslaan`);
+    if (lookupError || !existing) redirect(appendContactTab(`${path(parsed.data.id)}?bewerken=1&fout=opslaan`,formData));
     const outcomes = Object.fromEntries(Object.entries(parsed.data).filter(([, value]) => value !== undefined));
     if (existing.status !== "done" && missingProjectOutcomes({ ...existing, ...outcomes }).length) {
-      redirect(`${path(parsed.data.id)}?bewerken=1&fout=afsluiting`);
+      redirect(appendContactTab(`${path(parsed.data.id)}?bewerken=1&fout=afsluiting`,formData));
     }
   }
   const { data, error } = await supabase
@@ -225,9 +226,9 @@ export async function updateProject(formData: FormData) {
     .eq("organization_id", membership.organization_id)
     .eq("id", parsed.data.id).is("deleted_at", null).select("id").maybeSingle();
   if (error?.code === "23514" && error.message?.includes("project_closure_required")) {
-    redirect(`${path(parsed.data.id)}?bewerken=1&fout=afsluiting`);
+    redirect(appendContactTab(`${path(parsed.data.id)}?bewerken=1&fout=afsluiting`,formData));
   }
-  if (error || !data) redirect(`${path(parsed.data.id)}?fout=opslaan`);
+  if (error || !data) redirect(appendContactTab(`${path(parsed.data.id)}?fout=opslaan`,formData));
   await supabase.from("activity_events").insert({
     organization_id: membership.organization_id,
     entity_type: "project",
@@ -236,7 +237,7 @@ export async function updateProject(formData: FormData) {
     actor_id: user.id,
   });
   revalidatePath(path(parsed.data.id));
-  redirect(`${path(parsed.data.id)}?succes=project`);
+  redirect(appendContactTab(`${path(parsed.data.id)}?succes=project`,formData));
 }
 
 export async function addMilestone(formData: FormData) {
@@ -253,7 +254,7 @@ export async function addMilestone(formData: FormData) {
     due_date: parsed.data.due_date || null,
     created_by: user.id,
   }).select("id").single();
-  if (error || !data) redirect(`${path(parsed.data.project_id)}?fout=mijlpaal`);
+  if (error || !data) redirect(appendContactTab(`${path(parsed.data.project_id)}?fout=mijlpaal`,formData));
   revalidatePath(path(parsed.data.project_id));
 }
 
@@ -270,7 +271,7 @@ export async function toggleMilestone(formData: FormData) {
     .update({ is_done: parsed.data.is_done === "true" })
     .eq("project_id", parsed.data.project_id)
     .eq("id", parsed.data.id).select("id").maybeSingle();
-  if (error || !data) redirect(`${path(parsed.data.project_id)}?fout=mijlpaal-opslaan`);
+  if (error || !data) redirect(appendContactTab(`${path(parsed.data.project_id)}?fout=mijlpaal-opslaan`,formData));
   revalidatePath(path(parsed.data.project_id));
 }
 
@@ -288,9 +289,9 @@ export async function updateMilestone(formData: FormData) {
     .update({ title: parsed.data.title, due_date: parsed.data.due_date || null })
     .eq("project_id", parsed.data.project_id)
     .eq("id", parsed.data.id).select("id").maybeSingle();
-  if (error || !data) redirect(`${path(parsed.data.project_id)}?fout=mijlpaal-opslaan`);
+  if (error || !data) redirect(appendContactTab(`${path(parsed.data.project_id)}?fout=mijlpaal-opslaan`,formData));
   revalidatePath(path(parsed.data.project_id));
-  redirect(`${path(parsed.data.project_id)}?succes=mijlpaal`);
+  redirect(appendContactTab(`${path(parsed.data.project_id)}?succes=mijlpaal`,formData));
 }
 
 export async function deleteMilestone(formData: FormData) {
@@ -305,9 +306,9 @@ export async function deleteMilestone(formData: FormData) {
     .delete()
     .eq("project_id", parsed.data.project_id)
     .eq("id", parsed.data.id).select("id").maybeSingle();
-  if (error || !data) redirect(`${path(parsed.data.project_id)}?fout=mijlpaal-verwijderen`);
+  if (error || !data) redirect(appendContactTab(`${path(parsed.data.project_id)}?fout=mijlpaal-verwijderen`,formData));
   revalidatePath(path(parsed.data.project_id));
-  redirect(`${path(parsed.data.project_id)}?succes=mijlpaal-verwijderd`);
+  redirect(appendContactTab(`${path(parsed.data.project_id)}?succes=mijlpaal-verwijderd`,formData));
 }
 
 export async function setProjectMember(formData: FormData) {
@@ -322,19 +323,19 @@ export async function setProjectMember(formData: FormData) {
     const { data: candidate, error: candidateError } = await supabase.from("organization_members")
       .select("user_id").eq("organization_id", membership.organization_id)
       .eq("user_id", parsed.data.user_id).eq("status", "active").maybeSingle();
-    if (candidateError || !candidate) redirect(`${path(parsed.data.project_id)}?fout=team`);
+    if (candidateError || !candidate) redirect(appendContactTab(`${path(parsed.data.project_id)}?fout=team`,formData));
     const { data, error } = await supabase.from("project_members").upsert({
       project_id: parsed.data.project_id,
       user_id: parsed.data.user_id,
     }).select("project_id,user_id").single();
-    if (error || !data) redirect(`${path(parsed.data.project_id)}?fout=team`);
+    if (error || !data) redirect(appendContactTab(`${path(parsed.data.project_id)}?fout=team`,formData));
   } else {
     const { data, error } = await supabase
       .from("project_members")
       .delete()
       .eq("project_id", parsed.data.project_id)
       .eq("user_id", parsed.data.user_id).select("project_id,user_id").maybeSingle();
-    if (error || !data) redirect(`${path(parsed.data.project_id)}?fout=team`);
+    if (error || !data) redirect(appendContactTab(`${path(parsed.data.project_id)}?fout=team`,formData));
   }
   revalidatePath(path(parsed.data.project_id));
 }

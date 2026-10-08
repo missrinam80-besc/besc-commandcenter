@@ -1,4 +1,5 @@
 "use server";
+import { appendContactTab } from "@/lib/contact-dossier-tabs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -23,7 +24,7 @@ export async function updateTaskDetails(formData:FormData){
   if(currentTask?.project_id)revalidatePath(`/app/projecten/${currentTask.project_id}`);
   if(parsed.data.project_id)revalidatePath(`/app/projecten/${parsed.data.project_id}`);
   const destination=parsed.data.return_to?.startsWith("/app/projecten/")?parsed.data.return_to:returnTo(parsed.data.id);
-  redirect(`${destination}?succes=taak`);
+  redirect(appendContactTab(`${destination}?succes=taak`,formData));
 }
 export async function addChecklistItem(formData:FormData){
   const parsed=z.object({task_id:z.string().uuid(),title:z.string().trim().max(240).optional()}).safeParse(Object.fromEntries(formData));if(!parsed.success)redirect("/app/taken?fout=velden");

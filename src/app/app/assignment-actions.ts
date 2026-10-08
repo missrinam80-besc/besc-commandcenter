@@ -1,4 +1,5 @@
 "use server";
+import { appendContactTab } from "@/lib/contact-dossier-tabs";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -43,9 +44,9 @@ export async function createPersonAssignment(formData: FormData) {
     created_by: user.id,
   };
   const { error } = await supabase.from("community_assignments").insert(values);
-  if (error) redirect(`${path}?fout=betrokkene-opslaan`);
+  if (error) redirect(appendContactTab(`${path}?fout=betrokkene-opslaan`,formData));
   revalidatePath(path);
-  redirect(`${path}?succes=betrokkene`);
+  redirect(appendContactTab(`${path}?succes=betrokkene`,formData));
 }
 
 export async function updatePersonAssignment(formData: FormData) {
@@ -61,9 +62,9 @@ export async function updatePersonAssignment(formData: FormData) {
     notes: parsed.data.notes || null,
   }).eq("organization_id", membership.organization_id).eq("id", parsed.data.id)
     .eq(parsed.data.entity_type === "project" ? "project_id" : "event_id", parsed.data.entity_id);
-  if (error) redirect(`${path}?fout=betrokkene-bijwerken`);
+  if (error) redirect(appendContactTab(`${path}?fout=betrokkene-bijwerken`,formData));
   revalidatePath(path);
-  redirect(`${path}?succes=betrokkene`);
+  redirect(appendContactTab(`${path}?succes=betrokkene`,formData));
 }
 
 export async function deletePersonAssignment(formData: FormData) {
@@ -73,7 +74,7 @@ export async function deletePersonAssignment(formData: FormData) {
   const { supabase, membership } = await manager(parsed.data.entity_type, path);
   const { error } = await supabase.from("community_assignments").delete().eq("organization_id", membership.organization_id).eq("id", parsed.data.id)
     .eq(parsed.data.entity_type === "project" ? "project_id" : "event_id", parsed.data.entity_id);
-  if (error) redirect(`${path}?fout=betrokkene-verwijderen`);
+  if (error) redirect(appendContactTab(`${path}?fout=betrokkene-verwijderen`,formData));
   revalidatePath(path);
-  redirect(`${path}?succes=betrokkene-verwijderd`);
+  redirect(appendContactTab(`${path}?succes=betrokkene-verwijderd`,formData));
 }

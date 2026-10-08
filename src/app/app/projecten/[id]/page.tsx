@@ -1,3 +1,5 @@
+import { DossierTabContent } from "@/components/dossier-tab-content";
+import { projectTabs, resolveContactTab } from "@/lib/contact-dossier-tabs";
 import { toPersonPickerOptions } from "@/lib/person-picker";
 import { ProjectOutcomeFields } from "@/components/project-outcome-fields";
 import { missingProjectOutcomes, projectOutcomeLabels, type ProjectOutcomes } from "@/lib/project-outcomes";
@@ -94,6 +96,8 @@ export default async function ProjectPage({ params, searchParams }: {
   const { id } = await params;
   const query = await searchParams;
   const { supabase, membership } = await requireActiveMembership();
+  const activeTab = resolveContactTab("projecten",query);
+  const closeHref = `?tab=${activeTab}`;
   const canManage = hasPermission(membership, "manageProjects");
   const canManageCampaigns = hasPermission(membership, "manageOrganization");
   const [
@@ -161,20 +165,21 @@ export default async function ProjectPage({ params, searchParams }: {
         </div>
         <div className="project-actions">
           {driveUrl ? <a href={driveUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Drive-map</a> : null}
-          {canManage ? <Link href="?bewerken=1">Bewerken</Link> : null}
-          {canManageCampaigns ? <Link href="?nieuw=campagne"><Plus size={16}/>Campagne</Link> : null}
-          <Link className="primary" href="?nieuw=taak"><Plus size={16}/>Taak</Link>
+          {canManage ? <Link href={`?tab=${activeTab}&bewerken=1`}>Bewerken</Link> : null}
+          {canManageCampaigns ? <Link href="?tab=dossiers&nieuw=campagne"><Plus size={16}/>Campagne</Link> : null}
+          <Link className="primary" href="?tab=planning&nieuw=taak"><Plus size={16}/>Taak</Link>
         </div>
       </header>
 
-      <div className="project-detail-body">
+      <nav className="event-dossier-tabs" aria-label="Onderdelen van het project">{projectTabs.map(tab=><Link key={tab.id} href={`?tab=${tab.id}`} scroll={false} aria-current={activeTab===tab.id?"page":undefined}>{tab.label}</Link>)}</nav>
+      <DossierTabContent tab={activeTab}><div className="project-detail-body contact-dossier">
         {query.fout ? <div className="error-note">{driveErrors[query.fout] ?? `Actie mislukt: ${query.fout}.`}</div> : null}
         {query.succes === "drive-geordend" ? <div className="success">De mapstructuur is gecontroleerd en de projectmap staat onder Google Drive → Projecten.</div> : null}
         {query.succes === "drive-al-geordend" ? <div className="success">De mapstructuur is gecontroleerd. De projectmap stond al onder Google Drive → Projecten.</div> : null}
         {query.succes && !query.succes.startsWith("drive-") ? <div className="success">Wijziging opgeslagen.</div> : null}
 
         {query.bewerken && canManage ? (
-          <FormModal title="Project bewerken">
+          <FormModal closeHref={closeHref} title="Project bewerken">
             <form action={updateProject}>
               <input type="hidden" name="id" value={id}/>
               <label>Titel<input name="title" defaultValue={project.title}/></label>
@@ -188,23 +193,23 @@ export default async function ProjectPage({ params, searchParams }: {
                 <label>Start<input type="date" name="start_date" defaultValue={project.start_date || ""}/></label>
                 <label>Deadline<input type="date" name="due_date" defaultValue={project.due_date || ""}/></label>
               </div>
-              <div className="form-actions"><Link href="?">Annuleren</Link><button className="primary">Opslaan</button></div>
+              <div className="form-actions"><Link href={closeHref}>Annuleren</Link><button className="primary">Opslaan</button></div>
             </form>
           </FormModal>
         ) : null}
 
         {query.nieuw === "taak" ? (
-          <TaskCreateModal returnTo={`/app/projecten/${id}`} defaultProjectId={id} projects={[{ id, title: project.title }]} people={people.map((person) => ({ id: person.user_id, label: person.profiles?.display_name || "Naamloos account" }))}/>
+          <TaskCreateModal closeHref={closeHref} returnTo={`/app/projecten/${id}`} defaultProjectId={id} projects={[{ id, title: project.title }]} people={people.map((person) => ({ id: person.user_id, label: person.profiles?.display_name || "Naamloos account" }))}/>
         ) : null}
 
         {query.nieuw === "campagne" && canManageCampaigns ? (
-          <FormModal title="Nieuwe campagne voor dit project">
+          <FormModal closeHref={closeHref} title="Nieuwe campagne voor dit project">
             <OperationalRecordForm action={createOperationalRecord} module="campagnes" record={{ project_id: id }} projects={[{ id, title: project.title }]} partners={partnerRows ?? []} events={eventRows ?? []} returnTo={`/app/projecten/${id}`}/>
           </FormModal>
         ) : null}
 
         {selectedTask ? (
-          <FormModal title="Taak bewerken">
+          <FormModal closeHref={closeHref} title="Taak bewerken">
             <form action={updateTaskDetails}>
               <input type="hidden" name="id" value={selectedTask.id}/>
               <input type="hidden" name="project_id" value={project.id}/>
@@ -222,12 +227,12 @@ export default async function ProjectPage({ params, searchParams }: {
         ) : null}
 
         {selectedMilestone && canManage ? (
-          <FormModal title="Mijlpaal bewerken">
+          <FormModal closeHref={closeHref} title="Mijlpaal bewerken">
             <form action={updateMilestone}>
               <input type="hidden" name="project_id" value={project.id}/><input type="hidden" name="id" value={selectedMilestone.id}/>
               <label>Titel<input name="title" defaultValue={selectedMilestone.title}/></label>
               <label>Deadline<input type="date" name="due_date" defaultValue={selectedMilestone.due_date || ""}/></label>
-              <div className="form-actions"><Link href="?">Annuleren</Link><button className="primary">Opslaan</button></div>
+              <div className="form-actions"><Link href={closeHref}>Annuleren</Link><button className="primary">Opslaan</button></div>
             </form>
             <form className="modal-danger-zone" action={deleteMilestone}>
               <input type="hidden" name="project_id" value={project.id}/><input type="hidden" name="id" value={selectedMilestone.id}/>
@@ -236,6 +241,7 @@ export default async function ProjectPage({ params, searchParams }: {
           </FormModal>
         ) : null}
 
+        {activeTab === "algemeen" && <>
         <section className="form-card record-overview">
           <div className="form-heading"><div><span className="eyebrow">OVERZICHT</span><h2>Projectgegevens</h2></div></div>
           {project.description ? <MarkdownContent>{project.description}</MarkdownContent> : <p>Nog geen beschrijving toegevoegd.</p>}
@@ -258,10 +264,13 @@ export default async function ProjectPage({ params, searchParams }: {
           {missingProjectOutcomes(project).length ? <p>Voor een nieuwe afsluiting ontbreken: {missingProjectOutcomes(project).join(", ")}. {project.status === "done" ? "Dit eerder afgeronde project behoudt zijn status." : "Je kunt het dossier alvast verder voorbereiden."}</p> : <p>De afsluitinformatie is ingevuld. De bevoegde projectbeheerder beoordeelt de uitkomst; de app bevestigt niet automatisch dat het doel is behaald.</p>}
         </section>
 
-        <RecordConnectionsPanel entityType="project" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} modal={query.koppeling} selectedLinkId={query.link}/>
-        <PeopleAssignmentsPanel entityType="project" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)} canManage={canManage} selected={query.betrokkene}/>
-        <FinancialSummaryPanel budgets={budgetRows ?? []} expenses={expenseRows ?? []} income={incomeRows ?? []}/>
+        </>}
+        {activeTab === "dossiers" && <RecordConnectionsPanel entityType="project" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} modal={query.koppeling} selectedLinkId={query.link} queryContext="tab=dossiers" view="relationships"/>}
+        {activeTab === "documenten" && <RecordConnectionsPanel entityType="project" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={canManage} modal={query.koppeling} selectedLinkId={query.link} queryContext="tab=documenten" view="documents"/>}
 
+        {activeTab === "financien" && <FinancialSummaryPanel budgets={budgetRows ?? []} expenses={expenseRows ?? []} income={incomeRows ?? []}/>}
+
+        {activeTab === "documenten" && <>
         <section className="form-card drive-card">
           <div className="form-heading"><div><span className="eyebrow">GOOGLE WORKSPACE</span><h2>Projectmap</h2></div>{driveUrl ? <a className="row-action" href={driveUrl} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Open map</a> : null}</div>
           {drive ? (
@@ -271,29 +280,39 @@ export default async function ProjectPage({ params, searchParams }: {
           )}
         </section>
 
-        <div className="project-columns">
-          <section className="project-task-section">
-            <div className="section-heading"><div><span className="eyebrow">UITVOERING</span><h2>Projecttaken</h2></div><span>{openTasks.length} open</span></div>
-            <div className="data-list">{openTasks.length ? openTasks.map((task) => <article key={task.id}><form action={updateTaskStatus}><input type="hidden" name="id" value={task.id}/><input type="hidden" name="status" value="done"/><input type="hidden" name="return_to" value={`/app/projecten/${id}`}/><button aria-label={`${task.title} afronden`} className="check"/></form><div><Link className="task-link" href={`?taak=${task.id}`}><strong>{task.title}</strong></Link><p>{formatDateTime(task.due_at)}</p></div><span className="badge">{labels[task.status] ?? task.status}</span><Link aria-label={`${task.title} bewerken`} className="row-action" href={`?taak=${task.id}`}><Pencil size={13}/></Link></article>) : <div className="empty">Nog geen open taken.</div>}</div>
-          </section>
-          <aside>
-            <section className="form-card">
-              <div className="form-heading"><h2>Mijlpalen</h2></div>
-              <div className="checklist">{milestones.map((milestone) => <div className="milestone-row" key={milestone.id}>{canManage ? <form action={toggleMilestone}><input type="hidden" name="project_id" value={id}/><input type="hidden" name="id" value={milestone.id}/><input type="hidden" name="is_done" value={String(!milestone.is_done)}/><button aria-label={`${milestone.title} ${milestone.is_done ? "heropenen" : "afronden"}`} className={`check ${milestone.is_done ? "checked" : ""}`}>{milestone.is_done ? "✓" : ""}</button></form> : <span className={`check ${milestone.is_done ? "checked" : ""}`} aria-label={milestone.is_done ? "Afgerond" : "Open"}>{milestone.is_done ? "✓" : ""}</span>}<span className={milestone.is_done ? "done" : ""}>{milestone.title}<small>{formatDate(milestone.due_date, "Geen deadline")}</small></span>{canManage ? <Link aria-label={`${milestone.title} bewerken`} href={`?mijlpaal=${milestone.id}`}><Pencil size={13}/></Link> : null}</div>)}</div>
-              {canManage ? <form className="milestone-add" action={addMilestone}><input type="hidden" name="project_id" value={id}/><input name="title" placeholder="Nieuwe mijlpaal"/><input type="date" name="due_date"/><button>Toevoegen</button></form> : null}
-            </section>
+        </>}
+        {activeTab === "team" && <>
+          <PeopleAssignmentsPanel entityType="project" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)} canManage={canManage} selected={query.betrokkene} closeHref="?tab=team"/>
             <section className="form-card">
               <div className="form-heading"><h2>Projectaccounts</h2></div>
               <div className="team-list">{people.map((person) => { const enabled = teamIds.has(person.user_id); return <form action={setProjectMember} key={person.user_id}><input type="hidden" name="project_id" value={id}/><input type="hidden" name="user_id" value={person.user_id}/><input type="hidden" name="enabled" value={String(!enabled)}/><span>{person.profiles?.display_name || "Naamloos"}</span>{canManage ? <button className={enabled ? "member-on" : ""}>{enabled ? "In team" : "Toevoegen"}</button> : <span>{enabled ? "In team" : "Niet in team"}</span>}</form>; })}</div>
             </section>
+        </>}
+        {activeTab === "planning" && <>
+        <div className="project-columns">
+          <section className="project-task-section">
+            <div className="section-heading"><div><span className="eyebrow">UITVOERING</span><h2>Projecttaken</h2></div><span>{openTasks.length} open</span></div>
+            <div className="data-list">{openTasks.length ? openTasks.map((task) => <article key={task.id}><form action={updateTaskStatus}><input type="hidden" name="id" value={task.id}/><input type="hidden" name="status" value="done"/><input type="hidden" name="return_to" value={`/app/projecten/${id}`}/><button aria-label={`${task.title} afronden`} className="check"/></form><div><Link className="task-link" href={`?tab=planning&taak=${task.id}`}><strong>{task.title}</strong></Link><p>{formatDateTime(task.due_at)}</p></div><span className="badge">{labels[task.status] ?? task.status}</span><Link aria-label={`${task.title} bewerken`} className="row-action" href={`?tab=planning&taak=${task.id}`}><Pencil size={13}/></Link></article>) : <div className="empty">Nog geen open taken.</div>}</div>
+          </section>
+          <aside>
+            <section className="form-card">
+              <div className="form-heading"><h2>Mijlpalen</h2></div>
+              <div className="checklist">{milestones.map((milestone) => <div className="milestone-row" key={milestone.id}>{canManage ? <form action={toggleMilestone}><input type="hidden" name="project_id" value={id}/><input type="hidden" name="id" value={milestone.id}/><input type="hidden" name="is_done" value={String(!milestone.is_done)}/><button aria-label={`${milestone.title} ${milestone.is_done ? "heropenen" : "afronden"}`} className={`check ${milestone.is_done ? "checked" : ""}`}>{milestone.is_done ? "✓" : ""}</button></form> : <span className={`check ${milestone.is_done ? "checked" : ""}`} aria-label={milestone.is_done ? "Afgerond" : "Open"}>{milestone.is_done ? "✓" : ""}</span>}<span className={milestone.is_done ? "done" : ""}>{milestone.title}<small>{formatDate(milestone.due_date, "Geen deadline")}</small></span>{canManage ? <Link aria-label={`${milestone.title} bewerken`} href={`?tab=planning&mijlpaal=${milestone.id}`}><Pencil size={13}/></Link> : null}</div>)}</div>
+              {canManage ? <form className="milestone-add" action={addMilestone}><input type="hidden" name="project_id" value={id}/><input name="title" placeholder="Nieuwe mijlpaal"/><input type="date" name="due_date"/><button>Toevoegen</button></form> : null}
+            </section>
+
           </aside>
         </div>
 
-        {finishedTasks.length ? <section className="completed-section"><div><span className="eyebrow">HISTORIEK</span><h2>Afgeronde en geannuleerde taken</h2></div><div className="data-list completed-list">{finishedTasks.map((task) => <article key={task.id}><span className="check checked">✓</span><div><Link className="task-link" href={`?taak=${task.id}`}><strong>{task.title}</strong></Link><p>{labels[task.status] ?? task.status}</p></div><span className="badge">{labels[task.status] ?? task.status}</span><Link aria-label={`${task.title} bekijken`} className="row-action" href={`?taak=${task.id}`}><Pencil size={13}/></Link></article>)}</div></section> : null}
+        {finishedTasks.length ? <section className="completed-section"><div><span className="eyebrow">HISTORIEK</span><h2>Afgeronde en geannuleerde taken</h2></div><div className="data-list completed-list">{finishedTasks.map((task) => <article key={task.id}><span className="check checked">✓</span><div><Link className="task-link" href={`?tab=planning&taak=${task.id}`}><strong>{task.title}</strong></Link><p>{labels[task.status] ?? task.status}</p></div><span className="badge">{labels[task.status] ?? task.status}</span><Link aria-label={`${task.title} bekijken`} className="row-action" href={`?tab=planning&taak=${task.id}`}><Pencil size={13}/></Link></article>)}</div></section> : null}
+        </>}
+        {activeTab === "overleg" && <>
         <Comments entityType="project" entityId={id} returnTo={`/app/projecten/${id}`} comments={(commentRows ?? []) as unknown as Comment[]}/>
         <ActivityTimeline events={(activityRows ?? []) as never[]}/>
-        <RecordLifecyclePanel entity="project" id={id} label="Project" isArchived={project.status === "archived"} canManage={canManage}/>
-      </div>
+        </>}
+        {activeTab === "algemeen" && <details className="contact-dossier-actions"><summary>Dossieracties</summary>
+        <RecordLifecyclePanel entity="project" id={id} label="Project" isArchived={project.status === "archived"} canManage={canManage}/></details>}
+      </div></DossierTabContent>
     </AppShell>
   );
 }
