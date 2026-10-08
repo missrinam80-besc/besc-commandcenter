@@ -64,7 +64,7 @@ export async function updateTaskStatus(formData: FormData) {
   const { data, error } = await supabase.from("tasks").update({ status: parsed.data.status, completed_at: parsed.data.status === "done" ? new Date().toISOString() : null }).eq("id", parsed.data.id).eq("organization_id", membership.organization_id).is("deleted_at", null).select("id").maybeSingle();
   if (error || !data) redirect("/app/taken?fout=opslaan");
   revalidatePath("/app"); revalidatePath("/app/taken");
-  if (parsed.data.return_to?.startsWith("/app/projecten/")) { revalidatePath(parsed.data.return_to); redirect(parsed.data.return_to); }
+  if (parsed.data.return_to?.startsWith("/app/projecten/")) { revalidatePath(parsed.data.return_to); redirect(appendContactTab(parsed.data.return_to,formData)); }
 }
 
 export async function convertInboxToTask(formData: FormData) {

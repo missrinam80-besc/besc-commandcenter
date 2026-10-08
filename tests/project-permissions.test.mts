@@ -50,6 +50,15 @@ for(const failed of [false,true])test(`Geen succes, activiteit of invalidatie bi
 test("Mijlpalen en teamacties weigeren een ontbrekend, verwijderd of organisatievreemd project",async()=>{for(const mode of ["add","toggle","update","delete","join","remove"]){const f=fixture("member",[],true,false,false);assert.match(await f.run(mode),/fout=project/);assert.equal(f.writes.length,0);assert.ok(f.filters.some(v=>JSON.stringify(v).includes('"deleted_at"')));assert.ok(f.filters.some(v=>JSON.stringify(v).includes('"organization_id"')));}});
 test("Projectteam toevoegen weigert een niet-actieve of niet-zichtbare organisatiekandidaat",async()=>{const f=fixture("member",[],true,false,true,false);assert.match(await f.run("join"),/fout=team/);assert.equal(f.writes.length,0);assert.equal(f.invalidations.length,0);});
 
+test("Projectwijzigingen en mijlpaalformulieren keren terug naar het geselecteerde tabblad",async()=>{
+ for(const mode of ["edit","update","delete"]){
+  const tab=mode==="edit"?"financien":"planning";
+  assert.match(await fixture("member").run(mode,{dossier_tab:tab}),new RegExp(`succes=.*&tab=${tab}$`));
+  assert.match(await fixture("member",[],false,true).run(mode,{dossier_tab:tab}),new RegExp(`fout=.*&tab=${tab}$`));
+ }
+ assert.doesNotMatch(await fixture("member").run("edit",{dossier_tab:"account"}),/&tab=/);
+});
+
 test("Projectscherm en directe bewerklink respecteren rollen voor team en mijlpalen",async()=>{
  for(const c of [{role:"admin",caps:[],allowed:true},{role:"board",caps:[],allowed:true},{role:"member",caps:[],allowed:true},{role:"volunteer",caps:[],allowed:false},{role:"volunteer",caps:["manageProjects"],allowed:true}]){
   const supabase={from:(table:string)=>{const q:Record<string,unknown>={};for(const k of ["select","eq","is","order","limit","neq"])q[k]=()=>q;
@@ -64,7 +73,8 @@ test("Projectscherm en directe bewerklink respecteren rollen voor team en mijlpa
   const html=renderToStaticMarkup(await page({params:Promise.resolve({id}),searchParams:Promise.resolve({bewerken:"1",mijlpaal:id})}));
   assert.equal(html.includes('name="title"'),c.allowed,`${c.role} direct form`);
   assert.equal(html.includes('aria-label="TESTFIXTURE mijlpaal afronden"'),c.allowed);
-  assert.equal(html.includes('class="member-on"')||html.includes('>Toevoegen</button>'),c.allowed);
+  const teamHtml=renderToStaticMarkup(await page({params:Promise.resolve({id}),searchParams:Promise.resolve({tab:"team"})}));
+  assert.equal(teamHtml.includes('class="member-on"')||teamHtml.includes('>Toevoegen</button>'),c.allowed);
  }
 });
 

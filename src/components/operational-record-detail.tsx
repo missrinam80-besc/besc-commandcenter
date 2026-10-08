@@ -121,8 +121,9 @@ export async function OperationalRecordDetail({
   }
   const record = recordResult.data as Row;
   const isContactDossier = module === "sponsors" || module === "community";
-  const activeTab = isContactDossier ? resolveContactTab(module,query) : "";
-  const tabQuery = isContactDossier ? `tab=${activeTab}&` : "";
+  const isTabbedDossier = isContactDossier || module === "campagnes";
+  const activeTab = isTabbedDossier ? resolveContactTab(module,query) : "";
+  const tabQuery = isTabbedDossier ? `tab=${activeTab}&` : "";
   const connectionEntity = module === "campagnes" ? "campaign" : module === "sponsors" ? "partner" : module === "community" ? "community_person" : null;
   const [connections, relationOptions] = connectionEntity ? await Promise.all([
     loadDossierConnections(supabase, org, connectionEntity, id),
@@ -180,18 +181,18 @@ export async function OperationalRecordDetail({
         </div>
         <div className="project-actions">
           {externalUrl && !isContactDossier && <a href={externalUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Open gekoppeld bestand</a>}
-          {connectionEntity && (!isContactDossier || hasPermission(membership,"manageProjects")) && <Link href={`?${isContactDossier ? "tab=dossiers&" : ""}nieuw=taak`}>Taak toevoegen</Link>}
-          {module === "campagnes" && <Link href="?nieuw=content">Content toevoegen</Link>}
-          {module === "campagnes" && <Link href="?nieuw=social">Social post toevoegen</Link>}
+          {connectionEntity && (!isContactDossier || hasPermission(membership,"manageProjects")) && <Link href={`?${isTabbedDossier ? "tab=dossiers&" : ""}nieuw=taak`}>Taak toevoegen</Link>}
+          {module === "campagnes" && <Link href="?tab=publicaties&nieuw=content">Content toevoegen</Link>}
+          {module === "campagnes" && <Link href="?tab=publicaties&nieuw=social">Social post toevoegen</Link>}
           {!query.bewerken && hasPermission(membership,"manageOrganization") && <Link className="primary" href={`?${tabQuery}bewerken=1`}>Bewerken</Link>}
         </div>
       </header>
-      {isContactDossier && <nav className="event-dossier-tabs" aria-label="Onderdelen van de fiche">{contactTabs(module).map(t=><Link key={t.id} href={`?tab=${t.id}`} scroll={false} aria-current={activeTab===t.id?"page":undefined}>{t.label}</Link>)}</nav>}
-      <DossierTabContent tab={activeTab}><div className={`project-detail-body ${isContactDossier ? "contact-dossier" : ""}`}>
+      {isTabbedDossier && <nav className="event-dossier-tabs" aria-label="Onderdelen van de fiche">{contactTabs(module).map(t=><Link key={t.id} href={`?tab=${t.id}`} scroll={false} aria-current={activeTab===t.id?"page":undefined}>{t.label}</Link>)}</nav>}
+      <DossierTabContent tab={activeTab}><div className={`project-detail-body ${isTabbedDossier ? "contact-dossier" : ""}`}>
         {query.fout && <div className="error-note">De wijziging kon niet worden opgeslagen ({query.fout}).</div>}
         {query.succes && <div className="success">De wijziging is opgeslagen.</div>}
         {query.bewerken ? (
-          <FormModal title={`${title} bewerken`} closeHref={`?${isContactDossier ? `tab=${activeTab}` : ""}`}>
+          <FormModal title={`${title} bewerken`} closeHref={`?${isTabbedDossier ? `tab=${activeTab}` : ""}`}>
             <OperationalRecordForm action={updateOperationalRecord} module={module} record={record} projects={projectsResult.data ?? []} partners={partnersResult.data ?? []} content={contentResult.data ?? []} campaigns={campaignOptionsResult.data ?? []} events={eventsResult.data ?? []} accountOptions={accountOptions} accountsUnavailable={Boolean(accountOptionsResult.error)} personRoles={personRoles}/>
           </FormModal>
         ) : (
@@ -199,13 +200,22 @@ export async function OperationalRecordDetail({
             <ContactDossierPanels module={module as "sponsors"|"community"} tab={activeTab} record={record} org={org} supabase={supabase} canManage={hasPermission(membership,"manageOrganization")} isAdmin={hasPermission(membership,"manageUsers")} query={query} connections={connections} options={relationOptions} accounts={accountOptions} accountError={Boolean(accountOptionsResult.error || ("error" in communityOptionsResult && communityOptionsResult.error) || ("error" in contactsResult && contactsResult.error))} loadError={panelError} roles={personRoles} contacts={(contactsResult.data??[]) as RelatedRow[]} interactions={(interactionsResult.data??[]) as RelatedRow[]} onboarding={(onboardingResult.data??[]) as RelatedRow[]} assignments={(assignmentsResult.data??[]) as RelatedRow[]} events={eventsResult.data??[]} projects={projectsResult.data??[]} campaigns={(partnerCampaignsResult.data??[]) as RelatedRow[]} people={communityOptionsResult.data??[]}/>
             <details className="contact-dossier-actions"><summary>Registratiegegevens</summary><RecordMetadata items={baseMetadata.filter(item=>["Aangemaakt","Laatst aangepast"].includes(item.label))}/></details>
             {hasPermission(membership,"manageOrganization") && <details className="contact-dossier-actions"><summary>Dossieracties</summary><RecordLifecyclePanel entity={lifecycleEntity[module]} id={id} label={config.singular} isArchived={record.status==="archived"} canManage={hasPermission(membership,"manageOrganization")}/></details>}
+          </> : module === "campagnes" ? <>
+            {activeTab === "algemeen" && <>
+              <section className="form-card"><div className="form-heading"><h2>Campagnegegevens</h2></div><RecordMetadata items={[...baseMetadata.filter(item=>!["Aangemaakt","Laatst aangepast"].includes(item.label)),...campaignMetadata.filter(item=>["Prioriteit","Startdatum","Einddatum","Kanalen"].includes(item.label))]}/></section>
+              <section className="form-card record-notes"><div className="form-heading"><h2>Notities en briefing</h2></div>{record.notes ? <MarkdownContent>{String(record.notes)}</MarkdownContent> : <p>Nog geen notities toegevoegd.</p>}</section>
+              <details className="contact-dossier-actions"><summary>Registratiegegevens</summary><RecordMetadata items={baseMetadata.filter(item=>["Aangemaakt","Laatst aangepast"].includes(item.label))}/></details>
+              <details className="contact-dossier-actions"><summary>Dossieracties</summary><RecordLifecyclePanel entity="campaign" id={id} label="Campagne" isArchived={record.status==="archived"} canManage={hasPermission(membership,"manageOrganization")}/></details>
+            </>}
+            {(activeTab === "deliverables" || activeTab === "publicaties") && <CampaignSections section={activeTab} id={id} deliverables={(deliverablesResult.data ?? []) as RelatedRow[]} social={(socialResult.data ?? []) as RelatedRow[]} content={(contentResult.data ?? []).filter(item => item.campaign_id === id) as RelatedRow[]} people={(communityOptionsResult.data ?? []) as RelatedRow[]}/>}
+            {activeTab === "financien" && <><section className="form-card"><div className="form-heading"><h2>Budget en waarde</h2></div><RecordMetadata items={campaignMetadata.filter(item=>["Budget","Waarde"].includes(item.label))}/></section><FinancialSummaryPanel budgets={budgetResult.data ?? []} expenses={expenseResult.data ?? []} income={incomeResult.data ?? []}/></>}
+            {activeTab === "resultaten" && <section className="form-card record-notes"><div className="form-heading"><h2>Resultaten en evaluatie</h2></div><RecordMetadata items={campaignMetadata.filter(item=>["Rapportage","Impressies","Kliks"].includes(item.label))}/>{record.results_summary ? <MarkdownContent>{String(record.results_summary)}</MarkdownContent> : <p>Nog geen evaluatie toegevoegd.</p>}</section>}
+            {activeTab === "dossiers" && <section className="form-card"><div className="form-heading"><h2>Hoofdkoppelingen</h2></div><RecordMetadata items={campaignMetadata.filter(item=>["Project","Event","Partner"].includes(item.label))}/></section>}
+            {(activeTab === "dossiers" || activeTab === "documenten") && <RecordConnectionsPanel entityType="campaign" entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={hasPermission(membership,"manageOrganization")} modal={query.koppeling} selectedLinkId={query.link} queryContext={`tab=${activeTab}`} view={activeTab === "dossiers" ? "relationships" : "documents"}/>}
           </> : <>
             <section className="form-card record-overview"><div className="form-heading"><div><span className="eyebrow">OVERZICHT</span><h2>{config.singular[0].toUpperCase() + config.singular.slice(1)}gegevens</h2></div></div><RecordMetadata items={[...baseMetadata, ...campaignMetadata, ...communityMetadata]}/></section>
             {connectionEntity && <RecordConnectionsPanel entityType={connectionEntity} entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={hasPermission(membership, "manageOrganization")} modal={query.koppeling} selectedLinkId={query.link}/>} 
-            {module === "campagnes" && <FinancialSummaryPanel budgets={budgetResult.data ?? []} expenses={expenseResult.data ?? []} income={incomeResult.data ?? []}/>} 
             {module !== "social" && <section className="form-card record-notes"><div className="form-heading"><h2>Notities en briefing</h2></div>{record.notes ? <MarkdownContent>{String(record.notes)}</MarkdownContent> : <p>Nog geen notities toegevoegd.</p>}</section>}
-            {module === "campagnes" && <section className="form-card record-notes"><div className="form-heading"><h2>Resultaten en evaluatie</h2></div>{record.results_summary ? <MarkdownContent>{String(record.results_summary)}</MarkdownContent> : <p>Nog geen evaluatie toegevoegd.</p>}</section>}
-            {module === "campagnes" && <CampaignSections id={id} deliverables={(deliverablesResult.data ?? []) as unknown as RelatedRow[]} social={(socialResult.data ?? []) as unknown as RelatedRow[]} content={((contentResult.data ?? []).filter((item) => item.campaign_id === id)) as unknown as RelatedRow[]} people={(communityOptionsResult.data ?? []) as unknown as RelatedRow[]}/>}
             {module === "social" && <SocialRelations record={record} variants={(variantsResult.data ?? []) as unknown as RelatedRow[]}/>}
             <RecordLifecyclePanel
               entity={lifecycleEntity[module]}
@@ -216,9 +226,9 @@ export async function OperationalRecordDetail({
             />
           </>
         )}
-        {query.nieuw === "taak" && connectionEntity ? <TaskCreateModal closeHref={isContactDossier?"?tab=dossiers":"?"} returnTo={`/app/${module}/${id}`} projects={projectsResult.data ?? []} people={accountOptions} defaultProjectId={String(record.project_id ?? "") || null} contextEntityType={connectionEntity} contextEntityId={id}/> : null}
-        {module === "campagnes" && query.nieuw === "content" ? <FormModal title="Content voor deze campagne"><ContentForm action={createContent} content={{ campaign_id: id, project_id: String(record.project_id ?? "") || null, partner_id: String(record.partner_id ?? "") || null }} projects={projectsResult.data ?? []} campaigns={[{ id, title }]} partners={partnersResult.data ?? []}/></FormModal> : null}
-        {module === "campagnes" && query.nieuw === "social" ? <FormModal title="Social post voor deze campagne"><OperationalRecordForm action={createOperationalRecord} module="social" record={{ campaign_id: id, event_id: record.event_id, partner_id: record.partner_id }} content={contentResult.data ?? []} campaigns={[{ id, title }]} events={eventsResult.data ?? []} partners={partnersResult.data ?? []}/></FormModal> : null}
+        {query.nieuw === "taak" && connectionEntity ? <TaskCreateModal closeHref={isTabbedDossier?"?tab=dossiers":"?"} returnTo={`/app/${module}/${id}`} projects={projectsResult.data ?? []} people={accountOptions} defaultProjectId={String(record.project_id ?? "") || null} contextEntityType={connectionEntity} contextEntityId={id}/> : null}
+        {module === "campagnes" && query.nieuw === "content" ? <FormModal closeHref="?tab=publicaties" title="Content voor deze campagne"><ContentForm action={createContent} content={{ campaign_id: id, project_id: String(record.project_id ?? "") || null, partner_id: String(record.partner_id ?? "") || null }} projects={projectsResult.data ?? []} campaigns={[{ id, title }]} partners={partnersResult.data ?? []}/></FormModal> : null}
+        {module === "campagnes" && query.nieuw === "social" ? <FormModal closeHref="?tab=publicaties" title="Social post voor deze campagne"><OperationalRecordForm action={createOperationalRecord} module="social" record={{ campaign_id: id, event_id: record.event_id, partner_id: record.partner_id }} content={contentResult.data ?? []} campaigns={[{ id, title }]} events={eventsResult.data ?? []} partners={partnersResult.data ?? []}/></FormModal> : null}
       </div></DossierTabContent>
     </AppShell>
   );
