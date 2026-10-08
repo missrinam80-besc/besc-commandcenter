@@ -1,3 +1,5 @@
+import { EventRegistrationsPanel } from "@/components/event-registrations-panel";
+import { EventFinancePanel } from "@/components/event-finance-panel";
 import { EventGiveawaysPanel } from "@/components/event-giveaways-panel";
 import { eventDossierTabs, resolveEventDossierTab } from "@/lib/event-dossier-tabs";
 import { EventSchedulePanel } from "@/components/event-schedule-panel";
@@ -15,7 +17,6 @@ import { FormModal } from "@/components/form-modal";
 import { MarkdownContent } from "@/components/markdown-field";
 import { RecordMetadata } from "@/components/record-metadata";
 import { TaskCreateModal } from "@/components/task-create-modal";
-import { FinancialSummaryPanel } from "@/components/financial-summary-panel";
 import { OperationalRecordForm } from "@/components/operational-record-form";
 import { PeopleAssignmentsPanel } from "@/components/people-assignments-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
@@ -44,6 +45,8 @@ type CalendarLink = {
 };
 
 const driveErrors: Record<string, string> = {
+  "inschrijving-opslaan": "Inschrijving of instellingen niet opgeslagen. Controleer de velden en of de eigen deelnemerslijst is ingeschakeld.",
+  "financieel-opslaan": "Financiële registratie niet opgeslagen. Controleer de velden en bevoegdheden.",
   "giveaway-velden": "Controleer de itemnaam en aantallen. Uitgedeeld mag niet hoger zijn dan ontvangen.",
   "giveaway-opslaan": "Het item kon niet worden opgeslagen. Controleer of het event en de verantwoordelijke nog beschikbaar zijn.",
   "giveaway-verwijderen": "Het item kon niet worden verwijderd. De lijst is mogelijk ondertussen gewijzigd.",
@@ -78,7 +81,7 @@ export default async function Event({
   const { supabase, membership } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageEvents");
   const canManageCampaigns = hasPermission(membership, "manageOrganization");
-  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }, { data: memberRows }, { data: budgetRows }, { data: expenseRows }, { data: incomeRows }, { data: partners }, { data: assignmentRows }, { data: centralPeopleRows, error: centralPeopleError }] = await Promise.all([
+  const [{ data: e }, { data: projects }, { data: source }, { data: driveRow }, { data: documentRow }, { data: calendarRow }, { data: memberRows }, { data: partners }, { data: assignmentRows }, { data: centralPeopleRows, error: centralPeopleError }] = await Promise.all([
     supabase.from("events").select("*").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
     supabase.from("projects").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
     supabase.from("migration_source_links").select("source_url").eq("target_table", "events").eq("target_id", id).limit(1).maybeSingle(),
@@ -86,9 +89,6 @@ export default async function Event({
     supabase.from("google_resource_links").select("name,web_url").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "document").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("google_resource_links").select("google_id,name,web_url,updated_at").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "calendar_event").maybeSingle(),
     supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", membership.organization_id).eq("status", "active"),
-    supabase.from("budget_envelopes").select("id,name,planned_amount,status").eq("organization_id", membership.organization_id).eq("event_id", id).is("deleted_at", null).order("created_at"),
-    supabase.from("expenses").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("event_id", id).is("deleted_at", null).order("expense_date", { ascending: false }),
-    supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", membership.organization_id).eq("event_id", id).is("deleted_at", null).order("expected_date", { ascending: false }),
     supabase.from("partners").select("id,name").eq("organization_id", membership.organization_id).is("deleted_at", null).order("name"),
     supabase.from("community_assignments").select("id,person_id,role_name,status,starts_at,notes,community_people(display_name)").eq("organization_id", membership.organization_id).eq("event_id", id).order("starts_at", { ascending: true, nullsFirst: false }),
     supabase.from("community_people").select("id,display_name,handle,discord_handle,community_person_roles(role)").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name"),
@@ -130,7 +130,7 @@ export default async function Event({
         {eventDossierTabs.map(tab => <Link key={tab.id} href={`?tab=${tab.id}`} scroll={false} aria-current={activeTab === tab.id ? "page" : undefined}>{tab.label}</Link>)}
       </nav>
       <div className="project-detail-body event-dossier">
-        {q.succes && <div className="success">{q.succes === "giveaway-opgeslagen" ? "Giveaway-item opgeslagen." : q.succes === "giveaway-verwijderd" ? "Giveaway-item verwijderd." : q.succes === "schema-opgeslagen" ? "Schemaonderdeel opgeslagen." : q.succes === "schema-verwijderd" ? "Schemaonderdeel verwijderd." : q.succes === "materiaal-opgeslagen" ? "Materiaal op de eventlijst opgeslagen." : q.succes === "materiaal-verwijderd" ? "Materiaal van de eventlijst verwijderd." : q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
+        {q.succes && <div className="success">{q.succes === "inschrijving-opgeslagen" ? "Inschrijvingen bijgewerkt." : q.succes === "financieel-opgeslagen" ? "Financiële registratie opgeslagen." : q.succes === "giveaway-opgeslagen" ? "Giveaway-item opgeslagen." : q.succes === "giveaway-verwijderd" ? "Giveaway-item verwijderd." : q.succes === "schema-opgeslagen" ? "Schemaonderdeel opgeslagen." : q.succes === "schema-verwijderd" ? "Schemaonderdeel verwijderd." : q.succes === "materiaal-opgeslagen" ? "Materiaal op de eventlijst opgeslagen." : q.succes === "materiaal-verwijderd" ? "Materiaal van de eventlijst verwijderd." : q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
         {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
         {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
         {q.bewerken && canManage && (
@@ -166,10 +166,8 @@ export default async function Event({
         </>}
         {activeTab === "materialen" && <EventMaterialsPanel eventId={id} selected={q.materiaal} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>}
         {activeTab === "giveaways" && <EventGiveawaysPanel eventId={id} selected={q.giveaway} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>}
-        {activeTab === "inschrijvingen" && <section className="form-card event-tab-placeholder"><h2>Inschrijvingen</h2>{e.eventbrite_url ? <><p>Er is een Eventbrite-link bij dit event geregistreerd.</p><a className="row-action" href={e.eventbrite_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Eventbrite openen</a></> : <p>Er is geen Eventbrite-link geregistreerd. De keuze om met of zonder inschrijvingen te werken wordt in een volgende stap toegevoegd.</p>}</section>}
-        {activeTab === "financien" && <>
-        <FinancialSummaryPanel budgets={budgetRows ?? []} expenses={expenseRows ?? []} income={incomeRows ?? []}/>
-        </>}
+        {activeTab === "inschrijvingen" && <EventRegistrationsPanel eventId={id} legacyUrl={e.eventbrite_url} selected={q.inschrijving}/>}
+        {activeTab === "financien" && <EventFinancePanel eventId={id} eventTitle={e.title} projectId={e.project_id} selected={q.financieel}/>}
         {activeTab === "documenten" && <>
           <div className="event-tab-actions">
           {driveUrl && <a href={driveUrl} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Drive</a>}

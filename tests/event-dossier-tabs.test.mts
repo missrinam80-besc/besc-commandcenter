@@ -77,7 +77,7 @@ test("eventpagina toont alleen de gekozen sectie en houdt titel, navigatie en be
     assert.ok(html.includes("TESTFIXTURE event"));
     assert.ok(html.includes(`?tab=${tab.id}&amp;bewerken=1`));
     assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
-    for (const [panel, owner] of [["EventGiveawaysPanel", "giveaways"], ["EventSchedulePanel", "planning"], ["EventMaterialsPanel", "materialen"], ["PeopleAssignmentsPanel", "planning"], ["FinancialSummaryPanel", "financien"], ["RecordConnectionsPanel", "documenten"], ["EmailCommunicationPanel", "communicatie"], ["RecordLifecyclePanel", "overzicht"]]) {
+    for (const [panel, owner] of [["EventGiveawaysPanel", "giveaways"], ["EventSchedulePanel", "planning"], ["EventMaterialsPanel", "materialen"], ["PeopleAssignmentsPanel", "planning"], ["EventFinancePanel", "financien"], ["EventRegistrationsPanel", "inschrijvingen"], ["RecordConnectionsPanel", "documenten"], ["EmailCommunicationPanel", "communicatie"], ["RecordLifecyclePanel", "overzicht"]]) {
       assert.equal(html.includes(`data-component="${panel}"`), tab.id === owner, `${panel} op ${tab.id}`);
     }
   }

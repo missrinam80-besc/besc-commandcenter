@@ -129,3 +129,15 @@
 .event-timegrid-details p{font-size:12px;line-height:1.5;margin:6px 0}
 .event-timegrid-notes{white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:600px){.event-timegrid-week{grid-template-columns:repeat(7,minmax(190px,1fr))}.event-timegrid-scroll{height:500px}}
+
+/* Compact event registration and finance panels inherit both theme palettes. */
+.event-registration-list article { display:flex; align-items:center; gap:1rem; padding:.65rem 0; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+.event-registration-list article > div:first-child { flex:1; min-width:12rem; }
+.event-registration-list details p,.event-practical-notes { white-space:pre-wrap; overflow-wrap:anywhere; }
+.event-finance-totals { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:.75rem; margin:1rem 0; }
+.event-finance-totals > div { padding:.7rem; border:1px solid var(--line); border-radius:8px; background:var(--theme-control); }
+.event-finance-totals dt { font-size:.8rem; color:var(--muted); }
+.event-finance-totals dd { margin:.3rem 0 0; font-weight:600; }
+.event-finance-panel .financial-related-lists article { display:flex; flex-direction:column; gap:.25rem; padding:.6rem 0; }
+
+.event-dossier > :is(.event-registrations-panel,.event-finance-panel) { grid-column:1/-1; }

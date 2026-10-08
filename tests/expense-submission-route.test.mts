@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import ts from "typescript";
+import { z } from "zod";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import * as jsx from "react/jsx-runtime";
@@ -34,6 +35,7 @@ function harness(role:string) {
   const passthrough=({children}: {children?:React.ReactNode})=>React.createElement("div",null,children);
   const dependencies:Record<string,unknown>={
     "react/jsx-runtime":jsx,
+    "zod":{z},
     "next/link":{__esModule:true,default:({children,href}: {children?:React.ReactNode;href:string})=>React.createElement("a",{href},children)},
     "next/navigation":{notFound:()=>{throw new Error("NOT_FOUND");}},
     "lucide-react":{ExternalLink:()=>null},

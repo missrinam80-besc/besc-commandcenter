@@ -1,0 +1,67 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFileSync } from "node:fs";
+import { PGlite } from "@electric-sql/pglite";
+
+const org="10000000-0000-4000-8000-000000000001", other="10000000-0000-4000-8000-000000000002";
+const user="20000000-0000-4000-8000-000000000001", volunteer="20000000-0000-4000-8000-000000000002";
+const event="30000000-0000-4000-8000-000000000001", foreignEvent="30000000-0000-4000-8000-000000000002";
+const asset="40000000-0000-4000-8000-000000000001", foreignAsset="40000000-0000-4000-8000-000000000002";
+const person="50000000-0000-4000-8000-000000000001", foreignPerson="50000000-0000-4000-8000-000000000002";
+
+test("inschrijvingen bewaken werkwijze, persoonsgegevens en dossiergrenzen", async () => {
+  const db=new PGlite();
+  try {
+    await db.exec(`create role authenticated; create role anon; create schema auth; create schema private;
+      create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+      grant usage on schema auth,private to authenticated;
+      create table public.organizations(id uuid primary key); create table public.profiles(id uuid primary key);
+      create table public.organization_members(organization_id uuid,user_id uuid,status text,role text,capabilities text[] default '{}');
+      create table public.events(id uuid primary key,organization_id uuid,deleted_at timestamptz);
+      create table public.assets(id uuid primary key,organization_id uuid,name text,status text,deleted_at timestamptz);
+      create table public.community_people(id uuid primary key,organization_id uuid,status text,deleted_at timestamptz);
+      create function private.is_active_member(org_id uuid) returns boolean language sql stable security definer set search_path='' as $$select exists(select 1 from public.organization_members where organization_id=org_id and user_id=auth.uid() and status='active')$$;
+      create function private.can_manage_events(org_id uuid) returns boolean language sql stable security definer set search_path='' as $$select exists(select 1 from public.organization_members where organization_id=org_id and user_id=auth.uid() and status='active' and (role in('admin','board','member') or 'manageEvents'=any(capabilities)))$$;
+      grant select,update on public.events to authenticated;grant select on public.assets,public.community_people to authenticated;
+      alter table public.events enable row level security;alter table public.assets enable row level security;alter table public.community_people enable row level security;
+      create policy event_read on public.events for select to authenticated using(private.is_active_member(organization_id));
+      create policy event_write on public.events for update to authenticated using(private.can_manage_events(organization_id)) with check(private.can_manage_events(organization_id));
+      create policy asset_read on public.assets for select to authenticated using(private.is_active_member(organization_id));
+      create policy person_read on public.community_people for select to authenticated using(private.is_active_member(organization_id));
+      insert into public.organizations values('${org}'),('${other}');insert into public.profiles values('${user}'),('${volunteer}');
+      insert into public.organization_members(organization_id,user_id,status,role) values('${org}','${user}','active','member'),('${org}','${volunteer}','active','volunteer');
+      insert into public.events values('${event}','${org}',null),('${foreignEvent}','${other}',null);
+      insert into public.assets values('${asset}','${org}','Camera','active',null),('${foreignAsset}','${other}','Andere camera','active',null);
+      insert into public.community_people values('${person}','${org}','active',null),('${foreignPerson}','${other}','active',null);`);
+    await db.exec(readFileSync(new URL("../supabase/migrations/20261007193759_event_materials.sql",import.meta.url),"utf8"));
+    await db.exec(readFileSync(new URL("../supabase/migrations/20261008052243_event_registrations.sql",import.meta.url),"utf8"));
+    await db.exec(`set role authenticated;set request.jwt.claim.sub='${user}';`);
+    const settings=async(mode="internal",extra="")=>db.exec(`insert into public.event_registration_settings(organization_id,event_id,mode,updated_by${extra?",external_url":""}) values('${org}','${event}','${mode}','${user}'${extra?",'"+extra+"'":""})`);
+    await assert.rejects(settings("external"));await assert.rejects(settings("external","javascript:alert(1)"));
+    await settings();
+    const insert=async(status="registered",quantity=1)=>db.query<{id:string}>(`insert into public.event_registrations(organization_id,event_id,name,quantity,status,created_by) values('${org}','${event}','TESTFIXTURE naam',${quantity},'${status}','${user}') returning id`);
+    await assert.rejects(insert("invalid"));await assert.rejects(insert("registered",0));
+    const created=await insert(),id=created.rows[0].id;
+    await assert.rejects(db.exec(`update public.event_registrations set event_id='${foreignEvent}' where id='${id}'`));
+    await assert.rejects(db.exec(`update public.event_registrations set created_by='${volunteer}' where id='${id}'`));
+    await db.exec(`update public.event_registration_settings set mode='none',updated_by='${user}' where event_id='${event}';`);
+    await assert.rejects(insert());
+    await db.exec(`update public.event_registrations set status='cancelled' where id='${id}';`);
+    assert.equal((await db.query(`select * from public.event_registrations`)).rows.length,1);
+    await db.exec(`set request.jwt.claim.sub='${volunteer}';`);
+    assert.equal((await db.query(`select * from public.event_registration_settings`)).rows.length,1);
+    assert.equal((await db.query(`select * from public.event_registrations`)).rows.length,0);
+    await assert.rejects(db.exec(`insert into public.event_registrations(organization_id,event_id,name,created_by) values('${org}','${event}','Naam','${volunteer}')`));
+    assert.equal((await db.query(`update public.event_registrations set name='Changed' where id='${id}' returning id`)).rows.length,0);
+    await assert.rejects(db.exec(`delete from public.event_registration_settings`));
+    await db.exec(`reset role;update public.organization_members set status='suspended' where user_id='${user}';set role authenticated;set request.jwt.claim.sub='${user}';`);
+    assert.equal((await db.query(`select * from public.event_registrations`)).rows.length,0);
+    await db.exec(`reset role;update public.organization_members set status='active' where user_id='${user}';update public.events set deleted_at=now() where id='${event}';set role authenticated;`);
+    assert.equal((await db.query(`select * from public.event_registration_settings`)).rows.length,0);
+    assert.equal((await db.query(`update public.event_registration_settings set mode='internal' where event_id='${event}' returning event_id`)).rows.length,0);
+    await db.exec(`set role anon;`);await assert.rejects(db.query(`select * from public.event_registrations`));
+    await db.exec(`reset role;`);
+    const security=await db.query<{safe:boolean}>(`select not prosecdef and not has_table_privilege('anon','public.event_registrations','SELECT') as safe from pg_proc where oid='public.guard_event_registration()'::regprocedure`);
+    assert.equal(security.rows[0].safe,true);
+  }finally{await db.close();}
+});
