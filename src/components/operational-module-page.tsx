@@ -145,9 +145,9 @@ export async function OperationalModulePage({
       .eq("organization_id", org)
       .is("deleted_at", null)
       .order("title"),
-    module === "community" ? supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", org).eq("status", "active") : Promise.resolve({ data: [] }),
+    module === "community" ? supabase.from("organization_members").select("user_id,status,profiles(display_name)").eq("organization_id", org).in("status", ["active", "pending"]) : Promise.resolve({ data: [] }),
   ]);
-  const accountOptions = (accountOptionsResult.data ?? []).map((item) => ({ id: item.user_id, label: (item.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account" }));
+  const accountOptions = (accountOptionsResult.data ?? []).map((item) => ({ id: item.user_id, label: ((item.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account") + (item.status === "pending" ? " · In afwachting" : "") }));
 
   const rows = (rowsResult.data ?? []) as unknown as Row[];
   const all = allResult.data ?? [];
@@ -222,7 +222,7 @@ export async function OperationalModulePage({
               content={contentResult.data ?? []}
               campaigns={campaignsResult.data ?? []}
               events={eventsResult.data ?? []}
-              accountOptions={accountOptions}
+              accountOptions={accountOptions} accountsUnavailable={"error" in accountOptionsResult && Boolean(accountOptionsResult.error)}
             />
           </FormModal>
         )}
@@ -336,6 +336,7 @@ export async function OperationalModulePage({
               <article key={row.id}>
                 <div>
                   <strong>{String(row[config.titleColumn])}</strong>
+                  {module === "community" && Boolean(row.account_user_id) && <span className="badge">Account gekoppeld</span>}
                   <p>
                     {String(row.notes ?? row.copy ?? "").slice(0, 100) || "Geen notities"}
                   </p>

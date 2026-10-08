@@ -98,11 +98,11 @@ export async function OperationalRecordDetail({
     module === "sponsors" ? supabase.from("campaigns").select("id,title,status").eq("organization_id", org).eq("partner_id", id).is("deleted_at", null) : Promise.resolve({ data: [] }),
     module === "social" ? supabase.from("social_post_variants").select("*").eq("organization_id", org).eq("social_post_id", id).order("platform") : Promise.resolve({ data: [] }),
     module === "community" ? supabase.from("community_person_roles").select("role").eq("organization_id", org).eq("person_id", id).order("role") : Promise.resolve({ data: [] }),
-    supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", org).eq("status", "active"),
+    supabase.from("organization_members").select("user_id,status,profiles(display_name)").eq("organization_id", org),
     module === "campagnes" ? supabase.from("budget_envelopes").select("id,name,planned_amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("created_at") : Promise.resolve({ data: [] }),
     module === "campagnes" ? supabase.from("expenses").select("id,title,amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("expense_date", { ascending: false }) : Promise.resolve({ data: [] }),
     module === "campagnes" ? supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("expected_date", { ascending: false }) : Promise.resolve({ data: [] }),
-    module === "campagnes" ? supabase.from("community_people").select("id,display_name,handle").eq("organization_id", org).is("deleted_at", null).order("display_name") : Promise.resolve({ data: [] }),
+    ["campagnes", "sponsors"].includes(module) ? supabase.from("community_people").select("id,display_name,handle,email,account_user_id").eq("organization_id", org).is("deleted_at", null).order("display_name") : Promise.resolve({ data: [] }),
   ]);
 
   if (!recordResult.data) {
@@ -133,7 +133,7 @@ export async function OperationalRecordDetail({
   const partner = partnersResult.data?.find((item) => item.id === record.partner_id);
   const event = eventsResult.data?.find((item) => item.id === record.event_id);
   const personRoles = (personRolesResult.data ?? []).map((item) => String(item.role));
-  const accountOptions = (accountOptionsResult.data ?? []).map((item) => ({ id: item.user_id, label: (item.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account" }));
+  const accountOptions = (accountOptionsResult.data ?? []).filter(item => (item.status === "active" || (["community", "sponsors"].includes(module) && item.status === "pending")) || item.user_id === record.account_user_id).map((item) => ({ id: item.user_id, label: ((item.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account") + (item.status === "pending" ? " · In afwachting" : "") }));
   const linkedAccount = accountOptions.find((account) => account.id === record.account_user_id);
   const baseMetadata: MetadataItem[] = [
     { label: "Type", value: typeLabel },
@@ -157,7 +157,7 @@ export async function OperationalRecordDetail({
   ] : [];
   const communityMetadata: MetadataItem[] = module === "community" ? [
     { label: "Rollen", value: personRoles.length ? personRoles.map((role) => communityRoleLabels[role as keyof typeof communityRoleLabels] ?? role).join(", ") : "Geen rollen" },
-    { label: "Command Center-account", value: linkedAccount?.label ?? "Niet gekoppeld" },
+    { label: "Command Center-account", value: linkedAccount?.label ?? (record.account_user_id ? "Eerder gekoppeld account" : "Niet gekoppeld") },
     { label: "E-mail", value: String(record.email ?? "Niet ingevuld") },
     { label: "Discord", value: String(record.discord_handle ?? "Niet ingevuld") },
     { label: "Taal", value: String(record.language ?? "Niet ingevuld") },
@@ -188,7 +188,7 @@ export async function OperationalRecordDetail({
         {query.succes && <div className="success">De wijziging is opgeslagen.</div>}
         {query.bewerken ? (
           <FormModal title={`${title} bewerken`}>
-            <OperationalRecordForm action={updateOperationalRecord} module={module} record={record} projects={projectsResult.data ?? []} partners={partnersResult.data ?? []} content={contentResult.data ?? []} campaigns={campaignOptionsResult.data ?? []} events={eventsResult.data ?? []} accountOptions={accountOptions} personRoles={personRoles}/>
+            <OperationalRecordForm action={updateOperationalRecord} module={module} record={record} projects={projectsResult.data ?? []} partners={partnersResult.data ?? []} content={contentResult.data ?? []} campaigns={campaignOptionsResult.data ?? []} events={eventsResult.data ?? []} accountOptions={accountOptions} accountsUnavailable={Boolean(accountOptionsResult.error)} personRoles={personRoles}/>
           </FormModal>
         ) : (
           <>
@@ -198,7 +198,7 @@ export async function OperationalRecordDetail({
             {module !== "social" && <section className="form-card record-notes"><div className="form-heading"><h2>Notities en briefing</h2></div>{record.notes ? <MarkdownContent>{String(record.notes)}</MarkdownContent> : <p>Nog geen notities toegevoegd.</p>}</section>}
             {module === "campagnes" && <section className="form-card record-notes"><div className="form-heading"><h2>Resultaten en evaluatie</h2></div>{record.results_summary ? <MarkdownContent>{String(record.results_summary)}</MarkdownContent> : <p>Nog geen evaluatie toegevoegd.</p>}</section>}
             {module === "sponsors" && <ApprovalPanel entityType="partner" entityId={id} sourceHref={`/app/sponsors/${id}`} title="Sponsorafspraak goedkeuren"/>}
-            {module === "sponsors" && <PartnerSections id={id} contacts={(contactsResult.data ?? []) as unknown as RelatedRow[]} interactions={(interactionsResult.data ?? []) as unknown as RelatedRow[]} campaigns={(partnerCampaignsResult.data ?? []) as unknown as RelatedRow[]} events={[]} content={[]}/>}
+            {module === "sponsors" && <PartnerSections accountOptions={accountOptions} people={communityOptionsResult.data ?? []} canManage={hasPermission(membership, "manageOrganization")} optionsError={Boolean(accountOptionsResult.error || ("error" in communityOptionsResult && communityOptionsResult.error) || ("error" in contactsResult && contactsResult.error))} id={id} contacts={(contactsResult.data ?? []) as unknown as RelatedRow[]} interactions={(interactionsResult.data ?? []) as unknown as RelatedRow[]} campaigns={(partnerCampaignsResult.data ?? []) as unknown as RelatedRow[]} events={[]} content={[]}/>}
             {module === "sponsors" && <SponsorDocumentTools partnerId={id}/>}
             {module === "campagnes" && <CampaignSections id={id} deliverables={(deliverablesResult.data ?? []) as unknown as RelatedRow[]} social={(socialResult.data ?? []) as unknown as RelatedRow[]} content={((contentResult.data ?? []).filter((item) => item.campaign_id === id)) as unknown as RelatedRow[]} people={(communityOptionsResult.data ?? []) as unknown as RelatedRow[]}/>}
             {module === "community" && <CommunitySections id={id} onboarding={(onboardingResult.data ?? []) as unknown as RelatedRow[]} assignments={(assignmentsResult.data ?? []) as unknown as RelatedRow[]} events={(eventsResult.data ?? []) as unknown as RelatedRow[]} projects={(projectsResult.data ?? []) as unknown as RelatedRow[]}/>}
