@@ -22,6 +22,41 @@ type Change={id:string;new:boolean;values:Record<string,unknown>;base:Record<str
 type Bundle={kind:string;root:Change;parts:Change[]};
 const library=load("src/lib/dossier-editor-draft.ts") as unknown as {createDossierDraft:(kind:string,id:string,record:Record<string,unknown>|null,parts?:Record<string,Record<string,unknown>[]>)=>Draft;buildEditorBundle:(draft:Draft)=>Bundle;validateEditorBundle:(bundle:Bundle)=>string[];editorHasChanges:(draft:Draft)=>boolean};
 const id="11111111-1111-4111-8111-111111111111",child="22222222-2222-4222-8222-222222222222";
+test("Eventmultiselect bewaart oude sponsor, inkomende koppelingen en overige relaties",()=>{
+ const partners=load("src/lib/event-editor-partners.ts") as unknown as {eventPartnerIds:(draft:Draft)=>string[];selectEventPartners:(draft:Draft,ids:string[],newId:()=>string)=>Draft};
+ const second="33333333-3333-4333-8333-333333333333",third="44444444-4444-4444-8444-444444444444";
+ const incoming={id:second,source_type:"partner",source_id:second,target_type:"event",target_id:id,relationship_type:"sponsor"};
+ const supplier={id:third,source_type:"event",source_id:id,target_type:"partner",target_id:third,relationship_type:"supplier"};
+ const draft=library.createDossierDraft("event",id,{id,title:"TESTFIXTURE",partner_id:child},{record_relationships:[incoming,supplier]});
+ assert.deepEqual(Array.from(partners.eventPartnerIds(draft)),[child,second]);
+ assert.equal(library.editorHasChanges(draft),false);
+ let counter=5;const newId=()=>`${String(counter++).padStart(8,"0")}-5555-4555-8555-555555555555`;
+ const selected=partners.selectEventPartners(draft,[child,third,third],newId);
+ assert.deepEqual(Array.from(partners.eventPartnerIds(selected)),[child,third]);
+ assert.equal(selected.values.partner_id,child);
+ assert.equal(selected.parts.record_relationships.find(row=>row.id===second)?.deleted,true);
+ assert.equal(selected.parts.record_relationships.find(row=>row.id===third)?.deleted,false);
+ const bundle=library.buildEditorBundle(selected);
+ assert.equal(bundle.parts.filter(part=>part.new).length,2);
+ assert.equal(bundle.parts.filter(part=>part.delete).length,1);
+ assert.equal(library.validateEditorBundle(bundle).length,0);
+ const restored=partners.selectEventPartners(selected,[second],newId);
+ assert.equal(restored.values.partner_id,second);
+ assert.equal(restored.parts.record_relationships.find(row=>row.id===second)?.deleted,false);
+ assert.equal(library.buildEditorBundle(restored).parts.length,0);
+ const cleared=partners.selectEventPartners(draft,[],newId);
+ assert.equal(cleared.values.partner_id,null);
+ assert.equal(library.buildEditorBundle(cleared).parts.length,1);
+});
+test("Eventmultiselect toont meerdere aangevinkte sponsors en behoudt ontbrekende keuze",()=>{
+ const Component=load("src/components/dossier-editor.tsx").DossierEditor as React.ComponentType<Record<string,unknown>>;
+ const relation={id:child,source_type:"event",source_id:id,target_type:"partner",target_id:child,relationship_type:"sponsor"};
+ const html=renderToStaticMarkup(React.createElement(Component,{kind:"event",id,record:{id,title:"TESTFIXTURE",partner_id:"33333333-3333-4333-8333-333333333333"},parts:{record_relationships:[relation]},options:{partners:[{id:child,label:"TESTFIXTURE sponsor"}]},mode:"edit",cancelHref:"/app",permissions:{record_relationships:true,eventSponsors:false}}));
+ assert.match(html,/2 geselecteerd/);
+ assert.match(html,/TESTFIXTURE sponsor/);assert.match(html,/Huidige koppeling/);
+ assert.equal((html.match(/type="checkbox" disabled="" checked=""/g)||[]).length,2);
+ assert.match(html,/Zoek sponsors \/ partners/);
+});
 test("Eventeditor toont datum en optionele tijd eenmaal en koppelt de ondergrenzen",()=>{
  const Component=load("src/components/dossier-editor.tsx").DossierEditor as React.ComponentType<Record<string,unknown>>;
  const html=renderToStaticMarkup(React.createElement(Component,{kind:"event",id,record:{id,title:"TESTFIXTURE",start_date:"2026-10-08",end_date:"2026-10-08",start_at:"2026-10-08T10:30:00+00:00",end_at:"2026-10-08T11:30:00+00:00"},mode:"edit",cancelHref:"/app",permissions:{}}));

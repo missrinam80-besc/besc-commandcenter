@@ -37,4 +37,10 @@
 .module-body>.dossier-editor { padding:20px;border:1px solid var(--line);border-radius:12px;background:var(--theme-surface); }
 @media(max-width:700px) { .dossier-editor-fields { grid-template-columns:1fr; }.dossier-editor-heading { align-items:flex-start;flex-direction:column; } }
 .event-timing-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.event-partner-picker{min-width:0;margin:0;padding:0;border:0;display:grid;gap:7px;font-size:12px}
+.event-partner-picker legend{padding:0;font-weight:600;margin-bottom:7px}
+.event-partner-picker details{border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:var(--theme-field)}
+.event-partner-picker summary{cursor:pointer}
+.event-partner-picker input[type="search"]{margin:10px 0}
+.event-partner-options{max-height:230px;overflow:auto;display:grid;gap:8px}
 @media(max-width:480px){.event-timing-fields{grid-template-columns:minmax(0,1fr)}}

@@ -7,6 +7,7 @@ import {dossierEditorCatalog,dossierFieldTab,type EditorCollection} from "@/lib/
 import {buildEditorBundle,createDossierDraft,defaultEditorValues,editorFields,editorHasChanges,validateEditorBundle,type DossierDraft,type DraftRow,type EditorBundle,type EditorRecord,type FieldSchema} from "@/lib/dossier-editor-draft";
 import {dossierFieldLabel,dossierChoiceLabel} from "@/lib/dossier-editor-labels";
 import {formatDateTimeLocal,localDateTimeToIso} from "@/lib/format";
+import {eventPartnerIds,eventPartnerForRow,selectEventPartners} from "@/lib/event-editor-partners";
 
 export type EditorOption={id:string;label:string;searchText?:string};
 function ArrayField({id,label,value,disabled,onChange}:{id:string;label:string;value:unknown;disabled:boolean;onChange:(value:string[])=>void}){
@@ -19,6 +20,12 @@ function ReferenceField({id,label,value,choices,disabled,required,onChange}:{id:
   return <label htmlFor={id}>{label}{choices.length>10&&<input disabled={disabled} aria-label={`Zoek ${label.toLowerCase()}`} placeholder="Zoeken…" type="search" value={query} onChange={event=>setQuery(event.target.value)}/>}<select id={id} disabled={disabled} aria-required={required} value={value} onChange={event=>onChange(event.target.value||null)}><option value="">Kies…</option>{filtered.map(choice=><option key={choice.id} value={choice.id}>{choice.label}</option>)}{value&&!choices.some(choice=>choice.id===value)&&<option value={value}>Huidige koppeling</option>}</select></label>;
 }
 type SaveResult={ok:boolean;message?:string;href?:string};
+function MultiReferenceField({id,choices,selected,disabled,onChange}:{id:string;choices:EditorOption[];selected:string[];disabled:boolean;onChange:(ids:string[])=>void}){
+  const [query,setQuery]=useState("");
+  const available:EditorOption[]=[...choices,...selected.filter(value=>!choices.some(choice=>choice.id===value)).map(value=>({id:value,label:"Huidige koppeling"}))];
+  const filtered=available.filter(choice=>`${choice.label} ${choice.searchText??""}`.toLocaleLowerCase("nl-BE").includes(query.toLocaleLowerCase("nl-BE")));
+  return <fieldset className="event-partner-picker"><legend>Sponsors / partners</legend><details><summary>{selected.length?`${selected.length} geselecteerd`:"Kies sponsors / partners…"}</summary><input id={id} aria-label="Zoek sponsors / partners" type="search" disabled={disabled} value={query} placeholder="Zoeken…" onChange={e=>setQuery(e.target.value)}/><div className="event-partner-options">{filtered.map(choice=><label className="inline-check" key={choice.id}><input type="checkbox" disabled={disabled} checked={selected.includes(choice.id)} onChange={e=>onChange(e.target.checked?[...selected,choice.id]:selected.filter(value=>value!==choice.id))}/>{choice.label}</label>)}{!filtered.length&&<p className="form-help">Geen sponsors gevonden.</p>}</div></details><small>Je kunt meerdere sponsors koppelen. Ze worden samen met het event opgeslagen.</small></fieldset>;
+}
 export type DossierEditorProps={
   kind:string;id:string;record?:EditorRecord|null;parts?:Record<string,EditorRecord[]>;
   options?:Record<string,EditorOption[]>;permissions?:Record<string,boolean>;
@@ -56,6 +63,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
     const candidates=field.name==="target_id"?options[relationTable]??[]:field.reference?options[field.reference]??[]:options[field.name]??[];
     const linkedPending=(draft.parts[field.reference??""]??[]).filter(row=>!row.deleted).map(row=>({id:row.id,label:String(row.values.title??row.values.name??"Nieuw onderdeel")}));
     const choices=[...candidates,...linkedPending.filter(row=>!candidates.some(candidate=>candidate.id===row.id))];
+    if(kind==="event"&&table==="events"&&field.name==="partner_id")return <MultiReferenceField key={field.name} id={inputId} choices={choices} selected={eventPartnerIds(draft)} disabled={readonly||saving||permissions.eventSponsors===false} onChange={ids=>{setTouched(true);setDraft(current=>selectEventPartners(current,ids,()=>crypto.randomUUID()));}}/>;
     if(field.type==="boolean")return <label className="inline-check" key={field.name}><input {...shared} type="checkbox" checked={Boolean(value)} onChange={e=>change(field.name,e.target.checked)}/>{label}</label>;
     if(field.type==="uuid")return <ReferenceField key={field.name} id={inputId} label={label} value={String(value)} choices={choices} disabled={readonly||saving} required={field.required} onChange={value=>change(field.name,value)}/>;
     if(known.length)return <label key={field.name} htmlFor={inputId}>{label}<select {...shared} value={String(value)} onChange={e=>change(field.name,e.target.value||null)}><option value="">Kies…</option>{known.map(choice=><option key={choice} value={choice}>{dossierChoiceLabel(choice)}</option>)}{value&&!known.includes(String(value))&&<option value={String(value)}>{dossierChoiceLabel(String(value))}</option>}</select></label>;
@@ -91,7 +99,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
     {cfg.tabs.map(item=><section key={item.id} role="tabpanel" id={`editor-panel-${item.id}`} aria-labelledby={`editor-tab-${item.id}`} hidden={tab!==item.id} className="dossier-editor-panel">
       {visibleRootFields.some(field=>dossierFieldTab(field.name,cfg)===item.id)&&<section className="dossier-editor-basics"><h3>{item.label}</h3><div className="dossier-editor-fields">{visibleRootFields.filter(field=>dossierFieldTab(field.name,cfg)===item.id).map(field=>input(field,draft.values,updateRoot))}</div></section>}
       {cfg.collections.filter(part=>part.tab===item.id).map(part=>{
-        const rows=draft.parts[part.table]??[],canManage=permissions[part.table]===true;
+        const rows=(draft.parts[part.table]??[]).filter(row=>kind!=="event"||part.table!=="record_relationships"||!eventPartnerForRow(row,id)),canManage=permissions[part.table]===true;
         return <section className="dossier-editor-collection" key={part.table}><div className="form-heading"><h3>{part.label}</h3>{canManage&&(!part.singleton||!rows.some(row=>!row.deleted))&&<button type="button" disabled={saving} onClick={()=>addRow(part)}>Toevoegen</button>}</div>
           {!rows.length&&<p className="form-help">Nog geen onderdelen toegevoegd.</p>}
           {!canManage&&<p className="form-help">Je kunt deze onderdelen bekijken. Wijzigen vraagt een aanvullende bevoegdheid.</p>}

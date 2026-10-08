@@ -50,13 +50,18 @@ for(const role of ["member","volunteer"])test(`Event-scherm bewaakt bewerklink e
  overrides["@/components/event-form"]={EventForm:()=>React.createElement("div",{"data-testid":"event-editor"}),eventStatuses:{idea:"Idee"},eventTypes:{community:"Community"}};
  overrides["@/lib/permissions"]={hasPermission};
  overrides["@/lib/event-dossier-tabs"]={eventDossierTabs,resolveEventDossierTab};
- overrides["@/lib/dossier-relations"]={loadDossierConnections:async()=>({}),loadRelationOptions:async()=>[]};
+ overrides["@/lib/dossier-relations"]={loadDossierConnections:async()=>({links:[],documents:[],relationships:[
+  {entityType:"partner",entityId:"fixture-sponsor-legacy",relationship_type:"sponsor",label:"TESTFIXTURE sponsor een"},
+  {entityType:"partner",entityId:"fixture-sponsor-two",relationship_type:"sponsor",label:"TESTFIXTURE sponsor twee"},
+  {entityType:"partner",entityId:"fixture-supplier",relationship_type:"supplier",label:"TESTFIXTURE leverancier"},
+ ]}),loadRelationOptions:async()=>[]};
+ overrides["@/components/record-metadata"]={RecordMetadata:({items}:{items:{label:string;value:React.ReactNode}[]})=>React.createElement("dl",null,items.map(item=>React.createElement("div",{key:item.label},item.label,item.value)))};
  const supabase={from:(table:string)=>{
   let single=false;
   const q:Record<string,unknown>={};
   for(const method of ["select","eq","is","order","limit","neq"])q[method]=()=>q;
   q.maybeSingle=()=>{single=true;return q;};
-  q.then=(resolve:(v:unknown)=>unknown)=>Promise.resolve({data:table==="events"?{id:"fixture-event",title:"TESTFIXTURE",status:"idea",event_type:"community",updated_at:"2026-10-06"}:single?null:[]}).then(resolve);
+  q.then=(resolve:(v:unknown)=>unknown)=>Promise.resolve({data:table==="events"?{id:"fixture-event",title:"TESTFIXTURE",status:"idea",event_type:"community",updated_at:"2026-10-06",partner_id:"fixture-sponsor-legacy"}:table==="partners"?{id:"fixture-sponsor-legacy",name:"TESTFIXTURE sponsor een"}:single?null:[]}).then(resolve);
   return q;
  }};
  overrides["@/lib/auth-context"]={requireActiveMembership:async()=>({supabase,membership:{organization_id:org,role,finance_role:"none"}})};
@@ -64,5 +69,8 @@ for(const role of ["member","volunteer"])test(`Event-scherm bewaakt bewerklink e
  const html=renderToStaticMarkup(await page({params:Promise.resolve({id:"fixture-event"}),searchParams:Promise.resolve({bewerken:"1"})}));
  assert.equal(html.includes('href="?tab=overzicht&amp;bewerken=1"'),role==="member");
  assert.equal(html.includes('data-testid="event-editor"'),false);
+ assert.equal((html.match(/TESTFIXTURE sponsor een/g)||[]).length,1);
+ assert.equal((html.match(/TESTFIXTURE sponsor twee/g)||[]).length,1);
+ assert.equal(html.includes("TESTFIXTURE leverancier"),false);
 });
 import { eventDossierTabs, resolveEventDossierTab } from "../src/lib/event-dossier-tabs.ts";
