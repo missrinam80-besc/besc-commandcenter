@@ -44,3 +44,6 @@
 .event-partner-picker input[type="search"]{margin:10px 0}
 .event-partner-options{max-height:230px;overflow:auto;display:grid;gap:8px}
 @media(max-width:480px){.event-timing-fields{grid-template-columns:minmax(0,1fr)}}
+.app-shell .dossier-editor .dossier-error-link{background:transparent;border:0;padding:3px 0;text-align:left;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
+.app-shell .dossier-editor .dossier-error-link:hover{background:transparent;text-decoration-thickness:2px}
+.dossier-editor [aria-invalid="true"]{outline:2px solid var(--theme-danger);outline-offset:1px}
