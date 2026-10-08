@@ -2,7 +2,6 @@ import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ModulePage } from "@/components/module-page";
-import { TaskCreateModal } from "@/components/task-create-modal";
 import { SavedViews } from "@/components/saved-views";
 import { demoDashboard } from "@/lib/demo-data";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
@@ -72,7 +71,7 @@ const successMessages = new Map<string, string>([
   ["taak-aangemaakt", "De taak werd aangemaakt."],
   ["taak", "De taak werd bijgewerkt."],
   ["verwijderd", "De taak werd verwijderd uit de werkvoorraad."],
-]);
+  ]);
 
 export default async function TasksPage({
   searchParams,
@@ -98,8 +97,6 @@ export default async function TasksPage({
     due_at: task.due,
     projects: { title: task.project },
   }));
-  let projects: { id: string; title: string }[] = [];
-  let people: { id: string; label: string }[] = [];
 
   if (isSupabaseConfigured()) {
     const { supabase, user, membership } = await requireActiveMembership();
@@ -131,20 +128,10 @@ export default async function TasksPage({
           : taskQuery.in("id", ["00000000-0000-0000-0000-000000000000"]);
     }
 
-    const [{ data: taskData }, { data: projectData }, { data: memberData }] = await Promise.all([
-      taskQuery,
-      supabase
-        .from("projects")
-        .select("id,title")
-        .eq("organization_id", membership.organization_id)
-        .is("deleted_at", null)
-        .in("status", ["planned", "active"])
-        .order("title"),
-      supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", membership.organization_id).eq("status", "active"),
-    ]);
+    const [{ data: taskData }] = await Promise.all([
+    taskQuery
+  ]);
     allTasks = (taskData ?? []) as unknown as TaskRow[];
-    projects = projectData ?? [];
-    people = (memberData ?? []).map((member) => ({ id: member.user_id, label: (member.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account" }));
   } else {
     if (search) {
       allTasks = allTasks.filter((task) =>
@@ -184,9 +171,7 @@ export default async function TasksPage({
         {params.succes && <div className="success">{successMessages.get(params.succes) ?? "Wijziging opgeslagen."}</div>}
         {overdue && <div className="permission-note">Je ziet nu alleen taken waarvan de deadline verstreken is. <Link href="/app/taken?van_mij=1">Toon al mijn taken</Link></div>}
         {openOnly && <div className="permission-note">Je ziet nu alleen open taken. <Link href="/app/taken">Toon ook de historiek</Link></div>}
-        {params.nieuw && (
-          <TaskCreateModal returnTo="/app/taken" projects={projects} people={people}/>
-        )}
+
         <SavedViews
           module="tasks"
           path="/app/taken"

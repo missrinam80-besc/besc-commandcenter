@@ -3,13 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, ExternalLink, FileText, ShieldAlert, Users } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { requireActiveMembership } from "@/lib/auth-context";
-import {
-  completeComplianceDeadline,
-  saveAdministrativeDocument,
-  saveAssociationMember,
-  saveComplianceDeadline,
-  saveGovernanceMandate,
-} from "./actions";
+import { completeComplianceDeadline } from "./actions";
 
 const documentTypes: Record<string, string> = {
   articles: "Statuten",
@@ -79,14 +73,12 @@ export default async function Page({
   }
 
   const organizationId = membership.organization_id;
-  const [membersResult, documentsResult, mandatesResult, deadlinesResult, profilesResult] =
-    await Promise.all([
-      supabase.from("association_members").select("*").eq("organization_id", organizationId).is("deleted_at", null).order("full_name"),
-      supabase.from("administrative_documents").select("*").eq("organization_id", organizationId).is("deleted_at", null).order("document_date", { ascending: false }),
-      supabase.from("governance_mandates").select("*,association_members(full_name)").eq("organization_id", organizationId).is("deleted_at", null).order("start_date", { ascending: false }),
-      supabase.from("compliance_deadlines").select("*,profiles(display_name),administrative_documents(title)").eq("organization_id", organizationId).is("deleted_at", null).order("due_date"),
-      supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", organizationId).eq("status", "active"),
-    ]);
+  const [membersResult, documentsResult, mandatesResult, deadlinesResult] = await Promise.all([
+    supabase.from("association_members").select("*").eq("organization_id", organizationId).is("deleted_at", null).order("full_name"),
+    supabase.from("administrative_documents").select("*").eq("organization_id", organizationId).is("deleted_at", null).order("document_date", { ascending: false }),
+    supabase.from("governance_mandates").select("*,association_members(full_name)").eq("organization_id", organizationId).is("deleted_at", null).order("start_date", { ascending: false }),
+    supabase.from("compliance_deadlines").select("*,profiles(display_name),administrative_documents(title)").eq("organization_id", organizationId).is("deleted_at", null).order("due_date")
+  ]);
 
   const members = membersResult.data ?? [];
   const documents = documentsResult.data ?? [];
@@ -145,30 +137,6 @@ export default async function Page({
               </article>
             ))}
             {expiringDocuments.map((item) => <article key={item.id}><div><strong>{item.title}</strong><span>Document vervalt op {item.valid_until}</span></div>{item.drive_url && <a className="row-action" href={item.drive_url} target="_blank" rel="noreferrer">Open</a>}</article>)}
-          </section>
-        )}
-
-        {query.nieuw === "lid" && (
-          <section className="form-card"><div className="form-heading"><h2>Lid registreren</h2><Link href="?">Sluiten</Link></div>
-            <form action={saveAssociationMember}><div className="form-row"><label>Volledige naam<input name="full_name" required/></label><label>Lidnummer<input name="member_number"/></label><label>E-mail<input name="email" type="email"/></label><label>Type lid<select name="membership_type">{Object.entries(memberTypes).map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label><label>Status<select name="status" defaultValue="active"><option value="candidate">Kandidaat</option><option value="active">Actief</option><option value="suspended">Geschorst</option><option value="former">Voormalig</option><option value="deceased">Overleden</option></select></label><label>Startdatum<input type="date" name="joined_on"/></label><label>Einddatum<input type="date" name="left_on"/></label><label className="inline-check"><input type="checkbox" name="voting_right"/>Stemrecht</label></div><label>Adres<textarea name="address" rows={3}/></label><label>Notities<textarea name="notes" rows={4}/></label><div className="form-actions"><button className="primary">Lid opslaan</button></div></form>
-          </section>
-        )}
-
-        {query.nieuw === "document" && (
-          <section className="form-card"><div className="form-heading"><h2>Officieel document registreren</h2><Link href="?">Sluiten</Link></div>
-            <form action={saveAdministrativeDocument}><label>Titel<input name="title" required/></label><div className="form-row"><label>Documenttype<select name="document_type">{Object.entries(documentTypes).map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label><label>Status<select name="status" defaultValue="active"><option value="draft">Concept</option><option value="active">Actief</option><option value="expiring">Vervalt binnenkort</option><option value="expired">Vervallen</option><option value="archived">Gearchiveerd</option></select></label><label>Documentdatum<input type="date" name="document_date"/></label><label>Geldig vanaf<input type="date" name="valid_from"/></label><label>Geldig tot<input type="date" name="valid_until"/></label><label>Referentienummer<input name="reference_number"/></label><label>Google Drive-link<input type="url" name="drive_url"/></label><label className="inline-check"><input type="checkbox" name="confidential" defaultChecked/>Vertrouwelijk</label></div><label>Notities<textarea name="notes" rows={4}/></label><div className="form-actions"><button className="primary">Document opslaan</button></div></form>
-          </section>
-        )}
-
-        {query.nieuw === "mandaat" && (
-          <section className="form-card"><div className="form-heading"><h2>Bestuursmandaat registreren</h2><Link href="?">Sluiten</Link></div>
-            <form action={saveGovernanceMandate}><div className="form-row"><label>Lid<select name="member_id" required><option value="">Selecteer lid</option>{members.map((item) => <option value={item.id} key={item.id}>{item.full_name}</option>)}</select></label><label>Functie<select name="role">{Object.entries(mandateRoles).map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label><label>Andere benaming<input name="role_label"/></label><label>Status<select name="status" defaultValue="active"><option value="planned">Gepland</option><option value="active">Actief</option><option value="ended">Beëindigd</option></select></label><label>Startdatum<input type="date" name="start_date"/></label><label>Einddatum<input type="date" name="end_date"/></label><label>Aanstelling in Drive<input type="url" name="appointment_document_url"/></label></div><label>Notities<textarea name="notes" rows={4}/></label><div className="form-actions"><button className="primary">Mandaat opslaan</button></div></form>
-          </section>
-        )}
-
-        {query.nieuw === "deadline" && (
-          <section className="form-card"><div className="form-heading"><h2>Wettelijke deadline registreren</h2><Link href="?">Sluiten</Link></div>
-            <form action={saveComplianceDeadline}><label>Titel<input name="title" required/></label><div className="form-row"><label>Categorie<select name="category">{Object.entries(deadlineCategories).map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label><label>Deadline<input type="date" name="due_date"/></label><label>Herhaling<select name="recurrence"><option value="once">Eenmalig</option><option value="monthly">Maandelijks</option><option value="quarterly">Per kwartaal</option><option value="yearly">Jaarlijks</option></select></label><label>Status<select name="status" defaultValue="open"><option value="open">Open</option><option value="planned">Ingepland</option><option value="completed">Afgerond</option><option value="cancelled">Geannuleerd</option><option value="not_applicable">Niet van toepassing</option></select></label><label>Verantwoordelijke<select name="responsible_id"><option value="">Niet toegewezen</option>{(profilesResult.data ?? []).map((item) => <option value={item.user_id} key={item.user_id}>{item.profiles?.[0]?.display_name || "Gebruiker"}</option>)}</select></label><label>Gekoppeld document<select name="document_id"><option value="">Geen document</option>{documents.map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label></div><label>Notities<textarea name="notes" rows={4}/></label><div className="form-actions"><button className="primary">Deadline opslaan</button></div></form>
           </section>
         )}
 

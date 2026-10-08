@@ -4,7 +4,7 @@ Deze wiki bundelt de handleidingen uit de repository in een klikbaar overzicht. 
 
 ## Begin hier
 
-- [Projectoverzicht en integratiebeheer](../../README.md)
+- [Projectoverzicht](../../README.md)
 - [Gebruik en richtlijnen](Gebruik-en-richtlijnen.md)
 - [Dossiers aanmaken en bewerken](Dossiers-aanmaken-en-bewerken.md)
 - [Rollen en profielen](Rollen-en-profielen.md)
@@ -23,6 +23,6 @@ We werken aan het Command Center op DEV. De app draait op de VPS en gebruikt Clo
 
 ## Documentatie onderhouden
 
-De originele handleidingen blijven de bron. Bewerk een handleiding op haar bestaande plaats; de wiki verwijst er rechtstreeks naar, zodat er geen tweede kopie veroudert. Houd de index bij wanneer een document wordt toegevoegd, hernoemd of verplaatst. Pas wijzigingen via een documentatie-PR aan.
+De wiki bevat de actuele uitleg. De technische handleidingen staan onder `handleidingen/`; eerdere ontwerpen, uitrolnotities en momentopnamen onder `historie/`. Bewerk de bestaande bronpagina en houd de index bij wanneer een document wordt toegevoegd, hernoemd of verplaatst. De hoofd-README verwijst naar de wiki. Pas wijzigingen via een documentatie-PR aan.
 
 De historische pagina bundelt oudere uitrolnotities en momentopnamen. Lees hun datum en scope voordat je ze gebruikt als actuele instructie. De wiki vervangt geen live controle van instellingen, rechten of deployment.

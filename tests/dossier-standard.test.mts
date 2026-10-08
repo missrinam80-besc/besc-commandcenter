@@ -139,7 +139,7 @@ test("één communitypersoon ondersteunt meerdere rollen en een optionele accoun
   assert.match(detail, /Command Center-account/);
 });
 
-test("de gedeelde taakmodal ondersteunt project, verantwoordelijke, checklist en dossierrelatie", async () => {
+test("de taakaanmaak ondersteunt project, verantwoordelijke, checklist en dossierrelatie", async () => {
   const [modal, actions, event, content, operational, task, bundle] = await Promise.all([
     source("src/components/task-create-modal.tsx"),
     source("src/app/app/actions.ts"),
@@ -155,9 +155,9 @@ test("de gedeelde taakmodal ondersteunt project, verantwoordelijke, checklist en
   assert.match(actions, /rpc\("create_task_bundle"/);
   assert.match(bundle, /task_checklist_items/);
   assert.match(bundle, /record_relationships/);
-  assert.match(event, /TaskCreateModal/);
-  assert.match(content, /TaskCreateModal/);
-  assert.match(operational, /TaskCreateModal/);
+  assert.match(event, /dossierEditorGate/); assert.doesNotMatch(event, /TaskCreateModal/);
+  assert.match(content, /dossierEditorGate/); assert.doesNotMatch(content, /TaskCreateModal/);
+  assert.match(operational, /dossierEditorGate/); assert.doesNotMatch(operational, /TaskCreateModal/);
   assert.match(task, /RecordConnectionsPanel entityType="task"/);
 });
 

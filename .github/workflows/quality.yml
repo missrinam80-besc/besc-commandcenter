@@ -62,6 +62,11 @@ jobs:
       - name: Codekwaliteit controleren
         run: pnpm run lint
 
+      - name: Gegenereerde dossierbestanden controleren
+        run: |
+          node scripts/build-dossier-editor-schema.cjs --check
+          node scripts/build-dossier-editor-migration.cjs --check
+
       - name: Productiebuild controleren
         run: pnpm run build
         env:

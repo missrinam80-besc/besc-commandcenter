@@ -3,7 +3,6 @@ import Link from "next/link";
 import { BookOpen, Search, Star } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { FormModal } from "@/components/form-modal";
-import { KnowledgeForm } from "@/components/knowledge-form";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { saveKnowledgeCategory } from "./actions";
 
@@ -56,25 +55,16 @@ export default async function KnowledgePage({
   if (q.type) request = request.eq("article_type", q.type);
   if (q.status) request = request.eq("status", q.status);
 
-  const [{ data: articles }, { data: categories }, { data: members }] = await Promise.all([
+  const [{ data: articles }, { data: categories }] = await Promise.all([
     request,
     supabase
-      .from("knowledge_categories")
-      .select("id,name,description,color")
-      .eq("organization_id", organizationId)
-      .is("deleted_at", null)
-      .order("sort_order"),
-    supabase
-      .from("organization_members")
-      .select("user_id,profiles(display_name)")
-      .eq("organization_id", organizationId)
-      .eq("status", "active"),
+        .from("knowledge_categories")
+        .select("id,name,description,color")
+        .eq("organization_id", organizationId)
+        .is("deleted_at", null)
+        .order("sort_order")
   ]);
 
-  const people = (members ?? []).map((member) => ({
-    id: member.user_id,
-    display_name: (member.profiles as unknown as { display_name: string | null } | null)?.display_name,
-  }));
   const startArticle = (articles ?? []).find((article) => article.title === "Start hier: werken met BESC Command Center");
   const selectedCategory = (categories ?? []).find((category) => category.id === q.categorie);
 
@@ -116,12 +106,6 @@ export default async function KnowledgePage({
                 <button className="primary">Opslaan</button>
               </div>
             </form>
-          </FormModal>
-        )}
-
-        {q.nieuw === "artikel" && manager && (
-          <FormModal title="Nieuw kennisartikel" closeHref="/app/kennisbank">
-            <KnowledgeForm categories={categories ?? []} people={people}/>
           </FormModal>
         )}
 

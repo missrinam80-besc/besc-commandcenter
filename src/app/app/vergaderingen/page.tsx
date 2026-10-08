@@ -1,8 +1,6 @@
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
-import { MeetingForm } from "@/components/meeting-form";
-import { FormModal } from "@/components/form-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatDateTime } from "@/lib/format";
 
@@ -60,11 +58,7 @@ export default async function Page({
           <article><span>Gepland</span><strong>{data.filter((item) => ["planned", "confirmed"].includes(item.status)).length}</strong></article>
           <article><span>Afgerond</span><strong>{data.filter((item) => item.status === "completed").length}</strong></article>
         </section>
-        {q.nieuw && (
-          <FormModal title="Nieuwe vergadering">
-            <MeetingForm />
-          </FormModal>
-        )}
+
         {openActionsOnly && (
           <section id="open-actiepunten" className="project-task-section administration-wide">
             <div className="section-heading">

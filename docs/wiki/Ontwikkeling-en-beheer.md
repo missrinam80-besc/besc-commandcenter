@@ -8,7 +8,9 @@ GitHub bewaart code en documentatie; databasegegevens en uploads hebben een afzo
 
 ## Handleidingen
 
-- [DEV_DEPLOYMENT](../DEV_DEPLOYMENT.md)
-- [Supabase koppelen](../SUPABASE_SETUP.md)
-- [BESC Command Center lokaal en op VPS draaien](../DOCKER_VPS_SETUP.md)
-- [Backup en restore](../BACKUP_EN_RESTORE.md)
+- [Editorbestanden, migraties en repositoryonderhoud](Repositoryonderhoud.md)
+
+- [DEV_DEPLOYMENT](handleidingen/DEV_DEPLOYMENT.md)
+- [Supabase koppelen](handleidingen/SUPABASE_SETUP.md)
+- [BESC Command Center lokaal en op VPS draaien](handleidingen/DOCKER_VPS_SETUP.md)
+- [Backup en restore](handleidingen/BACKUP_EN_RESTORE.md)

@@ -41,9 +41,9 @@ test("campagnes kunnen rechtstreeks vanuit projecten en events worden gestart", 
     source("src/components/operational-record-detail.tsx"),
   ]);
   assert.match(project, /nieuw=campagne/);
-  assert.match(project, /returnTo=\{`\/app\/projecten\/\$\{id\}`\}/);
+  assert.match(project, /dossierEditorGate\(\{kind:"project",id,/);
   assert.match(event, /nieuw=campagne/);
-  assert.match(event, /returnTo=\{`\/app\/events\/\$\{id\}`\}/);
+  assert.match(event, /dossierEditorGate\(\{kind:"event",id,/);
   assert.match(detail, /nieuw=content/);
   assert.match(detail, /nieuw=social/);
 });

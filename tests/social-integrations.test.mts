@@ -5,7 +5,7 @@ import test from "node:test";
 const migration = readFileSync("supabase/migrations/20260803150500_add_social_integration_core.sql", "utf8");
 const page = readFileSync("src/app/app/integraties/social-accounts.tsx", "utf8");
 const logs = readFileSync("src/app/app/integraties/logs/page.tsx", "utf8");
-const readme = readFileSync("README.md", "utf8");
+const integrationGuide = readFileSync("docs/wiki/Integraties.md", "utf8");
 const actions = readFileSync("src/app/app/integraties/social/actions.ts", "utf8");
 const connectorDefinitions = readFileSync("src/lib/social-connectors.ts", "utf8");
 const youtube = readFileSync("src/lib/youtube-integration.ts", "utf8");
@@ -26,10 +26,9 @@ const twitchStart = readFileSync("src/app/app/integraties/social/twitch/start/ro
 const twitchCallback = readFileSync("src/app/app/integraties/social/twitch/callback/route.ts", "utf8");
 const twitchSync = readFileSync("src/lib/twitch-sync.ts", "utf8");
 const cronRoute = readFileSync("src/app/api/cron/social-sync/route.ts", "utf8");
-const vercel = readFileSync("vercel.json", "utf8");
+const timer = readFileSync("ops/besc-social-sync.timer", "utf8");
 const reportPage = readFileSync("src/app/app/rapportage/social/page.tsx", "utf8");
 const reportExport = readFileSync("src/app/app/rapportage/social/export/route.ts", "utf8");
-const socialAcceptance = readFileSync("src/lib/social-acceptance.ts", "utf8");
 const quotaMigration = readFileSync("supabase/migrations/20260803152000_add_social_quota_and_audit.sql", "utf8");
 const audit = readFileSync("src/lib/audit.ts", "utf8");
 
@@ -78,7 +77,7 @@ test("beheer toont platformfasering, accountstatus en syncgeschiedenis", () => {
   assert.match(connectorDefinitions, /x: \{[^\n]+state: "blocked"[^\n]+API-budget/);
   assert.match(page, /Geregistreerde kanalen/);
   assert.match(logs, /Laatste 50 synchronisaties/);
-  assert.match(readme, /versleuteld in Supabase Vault/);
+  assert.match(integrationGuide, /versleuteld in Supabase Vault/);
   assert.match(page, /changeSocialAccountState/);
 });
 
@@ -184,8 +183,8 @@ test("automatische social sync is afgeschermd, begrensd en idempotent", () => {
   assert.match(cronRoute, /syncThreadsAccountById\(account\.id, "scheduled"\)/);
   assert.match(cronRoute, /syncTwitchAccountById\(account\.id, "scheduled"\)/);
   assert.match(youtubeSync, /scheduled:\$\{Math\.floor/);
-  assert.match(vercel, /"path": "\/api\/cron\/social-sync"/);
-  assert.match(vercel, /"schedule": "15 4 \* \* \*"/);
+  assert.match(timer, /Unit=besc-social-sync.service/);
+  assert.match(timer, /OnCalendar=\*-\*-\* \*:00\/15:00 UTC/);
 });
 
 test("socialrapport en CSV nemen officiële API-metingen op", () => {
@@ -210,19 +209,12 @@ test("social koppelingen hebben auditregistratie en een interne quotarem", () =>
 });
 
 test("social integraties bewaren acceptatiecriteria en documenteren platformvoorwaarden buiten de beheerpagina", () => {
-  for (const platform of ["youtube", "facebook", "instagram", "twitch"]) {
-    assert.match(socialAcceptance, new RegExp(`${platform}: \\[`));
-  }
-  assert.doesNotMatch(socialAcceptance, /threads: \[/);
-  assert.match(socialAcceptance, /OAuth-flow/);
-  assert.match(socialAcceptance, /Handmatige sync uitvoeren/);
-  assert.match(socialAcceptance, /Socialrapportage en CSV-export valideren/);
-  assert.match(socialAcceptance, /platform: "Threads"/);
-  assert.match(socialAcceptance, /platform: "LinkedIn"/);
-  assert.match(socialAcceptance, /platform: "TikTok"/);
-  assert.match(socialAcceptance, /platform: "X"/);
+  assert.match(integrationGuide, /YouTube, Facebook, Instagram en Twitch/);
+  assert.match(integrationGuide, /OAuth-flow/);
+  assert.match(integrationGuide, /handmatige sync/);
+  assert.match(integrationGuide, /socialrapportage en CSV-export/);
   assert.doesNotMatch(page, /FINALE ACCEPTATIE|BESLISPOORTEN/);
-  assert.match(readme, /Threads, LinkedIn, TikTok en X/);
-  assert.match(readme, /Registratie betekent geen operationele ondersteuning/);
-  assert.match(readme, /platformrechten\/configuratie/);
+  assert.match(integrationGuide, /Threads, LinkedIn, TikTok en X/);
+  assert.match(integrationGuide, /Registratie betekent geen operationele ondersteuning/);
+  assert.match(integrationGuide, /platformrechten\/configuratie/);
 });

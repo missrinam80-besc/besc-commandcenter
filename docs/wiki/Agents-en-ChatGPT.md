@@ -6,6 +6,6 @@ Documentatie voor de bestaande BESC-agents, Command Center-toegang en de social 
 
 ## Handleidingen
 
-- [Technical Agent: tweewegkoppeling op DEV](../TECHNICAL_AGENT_DEV.md)
-- [Command Center-leeskoppeling en verbeteronderzoek](../COMMANDCENTER_AGENT_READ.md)
-- [BESC Socialrapportage in ChatGPT via MCP + OAuth](../SOCIAL_MCP_CHATGPT.md)
+- [Technical Agent: tweewegkoppeling op DEV](handleidingen/TECHNICAL_AGENT_DEV.md)
+- [Command Center-leeskoppeling en verbeteronderzoek](handleidingen/COMMANDCENTER_AGENT_READ.md)
+- [BESC Socialrapportage in ChatGPT via MCP + OAuth](handleidingen/SOCIAL_MCP_CHATGPT.md)

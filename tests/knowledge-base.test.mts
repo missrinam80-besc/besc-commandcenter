@@ -15,7 +15,7 @@ test("kennisbank heeft een startpunt en doorzoekt inhoud", async () => {
   assert.match(page, /Zoek in titel, samenvatting of inhoud/);
 });
 
-test("kennisbankformulieren gebruiken modal en Markdown", async () => {
+test("kennisbank gebruikt de gezamenlijke editor; categoriebeheer en Markdownweergave blijven", async () => {
   const [page, detail, form] = await Promise.all([
     source("src/app/app/kennisbank/page.tsx"),
     source("src/app/app/kennisbank/[id]/page.tsx"),
@@ -23,7 +23,7 @@ test("kennisbankformulieren gebruiken modal en Markdown", async () => {
   ]);
 
   assert.match(page, /FormModal/);
-  assert.match(detail, /FormModal/);
+  assert.match(detail, /dossierEditorGate/);assert.doesNotMatch(detail,/FormModal|KnowledgeForm/);
   assert.match(detail, /MarkdownContent/);
   assert.match(form, /MarkdownField/);
   assert.doesNotMatch(form, /name="title"[^>]*\brequired\b/);

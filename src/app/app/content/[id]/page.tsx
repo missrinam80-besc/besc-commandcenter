@@ -4,14 +4,10 @@ import { ExternalLink } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ApprovalPanel } from "@/components/approval-panel";
-import { ContentForm } from "@/components/content-form";
-import { FormModal } from "@/components/form-modal";
 import { RecordLifecyclePanel } from "@/components/record-lifecycle-panel";
 import { RecordConnectionsPanel } from "@/components/record-connections-panel";
-import { TaskCreateModal } from "@/components/task-create-modal";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatDateTime } from "@/lib/format";
-import { updateContent } from "../actions";
 import { approvalStatuses, contentStatuses, contentTypes } from "../constants";
 import { hasPermission } from "@/lib/permissions";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
@@ -51,17 +47,12 @@ export default async function ContentDetail({
 
   const { supabase, membership } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageContent");
-  const [{ data }, { data: projects }, { data: source }, { data: memberRows }, { data: campaigns }, { data: partners }] = await Promise.all([
+  const [{ data }, { data: source }] = await Promise.all([
     supabase.from("content_items").select("id,title,description,content_type,status,priority,project_id,campaign_id,partner_id,primary_channel,channels,deadline,publication_at,drive_url,canva_url,publication_url,approval_status,projects(title)").eq("organization_id", membership.organization_id).eq("id", id).is("deleted_at", null).maybeSingle(),
-    supabase.from("projects").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
-    supabase.from("migration_source_links").select("source_url").eq("target_table", "content_items").eq("target_id", id).limit(1).maybeSingle(),
-    supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", membership.organization_id).eq("status", "active"),
-    supabase.from("campaigns").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
-    supabase.from("partners").select("id,name").eq("organization_id", membership.organization_id).is("deleted_at", null).order("name"),
+    supabase.from("migration_source_links").select("source_url").eq("target_table", "content_items").eq("target_id", id).limit(1).maybeSingle()
   ]);
   if (!data) notFound();
   const item = data as unknown as Content;
-  const people = (memberRows ?? []).map((member) => ({ id: member.user_id, label: (member.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account" }));
   const [connections, relationOptions] = await Promise.all([
     loadDossierConnections(supabase, membership.organization_id, "content", id),
     loadRelationOptions(supabase, membership.organization_id, "content", id),
@@ -81,8 +72,7 @@ export default async function ContentDetail({
       <div className="project-detail-body">
         {query.fout && <div className="error-note">Wijziging mislukt ({query.fout}).</div>}
         {query.succes && <div className="success">{query.succes === "goedkeuring-aangevraagd" ? "Ter goedkeuring voorgelegd." : "Contentitem opgeslagen."}</div>}
-        {query.bewerken && canManage && <FormModal title="Content bewerken"><ContentForm action={updateContent} content={item} projects={projects ?? []} campaigns={campaigns ?? []} partners={partners ?? []}/></FormModal>}
-        {query.nieuw === "taak" ? <TaskCreateModal returnTo={`/app/content/${id}`} projects={projects ?? []} people={people} defaultProjectId={item.project_id} contextEntityType="content" contextEntityId={id}/> : null}
+
         <section className="content-summary">
           <article><span>Type</span><strong>{contentTypes[item.content_type as keyof typeof contentTypes] ?? item.content_type}</strong></article>
           <article><span>Status</span><strong>{contentStatuses[item.status as keyof typeof contentStatuses] ?? item.status}</strong></article>

@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import { updateExpenseWorkflow } from "@/app/app/financien/actions";
 import { AppShell } from "@/components/app-shell";
 import { ApprovalPanel } from "@/components/approval-panel";
-import { ExpenseForm } from "@/components/finance-forms";
 import { hasPermission } from "@/lib/permissions";
 import { requireActiveMembership } from "@/lib/auth-context";
 
@@ -26,26 +25,12 @@ export default async function Page({
   const canViewOverview = hasPermission(membership, "viewFinance");
   const expenseQuery = supabase.from("expenses").select("*,budget_envelopes(name),projects(title),events(title),campaigns(title),partners(name),merch_launches(title)").eq("organization_id", organizationId).eq("id", id).is("deleted_at", null);
   if (!canViewOverview) expenseQuery.eq("submitted_by", user.id);
-  const [expenseResult, budgets, projects, events, campaigns, partners, launches, audit] = await Promise.all([
+  const [expenseResult, audit] = await Promise.all([
     expenseQuery.maybeSingle(),
-    supabase.from("budget_envelopes").select("id,name").eq("organization_id", organizationId).is("deleted_at", null).order("name"),
-    supabase.from("projects").select("id,title").eq("organization_id", organizationId).is("deleted_at", null).order("title"),
-    supabase.from("events").select("id,title").eq("organization_id", organizationId).is("deleted_at", null).order("title"),
-    supabase.from("campaigns").select("id,title").eq("organization_id", organizationId).is("deleted_at", null).order("title"),
-    supabase.from("partners").select("id,name").eq("organization_id", organizationId).is("deleted_at", null).order("name"),
-    supabase.from("merch_launches").select("id,title").eq("organization_id", organizationId).is("deleted_at", null).order("title"),
-    supabase.from("financial_audit_log").select("id,action,previous_status,new_status,created_at,profiles(display_name)").eq("organization_id", organizationId).eq("entity_type", "expense").eq("entity_id", id).order("created_at", { ascending: false }),
+    supabase.from("financial_audit_log").select("id,action,previous_status,new_status,created_at,profiles(display_name)").eq("organization_id", organizationId).eq("entity_type", "expense").eq("entity_id", id).order("created_at", { ascending: false })
   ]);
   if (!expenseResult.data) notFound();
   const expense = expenseResult.data;
-  const options = {
-    budgets: budgets.data ?? [],
-    projects: projects.data ?? [],
-    events: events.data ?? [],
-    campaigns: campaigns.data ?? [],
-    partners: partners.data ?? [],
-    launches: launches.data ?? [],
-  };
   const canManage = hasPermission(membership, "manageFinance");
   const transition = (value: string, label: string) => (
     <form action={updateExpenseWorkflow}>
@@ -69,18 +54,13 @@ export default async function Page({
           {expense.proof_url && <a href={expense.proof_url} target="_blank" rel="noreferrer"><ExternalLink size={16}/>Open bewijsstuk</a>}
           {canManage && expense.status === "approved" && transition("pay", "Markeer betaald")}
           {canManage && expense.status === "reimbursement_due" && transition("reimburse", "Markeer terugbetaald")}
-          {canManage && !query.bewerken && <Link className="primary" href="?bewerken=1">Bewerken</Link>}
+          {canManage && <Link className="primary" href="?bewerken=1">Bewerken</Link>}
         </div>
       </header>
       <div className="project-detail-body">
         {query.succes && <div className="success">De financiële workflow is bijgewerkt.</div>}
         {query.fout && <div className="error-note">Actie mislukt: {query.fout}.</div>}
-        {canManage && query.bewerken ? (
-          <section className="form-card">
-            <div className="form-heading"><h2>Kost bewerken</h2><Link href="?">Annuleren</Link></div>
-            <ExpenseForm record={expense} options={options} canManage={canManage}/>
-          </section>
-        ) : (
+        {(
           <>
             <section className="project-summary">
               <article><span>Bedrag</span><strong>€ {Number(expense.amount).toFixed(2)}</strong></article>

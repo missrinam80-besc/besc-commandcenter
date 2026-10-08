@@ -2,12 +2,9 @@ import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { Clapperboard, Search, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { ContentForm } from "@/components/content-form";
-import { FormModal } from "@/components/form-modal";
 import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { hasPermission } from "@/lib/permissions";
-import { createContent } from "./actions";
 import { contentStatuses, contentTypes } from "./constants";
 
 const PAGE_SIZE = 25;
@@ -61,21 +58,13 @@ export default async function ContentPage({
   if (mine) query = query.eq("owner_id", user.id);
 
   const from = (page - 1) * PAGE_SIZE;
-  const [{ data, count }, { data: allRows }, { data: projects }, { data: campaigns }, { data: partners }] = await Promise.all([
+  const [{ data, count }, { data: allRows }] = await Promise.all([
     query.range(from, from + PAGE_SIZE - 1),
     supabase
-      .from("content_items")
-      .select("status")
-      .eq("organization_id", membership.organization_id)
-      .is("deleted_at", null),
-    supabase
-      .from("projects")
-      .select("id,title")
-      .eq("organization_id", membership.organization_id)
-      .is("deleted_at", null)
-      .order("title"),
-    supabase.from("campaigns").select("id,title").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
-    supabase.from("partners").select("id,name").eq("organization_id", membership.organization_id).is("deleted_at", null).order("name"),
+        .from("content_items")
+        .select("status")
+        .eq("organization_id", membership.organization_id)
+        .is("deleted_at", null)
   ]);
   const rows = (data ?? []) as unknown as Row[];
   const total = count ?? 0;
@@ -130,11 +119,7 @@ export default async function ContentPage({
         {params.fout && (
           <div className="error-note">Content kon niet worden opgeslagen ({params.fout}).</div>
         )}
-        {params.nieuw && canManage && (
-          <FormModal title="Nieuw contentitem">
-            <ContentForm action={createContent} projects={projects ?? []} campaigns={campaigns ?? []} partners={partners ?? []} />
-          </FormModal>
-        )}
+
         <form className="history-filters extended-filters" method="get">
           <label className="search">
             <Search size={16} />

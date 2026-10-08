@@ -5,7 +5,7 @@ import test from "node:test";
 const root = new URL("../", import.meta.url);
 const source = (path: string) => readFile(new URL(path, root), "utf8");
 
-test("centrale invoerformulieren openen in een dialoog", async () => {
+test("dossieraanmaak gebruikt de gezamenlijke editor; instellingen behouden hun dialoog", async () => {
   const [entity, content, events, meetings, operational] = await Promise.all([
     source("src/components/entity-form.tsx"),
     source("src/app/app/content/page.tsx"),
@@ -13,12 +13,13 @@ test("centrale invoerformulieren openen in een dialoog", async () => {
     source("src/app/app/vergaderingen/page.tsx"),
     source("src/components/operational-module-page.tsx"),
   ]);
-  for (const file of [entity, content, events, meetings, operational]) {
-    assert.match(file, /FormModal/);
-  }
+  assert.match(entity,/FormModal/);
+  for(const file of [content,events,meetings,operational])assert.match(file,/dossierEditorGate/);
+  const workspace=await source("src/components/dossier-workspace.tsx"),create=await source("src/components/full-dossier-create.tsx");
+  assert.match(workspace,/FullDossierCreate/);assert.match(create,/<dialog/);
 });
 
-test("lange operationele tekstvelden ondersteunen Markdown en voorbeeldweergave", async () => {
+test("lange tekstvelden blijven bewerkbaar; bestaande Markdownvoorbeelden blijven beschikbaar", async () => {
   const [field, task, content, event, meeting, operational] = await Promise.all([
     source("src/components/markdown-field.tsx"),
     source("src/app/app/taken/[id]/page.tsx"),
@@ -29,7 +30,9 @@ test("lange operationele tekstvelden ondersteunen Markdown en voorbeeldweergave"
   ]);
   assert.match(field, /Streamdown/);
   assert.match(field, /Voorbeeld/);
-  for (const file of [task, content, event, meeting, operational]) {
+  assert.match(task,/dossierEditorGate/);
+  const editor=await source("src/components/dossier-editor.tsx");assert.match(editor,/<textarea/);
+  for (const file of [content, event, meeting, operational]) {
     assert.match(file, /MarkdownField/);
   }
 });

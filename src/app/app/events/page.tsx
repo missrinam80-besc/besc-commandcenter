@@ -2,13 +2,11 @@ import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { CalendarDays, Search, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { EventForm, eventStatuses, eventTypes } from "@/components/event-form";
-import { FormModal } from "@/components/form-modal";
+import { eventStatuses, eventTypes } from "@/components/event-form";
 import { SavedViews } from "@/components/saved-views";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { hasPermission } from "@/lib/permissions";
 import { formatDate, formatLocalDate } from "@/lib/format";
-import { saveEvent } from "./actions";
 
 const PAGE_SIZE = 25;
 
@@ -60,14 +58,8 @@ export default async function Events({
   if (mine) query = query.eq("owner_id", user.id);
 
   const from = (page - 1) * PAGE_SIZE;
-  const [{ data, count }, { data: projects }] = await Promise.all([
-    query.range(from, from + PAGE_SIZE - 1),
-    supabase
-      .from("projects")
-      .select("id,title")
-      .eq("organization_id", membership.organization_id)
-      .is("deleted_at", null)
-      .order("title"),
+  const [{ data, count }] = await Promise.all([
+    query.range(from, from + PAGE_SIZE - 1)
   ]);
   const rows = (data ?? []) as unknown as Row[];
   const total = count ?? 0;
@@ -95,11 +87,7 @@ export default async function Events({
           Beheer community-events, workshops, streams en externe deelnames in één dossier.
         </p>
         {params.fout && <div className="error-note">Event kon niet worden opgeslagen.</div>}
-        {params.nieuw && canManage && (
-          <FormModal title="Nieuw event">
-            <EventForm action={saveEvent} projects={projects ?? []} />
-          </FormModal>
-        )}
+
         <form className="history-filters extended-filters" method="get">
           <label className="search">
             <Search size={16} /><span className="sr-only">Zoeken</span>

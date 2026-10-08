@@ -4,20 +4,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { Comments } from "@/components/comments";
-import { FormModal } from "@/components/form-modal";
-import { MarkdownContent, MarkdownField } from "@/components/markdown-field";
+import { MarkdownContent } from "@/components/markdown-field";
 import { RecordConnectionsPanel } from "@/components/record-connections-panel";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { loadDossierConnections, loadRelationOptions } from "@/lib/dossier-relations";
 import { hasPermission } from "@/lib/permissions";
-import { formatDateTime, formatDateTimeLocal } from "@/lib/format";
-import {
-  addChecklistItem,
-  deleteTask,
-  setTaskAssignee,
-  toggleChecklistItem,
-  updateTaskDetails,
-} from "./actions";
+import { formatDateTime } from "@/lib/format";
+import { addChecklistItem, deleteTask, setTaskAssignee, toggleChecklistItem } from "./actions";
 
 type TaskDetail = {
   id: string;
@@ -32,7 +25,6 @@ type TaskDetail = {
 };
 type Checklist = { id: string; title: string; is_done: boolean };
 type Member = { user_id: string; profiles: { display_name: string | null } | null };
-type ProjectOption = { id: string; title: string; status: string };
 
 export default async function TaskDetailPage({
   params,
@@ -47,18 +39,11 @@ export default async function TaskDetailPage({
   if (unifiedEditor) return unifiedEditor;
 
   const { supabase, membership } = await requireActiveMembership();
-  const [
-    { data: taskRow },
-    { data: checks },
-    { data: members },
-    { data: projects },
-    { data: commentRows },
-  ] = await Promise.all([
+  const [{ data: taskRow }, { data: checks }, { data: members }, { data: commentRows }] = await Promise.all([
     supabase.from("tasks").select("id,title,description,status,priority,due_at,project_id,projects(id,title),task_assignees(user_id,profiles(display_name))").eq("id", id).eq("organization_id", membership.organization_id).is("deleted_at", null).maybeSingle(),
     supabase.from("task_checklist_items").select("id,title,is_done").eq("task_id", id).order("position").order("created_at"),
     supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", membership.organization_id).eq("status", "active"),
-    supabase.from("projects").select("id,title,status").eq("organization_id", membership.organization_id).is("deleted_at", null).order("title"),
-    supabase.from("comments").select("id,body,created_at,profiles!comments_author_id_fkey(display_name)").eq("entity_type", "task").eq("entity_id", id).order("created_at"),
+    supabase.from("comments").select("id,body,created_at,profiles!comments_author_id_fkey(display_name)").eq("entity_type", "task").eq("entity_id", id).order("created_at")
   ]);
   if (!taskRow) notFound();
   const [connections, relationOptions] = await Promise.all([
@@ -69,7 +54,6 @@ export default async function TaskDetailPage({
   const task = taskRow as unknown as TaskDetail;
   const checklist = (checks ?? []) as Checklist[];
   const people = (members ?? []) as unknown as Member[];
-  const projectOptions = (projects ?? []) as ProjectOption[];
   const currentAssignee = task.task_assignees?.[0]?.user_id || "";
   const done = checklist.filter((item) => item.is_done).length;
 
@@ -86,28 +70,13 @@ export default async function TaskDetailPage({
         </div>
         <div className="project-actions">
           <span className="badge">{task.status}</span>
-          {!query.bewerken && <Link className="primary" href="?bewerken=1">Bewerken</Link>}
+          <Link className="primary" href="?bewerken=1">Bewerken</Link>
         </div>
       </header>
       <div className="task-detail-body">
         {query.fout && <div className="error-note">Wijziging mislukt: {query.fout}.</div>}
         {query.succes && <div className="success">De taak werd bijgewerkt.</div>}
-        {query.bewerken && (
-          <FormModal title="Taak bewerken">
-            <form action={updateTaskDetails}>
-              <input type="hidden" name="id" value={task.id}/>
-              <label>Titel<input name="title" defaultValue={task.title}/></label>
-              <MarkdownField name="description" label="Beschrijving" rows={6} defaultValue={task.description}/>
-              <label>Project<select name="project_id" defaultValue={task.project_id || ""}><option value="">Geen project</option>{projectOptions.map((project) => <option key={project.id} value={project.id}>{project.title}{["done", "archived"].includes(project.status) ? " (afgerond)" : ""}</option>)}</select></label>
-              <div className="form-row">
-                <label>Status<select name="status" defaultValue={task.status}><option value="todo">Te doen</option><option value="doing">Bezig</option><option value="waiting">Wachten</option><option value="review">Review</option><option value="done">Afgerond</option><option value="cancelled">Geannuleerd</option></select></label>
-                <label>Prioriteit<select name="priority" defaultValue={task.priority}><option value="low">Laag</option><option value="normal">Normaal</option><option value="high">Hoog</option><option value="urgent">Urgent</option></select></label>
-              </div>
-              <label>Deadline<input type="datetime-local" name="due_at" defaultValue={formatDateTimeLocal(task.due_at)}/></label>
-              <div className="form-actions"><button className="primary">Wijzigingen opslaan</button></div>
-            </form>
-          </FormModal>
-        )}
+
         <div className="task-detail-grid">
           <section className="form-card">
             <div className="form-heading"><h2>Taakgegevens</h2></div>
