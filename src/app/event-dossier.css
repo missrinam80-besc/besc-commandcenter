@@ -47,17 +47,17 @@
 @media(max-width:850px){.app-shell .event-dossier{grid-template-columns:minmax(0,1fr);padding:18px 16px}.event-dossier>.record-connections-grid{grid-template-columns:minmax(0,1fr)}.event-dossier .form-heading{flex-wrap:wrap}.event-dossier .form-heading .row-action{margin-left:auto}}
 @media(max-width:480px){.event-dossier .financial-summary-totals{grid-template-columns:minmax(0,1fr)}.event-dossier .form-heading .row-action{white-space:normal}}
 .event-dossier-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:16px 28px 0;max-width:1280px;margin:0 auto}
-.event-dossier-tabs a{display:inline-flex;align-items:center;min-height:36px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--theme-surface);color:var(--ink);font-size:12px;text-decoration:none;line-height:1.4}
-.event-dossier-tabs a:hover{background:var(--theme-control-hover)}
-.event-dossier-tabs a[aria-current="page"]{border-color:var(--besc-red);background:var(--theme-control);font-weight:750;box-shadow:inset 0 -2px var(--besc-red)}
-.event-dossier-tabs a:focus-visible{outline:2px solid var(--besc-red);outline-offset:3px}
+.event-dossier-tabs :is(a,button){display:inline-flex;align-items:center;min-height:36px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--theme-surface);color:var(--ink);font-family:inherit;font-size:12px;text-decoration:none;line-height:1.4;cursor:pointer}
+.event-dossier-tabs :is(a,button):hover{background:var(--theme-control-hover)}
+.event-dossier-tabs :is(a[aria-current="page"],button[aria-selected="true"]){border-color:var(--besc-red);background:var(--theme-control);font-weight:750;box-shadow:inset 0 -2px var(--besc-red)}
+.event-dossier-tabs :is(a,button):focus-visible{outline:2px solid var(--besc-red);outline-offset:3px}
 .event-dossier>.form-card,.event-dossier>.event-tab-actions{grid-column:1/-1}
 .event-tab-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .event-tab-actions:empty{display:none}
 .event-tab-actions a,.event-tab-actions button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;background:var(--theme-control);color:var(--ink);padding:8px 11px;font-size:12px;text-decoration:none}
 .event-tab-placeholder h2{font-size:18px;margin:0 0 8px}
 .event-tab-placeholder .row-action{display:inline-flex;gap:6px;align-items:center;margin-top:8px}
-@media(max-width:850px){.event-dossier-tabs{padding:14px 16px 0}.event-dossier-tabs a{font-size:11px;padding:7px 9px}}
+@media(max-width:850px){.event-dossier-tabs{padding:14px 16px 0}.event-dossier-tabs :is(a,button){font-size:11px;padding:7px 9px}}
 .event-material-list{display:grid}
 .event-giveaway-list{display:grid}
 .event-giveaway-list article{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto auto;gap:14px;align-items:start;padding:12px 0;border-bottom:1px solid var(--line)}
