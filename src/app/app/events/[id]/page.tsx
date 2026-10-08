@@ -90,10 +90,13 @@ export default async function Event({
     supabase.from("community_people").select("id,display_name,handle,discord_handle,community_person_roles(role)").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name")
   ]);
   if (!e) notFound();
-  const [connections, relationOptions] = await Promise.all([
+  const [connections, relationOptions, primaryPartnerResult] = await Promise.all([
     loadDossierConnections(supabase, membership.organization_id, "event", id),
     loadRelationOptions(supabase, membership.organization_id, "event", id),
+    e.partner_id?supabase.from("partners").select("id,name").eq("organization_id",membership.organization_id).eq("id",e.partner_id).is("deleted_at",null).maybeSingle():Promise.resolve({data:null}),
   ]);
+  const sponsors=new Map(connections.relationships.filter(relation=>relation.entityType==="partner"&&relation.relationship_type==="sponsor").map(relation=>[relation.entityId,{id:relation.entityId,name:relation.label}]));
+  if(primaryPartnerResult.data)sponsors.set(primaryPartnerResult.data.id,primaryPartnerResult.data);
   const drive = driveRow as DriveLink | null;
   let structurePreview: Awaited<ReturnType<typeof previewEventDriveStructure>> | null = null;
   let structureError = false;
@@ -143,6 +146,7 @@ export default async function Event({
             { label: "Locatie", value: e.is_online ? (e.location ? `Online · ${e.location}` : "Online") : e.location ?? "Niet bepaald" },
             { label: "Verwachte deelnemers", value: e.expected_attendees ?? "Niet bepaald" },
             { label: "Project", value: project ? <Link href={`/app/projecten/${project.id}`}>{project.title}</Link> : "Geen project" },
+            { label: "Sponsors / partners", value: sponsors.size?<span>{[...sponsors.values()].map((partner,index)=><span key={partner.id}>{index>0?" · ":""}<Link href={`/app/sponsors/${partner.id}`}>{partner.name}</Link></span>)}</span>:"Geen sponsors gekoppeld" },
           ]}/>
         </section>
         <div className="event-tab-actions">{canManage && !["cancelled", "archived", "completed"].includes(e.status) && <form action={cancelEvent}><input type="hidden" name="id" value={id}/><ConfirmSubmitButton className="danger-button" message="Dit event annuleren? Het event blijft bewaard en wordt als geannuleerd zichtbaar in Google Calendar.">Event annuleren</ConfirmSubmitButton></form>}</div>

@@ -17,6 +17,7 @@ export async function loadDossierEditor(kind:string,id?:string,preset:EditorReco
  }
  const permissions:Record<string,boolean>={},parts:Record<string,EditorRecord[]>={};
  permissions.manageFinance=hasPermission(membership,"manageFinance");
+ permissions.eventSponsors=membership.role==="admin"||membership.role==="board";
  await Promise.all(cfg.collections.map(async part=>{
    permissions[part.table]=(part.capability??cfg.capability)==="active"||hasPermission(membership,(part.capability??cfg.capability) as Capability);
    if(!id){parts[part.table]=[];return;}
