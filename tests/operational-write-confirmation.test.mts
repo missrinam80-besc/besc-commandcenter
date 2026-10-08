@@ -1,3 +1,4 @@
+import * as contactTabHelpers from "../src/lib/contact-dossier-tabs.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -7,7 +8,7 @@ import ts from "typescript";
 import { operationalModules } from "../src/app/app/operations/config.ts";
 import { lifecycleEntities } from "../src/lib/record-lifecycle.ts";
 
-const require = createRequire(import.meta.url);
+const require = ((native) => (name: string) => name === "@/lib/contact-dossier-tabs" ? contactTabHelpers : native(name))(createRequire(import.meta.url));
 const id = "11111111-1111-4111-8111-111111111111";
 function load(path: string, overrides: Record<string, unknown>) {
   const compiled = { exports: {} as Record<string, (form: FormData) => Promise<void>> };

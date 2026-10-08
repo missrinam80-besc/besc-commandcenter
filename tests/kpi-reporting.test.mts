@@ -62,7 +62,7 @@ test("sponsorrapport is online, afdrukbaar en als CSV beschikbaar", async () => 
   const [overview, page, detail, exportRoute] = await Promise.all([
     source("src/app/app/rapportage/sponsors/page.tsx"),
     source("src/app/app/rapportage/sponsors/[id]/page.tsx"),
-    source("src/components/operational-record-detail.tsx"),
+    source("src/components/contact-dossier-panels.tsx"),
     source("src/app/app/rapportage/sponsors/[id]/export/route.ts"),
   ]);
   assert.match(overview, /ReportSelector/);
@@ -85,7 +85,7 @@ test("event- en creatorrapporten gebruiken dezelfde controleerbare uitvoer", asy
     source("src/app/app/rapportage/creators/[id]/page.tsx"),
     source("src/app/app/rapportage/creators/[id]/export/route.ts"),
     source("src/app/app/events/[id]/page.tsx"),
-    source("src/components/operational-record-detail.tsx"),
+    source("src/components/contact-dossier-panels.tsx"),
   ]);
   assert.match(creatorOverview, /ReportSelector/);
   assert.match(creatorOverview, /basePath="\/app\/rapportage\/creators"/);
@@ -98,7 +98,7 @@ test("event- en creatorrapporten gebruiken dezelfde controleerbare uitvoer", asy
   assert.match(creatorExport, /\["admin","board","member"\]/);
   for (const route of [eventExport, creatorExport]) assert.match(route, /Content-Disposition/);
   assert.match(eventDetail, /Eventrapport/);
-  assert.match(operationalDetail, /Creatorrapport/);
+  assert.match(operationalDetail, /Streamerrapportage/);
 });
 
 test("streamerrapportage bevat naast individuele fiches ook een totaalrapport", async () => {

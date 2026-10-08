@@ -1,10 +1,11 @@
+import * as contactTabHelpers from "../src/lib/contact-dossier-tabs.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
-const require=createRequire(import.meta.url);
+const require=((native) => (name: string) => name === "@/lib/contact-dossier-tabs" ? contactTabHelpers : native(name))(createRequire(import.meta.url));
 function load(path:string,overrides:Record<string,unknown>={},globals:Record<string,unknown>={}) {
   const source=readFileSync(new URL(`../${path}`,import.meta.url),"utf8");
   const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;

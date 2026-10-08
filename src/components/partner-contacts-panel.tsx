@@ -28,22 +28,22 @@ export function PartnerContactsPanel({ partnerId, contacts, people, accounts, ca
         <span>{String(c.role_title ?? "")}{(person?.email ?? c.email) ? ` · ${person?.email ?? c.email}` : ""}{c.is_primary ? " · Primair" : ""}</span>
         {account ? <span>Account gekoppeld</span> : null}
         {c.community_person_id ? <Link href={`/app/community/${c.community_person_id}`}>Contactfiche en account openen</Link> : null}
-        {canManage && !optionsError && <form action={linkPartnerContact}>
+        {canManage && !optionsError && <details><summary>Koppeling wijzigen</summary><form action={linkPartnerContact}>
           <input type="hidden" name="partner_id" value={partnerId}/><input type="hidden" name="contact_id" value={c.id}/>
           <div className="form-row">{personSelect(String(c.community_person_id ?? ""))}{c.community_person_id ? <input type="hidden" name="account_user_id" value=""/> : accountSelect(String(c.account_user_id ?? ""))}</div>
           <button className="secondary-button">Koppeling opslaan</button>
-        </form>}
+        </form></details>}
       </article>;
     })}</div>
     {canManage && !optionsError && <>
       <p className="form-help">Kies een bestaand contact, of vul hieronder een nieuwe contactpersoon in. Bij een bestaand contact beheer je het account op de contactfiche. Een koppeling geeft geen toegang.</p>
-      <form action={addPartnerContact}>
+      <details><summary>Contactpersoon toevoegen</summary><form action={addPartnerContact}>
         <input type="hidden" name="partner_id" value={partnerId}/>
         <div className="form-row">{personSelect()}{accountSelect()}</div>
         <div className="form-row"><label>Naam (bij nieuw contact)<input name="name" maxLength={180}/></label><label>Functie bij sponsor<input name="role_title" maxLength={180}/></label><label>E-mail<input type="email" name="email"/></label><label>Telefoon<input name="phone" maxLength={50}/></label></div>
         <label className="inline-check"><input type="checkbox" name="is_primary"/>Primair contact</label>
         <button className="secondary-button">Contact toevoegen</button>
-      </form>
+      </form></details>
     </>}
   </section>;
 }

@@ -1,4 +1,5 @@
 "use server";
+import { appendContactTab } from "@/lib/contact-dossier-tabs";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -36,9 +37,10 @@ async function context(entityType: DossierEntityType, entityId: string) {
   return requirePermission(config.capability, fallback);
 }
 
-function finish(entityType: DossierEntityType, entityId: string, result: "succes" | "fout", code: string): never {
+function finish(entityType: DossierEntityType, entityId: string, result: "succes" | "fout", code: string, formData?: FormData): never {
   revalidatePath(dossierPath(entityType, entityId));
-  redirect(`${dossierPath(entityType, entityId)}?${result}=${code}`);
+  const href=`${dossierPath(entityType, entityId)}?${result}=${code}`;
+  redirect(formData ? appendContactTab(href,formData) : href);
 }
 
 async function requireActiveLinkDossier(supabase: SupabaseClient, organizationId: string, entityType: DossierEntityType, entityId: string) {
@@ -65,7 +67,7 @@ export async function addRecordLink(formData: FormData) {
     link_type: parsed.data.link_type,
     created_by: user.id,
   });
-  finish(parsed.data.entity_type, parsed.data.entity_id, error ? "fout" : "succes", error ? "link-opslaan" : "link-opgeslagen");
+  finish(parsed.data.entity_type, parsed.data.entity_id, error ? "fout" : "succes", error ? "link-opslaan" : "link-opgeslagen",formData);
 }
 
 export async function updateRecordLink(formData: FormData) {
@@ -82,7 +84,7 @@ export async function updateRecordLink(formData: FormData) {
     .eq("entity_type", parsed.data.entity_type)
     .eq("entity_id", parsed.data.entity_id)
     .eq("id", parsed.data.id).select("id").maybeSingle();
-  finish(parsed.data.entity_type, parsed.data.entity_id, error || !changed || changed.id !== parsed.data.id ? "fout" : "succes", error || !changed || changed.id !== parsed.data.id ? "link-opslaan" : "link-opgeslagen");
+  finish(parsed.data.entity_type, parsed.data.entity_id, error || !changed || changed.id !== parsed.data.id ? "fout" : "succes", error || !changed || changed.id !== parsed.data.id ? "link-opslaan" : "link-opgeslagen",formData);
 }
 
 export async function deleteRecordLink(formData: FormData) {
@@ -95,7 +97,7 @@ export async function deleteRecordLink(formData: FormData) {
     .eq("entity_type", parsed.data.entity_type)
     .eq("entity_id", parsed.data.entity_id)
     .eq("id", parsed.data.id).select("id").maybeSingle();
-  finish(parsed.data.entity_type, parsed.data.entity_id, error || !changed || changed.id !== parsed.data.id ? "fout" : "succes", error || !changed || changed.id !== parsed.data.id ? "link-verwijderen" : "link-verwijderd");
+  finish(parsed.data.entity_type, parsed.data.entity_id, error || !changed || changed.id !== parsed.data.id ? "fout" : "succes", error || !changed || changed.id !== parsed.data.id ? "link-verwijderen" : "link-verwijderd",formData);
 }
 
 export async function addRecordRelationship(formData: FormData) {
@@ -107,11 +109,11 @@ export async function addRecordRelationship(formData: FormData) {
   const sourceConfig = dossierEntityConfig[parsed.data.entity_type];
   const { data: source, error: sourceError } = await supabase.from(sourceConfig.table).select("id")
     .eq("organization_id", membership.organization_id).eq("id", parsed.data.entity_id).is("deleted_at", null).maybeSingle();
-  if (sourceError || !source) finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "relatie-bron");
+  if (sourceError || !source) finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "relatie-bron",formData);
   const targetConfig = dossierEntityConfig[targetType];
   const { data: target, error: targetError } = await supabase.from(targetConfig.table).select("id")
     .eq("organization_id", membership.organization_id).eq("id", targetId).is("deleted_at", null).maybeSingle();
-  if (targetError || !target) finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "relatie-doel");
+  if (targetError || !target) finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "relatie-doel",formData);
 
   const left = `${parsed.data.entity_type}:${parsed.data.entity_id}`;
   const right = `${targetType}:${targetId}`;
@@ -127,7 +129,7 @@ export async function addRecordRelationship(formData: FormData) {
     relationship_type: parsed.data.relationship_type,
     created_by: user.id,
   });
-  finish(parsed.data.entity_type, parsed.data.entity_id, error ? "fout" : "succes", error ? "relatie-opslaan" : "relatie-opgeslagen");
+  finish(parsed.data.entity_type, parsed.data.entity_id, error ? "fout" : "succes", error ? "relatie-opslaan" : "relatie-opgeslagen",formData);
 }
 
 export async function deleteRecordRelationship(formData: FormData) {
@@ -138,7 +140,7 @@ export async function deleteRecordRelationship(formData: FormData) {
     .eq("organization_id", membership.organization_id)
     .eq("id", parsed.data.id)
     .or(`and(source_type.eq.${parsed.data.entity_type},source_id.eq.${parsed.data.entity_id}),and(target_type.eq.${parsed.data.entity_type},target_id.eq.${parsed.data.entity_id})`).select("id").maybeSingle();
-  finish(parsed.data.entity_type, parsed.data.entity_id, error || !changed || changed.id !== parsed.data.id ? "fout" : "succes", error || !changed || changed.id !== parsed.data.id ? "relatie-verwijderen" : "relatie-verwijderd");
+  finish(parsed.data.entity_type, parsed.data.entity_id, error || !changed || changed.id !== parsed.data.id ? "fout" : "succes", error || !changed || changed.id !== parsed.data.id ? "relatie-verwijderen" : "relatie-verwijderd",formData);
 }
 
 export async function addRecordDocument(formData: FormData) {
@@ -147,26 +149,26 @@ export async function addRecordDocument(formData: FormData) {
     url: z.string().trim().url(),
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app?fout=ongeldig-document");
-  if (!["project", "event", "campaign", "partner"].includes(parsed.data.entity_type)) {
-    finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-module");
+  if (!["project", "event", "campaign", "partner", "community_person"].includes(parsed.data.entity_type)) {
+    finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-module",formData);
   }
   const url = new URL(parsed.data.url);
   if (url.protocol !== "https:" || !["drive.google.com", "docs.google.com"].includes(url.hostname) || url.username || url.password) {
-    finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-link");
+    finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-link",formData);
   }
   const googleId = googleDriveFileId(parsed.data.url);
-  if (!googleId) finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-link");
+  if (!googleId) finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-link",formData);
   const { supabase, user, membership } = await context(parsed.data.entity_type, parsed.data.entity_id);
   const config = dossierEntityConfig[parsed.data.entity_type];
   const { data: dossier, error: dossierError } = await supabase.from(config.table).select("id")
     .eq("organization_id", membership.organization_id).eq("id", parsed.data.entity_id)
     .is("deleted_at", null).maybeSingle();
-  if (dossierError || !dossier) finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-koppelen");
+  if (dossierError || !dossier) finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-koppelen",formData);
   let file: Awaited<ReturnType<typeof getGoogleDriveDocumentMetadata>>;
   try {
     file = await getGoogleDriveDocumentMetadata(googleId);
   } catch {
-    finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-controleren");
+    finish(parsed.data.entity_type, parsed.data.entity_id, "fout", "document-controleren",formData);
   }
   const { error } = await supabase.from("google_resource_links").insert({
     organization_id: membership.organization_id,
@@ -182,7 +184,7 @@ export async function addRecordDocument(formData: FormData) {
     ...sourceObservation(file),
     created_by: user.id,
   });
-  finish(parsed.data.entity_type, parsed.data.entity_id, error ? "fout" : "succes", error ? "document-koppelen" : "document-gekoppeld");
+  finish(parsed.data.entity_type, parsed.data.entity_id, error ? "fout" : "succes", error ? "document-koppelen" : "document-gekoppeld",formData);
 }
 
 export async function deleteRecordDocument(formData: FormData) {
@@ -195,5 +197,5 @@ export async function deleteRecordDocument(formData: FormData) {
     .eq("entity_id", parsed.data.entity_id)
     .eq("resource_type", "document")
     .eq("id", parsed.data.id).select("id").maybeSingle();
-  finish(parsed.data.entity_type, parsed.data.entity_id, error || !changed || changed.id !== parsed.data.id ? "fout" : "succes", error || !changed || changed.id !== parsed.data.id ? "document-verwijderen" : "document-verwijderd");
+  finish(parsed.data.entity_type, parsed.data.entity_id, error || !changed || changed.id !== parsed.data.id ? "fout" : "succes", error || !changed || changed.id !== parsed.data.id ? "document-verwijderen" : "document-verwijderd",formData);
 }

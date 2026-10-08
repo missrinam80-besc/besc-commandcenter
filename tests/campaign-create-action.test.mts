@@ -1,3 +1,4 @@
+import * as contactTabHelpers from "../src/lib/contact-dossier-tabs.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -6,7 +7,7 @@ import test from "node:test";
 import ts from "typescript";
 import { campaignTemplates } from "../src/lib/campaign-templates.ts";
 import { operationalModules } from "../src/app/app/operations/config.ts";
-const require=createRequire(import.meta.url),id="11111111-1111-4111-8111-111111111111";
+const require=((native) => (name: string) => name === "@/lib/contact-dossier-tabs" ? contactTabHelpers : native(name))(createRequire(import.meta.url)),id="11111111-1111-4111-8111-111111111111";
 function fixture(result:unknown=id,error:unknown=null,denied=false){
  const calls:unknown[][]=[],invalidations:string[]=[];
  const compiled={exports:{} as {createOperationalRecord:(f:FormData)=>Promise<void>}};

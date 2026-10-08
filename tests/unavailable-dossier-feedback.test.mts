@@ -1,3 +1,4 @@
+import * as contactTabHelpers from "../src/lib/contact-dossier-tabs.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -24,6 +25,7 @@ async function render(selectedModule: OperationalModule, query: Record<string, s
   }).outputText;
   runInNewContext(code, { module: compiled, exports: compiled.exports,
     require: (key: string) => {
+      if(key === "@/lib/contact-dossier-tabs") return contactTabHelpers;
       if (key === "next/navigation") return { notFound: () => { throw Error("404"); } };
       if (key === "next/link") return { default: ({ children, href }: React.PropsWithChildren<{ href: string }>) => React.createElement("a", { href }, children) };
       if (key === "@/components/app-shell") return { AppShell: ({ children }: React.PropsWithChildren) => React.createElement("main", null, children) };
