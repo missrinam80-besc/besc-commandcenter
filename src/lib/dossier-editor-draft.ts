@@ -1,4 +1,4 @@
-import {dossierEditorCatalog,type EditorConfig} from "./dossier-editor-catalog";
+import {dossierEditorCatalog,dossierFieldTab,type EditorConfig} from "./dossier-editor-catalog";
 import schemas from "./dossier-editor-schema.json";
 import {eventEditorValues,eventEditorStorageValues,eventEditorTimingError} from "./event-editor-timing";
 
@@ -36,38 +36,58 @@ export function buildEditorBundle(draft:DossierDraft):EditorBundle {
   return {kind:draft.kind,root,parts};
 }
 export function editorHasChanges(draft:DossierDraft){const bundle=buildEditorBundle(draft);return !draft.base||Object.keys(bundle.root.values).length>0||bundle.parts.length>0;}
+export type EditorIssue={message:string;tab?:string;field?:string;rowId?:string;collection?:string;label?:string};
 export function validateEditorBundle(bundle:EditorBundle,config:EditorConfig=dossierEditorCatalog[bundle.kind]):string[]{
-  if(!config||config!==dossierEditorCatalog[bundle.kind])return ["Onbekend dossiertype."];
-  const problems:string[]=[];
+ return [...new Set(validateEditorIssues(bundle,config).map(issue=>issue.message))];
+}
+export function validateEditorIssues(bundle:EditorBundle,config:EditorConfig=dossierEditorCatalog[bundle.kind]):EditorIssue[]{
+  if(!config||config!==dossierEditorCatalog[bundle.kind])return [{message:"Onbekend dossiertype."}];
+  const problems:EditorIssue[]=[];
+  let location:Omit<EditorIssue,"message">={};
+  const add=(message:string,field?:string)=>problems.push({...location,message,field,tab:field&&!location.collection?dossierFieldTab(field,config):location.tab});
   const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  if(!uuid.test(bundle.root.id)||bundle.root.delete)problems.push("Ongeldig hoofddossier.");
-  if(bundle.parts.length>250)problems.push("Er staan te veel onderdelen in deze wijziging.");
+  if(!uuid.test(bundle.root.id)||bundle.root.delete)add("Ongeldig hoofddossier.");
+  if(bundle.parts.length>250)add("Er staan te veel onderdelen in deze wijziging.");
   const seen=new Set<string>();
   for(const [index,change] of [bundle.root,...bundle.parts].entries()){
+    location={};
     const part=index===0?null:config.collections.find(p=>p.table===change.collection);
-    if(index>0&&!part){problems.push("Onbekend dossieronderdeel.");continue;}
+    if(index>0&&!part){add("Onbekend dossieronderdeel.");continue;}
+    location={tab:part?.tab??config.tabs[0].id,rowId:change.id,collection:part?.table,label:part?`${part.label}: ${String(change.values.title??change.values.name??change.base?.title??change.base?.name??"onderdeel")}`:config.label};
     const fields=index===0?config.fields:part!.fields;
     const table=index===0?config.table:part!.table;
     const key=index===0?"id":part?.key??"id";
-    const identity=`${table}:${change.id}`;if(seen.has(identity))problems.push("Hetzelfde onderdeel staat tweemaal in de wijziging.");seen.add(identity);
-    if(key==="id"&&!uuid.test(change.id))problems.push("Ongeldig onderdeel.");
-    if(!change.new&&!change.base)problems.push("De oorspronkelijke versie ontbreekt.");
-    if(change.delete){if(index===0)problems.push("Verwijderen van de fiche is een aparte dossieractie.");continue;}
-    for(const name of Object.keys(change.values))if(!fields.includes(name))problems.push("Deze wijziging bevat een veld dat niet bij het dossier hoort.");
+    const identity=`${table}:${change.id}`;if(seen.has(identity))add("Hetzelfde onderdeel staat tweemaal in de wijziging.");seen.add(identity);
+    if(key==="id"&&!uuid.test(change.id))add("Ongeldig onderdeel.");
+    if(!change.new&&!change.base)add("De oorspronkelijke versie ontbreekt.");
+    if(change.delete){if(index===0)add("Verwijderen van de fiche is een aparte dossieractie.");continue;}
+    for(const name of Object.keys(change.values))if(!fields.includes(name))add("Deze wijziging bevat een veld dat niet bij het dossier hoort.");
     const all={...change.base,...change.values};
-    if(table==="events"){const timingError=eventEditorTimingError(all);if(timingError)problems.push(timingError);}
+    if(table==="event_schedule_items"){
+      if(!all.kind)add("Kies een soort onderdeel.","kind");
+      if(!all.status)add("Kies een status voor het tijdslot.","status");
+      const start=all.starts_at,end=all.ends_at;
+      if(end&&!start)add("Voor een eindmoment is een startmoment nodig.","starts_at");
+      if(start&&end&&new Date(String(end)).getTime()<=new Date(String(start)).getTime())add("Het eindmoment moet na het startmoment liggen.","ends_at");
+      const title=String(all.title??"").trim();
+      if(title.length<2||title.length>180)add("De titel van het tijdslot moet 2 tot 180 tekens bevatten.","title");
+      if(String(all.location??"").length>300)add("De locatie mag maximaal 300 tekens bevatten.","location");
+      if(String(all.notes??"").length>4000)add("De praktische afspraken mogen maximaal 4000 tekens bevatten.","notes");
+    }
+    if(table==="events"){const timingError=eventEditorTimingError(all);if(timingError)add(timingError,"end_date");}
     for(const field of editorFields(bundle.kind,table)){
       const value=all[field.name];
-      if(field.required&&(value===null||value===undefined||value===""))problems.push(`Vul ${field.name} in.`);
+      if(field.required&&(value===null||value===undefined||value===""))add(`Vul ${field.name} in.`,field.name);
       if(value===null||value===undefined||value==="")continue;
-      if(field.options.length&&!field.options.includes(String(value)))problems.push(`Controleer ${field.name}.`);
-      if(field.type==="uuid"&&!uuid.test(String(value)))problems.push(`Controleer de koppeling ${field.name}.`);
-      if(field.type==="boolean"&&typeof value!=="boolean")problems.push(`Controleer ${field.name}.`);
-      if(field.type.endsWith("[]")&&(!Array.isArray(value)||value.some(v=>typeof v!=="string")))problems.push(`Controleer ${field.name}.`);
-      if(/^(integer|bigint|smallint|numeric|decimal)/.test(field.type)&&(!Number.isFinite(Number(value))||(typeof value!=="number")))problems.push(`Controleer het getal bij ${field.name}.`);
-      if(typeof value==="string"&&value.length>30000)problems.push(`De tekst bij ${field.name} is te lang.`);
-      if(typeof value==="string"&&/(_url|^url$|^website$)/.test(field.name))try{const url=new URL(value);if(!["https:","http:"].includes(url.protocol))throw Error();}catch{problems.push(`Controleer de link bij ${field.name}.`);}
+      if(field.options.length&&!field.options.includes(String(value)))add(`Kies een geldige waarde voor ${field.name}.`,field.name);
+      if(/timestamp|timestamptz|^date$/.test(field.type)&&!Number.isFinite(new Date(String(value)).getTime()))add(`Vul een geldige datum of tijd in bij ${field.name}.`,field.name);
+      if(field.type==="uuid"&&!uuid.test(String(value)))add(`Kies een geldige koppeling voor ${field.name}.`,field.name);
+      if(field.type==="boolean"&&typeof value!=="boolean")add(`Gebruik een geldige ja/nee-keuze voor ${field.name}.`,field.name);
+      if(field.type.endsWith("[]")&&(!Array.isArray(value)||value.some(v=>typeof v!=="string")))add(`Gebruik een lijst van tekstwaarden voor ${field.name}.`,field.name);
+      if(/^(integer|bigint|smallint|numeric|decimal)/.test(field.type)&&(!Number.isFinite(Number(value))||(typeof value!=="number")))add(`Vul een geldig getal in bij ${field.name}.`,field.name);
+      if(typeof value==="string"&&value.length>30000)add(`De tekst bij ${field.name} is te lang.`,field.name);
+      if(typeof value==="string"&&/(_url|^url$|^website$)/.test(field.name))try{const url=new URL(value);if(!["https:","http:"].includes(url.protocol))throw Error();}catch{add(`Vul een volledige http- of https-link in bij ${field.name}.`,field.name);}
     }
   }
-  return [...new Set(problems)];
+  return problems;
 }

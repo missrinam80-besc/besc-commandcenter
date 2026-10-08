@@ -4,10 +4,11 @@ import {useRouter} from "next/navigation";
 import {RichTextField} from "./rich-text-field";
 import {isRichTextField} from "@/lib/rich-text";
 import {dossierEditorCatalog,dossierFieldTab,type EditorCollection} from "@/lib/dossier-editor-catalog";
-import {buildEditorBundle,createDossierDraft,defaultEditorValues,editorFields,editorHasChanges,validateEditorBundle,type DossierDraft,type DraftRow,type EditorBundle,type EditorRecord,type FieldSchema} from "@/lib/dossier-editor-draft";
+import {buildEditorBundle,createDossierDraft,defaultEditorValues,editorFields,editorHasChanges,validateEditorIssues,type DossierDraft,type DraftRow,type EditorBundle,type EditorRecord,type EditorIssue,type FieldSchema} from "@/lib/dossier-editor-draft";
 import {dossierFieldLabel,dossierChoiceLabel} from "@/lib/dossier-editor-labels";
 import {formatDateTimeLocal,localDateTimeToIso} from "@/lib/format";
 import {eventPartnerIds,eventPartnerForRow,selectEventPartners} from "@/lib/event-editor-partners";
+import {editorIssueText} from "@/lib/dossier-editor-feedback";
 import {hasDossierDriveFolder,unlinkDossierDriveFolder} from "@/lib/dossier-drive-unlink";
 
 export type EditorOption={id:string;label:string;searchText?:string};
@@ -20,7 +21,7 @@ function ReferenceField({id,label,value,choices,disabled,required,onChange}:{id:
   const filtered=choices.filter(choice=>choice.id===value||`${choice.label} ${choice.searchText??""}`.toLocaleLowerCase("nl-BE").includes(query.toLocaleLowerCase("nl-BE")));
   return <label htmlFor={id}>{label}{choices.length>10&&<input disabled={disabled} aria-label={`Zoek ${label.toLowerCase()}`} placeholder="Zoeken…" type="search" value={query} onChange={event=>setQuery(event.target.value)}/>}<select id={id} disabled={disabled} aria-required={required} value={value} onChange={event=>onChange(event.target.value||null)}><option value="">Kies…</option>{filtered.map(choice=><option key={choice.id} value={choice.id}>{choice.label}</option>)}{value&&!choices.some(choice=>choice.id===value)&&<option value={value}>Huidige koppeling</option>}</select></label>;
 }
-type SaveResult={ok:boolean;message?:string;href?:string};
+type SaveResult={ok:boolean;message?:string;href?:string;issues?:EditorIssue[]};
 function MultiReferenceField({id,choices,selected,disabled,onChange}:{id:string;choices:EditorOption[];selected:string[];disabled:boolean;onChange:(ids:string[])=>void}){
   const [query,setQuery]=useState("");
   const available:EditorOption[]=[...choices,...selected.filter(value=>!choices.some(choice=>choice.id===value)).map(value=>({id:value,label:"Huidige koppeling"}))];
@@ -42,6 +43,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
   const visibleRootFields=editorFields(kind,cfg.table).filter(field=>kind!=="event"||!["start_at","end_at"].includes(field.name));
   const [draft,setDraft]=useState<DossierDraft>(()=>{const created=createDossierDraft(kind,id,record,parts);if(!record)created.values={...created.values,...initialValues};return created;});
   const [tab,setTab]=useState(cfg.tabs.find(item=>item.id===initialTab)?.id??cfg.tabs[0].id),[saving,setSaving]=useState(false),[message,setMessage]=useState("");
+  const [issues,setIssues]=useState<EditorIssue[]>([]);
   const dirty=editorHasChanges(draft);
   const folderUnlinkPending=!hasDossierDriveFolder(draft)&&(Boolean(draft.base?.drive_url)||(draft.parts.google_resource_links??[]).some(row=>row.deleted&&row.base?.resource_type==="folder"));
   const [touched,setTouched]=useState(false);
@@ -59,7 +61,8 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
   function input(field:FieldSchema,values:EditorRecord,change:(name:string,value:unknown)=>void,readonly=false,prefix=id,table=cfg.table){
     readonly=readonly||(table==="expenses"&&field.name==="budget_id"&&permissions.manageFinance===false);
     const value=values[field.name]??"",label=dossierFieldLabel(field.name),inputId=`${field.name}-${prefix}`;
-    const shared={id:inputId,disabled:readonly||saving,"aria-required":field.required};
+    const invalid=issues.some(issue=>issue.field===field.name&&issue.rowId===prefix);
+    const shared={id:inputId,disabled:readonly||saving,"aria-required":field.required,"aria-invalid":invalid||undefined,"aria-describedby":invalid?"dossier-save-feedback":undefined};
     const known=field.options.filter(choice=>field.name==="target_type"?['project','event','campaign','content','partner','community_person','task'].includes(choice):field.name==="resource_type"?['document','folder'].includes(choice):field.name==="status"&&table==="expenses"?!['paid','approved','reimbursed'].includes(choice):field.name==="status"&&table==="budget_envelopes"?choice!=="approved":true);
     const relationTable=({project:"projects",event:"events",campaign:"campaigns",content:"content_items",partner:"partners",community_person:"community_people",task:"tasks"} as Record<string,string>)[String(values.target_type??"")];
     const candidates=field.name==="target_id"?options[relationTable]??[]:field.reference?options[field.reference]??[]:options[field.name]??[];
@@ -83,12 +86,13 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
   }
   async function save(event:FormEvent){
     event.preventDefault();if(saving||!onSave)return;
-    const bundle=buildEditorBundle(draft),problems=validateEditorBundle(bundle).map(problem=>problem.replace(/\b[a-z]+(?:_[a-z]+)+\b/g,dossierFieldLabel));
-    if(problems.length){setMessage(problems.join(" "));return;}
+    const bundle=buildEditorBundle(draft),problems=validateEditorIssues(bundle);
+    setIssues(problems);
+    if(problems.length){setMessage("Controleer de onderstaande velden. Er is niets opgeslagen.");return;}
     setSaving(true);setMessage("");
     try{
       const result=await onSave(bundle);
-      if(!result.ok){setMessage(result.message||"Er is niets opgeslagen. Controleer de gegevens en probeer opnieuw.");return;}
+      if(!result.ok){setIssues(result.issues??[]);setMessage(result.message||"Er is niets opgeslagen. Controleer de gegevens en probeer opnieuw.");return;}
       if(result.href){router.push(result.href);router.refresh();}
       else setMessage("Het volledige dossier is opgeslagen.");
     }catch{setMessage("Opslaan kon niet worden bevestigd. Je wijzigingen blijven in dit formulier staan.");}
@@ -97,8 +101,8 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
   return <form className="dossier-editor" onSubmit={save} noValidate>
     <div className="dossier-editor-heading"><h2>{mode==="create"?`Nieuw: ${cfg.label}`:`${cfg.label} bewerken`}</h2><span>{dirty?"Niet opgeslagen":"Geen wijzigingen"}</span></div>
     <div className="event-dossier-tabs dossier-editor-tabs" role="tablist" aria-label="Dossieronderdelen">{cfg.tabs.map(item=><button type="button" role="tab" id={`editor-tab-${item.id}`} aria-controls={`editor-panel-${item.id}`} aria-selected={tab===item.id} tabIndex={tab===item.id?0:-1} key={item.id} onClick={()=>setTab(item.id)} onKeyDown={e=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(e.key))return;e.preventDefault();const index=cfg.tabs.findIndex(t=>t.id===tab);const next=e.key==="Home"?0:e.key==="End"?cfg.tabs.length-1:(index+(e.key==="ArrowRight"?1:-1)+cfg.tabs.length)%cfg.tabs.length;setTab(cfg.tabs[next].id);document.getElementById(`editor-tab-${cfg.tabs[next].id}`)?.focus();}}>{item.label}</button>)}</div>
-    {message&&<div className="error-note" role="alert">{message}</div>}
-    {cfg.tabs.map(item=><section key={item.id} role="tabpanel" id={`editor-panel-${item.id}`} aria-labelledby={`editor-tab-${item.id}`} hidden={tab!==item.id} className="dossier-editor-panel">
+    {message&&<div id="dossier-save-feedback" className="error-note" role="alert"><p>{message}</p>{issues.length>0&&<ul>{issues.map((issue,index)=><li key={index}>{issue.tab?<button type="button" className="dossier-error-link" onClick={()=>{setTab(issue.tab!);setTimeout(()=>{const field=issue.field&&document.getElementById(`${issue.field}-${issue.rowId??id}`);(field||document.getElementById(`editor-panel-${issue.tab}`))?.focus();},0);}}>{editorIssueText(issue)}</button>:editorIssueText(issue)}</li>)}</ul>}</div>}
+    {cfg.tabs.map(item=><section key={item.id} role="tabpanel" id={`editor-panel-${item.id}`} aria-labelledby={`editor-tab-${item.id}`} hidden={tab!==item.id} className="dossier-editor-panel" tabIndex={-1}>
       {item.id==="documenten"&&(hasDossierDriveFolder(draft)||folderUnlinkPending)&&<section className="dossier-editor-basics"><h3>Drive-mapkoppeling</h3><p className="form-help">Ontkoppelen verwijdert de maplink en mapregistratie uit deze fiche. De map en bestanden in Google Drive en afzonderlijk gekoppelde documenten blijven behouden. Bevestig daarna met Alles opslaan.</p>{folderUnlinkPending&&<p role="status">De map wordt ontkoppeld zodra je Alles opslaan kiest. Annuleren bewaart de koppeling.</p>}<button type="button" disabled={saving||folderUnlinkPending||Boolean((draft.parts.google_resource_links??[]).some(row=>!row.deleted&&row.values.resource_type==="folder")&&permissions.google_resource_links!==true)} onClick={()=>{setTouched(true);setDraft(current=>unlinkDossierDriveFolder(current));}}>Map ontkoppelen bij opslaan</button></section>}
       {visibleRootFields.some(field=>dossierFieldTab(field.name,cfg)===item.id)&&<section className="dossier-editor-basics"><h3>{item.label}</h3><div className="dossier-editor-fields">{visibleRootFields.filter(field=>dossierFieldTab(field.name,cfg)===item.id).map(field=>input(field,draft.values,updateRoot))}</div></section>}
       {cfg.collections.filter(part=>part.tab===item.id).map(part=>{
@@ -110,7 +114,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
             const canEdit=canManage&&permissions[`${part.table}:${row.id}`]!==false;
             const incoming=part.table==="record_relationships"&&row.base?.target_id===id&&row.base?.target_type===part.entityValue;
             const values=incoming?{...row.values,target_type:row.values.source_type,target_id:row.values.source_id}:row.values;
-            return <details key={row.localId} open={!row.base||row.deleted} className={`dossier-editor-row ${row.deleted?"pending-removal":""}`}><summary>{String(row.values.title??row.values.name??row.values.label??part.label)}{row.deleted?" — wordt verwijderd":""}</summary><div className="dossier-editor-fields">{!row.deleted&&editorFields(kind,part.table).filter(field=>part.table!=="record_relationships"||!['source_id','source_type'].includes(field.name)).map(field=>input(field,values,(name,value)=>updateRow(part,row,incoming?name.replace(/^target_/,"source_"):name,value),!canEdit,row.localId,part.table))}</div>{canManage&&!canEdit&&<p className="form-help">Alleen de auteur kan deze opmerking wijzigen.</p>}{canManage&&!part.singleton&&<button type="button" disabled={saving} className="row-action" onClick={()=>toggleRemoval(part,row)}>{row.deleted?"Verwijdering ongedaan maken":"Verwijderen bij opslaan"}</button>}</details>;
+            return <details key={row.localId} open={!row.base||row.deleted||issues.some(issue=>issue.rowId===row.id&&issue.collection===part.table)} className={`dossier-editor-row ${row.deleted?"pending-removal":""}`}><summary>{String(row.values.title??row.values.name??row.values.label??part.label)}{row.deleted?" — wordt verwijderd":""}</summary><div className="dossier-editor-fields">{!row.deleted&&editorFields(kind,part.table).filter(field=>part.table!=="record_relationships"||!['source_id','source_type'].includes(field.name)).map(field=>input(field,values,(name,value)=>updateRow(part,row,incoming?name.replace(/^target_/,"source_"):name,value),!canEdit,row.localId,part.table))}</div>{canManage&&!canEdit&&<p className="form-help">Alleen de auteur kan deze opmerking wijzigen.</p>}{canManage&&!part.singleton&&<button type="button" disabled={saving} className="row-action" onClick={()=>toggleRemoval(part,row)}>{row.deleted?"Verwijdering ongedaan maken":"Verwijderen bij opslaan"}</button>}</details>;
           })}
         </section>;
       })}

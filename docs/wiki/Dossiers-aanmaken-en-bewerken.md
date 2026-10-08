@@ -47,3 +47,7 @@ De lokale proeven gebruiken synthetische gegevens en controleren alle 22 modelle
 ## Drive-map ontkoppelen
 
 Open de fiche via **Bewerken → Documenten** en klik **Map ontkoppelen bij opslaan**. Bevestig met **Alles opslaan**. De maplink en de geregistreerde dossiermap worden samen ontkoppeld; de map, bestanden en afzonderlijk gekoppelde documenten blijven behouden. Annuleren bewaart de oorspronkelijke koppeling. De actie is beschikbaar in alle uniforme fiches met een Drive-link of mapregistratie, ook bij vergaderingen met alleen een mapregistratie. De bestaande bewerkrechten blijven gelden. Events, projecten, sponsors en communitycontacten bieden ook een snelkoppeling vanuit hun documentenweergave.
+
+## Gerichte foutmeldingen bij opslaan
+
+Een mislukte opslag toont de oorzaak en, waar bekend, het veld en de titel van het betreffende onderdeel. Klik op een veldmelding om het juiste tabblad en onderdeel te openen. Je invoer blijft staan. Tijdslots controleren vooraf de tijdvolgorde, soort, status en tekstlengtes. Onbekende tijden mogen leeg blijven; een eindmoment vereist een startmoment en moet later liggen. Bij een databankfout zonder precieze rijverwijzing toont de editor de herkenbare regel en mogelijke onderdelen, of een foutcode voor verdere diagnose.
