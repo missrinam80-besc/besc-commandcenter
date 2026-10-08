@@ -1,5 +1,6 @@
 import {dossierEditorCatalog,type EditorConfig} from "./dossier-editor-catalog";
 import schemas from "./dossier-editor-schema.json";
+import {eventEditorValues,eventEditorStorageValues,eventEditorTimingError} from "./event-editor-timing";
 
 export type FieldSchema={name:string;type:string;required:boolean;default:unknown;options:string[];reference:string|null};
 export type EditorRecord=Record<string,unknown>;
@@ -15,7 +16,7 @@ export function defaultEditorValues(kind:string,table:string):EditorRecord {
 }
 export function createDossierDraft(kind:string,id:string,record:EditorRecord|null,parts:Record<string,EditorRecord[]>={}):DossierDraft {
   const cfg=dossierEditorCatalog[kind];if(!cfg)throw Error("Onbekend dossiertype");
-  return {kind,id,base:record,values:record?{...record}:defaultEditorValues(kind,cfg.table),parts:Object.fromEntries(cfg.collections.map(part=>[part.table,(parts[part.table]??[]).map((row,index)=>({localId:`${part.table}:${index}`,id:String(row[part.key??"id"]??""),values:{...row},base:record?row:null,deleted:false}))]))};
+  return {kind,id,base:record,values:kind==="event"?eventEditorValues(record??defaultEditorValues(kind,cfg.table)):record?{...record}:defaultEditorValues(kind,cfg.table),parts:Object.fromEntries(cfg.collections.map(part=>[part.table,(parts[part.table]??[]).map((row,index)=>({localId:`${part.table}:${index}`,id:String(row[part.key??"id"]??""),values:{...row},base:record?row:null,deleted:false}))]))};
 }
 function equal(a:unknown,b:unknown){return JSON.stringify(a??null)===JSON.stringify(b??null);}
 function changed(values:EditorRecord,base:EditorRecord|null,allowed:string[]):EditorRecord {
@@ -23,7 +24,7 @@ function changed(values:EditorRecord,base:EditorRecord|null,allowed:string[]):Ed
 }
 export function buildEditorBundle(draft:DossierDraft):EditorBundle {
   const cfg=dossierEditorCatalog[draft.kind];if(!cfg)throw Error("Onbekend dossiertype");
-  const root={id:draft.id,new:!draft.base,values:changed(draft.values,draft.base,cfg.fields),base:draft.base};
+  const root={id:draft.id,new:!draft.base,values:changed(draft.kind==="event"?eventEditorStorageValues(draft.values):draft.values,draft.base,cfg.fields),base:draft.base};
   const parts:EditorChange[]=[];
   for(const part of cfg.collections)for(const row of draft.parts[part.table]??[]){
     if(row.deleted&&!row.base)continue;
@@ -54,6 +55,7 @@ export function validateEditorBundle(bundle:EditorBundle,config:EditorConfig=dos
     if(change.delete){if(index===0)problems.push("Verwijderen van de fiche is een aparte dossieractie.");continue;}
     for(const name of Object.keys(change.values))if(!fields.includes(name))problems.push("Deze wijziging bevat een veld dat niet bij het dossier hoort.");
     const all={...change.base,...change.values};
+    if(table==="events"){const timingError=eventEditorTimingError(all);if(timingError)problems.push(timingError);}
     for(const field of editorFields(bundle.kind,table)){
       const value=all[field.name];
       if(field.required&&(value===null||value===undefined||value===""))problems.push(`Vul ${field.name} in.`);

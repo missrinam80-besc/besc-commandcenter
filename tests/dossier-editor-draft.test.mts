@@ -22,6 +22,47 @@ type Change={id:string;new:boolean;values:Record<string,unknown>;base:Record<str
 type Bundle={kind:string;root:Change;parts:Change[]};
 const library=load("src/lib/dossier-editor-draft.ts") as unknown as {createDossierDraft:(kind:string,id:string,record:Record<string,unknown>|null,parts?:Record<string,Record<string,unknown>[]>)=>Draft;buildEditorBundle:(draft:Draft)=>Bundle;validateEditorBundle:(bundle:Bundle)=>string[];editorHasChanges:(draft:Draft)=>boolean};
 const id="11111111-1111-4111-8111-111111111111",child="22222222-2222-4222-8222-222222222222";
+test("Eventeditor toont datum en optionele tijd eenmaal en koppelt de ondergrenzen",()=>{
+ const Component=load("src/components/dossier-editor.tsx").DossierEditor as React.ComponentType<Record<string,unknown>>;
+ const html=renderToStaticMarkup(React.createElement(Component,{kind:"event",id,record:{id,title:"TESTFIXTURE",start_date:"2026-10-08",end_date:"2026-10-08",start_at:"2026-10-08T10:30:00+00:00",end_at:"2026-10-08T11:30:00+00:00"},mode:"edit",cancelHref:"/app",permissions:{}}));
+ assert.equal((html.match(/type="date"/g)||[]).length,2);
+ assert.equal((html.match(/type="time"/g)||[]).length,2);
+ assert.doesNotMatch(html,/type="datetime-local"/);
+ assert.match(html,/type="date" min="2026-10-08"/);
+ assert.match(html,/type="time" min="12:30"/);
+});
+test("Eventdatum wijzigen verplaatst de tijd mee; wissen behoudt datum zonder verzonnen tijd",()=>{
+ const draft=library.createDossierDraft("event",id,{id,title:"TESTFIXTURE",start_date:"2026-10-08",start_at:"2026-10-08T10:30:25+00:00",end_date:null,end_at:null});
+ assert.equal(library.editorHasChanges(draft),false);
+ draft.values.start_date="2026-10-09";
+ let bundle=library.buildEditorBundle(draft);
+ assert.equal(bundle.root.values.start_at,"2026-10-09T10:30:00.000Z");
+ assert.equal(library.validateEditorBundle(bundle).length,0);
+ draft.values.start_time="";bundle=library.buildEditorBundle(draft);
+ assert.equal(bundle.root.values.start_at,null);assert.equal(bundle.root.values.start_date,"2026-10-09");
+ assert.equal(library.validateEditorBundle(bundle).length,0);
+});
+test("Gezamenlijke eventopslag weigert vroege einddatum, vroeg uur en ongeldige zomertijd",()=>{
+ for(const input of [
+  {start_date:"2026-10-09",end_date:"2026-10-08"},
+  {start_date:"2026-10-09",end_date:"2026-10-09",start_time:"18:00",end_time:"17:00"},
+  {start_date:"2026-03-29",start_time:"02:30"},
+  {start_date:"2026-02-30"},
+  {start_time:"12:00"},
+ ]){
+  const draft=library.createDossierDraft("event",id,null);Object.assign(draft.values,{title:"TESTFIXTURE"},input);
+  assert.ok(library.validateEditorBundle(library.buildEditorBundle(draft)).length,JSON.stringify(input));
+ }
+ const draft=library.createDossierDraft("event",id,null);Object.assign(draft.values,{title:"TESTFIXTURE",start_date:"2026-10-08",end_date:"2026-10-09",start_time:"23:00",end_time:"01:00"});
+ assert.equal(library.validateEditorBundle(library.buildEditorBundle(draft)).length,0);
+});
+test("Servervalidatie weigert directe ongeldige datumvolgorde en tegenstrijdige datums",()=>{
+ const draft=library.createDossierDraft("event",id,{id,title:"TESTFIXTURE",start_date:"2026-10-09",end_date:"2026-10-10",start_at:null,end_at:null});
+ const bundle=library.buildEditorBundle(draft);bundle.root.values={end_date:"2026-10-08"};
+ assert.ok(library.validateEditorBundle(bundle).some(message=>message.includes("Einddatum")));
+ bundle.root.values={start_date:"2026-10-08",start_at:"2026-10-09T10:00:00Z"};
+ assert.ok(library.validateEditorBundle(bundle).some(message=>message.includes("dezelfde dag")));
+});
 test("Bestaande aanmaak- en bewerklinks openen de gezamenlijke editor met dossiercontext",async()=>{
  const gate=load("src/components/dossier-editor-gate.tsx").dossierEditorGate as (props:unknown)=>Promise<React.ReactElement<{kind:string;id?:string;preset:Record<string,unknown>;context?:{id:string;type:string}}>|null>;
  assert.equal(await gate({kind:"event",id,query:{}}),null);

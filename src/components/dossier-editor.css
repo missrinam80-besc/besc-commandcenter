@@ -36,3 +36,5 @@
 .dossier-editor-actions { justify-content:flex-end;position:sticky;z-index:1;bottom:0;padding:14px 0 0;background:var(--theme-surface);border-top:1px solid var(--line); }
 .module-body>.dossier-editor { padding:20px;border:1px solid var(--line);border-radius:12px;background:var(--theme-surface); }
 @media(max-width:700px) { .dossier-editor-fields { grid-template-columns:1fr; }.dossier-editor-heading { align-items:flex-start;flex-direction:column; } }
+.event-timing-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media(max-width:480px){.event-timing-fields{grid-template-columns:minmax(0,1fr)}}

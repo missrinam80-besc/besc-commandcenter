@@ -20,6 +20,8 @@ Er is geen externe editordienst of API nodig en er zijn geen extra credits voor 
 
 ## Toevoegen, verwijderen en fouten
 
+Events hebben één startdatum en één einddatum, elk met een afzonderlijk optioneel tijdveld. Een onbekend uur blijft leeg. De einddatum kan niet vóór de startdatum liggen; op dezelfde dag kan de eindtijd niet vóór de starttijd liggen. De editor en server controleren dit vóór gezamenlijke opslag. Ongewijzigde precieze tijdstippen blijven behouden, ook rond de omschakeling van zomer- en wintertijd.
+
 Toevoegen en verwijderen binnen de editor verandert eerst alleen de invoer. **Verwijderen bij opslaan** kan worden teruggedraaid vóór de gezamenlijke opslag. Annuleren verwerpt de invoer. Een opslagfout bewaart de invoer in de editor en draait de volledige databasewijziging terug.
 
 Als een dossier of onderdeel ondertussen gewijzigd is, weigert de opslag de verouderde versie. Vergelijk de recente versie vóór je opnieuw probeert; de editor overschrijft haar niet stilzwijgend.
