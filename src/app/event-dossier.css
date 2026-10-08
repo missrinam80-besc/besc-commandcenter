@@ -101,8 +101,9 @@
 .event-timegrid-hour{position:absolute;left:0;right:0;height:60px;border-top:1px solid var(--line);background:linear-gradient(to bottom,transparent 29px,color-mix(in srgb,var(--line) 50%,transparent) 29px,color-mix(in srgb,var(--line) 50%,transparent) 30px,transparent 30px);pointer-events:none}
 .event-timegrid-hour>span{display:block;width:50px;padding:4px 3px;color:var(--muted);font-size:9px;line-height:1.4}
 .event-timegrid-blocks{position:absolute;left:52px;right:3px;top:0;bottom:0}
-.app-shell .event-timegrid-block{position:absolute;display:block;margin:0;border:1px solid var(--agenda-color);border-left:3px solid var(--agenda-color);border-radius:5px;padding:3px 5px;text-align:left;overflow:hidden;color:var(--ink);background-color:color-mix(in srgb,var(--agenda-color) 18%,var(--theme-surface));box-shadow:0 0 0 1px var(--theme-surface);cursor:pointer}
-.app-shell .event-timegrid-block:hover{background-color:color-mix(in srgb,var(--agenda-color) 28%,var(--theme-surface));z-index:2}
+/* Keep semantic agenda colors above the shared themed button defaults. */
+.app-shell .event-timegrid-block[data-kind]{position:absolute;display:block;margin:0;border:1px solid var(--agenda-color);border-left:3px solid var(--agenda-color);border-radius:5px;padding:3px 5px;text-align:left;overflow:hidden;color:var(--ink);background-color:color-mix(in srgb,var(--agenda-color) 18%,var(--theme-surface));box-shadow:0 0 0 1px var(--theme-surface);cursor:pointer}
+.app-shell .event-timegrid-block[data-kind]:hover{background-color:color-mix(in srgb,var(--agenda-color) 28%,var(--theme-surface));z-index:2}
 .app-shell .event-timegrid-block:focus-visible{outline:2px solid var(--ink);outline-offset:1px;z-index:3}
 .event-timegrid-block strong,.event-timegrid-block span{display:block;font-size:10px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .event-timegrid-block strong{font-weight:750}
