@@ -18,6 +18,7 @@ export function OperationalRecordForm({
   campaigns = [],
   events = [],
   accountOptions = [],
+  accountsUnavailable = false,
   personRoles = [],
   returnTo,
 }: {
@@ -30,6 +31,7 @@ export function OperationalRecordForm({
   campaigns?: Option[];
   events?: Option[];
   accountOptions?: { id: string; label: string }[];
+  accountsUnavailable?: boolean;
   personRoles?: string[];
   returnTo?: string;
 }) {
@@ -87,7 +89,8 @@ export function OperationalRecordForm({
       {module === "community" && <>
         <h3 className="form-subtitle">Profiel en inzetbaarheid</h3>
         <div className="form-row">
-          <label>Command Center-account<select name="account_user_id" defaultValue={String(record.account_user_id ?? "")}><option value="">Geen account gekoppeld</option>{accountOptions.map((account) => <option key={account.id} value={account.id}>{account.label}</option>)}</select></label>
+          {accountsUnavailable && <><p role="alert">Accounts konden niet geladen worden. De bestaande koppeling blijft behouden.</p><input type="hidden" name="account_user_id" value={String(record.account_user_id ?? "")}/></>}
+          <label>Gebruikersaccount<select disabled={accountsUnavailable} name="account_user_id" defaultValue={String(record.account_user_id ?? "")}><option value="">Geen account gekoppeld</option>{record.account_user_id && !accountOptions.some(a => a.id === record.account_user_id) ? <option value={String(record.account_user_id)}>Eerder gekoppeld account</option> : null}{accountOptions.map((account) => <option key={account.id} value={account.id}>{account.label}</option>)}</select></label>
           <label>Handle<input name="handle" defaultValue={String(record.handle ?? "")}/></label>
           <label>Discord<input name="discord_handle" defaultValue={String(record.discord_handle ?? "")}/></label>
           <label>E-mail<input type="email" name="email" defaultValue={String(record.email ?? "")}/></label>

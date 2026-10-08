@@ -70,6 +70,16 @@ Zonder bestaande match wordt een contact aangemaakt met de accountnaam en het be
 
 Bij meerdere mogelijke contacten, een portaaldossier dat al aan een ander account gekoppeld is of een eerder verwijderd accountcontact wordt niets automatisch samengevoegd of hersteld. **Gebruikers & toegang** toont deze ontbrekende koppelingen. Admin kiest **Contact koppelen** en selecteert expliciet het juiste bestaande contact. Een contact dat al aan een ander account verbonden is kan niet worden overgenomen. Indien nodig maak je eerst een nieuw contact aan en koppel je het daarna. De knop **Contact openen** voert rechtstreeks naar de gekoppelde fiche; de communitylijst toont **Account gekoppeld**.
 
-Schorsen of intrekken van toegang verwijdert de contactfiche niet. Een ongewijzigde historische accountkoppeling blijft geldig bij het bewerken van een contact. Een nieuw gekozen account moet actieve interne of portaaltoegang hebben. Het activeren van een contact verandert nooit het lidmaatschap of portaalrechten.
+Schorsen of intrekken van toegang verwijdert de contactfiche niet. Een ongewijzigde historische accountkoppeling blijft geldig bij het bewerken van een contact. Een nieuw gekozen account mag actief zijn of nog wachten op goedkeuring tijdens intake. Het activeren van een contact verandert nooit het lidmaatschap of portaalrechten.
 
 Migratie `20261008065014_account_community_contacts.sql` vult bestaande accounts met toegang aan en voegt dezelfde opvolging toe bij het verlenen van nieuwe toegang. De automatische onderhoudsfuncties zijn privé en niet rechtstreeks uitvoerbaar door clients. De handmatige koppelactie controleert Admin-bevoegdheid en organisatiegrenzen. Er worden geen e-mails verstuurd en geen externe agentruns gestart.
+
+## Intake vanuit contacten en sponsorbedrijven
+
+In Community & vrijwilligers kies je bij aanmaken of bewerken het bestaande gebruikersaccount. Ook accounts in afwachting kunnen worden gekoppeld. Dit activeert geen lidmaatschap, verandert geen functies en verleent geen portaaltoegang. Uitnodigen en toegang goedkeuren blijven aparte stappen in Gebruikers & toegang. Eén account hoort bij maximaal één levende centrale persoonsfiche per organisatie.
+
+Een sponsorfiche is een bedrijf. Onder Contactpersonen kun je meerdere bestaande individuele contacten uit Community & vrijwilligers koppelen. Dezelfde persoon kan contactpersoon voor meerdere bedrijven zijn; binnen hetzelfde bedrijf voorkom je dubbele koppelingen. Naam en e-mail worden bij gekoppelde personen vanuit hun centrale fiche weergegeven. Functie bij het bedrijf, primair contact en CRM-historie blijven bij de sponsor horen. Met Contactfiche en account openen beheer je hun gebruikersaccount op de centrale persoonsfiche.
+
+Een afzonderlijke CRM-contactpersoon zonder centrale persoonsfiche kan ook direct een actief of wachtend gebruikersaccount krijgen via Koppeling opslaan. Bij koppeling aan een centrale persoon wordt diens account de bron; een conflicterend apart account wordt geweigerd. Koppelingen maken geen Auth-account aan en sturen geen e-mail. Alleen Admin en Bestuur kunnen contactidentiteiten beheren; apprechten en portaaltoegang blijven voor Admin.
+
+Na `20261008065014_account_community_contacts.sql` volgt migratie `20261008070508_contact_account_intake.sql`. Die voegt CRM-persoonskoppelingen en accountkoppelingen toe, bewaakt organisatiegrenzen en voert contactaanmaak en wijziging van het primaire contact samen uit. Bij een mislukte koppeling blijft het bestaande primaire contact behouden.
