@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -9,6 +10,9 @@ import { requireActiveMembership } from "@/lib/auth-context";
 
 export default async function Page({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<Record<string,string|undefined>>}) {
   const {id}=await params,q=await searchParams,{supabase,membership}=await requireActiveMembership(),org=membership.organization_id;
+  const unifiedEditor = await dossierEditorGate({kind:"product",id,query:q});
+  if (unifiedEditor) return unifiedEditor;
+
   const [recordResult,partnersResult,projectsResult,campaignsResult]=await Promise.all([
     supabase.from("shop_products").select("*,supplier:partners!shop_products_supplier_id_fkey(name),producer:partners!shop_products_producer_id_fkey(name),projects(title),campaigns(title)").eq("organization_id",org).eq("id",id).is("deleted_at",null).maybeSingle(),
     supabase.from("partners").select("id,name").eq("organization_id",org).is("deleted_at",null).order("name"),supabase.from("projects").select("id,title").eq("organization_id",org).is("deleted_at",null).order("title"),supabase.from("campaigns").select("id,title").eq("organization_id",org).is("deleted_at",null).order("title"),

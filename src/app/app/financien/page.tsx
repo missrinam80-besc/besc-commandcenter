@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import { z } from "zod";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
@@ -8,6 +9,9 @@ import { requireActiveMembership } from "@/lib/auth-context";
 
 export default async function Page({searchParams}:{searchParams:Promise<Record<string,string|undefined>>}){
   const q=await searchParams,{supabase,membership}=await requireActiveMembership(),org=membership.organization_id;
+  const unifiedEditor = await dossierEditorGate({group:"finance",query:q});
+  if (unifiedEditor) return unifiedEditor;
+
   const canManageFinance=hasPermission(membership,"manageFinance");
   const canViewOverview=hasPermission(membership,"viewFinance");
   const[b,e,i,p,ev,c,pa,l]=await Promise.all([canViewOverview?supabase.from("budget_envelopes").select("*").eq("organization_id",org).is("deleted_at",null).order("created_at",{ascending:false}):Promise.resolve({data:[]}),canViewOverview?supabase.from("expenses").select("*,budget_envelopes(name)").eq("organization_id",org).is("deleted_at",null).order("expense_date",{ascending:false}):Promise.resolve({data:[]}),canViewOverview?supabase.from("income_entries").select("*,budget_envelopes(name)").eq("organization_id",org).is("deleted_at",null).order("expected_date",{ascending:false}):Promise.resolve({data:[]}),supabase.from("projects").select("id,title").eq("organization_id",org).is("deleted_at",null).order("title"),supabase.from("events").select("id,title").eq("organization_id",org).is("deleted_at",null).order("title"),supabase.from("campaigns").select("id,title").eq("organization_id",org).is("deleted_at",null).order("title"),supabase.from("partners").select("id,name").eq("organization_id",org).is("deleted_at",null).order("name"),supabase.from("merch_launches").select("id,title").eq("organization_id",org).is("deleted_at",null).order("title")]);

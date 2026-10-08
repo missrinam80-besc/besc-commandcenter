@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { CalendarDays, Search, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -29,6 +30,9 @@ export default async function Events({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"event",query:params});
+  if (unifiedEditor) return unifiedEditor;
+
   const search = params.zoek?.trim().slice(0, 100) ?? "";
   const status = Object.hasOwn(eventStatuses, params.status ?? "") ? params.status! : "";
   const type = Object.hasOwn(eventTypes, params.type ?? "") ? params.type! : "";

@@ -34,6 +34,7 @@ function harness(role:string) {
   };
   const passthrough=({children}: {children?:React.ReactNode})=>React.createElement("div",null,children);
   const dependencies:Record<string,unknown>={
+    "@/components/dossier-editor-gate":{dossierEditorGate:async()=>null},
     "react/jsx-runtime":jsx,
     "zod":{z},
     "next/link":{__esModule:true,default:({children,href}: {children?:React.ReactNode;href:string})=>React.createElement("a",{href},children)},

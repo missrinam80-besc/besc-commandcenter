@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { ExternalLink, History } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -35,6 +36,9 @@ export default async function KnowledgeDetail({
 }) {
   const { id } = await params;
   const q = await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"knowledge",id,query:q});
+  if (unifiedEditor) return unifiedEditor;
+
   const { supabase, membership } = await requireActiveMembership();
   const organizationId = membership.organization_id;
   const manager = ["admin", "board"].includes(membership.role);

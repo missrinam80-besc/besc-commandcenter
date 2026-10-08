@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { MeetingForm } from "@/components/meeting-form";
@@ -20,6 +21,9 @@ export default async function Page({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const q = await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"meeting",query:q});
+  if (unifiedEditor) return unifiedEditor;
+
   const openActionsOnly = q.actiepunten === "open";
   const { supabase, membership } = await requireActiveMembership();
   const [meetingResult, actionResult] = await Promise.all([

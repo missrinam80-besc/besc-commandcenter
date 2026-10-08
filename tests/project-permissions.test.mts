@@ -13,7 +13,7 @@ const require=((native) => (name: string) => name === "@/lib/contact-dossier-tab
 function load(path:string, overrides:Record<string,unknown>){
  const compiled={exports:{} as Record<string,unknown>};
  const code=ts.transpileModule(readFileSync(new URL(`../${path}`,import.meta.url),"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText;
- runInNewContext(code,{module:compiled,exports:compiled.exports,FormData,Date,URLSearchParams,require:(key:string)=>key in overrides?overrides[key]:require(key)});return compiled.exports;
+ runInNewContext(code,{module:compiled,exports:compiled.exports,FormData,Date,URLSearchParams,require:(key:string)=>key==="@/components/dossier-editor-gate"?{dossierEditorGate:async()=>null}:key in overrides?overrides[key]:require(key)});return compiled.exports;
 }
 const id="11111111-1111-4111-8111-111111111111";
 const actions=["create","edit","add","toggle","update","delete","join","remove","archive","restore","softdelete"];

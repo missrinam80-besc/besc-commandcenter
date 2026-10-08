@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { BookOpen, Search, Star } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -35,6 +36,9 @@ export default async function KnowledgePage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const q = await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"knowledge",query:q});
+  if (unifiedEditor) return unifiedEditor;
+
   const { supabase, membership } = await requireActiveMembership();
   const organizationId = membership.organization_id;
   const manager = ["admin", "board"].includes(membership.role);

@@ -1,0 +1,25 @@
+.dossier-editor { display:grid;gap:1rem;color:var(--ink); }
+.full-dossier-create { width:min(90rem,96vw);max-width:96vw;max-height:92dvh;overflow:auto;margin:auto;padding:1.25rem;border:1px solid var(--line);border-radius:.8rem;background:var(--theme-surface);color:var(--ink); }
+.full-dossier-create::backdrop { background:rgb(0 0 0 / .6); }
+.dossier-editor-heading,.dossier-editor-actions { display:flex;align-items:center;justify-content:space-between;gap:1rem; }
+.dossier-editor-heading h2 { font-size:1.2rem;margin:0; }
+.dossier-editor-row>summary { cursor:pointer;font-weight:600; }
+.dossier-editor-row[open]>summary { margin-bottom:.8rem; }
+.dossier-editor-heading>span { font-size:.8rem;color:var(--muted); }
+.dossier-editor-tabs { margin:0;flex-wrap:wrap; }
+.dossier-editor-tabs button[aria-selected="true"] { border-color:var(--red);box-shadow:inset 0 -2px var(--red); }
+.dossier-editor-panel[hidden] { display:none; }
+.dossier-editor-panel { display:grid;gap:1rem; }
+.dossier-editor-fields { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem 1rem; }
+.dossier-editor-fields label { min-width:0;display:grid;gap:.4rem;font-size:.85rem; }
+.dossier-editor-fields input,.dossier-editor-fields select,.dossier-editor-fields textarea { width:100%;min-width:0;color:var(--ink);background:var(--theme-surface);border:1px solid var(--line);border-radius:.5rem;padding:.6rem; }
+.dossier-editor-fields textarea { resize:vertical; }
+.dossier-editor-fields .inline-check { display:flex;align-items:center;gap:.5rem; }
+.dossier-editor-fields input[type="checkbox"] { width:auto; }
+.dossier-editor-collection,.dossier-editor-row { border:1px solid var(--line);border-radius:.65rem;padding:.85rem;background:var(--theme-surface); }
+.dossier-editor-collection h3 { font-size:1rem;margin:0; }
+.dossier-editor-row+.dossier-editor-row { margin-top:.7rem; }
+.dossier-editor-row>.row-action { margin-top:.65rem; }
+.dossier-editor .pending-removal { border-style:dashed; }
+.dossier-editor-actions { justify-content:flex-end;position:sticky;bottom:0;padding:.9rem 0;background:var(--theme-surface);border-top:1px solid var(--line); }
+@media(max-width:700px) { .dossier-editor-fields { grid-template-columns:1fr; }.dossier-editor-heading { align-items:flex-start;flex-direction:column; } }

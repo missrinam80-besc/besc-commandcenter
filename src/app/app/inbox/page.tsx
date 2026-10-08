@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import { AppShell } from "@/components/app-shell";
 import Link from "next/link";
 import { ModulePage } from "@/components/module-page";
@@ -33,6 +34,9 @@ export default async function InboxPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"inbox",query:params});
+  if (unifiedEditor) return unifiedEditor;
+
   const currentQuery = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) if (value) currentQuery.set(key, value);
   const search = params.zoek?.trim() ?? "";

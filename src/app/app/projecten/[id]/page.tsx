@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import { DossierTabContent } from "@/components/dossier-tab-content";
 import { projectTabs, resolveContactTab } from "@/lib/contact-dossier-tabs";
 import { toPersonPickerOptions } from "@/lib/person-picker";
@@ -95,6 +96,9 @@ export default async function ProjectPage({ params, searchParams }: {
 }) {
   const { id } = await params;
   const query = await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"project",id,query:query});
+  if (unifiedEditor) return unifiedEditor;
+
   const { supabase, membership } = await requireActiveMembership();
   const activeTab = resolveContactTab("projecten",query);
   const closeHref = `?tab=${activeTab}`;

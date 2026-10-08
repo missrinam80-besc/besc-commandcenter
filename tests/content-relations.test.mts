@@ -15,7 +15,7 @@ function load(path: string, overrides: Record<string, unknown> = {}) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   runInNewContext(code, { module: compiled, exports: compiled.exports, FormData, Date, URLSearchParams,
-    require: (key: string) => key in overrides ? overrides[key] : require(key) });
+    require: (key: string) => key === "@/components/dossier-editor-gate" ? {dossierEditorGate:async()=>null} : key in overrides ? overrides[key] : require(key) });
   return compiled.exports;
 }
 const id = "11111111-1111-4111-8111-111111111111";

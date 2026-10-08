@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import { EventRegistrationsPanel } from "@/components/event-registrations-panel";
 import { EventFinancePanel } from "@/components/event-finance-panel";
 import { EventGiveawaysPanel } from "@/components/event-giveaways-panel";
@@ -76,6 +77,9 @@ export default async function Event({
 }) {
   const { id } = await params;
   const q = await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"event",id,query:q});
+  if (unifiedEditor) return unifiedEditor;
+
   const activeTab = resolveEventDossierTab(q);
   const closeHref = `?tab=${activeTab}`;
   const { supabase, membership } = await requireActiveMembership();

@@ -15,7 +15,7 @@ import {toPersonPickerOptions} from "../src/lib/person-picker.ts";
 const id="11111111-1111-4111-8111-111111111111";
 function load(path:string,dependencies:Record<string,unknown>){
   const require=createRequire(import.meta.url),compiled={exports:{} as Record<string,unknown>};
-  runInNewContext(ts.transpileModule(readFileSync(path,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,{module:compiled,exports:compiled.exports,FormData,require:(name:string)=>name in dependencies?dependencies[name]:require(name)});
+  runInNewContext(ts.transpileModule(readFileSync(path,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,{module:compiled,exports:compiled.exports,FormData,require:(name:string)=>name==="@/components/dossier-editor-gate"?{dossierEditorGate:async()=>null}:name in dependencies?dependencies[name]:require(name)});
   return compiled.exports;
 }
 test("Campagne-opleveringen en publicaties renderen afzonderlijk met behoud van toewijzing en links",()=>{
