@@ -1,6 +1,8 @@
 "use client";
 import {useEffect,useState,type FormEvent} from "react";
 import {useRouter} from "next/navigation";
+import {RichTextField} from "./rich-text-field";
+import {isRichTextField} from "@/lib/rich-text";
 import {dossierEditorCatalog,dossierFieldTab,type EditorCollection} from "@/lib/dossier-editor-catalog";
 import {buildEditorBundle,createDossierDraft,defaultEditorValues,editorFields,editorHasChanges,validateEditorBundle,type DossierDraft,type DraftRow,type EditorBundle,type EditorRecord,type FieldSchema} from "@/lib/dossier-editor-draft";
 import {dossierFieldLabel,dossierChoiceLabel} from "@/lib/dossier-editor-labels";
@@ -57,7 +59,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
     if(field.type==="uuid")return <ReferenceField key={field.name} id={inputId} label={label} value={String(value)} choices={choices} disabled={readonly||saving} required={field.required} onChange={value=>change(field.name,value)}/>;
     if(known.length)return <label key={field.name} htmlFor={inputId}>{label}<select {...shared} value={String(value)} onChange={e=>change(field.name,e.target.value||null)}><option value="">Kies…</option>{known.map(choice=><option key={choice} value={choice}>{dossierChoiceLabel(choice)}</option>)}{value&&!known.includes(String(value))&&<option value={String(value)}>{dossierChoiceLabel(String(value))}</option>}</select></label>;
     if(field.type.endsWith("[]"))return <ArrayField key={field.name} id={inputId} label={label} value={value} disabled={readonly||saving} onChange={value=>change(field.name,value)}/>;
-    if(/^(notes|description|goal|deliverables|acceptance_criteria|closure_evaluation|body|body_text|copy|summary|agreement_summary|results_summary|decisions|action_points)$/.test(field.name))return <label key={field.name} htmlFor={inputId}>{label}<textarea {...shared} rows={4} value={String(value)} onChange={e=>change(field.name,e.target.value||null)}/></label>;
+    if(isRichTextField(field.name))return <RichTextField key={field.name} id={inputId} label={label} value={String(value)} disabled={readonly||saving} onChange={value=>change(field.name,value||null)}/>;
     const numeric=/^(integer|bigint|smallint|numeric|decimal)/.test(field.type),date=field.type==="date",timestamp=/timestamp|timestamptz/.test(field.type);
     const type=numeric?"number":timestamp?"datetime-local":date?"date":/(_url|^url$|website)/.test(field.name)?"url":field.name==="email"?"email":"text";
     return <label key={field.name} htmlFor={inputId}>{label}<input {...shared} type={type} step={numeric?(/numeric|decimal/.test(field.type)?"0.01":"1"):undefined} value={timestamp&&value?formatDateTimeLocal(String(value)):date?String(value).slice(0,10):String(value)} onChange={e=>change(field.name,numeric?(e.target.value===""?null:Number(e.target.value)):timestamp?localDateTimeToIso(e.target.value):e.target.value||null)}/></label>;

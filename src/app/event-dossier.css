@@ -21,17 +21,6 @@
 .event-dossier .connection-list a{font-size:12px;line-height:1.5}
 .event-dossier .connection-list strong{white-space:normal;overflow-wrap:anywhere}
 .event-dossier .connection-list span{font-size:11px;line-height:1.5;overflow-wrap:anywhere}
-.event-dossier .markdown-content{font-size:13px;line-height:1.6;overflow-wrap:anywhere}
-.event-dossier .markdown-content :is(h1,h2,h3,h4){font-family:inherit;font-weight:700;line-height:1.35;margin:16px 0 7px}
-.event-dossier .markdown-content :is(h1,h2){font-size:17px}
-.event-dossier .markdown-content :is(h3,h4){font-size:14px}
-.event-dossier .markdown-content p{margin:7px 0}
-.event-dossier .markdown-content :is(ul,ol){padding-left:22px;margin:8px 0}
-.event-dossier .markdown-content ul{list-style:disc}
-.event-dossier .markdown-content ol{list-style:decimal}
-.event-dossier .markdown-content li{margin:3px 0}
-.event-dossier .markdown-content a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
-.event-dossier .markdown-content pre{max-width:100%;overflow-x:auto;background:var(--theme-control);color:var(--ink);padding:12px;border-radius:8px}
 .app-shell .financial-summary-totals article{background:var(--theme-control);color:var(--ink);border:1px solid var(--line);padding:10px 12px}
 .financial-summary-totals strong{font-size:13px;line-height:1.45;overflow-wrap:anywhere}
 .financial-related-lists>div{border-color:var(--line)}

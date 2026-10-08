@@ -10,7 +10,9 @@
 @import "./integrations-ai.css";
 @import "./account.css";
 @import "./event-dossier.css";
+@import "./rich-text.css";
 @import "tailwindcss";
+@source "../../node_modules/streamdown/dist/*.js";
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .form-modal-backdrop{position:fixed;inset:0;z-index:220;display:grid;place-items:center;padding:24px;background:rgb(18 22 20 / 58%);backdrop-filter:blur(3px)}
@@ -20,15 +22,6 @@
 .form-modal-close{display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--line);border-radius:9px;color:var(--ink)}
 .form-modal-content{padding:0 2px 2px}
 .module-body>.form-card:has(>.form-heading+form),.project-detail-body>.form-card:has(>.form-heading+form):first-of-type{position:fixed;z-index:210;inset:5vh max(16px,calc((100vw - 860px)/2));max-height:90vh;overflow-y:auto;margin:0;box-shadow:0 0 0 100vmax rgb(18 22 20 / 58%),0 24px 80px rgb(0 0 0 / 30%);clip-path:inset(-100vmax)}
-.markdown-field{display:grid!important;gap:0!important}
-.markdown-field-label{margin-bottom:6px}
-.markdown-toolbar{display:flex;align-items:center;gap:4px;padding:6px;border:1px solid var(--line);border-bottom:0;border-radius:9px 9px 0 0;background:#f8f8f6}
-.markdown-toolbar button{display:inline-flex;align-items:center;gap:5px;border:0;border-radius:6px;padding:6px;background:transparent;color:var(--muted);font-size:10px;cursor:pointer}
-.markdown-toolbar button:hover,.markdown-toolbar button.active{background:#fff;color:var(--besc-red);box-shadow:0 1px 4px #0001}
-.markdown-toolbar small{margin-left:auto;padding-right:5px;color:var(--muted);font-size:9px}
-.markdown-field textarea{border-radius:0 0 9px 9px!important}
-.markdown-preview{min-height:130px;padding:13px 15px;border:1px solid var(--line);border-radius:0 0 9px 9px;background:#fff;overflow:auto}
-.markdown-content{font-size:12px;line-height:1.65}.markdown-content>:first-child,.markdown-preview>:first-child{margin-top:0}.markdown-content>:last-child,.markdown-preview>:last-child{margin-bottom:0}
 @media(max-width:700px){.form-modal-backdrop{align-items:end;padding:0}.form-modal{width:100%;max-height:92vh;border-radius:16px 16px 0 0}.markdown-toolbar small{display:none}}
 .history-total{display:flex;align-items:center;gap:8px;background:#f0eee9;border-radius:20px;padding:8px 12px;font-size:11px;color:#626560}
 .history-filters{display:flex;gap:9px;align-items:center;margin-bottom:17px}.history-filters .search{height:39px}

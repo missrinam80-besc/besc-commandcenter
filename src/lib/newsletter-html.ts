@@ -1,3 +1,5 @@
+import {Marked} from "marked";
+
 export const newsletterVariants = ["besc", "event", "partner", "compact"] as const;
 
 export type NewsletterVariant = (typeof newsletterVariants)[number];
@@ -36,15 +38,18 @@ function escapeHtml(value: string) {
 }
 
 function textBlocks(value: string) {
-  return value.trim().split(/\n\s*\n/).filter(Boolean).map((block) => {
-    const lines = block.split(/\r?\n/).map((line) => escapeHtml(line));
-    const isList = lines.every((line) => /^[-*]\s+/.test(line));
-    if (isList) {
-      const items = lines.map((line) => `<li style="margin:0 0 8px">${line.replace(/^[-*]\s+/, "")}</li>`).join("");
-      return `<ul style="margin:0 0 20px;padding-left:22px">${items}</ul>`;
-    }
-    return `<p style="margin:0 0 20px;line-height:1.65">${lines.join("<br>")}</p>`;
-  }).join("");
+  const markdown = new Marked({breaks:true, renderer:{
+    html({text}) {return escapeHtml(text);},
+    link({href,tokens}) {
+      const text=this.parser.parseInline(tokens);
+      try {if(!["https:","http:","mailto:"].includes(new URL(href).protocol))return text;}catch{return text;}
+      return `<a href="${escapeHtml(href)}" style="color:inherit;text-decoration:underline">${text}</a>`;
+    },
+    image({text}) {return escapeHtml(text);},
+    paragraph({tokens}) {return `<p style="margin:0 0 20px;line-height:1.65">${this.parser.parseInline(tokens)}</p>`;},
+    heading({depth,tokens}) {return `<h${depth} style="margin:20px 0 10px;line-height:1.3">${this.parser.parseInline(tokens)}</h${depth}>`;},
+  }});
+  return markdown.parse(value.trim(),{async:false});
 }
 
 export function newsletterHtml(input: {

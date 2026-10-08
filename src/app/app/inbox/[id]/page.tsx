@@ -1,3 +1,4 @@
+import {MarkdownContent} from "@/components/markdown-field";
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { Archive, ArrowRight, Trash2 } from "lucide-react";
@@ -108,7 +109,7 @@ export default async function InboxItemPage({
             </section>
             <section className="form-card record-notes">
               <div className="form-heading"><h2>Beschrijving</h2></div>
-              <p>{item.description || "Er werd geen beschrijving toegevoegd."}</p>
+              <MarkdownContent>{item.description || "Er werd geen beschrijving toegevoegd."}</MarkdownContent>
             </section>
 
             {item.status !== "processed" && (
