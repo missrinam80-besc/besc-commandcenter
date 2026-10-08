@@ -193,6 +193,7 @@ export default async function Event({
             <div><span className="eyebrow">GOOGLE WORKSPACE</span><h2>Eventmap</h2></div>
              {driveUrl && <a className="row-action" href={driveUrl} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Open map</a>}
           </div>
+          {canManage&&driveUrl&&<p><Link className="row-action" href="?bewerken=1&tab=documenten">Mapkoppeling beheren / ontkoppelen</Link></p>}
           {drive ? (
             <div><strong>Drive-map gekoppeld</strong><p>De bestaande map en haar inhoud blijven op hun huidige plek.</p>
               {canManage && <Link href="?tab=documenten&drivePreview=1"><FolderInput size={15}/>Ontbrekende basismappen bekijken</Link>}

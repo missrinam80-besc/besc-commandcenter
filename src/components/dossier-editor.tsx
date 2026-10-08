@@ -8,6 +8,7 @@ import {buildEditorBundle,createDossierDraft,defaultEditorValues,editorFields,ed
 import {dossierFieldLabel,dossierChoiceLabel} from "@/lib/dossier-editor-labels";
 import {formatDateTimeLocal,localDateTimeToIso} from "@/lib/format";
 import {eventPartnerIds,eventPartnerForRow,selectEventPartners} from "@/lib/event-editor-partners";
+import {hasDossierDriveFolder,unlinkDossierDriveFolder} from "@/lib/dossier-drive-unlink";
 
 export type EditorOption={id:string;label:string;searchText?:string};
 function ArrayField({id,label,value,disabled,onChange}:{id:string;label:string;value:unknown;disabled:boolean;onChange:(value:string[])=>void}){
@@ -42,6 +43,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
   const [draft,setDraft]=useState<DossierDraft>(()=>{const created=createDossierDraft(kind,id,record,parts);if(!record)created.values={...created.values,...initialValues};return created;});
   const [tab,setTab]=useState(cfg.tabs.find(item=>item.id===initialTab)?.id??cfg.tabs[0].id),[saving,setSaving]=useState(false),[message,setMessage]=useState("");
   const dirty=editorHasChanges(draft);
+  const folderUnlinkPending=!hasDossierDriveFolder(draft)&&(Boolean(draft.base?.drive_url)||(draft.parts.google_resource_links??[]).some(row=>row.deleted&&row.base?.resource_type==="folder"));
   const [touched,setTouched]=useState(false);
   useEffect(()=>{
     if(!dirty||!touched)return;
@@ -97,6 +99,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
     <div className="event-dossier-tabs dossier-editor-tabs" role="tablist" aria-label="Dossieronderdelen">{cfg.tabs.map(item=><button type="button" role="tab" id={`editor-tab-${item.id}`} aria-controls={`editor-panel-${item.id}`} aria-selected={tab===item.id} tabIndex={tab===item.id?0:-1} key={item.id} onClick={()=>setTab(item.id)} onKeyDown={e=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(e.key))return;e.preventDefault();const index=cfg.tabs.findIndex(t=>t.id===tab);const next=e.key==="Home"?0:e.key==="End"?cfg.tabs.length-1:(index+(e.key==="ArrowRight"?1:-1)+cfg.tabs.length)%cfg.tabs.length;setTab(cfg.tabs[next].id);document.getElementById(`editor-tab-${cfg.tabs[next].id}`)?.focus();}}>{item.label}</button>)}</div>
     {message&&<div className="error-note" role="alert">{message}</div>}
     {cfg.tabs.map(item=><section key={item.id} role="tabpanel" id={`editor-panel-${item.id}`} aria-labelledby={`editor-tab-${item.id}`} hidden={tab!==item.id} className="dossier-editor-panel">
+      {item.id==="documenten"&&(hasDossierDriveFolder(draft)||folderUnlinkPending)&&<section className="dossier-editor-basics"><h3>Drive-mapkoppeling</h3><p className="form-help">Ontkoppelen verwijdert de maplink en mapregistratie uit deze fiche. De map en bestanden in Google Drive en afzonderlijk gekoppelde documenten blijven behouden. Bevestig daarna met Alles opslaan.</p>{folderUnlinkPending&&<p role="status">De map wordt ontkoppeld zodra je Alles opslaan kiest. Annuleren bewaart de koppeling.</p>}<button type="button" disabled={saving||folderUnlinkPending||Boolean((draft.parts.google_resource_links??[]).some(row=>!row.deleted&&row.values.resource_type==="folder")&&permissions.google_resource_links!==true)} onClick={()=>{setTouched(true);setDraft(current=>unlinkDossierDriveFolder(current));}}>Map ontkoppelen bij opslaan</button></section>}
       {visibleRootFields.some(field=>dossierFieldTab(field.name,cfg)===item.id)&&<section className="dossier-editor-basics"><h3>{item.label}</h3><div className="dossier-editor-fields">{visibleRootFields.filter(field=>dossierFieldTab(field.name,cfg)===item.id).map(field=>input(field,draft.values,updateRoot))}</div></section>}
       {cfg.collections.filter(part=>part.tab===item.id).map(part=>{
         const rows=(draft.parts[part.table]??[]).filter(row=>kind!=="event"||part.table!=="record_relationships"||!eventPartnerForRow(row,id)),canManage=permissions[part.table]===true;
