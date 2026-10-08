@@ -59,3 +59,17 @@ Voor de websitekoppeling moet de website dezelfde identiteit en actieve portaalt
 - De matrix volgt de zichtbaarheid van de routes; verborgen modules geven geen misleidende algemene schrijftoegang.
 - Migratie: `supabase/migrations/20261007152913_besc_role_management.sql`. Breidt de financiële waarden uit, beperkt integraties en roltoekenningen tot Admin en koppelt formele beoordelingen aan toegewezen functies.
 - Na merge: migratie op Cloud DEV, GitHub-imagebouw, bestaande serverdeploy en live controle met relevante accounts. Er worden geen accounts automatisch opnieuw geactiveerd of rollen toegewezen.
+
+## Accounts zijn ook contacten
+
+Een account met actieve interne toegang of actieve portaaltoegang krijgt een gekoppelde persoonsfiche onder **Community & vrijwilligers**. Nieuwe aanmeldingen die nog wachten op goedkeuring krijgen niet alleen door registratie automatisch een contact. Een contact zelf geeft geen apprechten of portaaltoegang.
+
+De koppeling gebruikt `account_user_id` binnen dezelfde organisatie. Bestaande expliciete koppelingen worden hergebruikt. Een eenduidig Streamteam-portaaldossier wordt als bestaand contact gebruikt. Anders kan precies één bestaand contact met hetzelfde bevestigde account-e-mailadres worden gekoppeld; vergelijking negeert hoofdletters en buitenste spaties. Een gelijkende naam leidt tot handmatige controle voordat een nieuw contact wordt aangemaakt; namen worden nooit gebruikt om personen automatisch samen te voegen. Bestaande namen, gegevens, rollen, status, documenten en historie blijven bewaard.
+
+Zonder bestaande match wordt een contact aangemaakt met de accountnaam en het bevestigde e-mailadres, indien beschikbaar. Als uitgangspunt krijgt een nieuw contact type Crew voor Admin/Bestuur/Crew, Vrijwilliger voor een actief vrijwilligersaccount, Streamer voor uitsluitend Streamteam-portaaltoegang en Extern voor uitsluitend sponsorportaaltoegang. Het nieuwe contact krijgt Contactpersoon plus de passende beginrol. Dit verleent geen rechten. Latere contactrollen en contactstatus worden afzonderlijk beheerd; wijzigen of schorsen van apprechten herschrijft die niet.
+
+Bij meerdere mogelijke contacten, een portaaldossier dat al aan een ander account gekoppeld is of een eerder verwijderd accountcontact wordt niets automatisch samengevoegd of hersteld. **Gebruikers & toegang** toont deze ontbrekende koppelingen. Admin kiest **Contact koppelen** en selecteert expliciet het juiste bestaande contact. Een contact dat al aan een ander account verbonden is kan niet worden overgenomen. Indien nodig maak je eerst een nieuw contact aan en koppel je het daarna. De knop **Contact openen** voert rechtstreeks naar de gekoppelde fiche; de communitylijst toont **Account gekoppeld**.
+
+Schorsen of intrekken van toegang verwijdert de contactfiche niet. Een ongewijzigde historische accountkoppeling blijft geldig bij het bewerken van een contact. Een nieuw gekozen account moet actieve interne of portaaltoegang hebben. Het activeren van een contact verandert nooit het lidmaatschap of portaalrechten.
+
+Migratie `20261008065014_account_community_contacts.sql` vult bestaande accounts met toegang aan en voegt dezelfde opvolging toe bij het verlenen van nieuwe toegang. De automatische onderhoudsfuncties zijn privé en niet rechtstreeks uitvoerbaar door clients. De handmatige koppelactie controleert Admin-bevoegdheid en organisatiegrenzen. Er worden geen e-mails verstuurd en geen externe agentruns gestart.

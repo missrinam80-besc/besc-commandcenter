@@ -12,7 +12,7 @@ export async function updateMemberAccess(formData: FormData) {
   if(parsed.data.user_id===user.id && (parsed.data.status!=="active"||parsed.data.role!=="admin")) redirect("/app/beheer/gebruikers?fout=eigen-account");
   const {error}=await supabase.from("organization_members").update({role:parsed.data.role,status:parsed.data.status,finance_role:parsed.data.finance_role,access_role_id:parsed.data.access_role_id||null}).eq("organization_id",membership.organization_id).eq("user_id",parsed.data.user_id);
   if(error) redirect("/app/beheer/gebruikers?fout=opslaan");
-  revalidatePath("/app/beheer/gebruikers"); redirect("/app/beheer/gebruikers?succes=bijgewerkt");
+  revalidatePath("/app/community"); revalidatePath("/app/beheer/gebruikers"); redirect("/app/beheer/gebruikers?succes=bijgewerkt");
 }
 
 const accessRoleSchema = z.object({
@@ -65,7 +65,17 @@ export async function savePortalAccess(formData: FormData) {
   const existing=await supabase.from("portal_access").select("id").eq("organization_id",membership.organization_id).eq("user_id",parsed.data.user_id).eq(parsed.data.access_type==="sponsor"?"partner_id":"community_person_id",parsed.data.target_id).maybeSingle();
   const result=existing.data?await supabase.from("portal_access").update({status:"active",updated_at:new Date().toISOString()}).eq("id",existing.data.id):await supabase.from("portal_access").insert(values);
   if(result.error)redirect(`/app/beheer/gebruikers?portaal=${parsed.data.user_id}&fout=portaal-opslaan`);
-  revalidatePath("/app/beheer/gebruikers");redirect(`/app/beheer/gebruikers?portaal=${parsed.data.user_id}&succes=portaal`);
+  revalidatePath("/app/community");revalidatePath("/app/beheer/gebruikers");redirect(`/app/beheer/gebruikers?portaal=${parsed.data.user_id}&succes=portaal`);
 }
 
 export async function revokePortalAccess(formData: FormData){const parsed=z.object({id:z.string().uuid(),user_id:z.string().uuid()}).safeParse(Object.fromEntries(formData));if(!parsed.success)redirect("/app/beheer/gebruikers?fout=portaal-velden");const{supabase,membership}=await requirePermission("manageUsers");const{error}=await supabase.from("portal_access").update({status:"revoked",updated_at:new Date().toISOString()}).eq("organization_id",membership.organization_id).eq("id",parsed.data.id);if(error)redirect(`/app/beheer/gebruikers?portaal=${parsed.data.user_id}&fout=portaal-intrekken`);revalidatePath("/app/beheer/gebruikers");redirect(`/app/beheer/gebruikers?portaal=${parsed.data.user_id}&succes=portaal`)}
+
+export async function linkMemberContact(formData: FormData) {
+  const parsed = z.object({ user_id: z.string().uuid(), person_id: z.string().uuid() }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) redirect("/app/beheer/gebruikers?fout=contact-velden");
+  const { supabase, membership } = await requirePermission("manageUsers");
+  const { data, error } = await supabase.rpc("link_account_contact", { p_organization_id: membership.organization_id, p_user_id: parsed.data.user_id, p_person_id: parsed.data.person_id });
+  if (error || data !== parsed.data.person_id) redirect(`/app/beheer/gebruikers?contact=${parsed.data.user_id}&fout=contact-koppelen`);
+  revalidatePath("/app/beheer/gebruikers"); revalidatePath("/app/community"); revalidatePath(`/app/community/${parsed.data.person_id}`);
+  redirect("/app/beheer/gebruikers?succes=contact");
+}

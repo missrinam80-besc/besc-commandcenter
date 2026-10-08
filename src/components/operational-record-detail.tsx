@@ -98,7 +98,7 @@ export async function OperationalRecordDetail({
     module === "sponsors" ? supabase.from("campaigns").select("id,title,status").eq("organization_id", org).eq("partner_id", id).is("deleted_at", null) : Promise.resolve({ data: [] }),
     module === "social" ? supabase.from("social_post_variants").select("*").eq("organization_id", org).eq("social_post_id", id).order("platform") : Promise.resolve({ data: [] }),
     module === "community" ? supabase.from("community_person_roles").select("role").eq("organization_id", org).eq("person_id", id).order("role") : Promise.resolve({ data: [] }),
-    supabase.from("organization_members").select("user_id,profiles(display_name)").eq("organization_id", org).eq("status", "active"),
+    supabase.from("organization_members").select("user_id,status,profiles(display_name)").eq("organization_id", org),
     module === "campagnes" ? supabase.from("budget_envelopes").select("id,name,planned_amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("created_at") : Promise.resolve({ data: [] }),
     module === "campagnes" ? supabase.from("expenses").select("id,title,amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("expense_date", { ascending: false }) : Promise.resolve({ data: [] }),
     module === "campagnes" ? supabase.from("income_entries").select("id,title,amount,status").eq("organization_id", org).eq("campaign_id", id).is("deleted_at", null).order("expected_date", { ascending: false }) : Promise.resolve({ data: [] }),
@@ -133,7 +133,7 @@ export async function OperationalRecordDetail({
   const partner = partnersResult.data?.find((item) => item.id === record.partner_id);
   const event = eventsResult.data?.find((item) => item.id === record.event_id);
   const personRoles = (personRolesResult.data ?? []).map((item) => String(item.role));
-  const accountOptions = (accountOptionsResult.data ?? []).map((item) => ({ id: item.user_id, label: (item.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account" }));
+  const accountOptions = (accountOptionsResult.data ?? []).filter(item => item.status === "active" || item.user_id === record.account_user_id).map((item) => ({ id: item.user_id, label: (item.profiles as { display_name?: string } | null)?.display_name ?? "Naamloos account" }));
   const linkedAccount = accountOptions.find((account) => account.id === record.account_user_id);
   const baseMetadata: MetadataItem[] = [
     { label: "Type", value: typeLabel },
@@ -157,7 +157,7 @@ export async function OperationalRecordDetail({
   ] : [];
   const communityMetadata: MetadataItem[] = module === "community" ? [
     { label: "Rollen", value: personRoles.length ? personRoles.map((role) => communityRoleLabels[role as keyof typeof communityRoleLabels] ?? role).join(", ") : "Geen rollen" },
-    { label: "Command Center-account", value: linkedAccount?.label ?? "Niet gekoppeld" },
+    { label: "Command Center-account", value: linkedAccount?.label ?? (record.account_user_id ? "Eerder gekoppeld account" : "Niet gekoppeld") },
     { label: "E-mail", value: String(record.email ?? "Niet ingevuld") },
     { label: "Discord", value: String(record.discord_handle ?? "Niet ingevuld") },
     { label: "Taal", value: String(record.language ?? "Niet ingevuld") },

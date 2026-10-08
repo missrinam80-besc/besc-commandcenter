@@ -336,6 +336,7 @@ export async function OperationalModulePage({
               <article key={row.id}>
                 <div>
                   <strong>{String(row[config.titleColumn])}</strong>
+                  {module === "community" && Boolean(row.account_user_id) && <span className="badge">Account gekoppeld</span>}
                   <p>
                     {String(row.notes ?? row.copy ?? "").slice(0, 100) || "Geen notities"}
                   </p>
