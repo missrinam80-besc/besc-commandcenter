@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { Clapperboard, Search, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -28,6 +29,9 @@ export default async function ContentPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"content",query:params});
+  if (unifiedEditor) return unifiedEditor;
+
   const search = params.zoek?.trim().slice(0, 100) ?? "";
   const status = Object.hasOwn(contentStatuses, params.status ?? "") ? params.status! : "";
   const type = Object.hasOwn(contentTypes, params.type ?? "") ? params.type! : "";

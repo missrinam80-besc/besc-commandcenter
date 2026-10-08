@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import { ContactDossierPanels } from "@/components/contact-dossier-panels";
 import { DossierTabContent } from "@/components/dossier-tab-content";
 import { contactTabs, resolveContactTab } from "@/lib/contact-dossier-tabs";
@@ -56,6 +57,9 @@ export async function OperationalRecordDetail({
 }) {
   const { id } = await params;
   const query = await searchParams;
+  const unifiedEditor = await dossierEditorGate({module,id,query:query});
+  if (unifiedEditor) return unifiedEditor;
+
   const config = operationalModules[module];
   const { supabase, membership } = await requireActiveMembership();
   const org = membership.organization_id;

@@ -6,6 +6,7 @@ Deze wiki bundelt de handleidingen uit de repository in een klikbaar overzicht. 
 
 - [Projectoverzicht en integratiebeheer](../../README.md)
 - [Gebruik en richtlijnen](Gebruik-en-richtlijnen.md)
+- [Dossiers aanmaken en bewerken](Dossiers-aanmaken-en-bewerken.md)
 - [Rollen en profielen](Rollen-en-profielen.md)
 - [Project- en campagnefiches](Project-en-campagnefiches.md)
 - [Sponsor- en persoonsfiches](Sponsor-en-persoonsfiches.md)

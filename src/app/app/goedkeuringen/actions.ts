@@ -41,9 +41,9 @@ async function sourceRecord(
   }
   if (type === "newsletter") {
     const { data } = await context.supabase.from("newsletters")
-      .select("id,title,created_by,status,gmail_draft_id")
+      .select("id,title,created_by,status,gmail_draft_id,body_html")
       .eq("organization_id", org).eq("id", id).maybeSingle();
-    if (!data || !data.gmail_draft_id || !["draft", "changes_requested"].includes(data.status)) return null;
+    if (!data || !data.gmail_draft_id || !data.body_html || !["draft", "changes_requested"].includes(data.status)) return null;
     return { title: data.title, module: "communication" as const };
   }
   const { data } = await context.supabase

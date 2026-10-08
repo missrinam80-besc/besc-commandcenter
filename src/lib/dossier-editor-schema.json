@@ -1,0 +1,6642 @@
+{
+  "task": {
+    "tasks": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "public.task_status",
+        "required": false,
+        "default": "todo",
+        "options": [
+          "todo",
+          "doing",
+          "waiting",
+          "review",
+          "done",
+          "cancelled"
+        ],
+        "reference": null
+      },
+      {
+        "name": "priority",
+        "type": "public.priority_level",
+        "required": false,
+        "default": "normal",
+        "options": [
+          "low",
+          "normal",
+          "high",
+          "urgent"
+        ],
+        "reference": null
+      },
+      {
+        "name": "due_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "projects"
+      },
+      {
+        "name": "content_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "content_items"
+      }
+    ],
+    "task_checklist_items": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "is_done",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "task_assignees": [
+      {
+        "name": "user_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      }
+    ],
+    "record_links": [
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "link_type",
+        "type": "text",
+        "required": false,
+        "default": "reference",
+        "options": [
+          "reference",
+          "publication",
+          "briefing",
+          "document",
+          "website",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_relationships": [
+      {
+        "name": "target_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "target_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "source_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "relationship_type",
+        "type": "text",
+        "required": false,
+        "default": "related",
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "project": {
+    "projects": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "public.project_status",
+        "required": false,
+        "default": "idea",
+        "options": [
+          "idea",
+          "planned",
+          "active",
+          "blocked",
+          "done",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "priority",
+        "type": "public.priority_level",
+        "required": false,
+        "default": "normal",
+        "options": [
+          "low",
+          "normal",
+          "high",
+          "urgent"
+        ],
+        "reference": null
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      },
+      {
+        "name": "start_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "due_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "drive_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "goal",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "deliverables",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "acceptance_criteria",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "closure_evaluation",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "tasks": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "public.task_status",
+        "required": false,
+        "default": "todo",
+        "options": [
+          "todo",
+          "doing",
+          "waiting",
+          "review",
+          "done",
+          "cancelled"
+        ],
+        "reference": null
+      },
+      {
+        "name": "priority",
+        "type": "public.priority_level",
+        "required": false,
+        "default": "normal",
+        "options": [
+          "low",
+          "normal",
+          "high",
+          "urgent"
+        ],
+        "reference": null
+      },
+      {
+        "name": "due_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "project_milestones": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "due_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "is_done",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "project_members": [
+      {
+        "name": "user_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      }
+    ],
+    "community_assignments": [
+      {
+        "name": "person_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": "community_people"
+      },
+      {
+        "name": "role_name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "planned",
+        "options": [
+          "planned",
+          "confirmed",
+          "completed",
+          "cancelled"
+        ],
+        "reference": null
+      },
+      {
+        "name": "starts_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "campaigns": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "campaign_type",
+        "type": "text",
+        "required": false,
+        "default": "social",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "idea",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "priority",
+        "type": "public.priority_level",
+        "required": false,
+        "default": "normal",
+        "options": [
+          "low",
+          "normal",
+          "high",
+          "urgent"
+        ],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "start_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "end_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "channels",
+        "type": "text[]",
+        "required": false,
+        "default": [],
+        "options": [],
+        "reference": null
+      }
+    ],
+    "budget_envelopes": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "event",
+          "content",
+          "equipment",
+          "software",
+          "marketing",
+          "merchandise",
+          "transport",
+          "venue",
+          "administration",
+          "giveaway",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "draft",
+        "options": [
+          "draft",
+          "requested",
+          "approved",
+          "active",
+          "closed",
+          "rejected",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "planned_amount",
+        "type": "numeric(12,2)",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "start_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "end_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      }
+    ],
+    "expenses": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "budget_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "budget_envelopes"
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "event",
+          "content",
+          "equipment",
+          "software",
+          "marketing",
+          "merchandise",
+          "transport",
+          "venue",
+          "administration",
+          "giveaway",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "planned",
+        "options": [
+          "planned",
+          "requested",
+          "approved",
+          "paid",
+          "reimbursement_due",
+          "reimbursed",
+          "rejected",
+          "cancelled",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "amount",
+        "type": "numeric(12,2)",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "expense_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "supplier",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "invoice_number",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "proof_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "declaration_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "claimant_name",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "income_entries": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "budget_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "budget_envelopes"
+      },
+      {
+        "name": "income_type",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "sponsorship",
+          "donation",
+          "membership",
+          "merchandise",
+          "ticketing",
+          "grant",
+          "refund",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "expected",
+        "options": [
+          "expected",
+          "invoiced",
+          "received",
+          "cancelled",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "amount",
+        "type": "numeric(12,2)",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "expected_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "received_at",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "payer",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "invoice_number",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "proof_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "google_resource_links": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "google_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "resource_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "folder",
+          "document",
+          "calendar_event"
+        ],
+        "reference": null
+      },
+      {
+        "name": "mime_type",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "web_url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "comments": [
+      {
+        "name": "body",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_links": [
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "link_type",
+        "type": "text",
+        "required": false,
+        "default": "reference",
+        "options": [
+          "reference",
+          "publication",
+          "briefing",
+          "document",
+          "website",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_relationships": [
+      {
+        "name": "target_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "target_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "source_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "relationship_type",
+        "type": "text",
+        "required": false,
+        "default": "related",
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "event": {
+    "events": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "event_type",
+        "type": "text",
+        "required": false,
+        "default": "community",
+        "options": [
+          "community",
+          "workshop",
+          "livestream",
+          "podcast",
+          "lan",
+          "meetup",
+          "tournament",
+          "partner",
+          "charity",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "idea",
+        "options": [
+          "idea",
+          "planning",
+          "confirmed",
+          "production",
+          "live",
+          "aftercare",
+          "completed",
+          "cancelled",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "priority",
+        "type": "public.priority_level",
+        "required": false,
+        "default": "normal",
+        "options": [
+          "low",
+          "normal",
+          "high",
+          "urgent"
+        ],
+        "reference": null
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      },
+      {
+        "name": "start_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "end_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "start_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "end_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "location",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "is_online",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "role_besc",
+        "type": "text",
+        "required": false,
+        "default": "organizer",
+        "options": [
+          "organizer",
+          "partner",
+          "promoter",
+          "participant"
+        ],
+        "reference": null
+      },
+      {
+        "name": "expected_attendees",
+        "type": "integer",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "eventbrite_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "stream_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "projects"
+      },
+      {
+        "name": "partner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "partners"
+      },
+      {
+        "name": "drive_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "tasks": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "public.task_status",
+        "required": false,
+        "default": "todo",
+        "options": [
+          "todo",
+          "doing",
+          "waiting",
+          "review",
+          "done",
+          "cancelled"
+        ],
+        "reference": null
+      },
+      {
+        "name": "priority",
+        "type": "public.priority_level",
+        "required": false,
+        "default": "normal",
+        "options": [
+          "low",
+          "normal",
+          "high",
+          "urgent"
+        ],
+        "reference": null
+      },
+      {
+        "name": "due_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "projects"
+      }
+    ],
+    "community_assignments": [
+      {
+        "name": "person_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": "community_people"
+      },
+      {
+        "name": "role_name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "planned",
+        "options": [
+          "planned",
+          "confirmed",
+          "completed",
+          "cancelled"
+        ],
+        "reference": null
+      },
+      {
+        "name": "starts_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "event_schedule_items": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "kind",
+        "type": "text",
+        "required": false,
+        "default": "program",
+        "options": [
+          "program",
+          "stream",
+          "runbook",
+          "shift"
+        ],
+        "reference": null
+      },
+      {
+        "name": "starts_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "ends_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "person_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "location",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "draft",
+        "options": [
+          "draft",
+          "confirmed",
+          "completed",
+          "cancelled"
+        ],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "event_materials": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "asset_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "quantity",
+        "type": "integer",
+        "required": false,
+        "default": 1,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source",
+        "type": "text",
+        "required": false,
+        "default": "own",
+        "options": [
+          "own",
+          "borrowed",
+          "rented",
+          "provided"
+        ],
+        "reference": null
+      },
+      {
+        "name": "provider",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "location",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "pickup_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "return_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "needed",
+        "options": [
+          "needed",
+          "arranged",
+          "ready",
+          "in_use",
+          "returned",
+          "cancelled"
+        ],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "responsible_person_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "event_giveaways": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "quantity_planned",
+        "type": "integer",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "quantity_received",
+        "type": "integer",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "quantity_distributed",
+        "type": "integer",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "needed",
+        "options": [
+          "needed",
+          "arranged",
+          "received",
+          "distributing",
+          "completed",
+          "cancelled"
+        ],
+        "reference": null
+      },
+      {
+        "name": "responsible_person_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source",
+        "type": "text",
+        "required": false,
+        "default": "own",
+        "options": [
+          "own",
+          "supplied",
+          "purchased"
+        ],
+        "reference": null
+      },
+      {
+        "name": "provider",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "event_registration_settings": [
+      {
+        "name": "mode",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "none",
+          "external",
+          "internal"
+        ],
+        "reference": null
+      },
+      {
+        "name": "capacity",
+        "type": "integer",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "external_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "event_registrations": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "quantity",
+        "type": "integer",
+        "required": false,
+        "default": 1,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "registered",
+        "options": [
+          "registered",
+          "waitlist",
+          "attended",
+          "cancelled"
+        ],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "budget_envelopes": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "event",
+          "content",
+          "equipment",
+          "software",
+          "marketing",
+          "merchandise",
+          "transport",
+          "venue",
+          "administration",
+          "giveaway",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "draft",
+        "options": [
+          "draft",
+          "requested",
+          "approved",
+          "active",
+          "closed",
+          "rejected",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "planned_amount",
+        "type": "numeric(12,2)",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "start_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "end_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      }
+    ],
+    "expenses": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "budget_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "budget_envelopes"
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "event",
+          "content",
+          "equipment",
+          "software",
+          "marketing",
+          "merchandise",
+          "transport",
+          "venue",
+          "administration",
+          "giveaway",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "planned",
+        "options": [
+          "planned",
+          "requested",
+          "approved",
+          "paid",
+          "reimbursement_due",
+          "reimbursed",
+          "rejected",
+          "cancelled",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "amount",
+        "type": "numeric(12,2)",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "expense_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "supplier",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "invoice_number",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "proof_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "declaration_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "claimant_name",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "income_entries": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "budget_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "budget_envelopes"
+      },
+      {
+        "name": "income_type",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "sponsorship",
+          "donation",
+          "membership",
+          "merchandise",
+          "ticketing",
+          "grant",
+          "refund",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "expected",
+        "options": [
+          "expected",
+          "invoiced",
+          "received",
+          "cancelled",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "amount",
+        "type": "numeric(12,2)",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "expected_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "received_at",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "payer",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "invoice_number",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "proof_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "google_resource_links": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "google_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "resource_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "folder",
+          "document",
+          "calendar_event"
+        ],
+        "reference": null
+      },
+      {
+        "name": "mime_type",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "web_url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_links": [
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "link_type",
+        "type": "text",
+        "required": false,
+        "default": "reference",
+        "options": [
+          "reference",
+          "publication",
+          "briefing",
+          "document",
+          "website",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_relationships": [
+      {
+        "name": "target_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "target_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "source_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "relationship_type",
+        "type": "text",
+        "required": false,
+        "default": "related",
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "campaign": {
+    "campaigns": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "campaign_type",
+        "type": "text",
+        "required": false,
+        "default": "social",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "idea",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "priority",
+        "type": "public.priority_level",
+        "required": false,
+        "default": "normal",
+        "options": [
+          "low",
+          "normal",
+          "high",
+          "urgent"
+        ],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "start_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "end_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "channels",
+        "type": "text[]",
+        "required": false,
+        "default": [],
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "projects"
+      },
+      {
+        "name": "event_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "events"
+      },
+      {
+        "name": "partner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "partners"
+      },
+      {
+        "name": "budget",
+        "type": "numeric(12,2)",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "value",
+        "type": "numeric(12,2)",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "reporting_status",
+        "type": "text",
+        "required": false,
+        "default": "not_required",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "results_summary",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "impressions",
+        "type": "bigint",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "clicks",
+        "type": "bigint",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "drive_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      }
+    ],
+    "campaign_deliverables": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "community_person_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "community_people"
+      },
+      {
+        "name": "due_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "todo",
+        "options": [
+          "todo",
+          "doing",
+          "review",
+          "approved",
+          "completed",
+          "blocked",
+          "cancelled"
+        ],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "content_items": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "content_type",
+        "type": "text",
+        "required": false,
+        "default": "social_post",
+        "options": [
+          "idea",
+          "blog",
+          "social_post",
+          "short_reel",
+          "youtube_video",
+          "livestream",
+          "podcast",
+          "tutorial",
+          "review",
+          "newsletter",
+          "community_post",
+          "partner_post",
+          "event_promo"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "idea",
+        "options": [
+          "idea",
+          "research",
+          "draft",
+          "production",
+          "review",
+          "approved",
+          "scheduled",
+          "published",
+          "repurpose",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "priority",
+        "type": "public.priority_level",
+        "required": false,
+        "default": "normal",
+        "options": [
+          "low",
+          "normal",
+          "high",
+          "urgent"
+        ],
+        "reference": null
+      },
+      {
+        "name": "primary_channel",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [
+          "Discord",
+          "Twitch",
+          "YouTube",
+          "TikTok",
+          "Instagram",
+          "Facebook",
+          "X",
+          "Threads",
+          "LinkedIn",
+          "Blogger",
+          "Website",
+          "Nieuwsbrief"
+        ],
+        "reference": null
+      },
+      {
+        "name": "channels",
+        "type": "text[]",
+        "required": false,
+        "default": [],
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "deadline",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "publication_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "drive_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "canva_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "publication_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "social_posts": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "post_type",
+        "type": "text",
+        "required": false,
+        "default": "publication",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "platform",
+        "type": "text",
+        "required": false,
+        "default": "Discord",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "idea",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "scheduled_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "copy",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "hashtags",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "call_to_action",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "publication_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "budget_envelopes": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "event",
+          "content",
+          "equipment",
+          "software",
+          "marketing",
+          "merchandise",
+          "transport",
+          "venue",
+          "administration",
+          "giveaway",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "draft",
+        "options": [
+          "draft",
+          "requested",
+          "approved",
+          "active",
+          "closed",
+          "rejected",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "planned_amount",
+        "type": "numeric(12,2)",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "start_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "end_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      }
+    ],
+    "expenses": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "budget_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "budget_envelopes"
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "event",
+          "content",
+          "equipment",
+          "software",
+          "marketing",
+          "merchandise",
+          "transport",
+          "venue",
+          "administration",
+          "giveaway",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "planned",
+        "options": [
+          "planned",
+          "requested",
+          "approved",
+          "paid",
+          "reimbursement_due",
+          "reimbursed",
+          "rejected",
+          "cancelled",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "amount",
+        "type": "numeric(12,2)",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "expense_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "supplier",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "invoice_number",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "proof_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "declaration_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "claimant_name",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "income_entries": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "budget_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "budget_envelopes"
+      },
+      {
+        "name": "income_type",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "sponsorship",
+          "donation",
+          "membership",
+          "merchandise",
+          "ticketing",
+          "grant",
+          "refund",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "expected",
+        "options": [
+          "expected",
+          "invoiced",
+          "received",
+          "cancelled",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "amount",
+        "type": "numeric(12,2)",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "expected_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "received_at",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "payer",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "invoice_number",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "proof_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "google_resource_links": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "google_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "resource_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "folder",
+          "document",
+          "calendar_event"
+        ],
+        "reference": null
+      },
+      {
+        "name": "mime_type",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "web_url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_links": [
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "link_type",
+        "type": "text",
+        "required": false,
+        "default": "reference",
+        "options": [
+          "reference",
+          "publication",
+          "briefing",
+          "document",
+          "website",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_relationships": [
+      {
+        "name": "target_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "target_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "source_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "relationship_type",
+        "type": "text",
+        "required": false,
+        "default": "related",
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "partner": {
+    "partners": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "partner_type",
+        "type": "text",
+        "required": false,
+        "default": "partner",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "prospect",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "priority",
+        "type": "public.priority_level",
+        "required": false,
+        "default": "normal",
+        "options": [
+          "low",
+          "normal",
+          "high",
+          "urgent"
+        ],
+        "reference": null
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "website",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "sector",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "collaboration_type",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "estimated_value",
+        "type": "numeric(12,2)",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "contract_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "agreement_summary",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "next_follow_up",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "drive_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      },
+      {
+        "name": "contact_name",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "last_contact",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "partner_contacts": [
+      {
+        "name": "community_person_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "community_people"
+      },
+      {
+        "name": "account_user_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "role_title",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "phone",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "is_primary",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "partner_interactions": [
+      {
+        "name": "interaction_type",
+        "type": "text",
+        "required": false,
+        "default": "note",
+        "options": [
+          "email",
+          "call",
+          "meeting",
+          "note",
+          "proposal",
+          "contract"
+        ],
+        "reference": null
+      },
+      {
+        "name": "occurred_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "summary",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "next_action",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "follow_up_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "google_resource_links": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "google_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "resource_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "folder",
+          "document",
+          "calendar_event"
+        ],
+        "reference": null
+      },
+      {
+        "name": "mime_type",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "web_url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_links": [
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "link_type",
+        "type": "text",
+        "required": false,
+        "default": "reference",
+        "options": [
+          "reference",
+          "publication",
+          "briefing",
+          "document",
+          "website",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_relationships": [
+      {
+        "name": "target_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "target_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "source_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "relationship_type",
+        "type": "text",
+        "required": false,
+        "default": "related",
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "community": {
+    "community_people": [
+      {
+        "name": "display_name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "person_type",
+        "type": "text",
+        "required": false,
+        "default": "volunteer",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "active",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "handle",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "discord_handle",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "account_user_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      },
+      {
+        "name": "language",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "availability",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "streamteam_level",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "onboarding_status",
+        "type": "text",
+        "required": false,
+        "default": "not_started",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "skills",
+        "type": "text[]",
+        "required": false,
+        "default": [],
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "interests",
+        "type": "text[]",
+        "required": false,
+        "default": [],
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "platforms",
+        "type": "text[]",
+        "required": false,
+        "default": [],
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "drive_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      },
+      {
+        "name": "phone",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "birth_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "started_on",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "stopped_on",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "role_description",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "avatar_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "community_person_roles": [
+      {
+        "name": "role",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "member",
+          "board",
+          "volunteer",
+          "creator",
+          "streamteam",
+          "moderator",
+          "staff",
+          "contact",
+          "guest"
+        ],
+        "reference": null
+      }
+    ],
+    "community_onboarding_items": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "item_type",
+        "type": "text",
+        "required": false,
+        "default": "onboarding",
+        "options": [
+          "onboarding",
+          "coaching",
+          "training"
+        ],
+        "reference": null
+      },
+      {
+        "name": "completed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "due_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "community_assignments": [
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "projects"
+      },
+      {
+        "name": "event_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "events"
+      },
+      {
+        "name": "role_name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "planned",
+        "options": [
+          "planned",
+          "confirmed",
+          "completed",
+          "cancelled"
+        ],
+        "reference": null
+      },
+      {
+        "name": "starts_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "google_resource_links": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "google_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "resource_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "folder",
+          "document",
+          "calendar_event"
+        ],
+        "reference": null
+      },
+      {
+        "name": "mime_type",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "web_url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_links": [
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "link_type",
+        "type": "text",
+        "required": false,
+        "default": "reference",
+        "options": [
+          "reference",
+          "publication",
+          "briefing",
+          "document",
+          "website",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_relationships": [
+      {
+        "name": "target_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "target_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "source_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "relationship_type",
+        "type": "text",
+        "required": false,
+        "default": "related",
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "social": {
+    "social_posts": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "post_type",
+        "type": "text",
+        "required": false,
+        "default": "publication",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "platform",
+        "type": "text",
+        "required": false,
+        "default": "Discord",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "idea",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "scheduled_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "copy",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "hashtags",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "call_to_action",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "content_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "content_items"
+      },
+      {
+        "name": "campaign_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "campaigns"
+      },
+      {
+        "name": "event_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "events"
+      },
+      {
+        "name": "partner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "partners"
+      },
+      {
+        "name": "planning_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "publication_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "canva_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      },
+      {
+        "name": "bundle_kind",
+        "type": "text",
+        "required": false,
+        "default": "single",
+        "options": [
+          "single",
+          "bundle"
+        ],
+        "reference": null
+      }
+    ],
+    "social_post_variants": [
+      {
+        "name": "platform",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "Discord",
+          "Twitch",
+          "YouTube",
+          "TikTok",
+          "Instagram",
+          "Facebook",
+          "X",
+          "Threads",
+          "LinkedIn",
+          "Blogger",
+          "Website",
+          "Nieuwsbrief"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "idea",
+        "options": [
+          "idea",
+          "copy_needed",
+          "visual_needed",
+          "review",
+          "approved",
+          "scheduled",
+          "published",
+          "repurpose",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "scheduled_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "copy",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "publication_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_links": [
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "link_type",
+        "type": "text",
+        "required": false,
+        "default": "reference",
+        "options": [
+          "reference",
+          "publication",
+          "briefing",
+          "document",
+          "website",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_relationships": [
+      {
+        "name": "target_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "target_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "source_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "relationship_type",
+        "type": "text",
+        "required": false,
+        "default": "related",
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "content": {
+    "content_items": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "content_type",
+        "type": "text",
+        "required": false,
+        "default": "social_post",
+        "options": [
+          "idea",
+          "blog",
+          "social_post",
+          "short_reel",
+          "youtube_video",
+          "livestream",
+          "podcast",
+          "tutorial",
+          "review",
+          "newsletter",
+          "community_post",
+          "partner_post",
+          "event_promo"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "idea",
+        "options": [
+          "idea",
+          "research",
+          "draft",
+          "production",
+          "review",
+          "approved",
+          "scheduled",
+          "published",
+          "repurpose",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "priority",
+        "type": "public.priority_level",
+        "required": false,
+        "default": "normal",
+        "options": [
+          "low",
+          "normal",
+          "high",
+          "urgent"
+        ],
+        "reference": null
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "projects"
+      },
+      {
+        "name": "campaign_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "campaigns"
+      },
+      {
+        "name": "partner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "partners"
+      },
+      {
+        "name": "primary_channel",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [
+          "Discord",
+          "Twitch",
+          "YouTube",
+          "TikTok",
+          "Instagram",
+          "Facebook",
+          "X",
+          "Threads",
+          "LinkedIn",
+          "Blogger",
+          "Website",
+          "Nieuwsbrief"
+        ],
+        "reference": null
+      },
+      {
+        "name": "channels",
+        "type": "text[]",
+        "required": false,
+        "default": [],
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "deadline",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "publication_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "drive_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "canva_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "publication_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      }
+    ],
+    "record_links": [
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "link_type",
+        "type": "text",
+        "required": false,
+        "default": "reference",
+        "options": [
+          "reference",
+          "publication",
+          "briefing",
+          "document",
+          "website",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_relationships": [
+      {
+        "name": "target_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "target_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "source_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "relationship_type",
+        "type": "text",
+        "required": false,
+        "default": "related",
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "meeting": {
+    "meetings": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "meeting_type",
+        "type": "text",
+        "required": false,
+        "default": "workgroup",
+        "options": [
+          "board",
+          "general_assembly",
+          "workgroup",
+          "project",
+          "partner",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "planned",
+        "options": [
+          "planned",
+          "confirmed",
+          "completed",
+          "cancelled",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "meeting_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "ends_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "attendees",
+        "type": "text[]",
+        "required": false,
+        "default": [],
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "decisions",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "action_points",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "minutes_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "meeting_action_items": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "assignee_text",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "todo",
+        "options": [
+          "todo",
+          "doing",
+          "done",
+          "cancelled"
+        ],
+        "reference": null
+      },
+      {
+        "name": "task_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "tasks"
+      }
+    ],
+    "google_resource_links": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "google_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "resource_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "folder",
+          "document",
+          "calendar_event"
+        ],
+        "reference": null
+      },
+      {
+        "name": "mime_type",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "web_url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_links": [
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "link_type",
+        "type": "text",
+        "required": false,
+        "default": "reference",
+        "options": [
+          "reference",
+          "publication",
+          "briefing",
+          "document",
+          "website",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_relationships": [
+      {
+        "name": "target_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "target_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "source_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "relationship_type",
+        "type": "text",
+        "required": false,
+        "default": "related",
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "inbox": {
+    "inbox_items": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source",
+        "type": "text",
+        "required": false,
+        "default": "manual",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "public.inbox_status",
+        "required": false,
+        "default": "new",
+        "options": [
+          "new",
+          "reviewing",
+          "waiting",
+          "processed",
+          "rejected",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "priority",
+        "type": "public.priority_level",
+        "required": false,
+        "default": "normal",
+        "options": [
+          "low",
+          "normal",
+          "high",
+          "urgent"
+        ],
+        "reference": null
+      },
+      {
+        "name": "reviewer_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      }
+    ]
+  },
+  "knowledge": {
+    "knowledge_articles": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "article_type",
+        "type": "text",
+        "required": false,
+        "default": "guide",
+        "options": [
+          "procedure",
+          "guide",
+          "policy",
+          "faq",
+          "onboarding",
+          "template",
+          "reference",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "draft",
+        "options": [
+          "draft",
+          "review",
+          "published",
+          "outdated",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "category_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "knowledge_categories"
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      },
+      {
+        "name": "summary",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "body",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "tags",
+        "type": "text[]",
+        "required": false,
+        "default": [],
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "review_due_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "drive_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "budget": {
+    "budget_envelopes": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "event",
+          "content",
+          "equipment",
+          "software",
+          "marketing",
+          "merchandise",
+          "transport",
+          "venue",
+          "administration",
+          "giveaway",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "draft",
+        "options": [
+          "draft",
+          "requested",
+          "approved",
+          "active",
+          "closed",
+          "rejected",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "planned_amount",
+        "type": "numeric(12,2)",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "start_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "end_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "projects"
+      },
+      {
+        "name": "event_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "events"
+      },
+      {
+        "name": "campaign_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "campaigns"
+      },
+      {
+        "name": "partner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "partners"
+      },
+      {
+        "name": "merch_launch_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "merch_launches"
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      }
+    ],
+    "expenses": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "event",
+          "content",
+          "equipment",
+          "software",
+          "marketing",
+          "merchandise",
+          "transport",
+          "venue",
+          "administration",
+          "giveaway",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "planned",
+        "options": [
+          "planned",
+          "requested",
+          "approved",
+          "paid",
+          "reimbursement_due",
+          "reimbursed",
+          "rejected",
+          "cancelled",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "amount",
+        "type": "numeric(12,2)",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "expense_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "supplier",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "invoice_number",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "proof_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "income_entries": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "income_type",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "sponsorship",
+          "donation",
+          "membership",
+          "merchandise",
+          "ticketing",
+          "grant",
+          "refund",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "expected",
+        "options": [
+          "expected",
+          "invoiced",
+          "received",
+          "cancelled",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "amount",
+        "type": "numeric(12,2)",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "expected_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "received_at",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "payer",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "proof_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "expense": {
+    "expenses": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "budget_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "budget_envelopes"
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "event",
+          "content",
+          "equipment",
+          "software",
+          "marketing",
+          "merchandise",
+          "transport",
+          "venue",
+          "administration",
+          "giveaway",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "planned",
+        "options": [
+          "planned",
+          "requested",
+          "approved",
+          "paid",
+          "reimbursement_due",
+          "reimbursed",
+          "rejected",
+          "cancelled",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "amount",
+        "type": "numeric(12,2)",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "expense_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "supplier",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "invoice_number",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "proof_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "declaration_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "claimant_name",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "projects"
+      },
+      {
+        "name": "event_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "events"
+      },
+      {
+        "name": "campaign_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "campaigns"
+      },
+      {
+        "name": "partner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "partners"
+      },
+      {
+        "name": "merch_launch_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "merch_launches"
+      }
+    ]
+  },
+  "income": {
+    "income_entries": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "budget_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "budget_envelopes"
+      },
+      {
+        "name": "income_type",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "sponsorship",
+          "donation",
+          "membership",
+          "merchandise",
+          "ticketing",
+          "grant",
+          "refund",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "expected",
+        "options": [
+          "expected",
+          "invoiced",
+          "received",
+          "cancelled",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "amount",
+        "type": "numeric(12,2)",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "expected_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "received_at",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "payer",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "invoice_number",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "proof_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "projects"
+      },
+      {
+        "name": "event_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "events"
+      },
+      {
+        "name": "campaign_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "campaigns"
+      },
+      {
+        "name": "partner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "partners"
+      },
+      {
+        "name": "merch_launch_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "merch_launches"
+      }
+    ]
+  },
+  "product": {
+    "shop_products": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "product_type",
+        "type": "text",
+        "required": false,
+        "default": "other",
+        "options": [
+          "emote",
+          "overlay",
+          "alert",
+          "panel",
+          "bundle",
+          "merch",
+          "digital",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "idea",
+        "options": [
+          "idea",
+          "design",
+          "ready",
+          "published",
+          "paused",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "price",
+        "type": "numeric(12,2)",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "style",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "platforms",
+        "type": "text[]",
+        "required": false,
+        "default": [],
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "asset_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "shop_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      },
+      {
+        "name": "supplier_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "partners"
+      },
+      {
+        "name": "producer_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "partners"
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "projects"
+      },
+      {
+        "name": "campaign_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "campaigns"
+      },
+      {
+        "name": "product_family",
+        "type": "text",
+        "required": false,
+        "default": "stream_graphics",
+        "options": [
+          "stream_graphics",
+          "merchandise"
+        ],
+        "reference": null
+      }
+    ],
+    "record_links": [
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "link_type",
+        "type": "text",
+        "required": false,
+        "default": "reference",
+        "options": [
+          "reference",
+          "publication",
+          "briefing",
+          "document",
+          "website",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_relationships": [
+      {
+        "name": "target_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "target_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "source_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "relationship_type",
+        "type": "text",
+        "required": false,
+        "default": "related",
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "launch": {
+    "merch_launches": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "collection_name",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "idea",
+        "options": [
+          "idea",
+          "planning",
+          "production",
+          "scheduled",
+          "live",
+          "completed",
+          "cancelled",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "launch_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "timing",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "drive_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "owner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "projects"
+      },
+      {
+        "name": "campaign_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "campaigns"
+      },
+      {
+        "name": "partner_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "partners"
+      }
+    ],
+    "record_links": [
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "link_type",
+        "type": "text",
+        "required": false,
+        "default": "reference",
+        "options": [
+          "reference",
+          "publication",
+          "briefing",
+          "document",
+          "website",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "record_relationships": [
+      {
+        "name": "target_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "target_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "source_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "project",
+          "event",
+          "campaign",
+          "content",
+          "partner",
+          "community_person",
+          "social_post",
+          "meeting",
+          "task",
+          "shop_product",
+          "merch_launch",
+          "administration",
+          "finance"
+        ],
+        "reference": null
+      },
+      {
+        "name": "source_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "relationship_type",
+        "type": "text",
+        "required": false,
+        "default": "related",
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "asset": {
+    "assets": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "asset_type",
+        "type": "text",
+        "required": false,
+        "default": "equipment",
+        "options": [
+          "equipment",
+          "computer",
+          "streaming",
+          "furniture",
+          "software",
+          "vehicle",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "active",
+        "options": [
+          "planned",
+          "active",
+          "maintenance",
+          "loaned",
+          "retired",
+          "lost",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "serial_number",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "owner_person_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "community_people"
+      },
+      {
+        "name": "location",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "acquired_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "purchase_value",
+        "type": "numeric(12,2)",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "current_value",
+        "type": "numeric(12,2)",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "supplier_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "partners"
+      },
+      {
+        "name": "project_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "projects"
+      },
+      {
+        "name": "event_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "events"
+      },
+      {
+        "name": "campaign_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "campaigns"
+      },
+      {
+        "name": "document_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "newsletter": {
+    "newsletters": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "subject",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "body_text",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "mailing_list_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": "mailing_lists"
+      },
+      {
+        "name": "email_template_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "email_templates"
+      },
+      {
+        "name": "template_variant",
+        "type": "text",
+        "required": false,
+        "default": "besc",
+        "options": [
+          "besc",
+          "event",
+          "partner",
+          "compact"
+        ],
+        "reference": null
+      },
+      {
+        "name": "preheader",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "hero_image_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "hero_image_alt",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "member": {
+    "association_members": [
+      {
+        "name": "full_name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "membership_type",
+        "type": "text",
+        "required": false,
+        "default": "effective",
+        "options": [
+          "effective",
+          "adherent",
+          "honorary",
+          "volunteer"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "active",
+        "options": [
+          "candidate",
+          "active",
+          "suspended",
+          "former",
+          "deceased"
+        ],
+        "reference": null
+      },
+      {
+        "name": "joined_on",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "left_on",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "member_number",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "voting_right",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "address",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "mandate": {
+    "governance_mandates": [
+      {
+        "name": "member_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": "association_members"
+      },
+      {
+        "name": "role",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "chair",
+          "vice_chair",
+          "secretary",
+          "treasurer",
+          "director",
+          "daily_management",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "role_label",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "start_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "end_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "active",
+        "options": [
+          "planned",
+          "active",
+          "ended"
+        ],
+        "reference": null
+      },
+      {
+        "name": "appointment_document_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "deadline": {
+    "compliance_deadlines": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "general_assembly",
+          "board",
+          "finance",
+          "kbo",
+          "ubo",
+          "tax",
+          "insurance",
+          "subsidy",
+          "publication",
+          "contract",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "due_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "open",
+        "options": [
+          "open",
+          "planned",
+          "completed",
+          "cancelled",
+          "not_applicable"
+        ],
+        "reference": null
+      },
+      {
+        "name": "recurrence",
+        "type": "text",
+        "required": false,
+        "default": "once",
+        "options": [
+          "once",
+          "monthly",
+          "quarterly",
+          "yearly"
+        ],
+        "reference": null
+      },
+      {
+        "name": "responsible_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "profiles"
+      },
+      {
+        "name": "document_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "administrative_documents"
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ]
+  },
+  "administration": {
+    "administrative_documents": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "document_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [
+          "articles",
+          "incorporation",
+          "official_gazette",
+          "kbo",
+          "ubo",
+          "vat",
+          "minutes",
+          "annual_accounts",
+          "budget",
+          "insurance",
+          "contract",
+          "subsidy",
+          "policy",
+          "register",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "active",
+        "options": [
+          "draft",
+          "active",
+          "expiring",
+          "expired",
+          "archived"
+        ],
+        "reference": null
+      },
+      {
+        "name": "document_date",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "valid_from",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "valid_until",
+        "type": "date",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "drive_url",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "reference_number",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "confidential",
+        "type": "boolean",
+        "required": false,
+        "default": true,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ]
+  }
+}

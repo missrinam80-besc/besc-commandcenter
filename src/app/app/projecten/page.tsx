@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import { ProjectOutcomeFields } from "@/components/project-outcome-fields";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
@@ -43,6 +44,9 @@ export default async function ProjectsPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"project",query:params});
+  if (unifiedEditor) return unifiedEditor;
+
   const currentQuery = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) if (value) currentQuery.set(key, value);
   const search = params.zoek?.trim() ?? "";

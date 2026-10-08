@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { CalendarDays, List, Search, X } from "lucide-react";
 import { createOperationalRecord } from "@/app/app/operations/actions";
@@ -56,6 +57,9 @@ export async function OperationalModulePage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
+  const unifiedEditor = await dossierEditorGate({module,query:params});
+  if (unifiedEditor) return unifiedEditor;
+
   const config = operationalModules[module];
   const search = params.zoek?.trim().slice(0, 100) ?? "";
   const status = Object.hasOwn(config.statuses, params.status ?? "") ? params.status! : "";

@@ -51,6 +51,7 @@ test("eventpagina toont alleen de gekozen sectie en houdt titel, navigatie en be
     return q;
   } };
   const overrides: Record<string, unknown> = {
+    "@/components/dossier-editor-gate": {dossierEditorGate:async()=>null},
     "next/link": { default: ({ children, scroll, ...props }: React.PropsWithChildren<Record<string, unknown>>) => { void scroll; return React.createElement("a", props, children); } },
     "next/navigation": { notFound: () => { throw Error("404"); } },
     "@/lib/event-dossier-tabs": { eventDossierTabs, resolveEventDossierTab },
@@ -62,6 +63,7 @@ test("eventpagina toont alleen de gekozen sectie en houdt titel, navigatie en be
     "@/lib/google-workspace": {},
   };
   for (const match of source.matchAll(/import \{([^}]+)\} from "(@\/components\/[^"]+)"/g)) {
+    if(match[2] in overrides)continue;
     const exports: Record<string, unknown> = {};
     for (const name of match[1].split(",").map(value => value.trim())) exports[name] = ({ children }: React.PropsWithChildren) => React.createElement("section", { "data-component": name }, children);
     overrides[match[2]] = exports;

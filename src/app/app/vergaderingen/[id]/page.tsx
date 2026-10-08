@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { CalendarSync, Download, ExternalLink, FilePlus2 } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -16,6 +17,9 @@ import { formatDateTime } from "@/lib/format";
 export default async function Page({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<Record<string,string|undefined>>}) {
   const {id}=await params;
   const q=await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"meeting",id,query:q});
+  if (unifiedEditor) return unifiedEditor;
+
   const{supabase,membership}=await requireActiveMembership();
   const canManage=hasPermission(membership,"manageOrganization");
   const[m,a,p,d,c]=await Promise.all([

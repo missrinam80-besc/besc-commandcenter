@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { ListPlus, MailPlus, Newspaper, Users } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -15,6 +16,9 @@ const newsletterStatuses: Record<string,string> = {
 
 export default async function NewsletterPage({ searchParams }: { searchParams: Promise<Record<string,string|undefined>> }) {
   const query = await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"newsletter",query:query});
+  if (unifiedEditor) return unifiedEditor;
+
   const { supabase, membership, user } = await requireActiveMembership();
   const org = membership.organization_id;
   if (!isManager(membership)) return <AppShell active="Nieuwsbrieven"><div className="module-body"><div className="permission-note">Alleen bestuur en beheerders kunnen mailinglijsten en nieuwsbrieven beheren.</div></div></AppShell>;

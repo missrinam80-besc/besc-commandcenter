@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -17,6 +18,9 @@ export default async function Page({
 }) {
   const { id } = await params;
   const query = await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"expense",id,query:query});
+  if (unifiedEditor) return unifiedEditor;
+
   const { supabase, membership, user } = await requireActiveMembership();
   const organizationId = membership.organization_id;
   const canViewOverview = hasPermission(membership, "viewFinance");

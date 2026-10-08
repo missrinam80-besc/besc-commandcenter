@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { Archive, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -31,6 +32,9 @@ const typeLabels: Record<string, string> = {
 
 export default async function MaterialsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const q = await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"asset",query:q});
+  if (unifiedEditor) return unifiedEditor;
+
   const { supabase, membership } = await requireActiveMembership();
   const org = membership.organization_id;
   const [assetsResult, peopleResult, partnersResult, projectsResult, eventsResult, campaignsResult] = await Promise.all([

@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { Archive, ArrowRight, Trash2 } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -61,6 +62,9 @@ export default async function InboxItemPage({
 }) {
   const { id } = await params;
   const query = await searchParams;
+  const unifiedEditor = await dossierEditorGate({kind:"inbox",id,query:query});
+  if (unifiedEditor) return unifiedEditor;
+
   const { supabase, membership } = await requirePermission("manageInbox", "/app/inbox?fout=geen-toegang");
   const { data: item } = await supabase
     .from("inbox_items")

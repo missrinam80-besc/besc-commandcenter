@@ -25,6 +25,7 @@ async function render(selectedModule: OperationalModule, query: Record<string, s
   }).outputText;
   runInNewContext(code, { module: compiled, exports: compiled.exports,
     require: (key: string) => {
+      if(key === "@/components/dossier-editor-gate")return {dossierEditorGate:async()=>null};
       if(key === "@/lib/contact-dossier-tabs") return contactTabHelpers;
       if (key === "next/navigation") return { notFound: () => { throw Error("404"); } };
       if (key === "next/link") return { default: ({ children, href }: React.PropsWithChildren<{ href: string }>) => React.createElement("a", { href }, children) };

@@ -1,3 +1,4 @@
+import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { FormModal } from "@/components/form-modal";
@@ -5,7 +6,10 @@ import { LaunchForm, ProductForm } from "@/components/shop-forms";
 import { requireActiveMembership } from "@/lib/auth-context";
 
 export default async function ShopPage({ searchParams }: { searchParams: Promise<Record<string,string|undefined>> }) {
-  const q = await searchParams; const { supabase, membership } = await requireActiveMembership(); const org = membership.organization_id;
+  const q = await searchParams;
+  const unifiedEditor = await dossierEditorGate({group:"shop",query:q});
+  if (unifiedEditor) return unifiedEditor;
+ const { supabase, membership } = await requireActiveMembership(); const org = membership.organization_id;
   const [productsResult, launchesResult, partnersResult, projectsResult, campaignsResult] = await Promise.all([
     supabase.from("shop_products").select("*").eq("organization_id",org).is("deleted_at",null).order("created_at",{ascending:false}),
     supabase.from("merch_launches").select("*").eq("organization_id",org).is("deleted_at",null).order("launch_date",{ascending:false}),
