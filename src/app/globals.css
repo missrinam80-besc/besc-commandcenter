@@ -541,3 +541,17 @@
 .member-access-actions button,.member-access-actions .row-action{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:8px 10px;white-space:nowrap}
 @media(max-width:1400px){.member-grid .member-access-row{grid-template-columns:minmax(0,1fr);gap:12px}}
 @media(max-width:600px){.member-access-fields{flex-basis:100%}.member-access-actions{width:100%}.member-access-fields .board-function-picker label{width:auto}}
+
+/* Compact person and company dossier tabs, using the shared theme palette. */
+.contact-dossier { gap: 1rem; }
+.contact-dossier .form-card { padding: 1rem; }
+.contact-dossier .form-heading { margin-bottom: .75rem; }
+.contact-dossier .form-heading h2 { font-size: 1.15rem; }
+.contact-dossier .record-metadata { grid-template-columns: repeat(2,minmax(0,1fr)); gap: .75rem 1.5rem; }
+.contact-dossier .relation-list article { padding: .65rem .75rem; }
+.contact-dossier .relation-grid > .form-card:only-child { grid-column: 1/-1; }
+.contact-summary-badges { display:flex; flex-wrap:wrap; gap:.5rem; }
+.contact-summary-badges a { padding:.4rem .65rem; border:1px solid var(--line); border-radius:.5rem; background:var(--theme-surface); color:var(--ink); font-size:.8rem; }
+.contact-dossier-actions > summary { cursor:pointer; font-size:.85rem; }
+.contact-dossier-actions .form-card { margin-top:.75rem; }
+@media(max-width:600px) { .contact-dossier .record-metadata {grid-template-columns:1fr;} }

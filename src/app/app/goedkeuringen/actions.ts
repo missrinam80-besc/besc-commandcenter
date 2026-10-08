@@ -1,4 +1,5 @@
 "use server";
+import { appendContactTab } from "@/lib/contact-dossier-tabs";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -65,7 +66,7 @@ export async function submitForApproval(formData: FormData) {
   if (!parsed.success) redirect("/app/goedkeuringen?fout=aanvraag-velden");
   const context = await requireActiveMembership();
   const source = await sourceRecord(context, parsed.data.entity_type, parsed.data.entity_id);
-  if (!source) redirect(`${parsed.data.source_href}?fout=goedkeuring-bron`);
+  if (!source) redirect(appendContactTab(`${parsed.data.source_href}?fout=goedkeuring-bron`,formData));
   const { data: existing } = await context.supabase
     .from("approval_requests")
     .select("id")
@@ -74,7 +75,7 @@ export async function submitForApproval(formData: FormData) {
     .eq("entity_id", parsed.data.entity_id)
     .eq("status", "pending")
     .maybeSingle();
-  if (existing) redirect(`${parsed.data.source_href}?fout=goedkeuring-loopt`);
+  if (existing) redirect(appendContactTab(`${parsed.data.source_href}?fout=goedkeuring-loopt`,formData));
   const { error } = await context.supabase.from("approval_requests").insert({
     organization_id: context.membership.organization_id,
     entity_type: parsed.data.entity_type,
@@ -85,7 +86,7 @@ export async function submitForApproval(formData: FormData) {
     requested_by: context.user.id,
     request_note: parsed.data.request_note || null,
   });
-  if (error) redirect(`${parsed.data.source_href}?fout=goedkeuring-opslaan`);
+  if (error) redirect(appendContactTab(`${parsed.data.source_href}?fout=goedkeuring-opslaan`,formData));
 
   if (parsed.data.entity_type === "content") {
     await context.supabase.from("content_items").update({ approval_status: "pending", updated_at: new Date().toISOString() }).eq("organization_id", context.membership.organization_id).eq("id", parsed.data.entity_id);
@@ -113,7 +114,7 @@ export async function submitForApproval(formData: FormData) {
   }
   revalidatePath("/app/goedkeuringen");
   revalidatePath(parsed.data.source_href);
-  redirect(`${parsed.data.source_href}?succes=goedkeuring-aangevraagd`);
+  redirect(appendContactTab(`${parsed.data.source_href}?succes=goedkeuring-aangevraagd`,formData));
 }
 
 export async function decideApproval(formData: FormData) {
@@ -125,7 +126,7 @@ export async function decideApproval(formData: FormData) {
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/goedkeuringen?fout=beslissing-velden");
   if (parsed.data.decision !== "approved" && !parsed.data.decision_note) {
-    redirect(`${parsed.data.return_to}?fout=toelichting-verplicht`);
+    redirect(appendContactTab(`${parsed.data.return_to}?fout=toelichting-verplicht`,formData));
   }
   const context = await requireActiveMembership();
   const { data: request } = await context.supabase
@@ -134,12 +135,12 @@ export async function decideApproval(formData: FormData) {
     .eq("organization_id", context.membership.organization_id)
     .eq("id", parsed.data.id)
     .maybeSingle();
-  if (!request || request.status !== "pending") redirect(`${parsed.data.return_to}?fout=niet-meer-open`);
+  if (!request || request.status !== "pending") redirect(appendContactTab(`${parsed.data.return_to}?fout=niet-meer-open`,formData));
   if (!canReviewApproval(context.membership, request.entity_type)) {
-    redirect(`${parsed.data.return_to}?fout=geen-toegang`);
+    redirect(appendContactTab(`${parsed.data.return_to}?fout=geen-toegang`,formData));
   }
   if (["email", "newsletter"].includes(request.entity_type) && request.requested_by === context.user.id) {
-    redirect(`${parsed.data.return_to}?fout=eigen-email-goedkeuren`);
+    redirect(appendContactTab(`${parsed.data.return_to}?fout=eigen-email-goedkeuren`,formData));
   }
   const now = new Date().toISOString();
   const { error } = await context.supabase.from("approval_requests").update({
@@ -149,7 +150,7 @@ export async function decideApproval(formData: FormData) {
     decided_at: now,
     updated_at: now,
   }).eq("organization_id", context.membership.organization_id).eq("id", request.id).eq("status", "pending");
-  if (error) redirect(`${parsed.data.return_to}?fout=beslissing-opslaan`);
+  if (error) redirect(appendContactTab(`${parsed.data.return_to}?fout=beslissing-opslaan`,formData));
 
   if (request.entity_type === "content") {
     await context.supabase.from("content_items").update({
@@ -195,5 +196,5 @@ export async function decideApproval(formData: FormData) {
   }
   revalidatePath("/app/goedkeuringen");
   revalidatePath(request.source_href);
-  redirect(`${parsed.data.return_to}?succes=beslissing`);
+  redirect(appendContactTab(`${parsed.data.return_to}?succes=beslissing`,formData));
 }

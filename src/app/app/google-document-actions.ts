@@ -1,4 +1,5 @@
 "use server";
+import { appendContactTab } from "@/lib/contact-dossier-tabs";
 
 import { kpiValueLabel } from "@/lib/management-report";
 
@@ -63,7 +64,7 @@ export async function generateMeetingMinutes(formData: FormData) {
     context.supabase.from("meetings").select("*").eq("organization_id", context.membership.organization_id).eq("id", parsed.data.meeting_id).is("deleted_at", null).maybeSingle(),
     context.supabase.from("meeting_action_items").select("title,assignee_text,status").eq("organization_id", context.membership.organization_id).eq("meeting_id", parsed.data.meeting_id).order("created_at"),
   ]);
-  if (!meeting) redirect(`${path}?fout=document`);
+  if (!meeting) redirect(appendContactTab(`${path}?fout=document`,formData));
   try {
     const folder = await resolveDossierDriveFolder({ supabase: context.supabase, organizationId: context.membership.organization_id, userId: context.user.id, entityType: "meeting", entityId: meeting.id, module: "meetings", title: meeting.title });
     const document = await createDocumentFromGoogleTemplate({
@@ -83,10 +84,10 @@ export async function generateMeetingMinutes(formData: FormData) {
     await saveDocumentMetadata({ context, entityType: "meeting", entityId: meeting.id, document });
     await context.supabase.from("meetings").update({ minutes_url: document.webViewLink, updated_at: new Date().toISOString() }).eq("organization_id", context.membership.organization_id).eq("id", meeting.id);
   } catch {
-    redirect(`${path}?fout=document-genereren`);
+    redirect(appendContactTab(`${path}?fout=document-genereren`,formData));
   }
   revalidatePath(path);
-  redirect(`${path}?succes=document`);
+  redirect(appendContactTab(`${path}?succes=document`,formData));
 }
 
 export async function generateSponsorReport(formData: FormData) {
@@ -98,7 +99,7 @@ export async function generateSponsorReport(formData: FormData) {
     context.supabase.from("partners").select("*").eq("organization_id", context.membership.organization_id).eq("id", parsed.data.partner_id).is("deleted_at", null).maybeSingle(),
     context.supabase.from("campaigns").select("title,status,start_date,end_date,value,deliverables").eq("organization_id", context.membership.organization_id).eq("partner_id", parsed.data.partner_id).is("deleted_at", null).order("start_date"),
   ]);
-  if (!partner) redirect(`${path}?fout=document`);
+  if (!partner) redirect(appendContactTab(`${path}?fout=document`,formData));
   try {
     const folder = await resolveDossierDriveFolder({ supabase: context.supabase, organizationId: context.membership.organization_id, userId: context.user.id, entityType: "partner", entityId: partner.id, module: "sponsors", title: partner.name });
     const document = await createDocumentFromGoogleTemplate({
@@ -121,10 +122,10 @@ export async function generateSponsorReport(formData: FormData) {
     });
     await saveDocumentMetadata({ context, entityType: "partner", entityId: partner.id, document });
   } catch {
-    redirect(`${path}?fout=document-genereren`);
+    redirect(appendContactTab(`${path}?fout=document-genereren`,formData));
   }
   revalidatePath(path);
-  redirect(`${path}?succes=document`);
+  redirect(appendContactTab(`${path}?succes=document`,formData));
 }
 
 export async function generateEventDossier(formData: FormData) {
@@ -133,7 +134,7 @@ export async function generateEventDossier(formData: FormData) {
   const path = `/app/events/${parsed.data.event_id}`;
   const context = await requirePermission("manageEvents", `${path}?fout=rechten`);
   const { data: event } = await context.supabase.from("events").select("*").eq("organization_id", context.membership.organization_id).eq("id", parsed.data.event_id).is("deleted_at", null).maybeSingle();
-  if (!event) redirect(`${path}?fout=document`);
+  if (!event) redirect(appendContactTab(`${path}?fout=document`,formData));
   try {
     const eventFolder = await resolveDossierDriveFolder({ supabase: context.supabase, organizationId: context.membership.organization_id, userId: context.user.id, entityType: "event", entityId: event.id, module: "events", title: event.title, legacyDriveUrl: event.drive_url });
     const document = await createDocumentFromGoogleTemplate({
@@ -155,11 +156,11 @@ export async function generateEventDossier(formData: FormData) {
     });
     await saveDocumentMetadata({ context, entityType: "event", entityId: event.id, document });
   } catch {
-    redirect(`${path}?fout=document-genereren`);
+    redirect(appendContactTab(`${path}?fout=document-genereren`,formData));
   }
   revalidatePath(path);
-  redirect(`${path}?succes=document`);
+  redirect(appendContactTab(`${path}?succes=document`,formData));
 }
 
-export async function generateSponsorPitchdeck(formData:FormData){const parsed=z.object({partner_id:z.string().uuid(),period_start:z.string().date(),period_end:z.string().date(),period_label:z.string().trim().min(2).max(100)}).safeParse(Object.fromEntries(formData));if(!parsed.success)redirect("/app/rapportage?fout=pitchdeck-velden");const path=`/app/rapportage/sponsors/${parsed.data.partner_id}`;const context=await requirePermission("manageOrganization",`${path}?fout=rechten`);const[partnerResult,campaignResult,kpiResult]=await Promise.all([context.supabase.from("partners").select("id,name,collaboration_type,estimated_value").eq("organization_id",context.membership.organization_id).eq("id",parsed.data.partner_id).is("deleted_at",null).maybeSingle(),context.supabase.from("campaigns").select("title,status,start_date,end_date,value,impressions,clicks").eq("organization_id",context.membership.organization_id).eq("partner_id",parsed.data.partner_id).is("deleted_at",null),context.supabase.from("kpi_records").select("metric,value,measurement_status,unit,source").eq("organization_id",context.membership.organization_id).eq("partner_id",parsed.data.partner_id).is("deleted_at",null).gte("period_end",parsed.data.period_start).lt("period_end",parsed.data.period_end)]);const partner=partnerResult.data;if(!partner)redirect(`${path}?fout=pitchdeck`);const campaigns=(campaignResult.data??[]).filter(item=>(!item.start_date||item.start_date<parsed.data.period_end)&&(!item.end_date||item.end_date>=parsed.data.period_start));try{const folder=await resolveDossierDriveFolder({supabase:context.supabase,organizationId:context.membership.organization_id,userId:context.user.id,entityType:"partner",entityId:partner.id,module:"sponsors",title:partner.name});const presentation=await createPresentationFromGoogleTemplate({template:"sponsor",name:`Pitchdeck - ${partner.name} - ${parsed.data.period_label}`,parentId:folder.id,replacements:{SPONSOR:partner.name,PERIODE:parsed.data.period_label,SAMENWERKING:partner.collaboration_type,GESCHATTE_WAARDE:partner.estimated_value==null?null:`€ ${Number(partner.estimated_value).toFixed(2)}`,CAMPAGNES:campaigns.map(x=>`${x.title} — ${x.status}`).join("\n"),GEREALISEERDE_WAARDE:`€ ${campaigns.reduce((sum,x)=>sum+Number(x.value??0),0).toFixed(2)}`,IMPRESSIES:campaigns.reduce((sum,x)=>sum+Number(x.impressions??0),0),KLIKS:campaigns.reduce((sum,x)=>sum+Number(x.clicks??0),0),KPI_RESULTATEN:(kpiResult.data??[]).map(x=>`${x.metric}: ${kpiValueLabel(x)} ${x.unit} (${x.source})`).join("\n")}});await saveDocumentMetadata({context,entityType:"partner",entityId:partner.id,document:presentation})}catch{redirect(`${path}?fout=pitchdeck-genereren`)}revalidatePath(path);redirect(`${path}?succes=pitchdeck`)}
+export async function generateSponsorPitchdeck(formData:FormData){const parsed=z.object({partner_id:z.string().uuid(),period_start:z.string().date(),period_end:z.string().date(),period_label:z.string().trim().min(2).max(100)}).safeParse(Object.fromEntries(formData));if(!parsed.success)redirect("/app/rapportage?fout=pitchdeck-velden");const path=`/app/rapportage/sponsors/${parsed.data.partner_id}`;const context=await requirePermission("manageOrganization",`${path}?fout=rechten`);const[partnerResult,campaignResult,kpiResult]=await Promise.all([context.supabase.from("partners").select("id,name,collaboration_type,estimated_value").eq("organization_id",context.membership.organization_id).eq("id",parsed.data.partner_id).is("deleted_at",null).maybeSingle(),context.supabase.from("campaigns").select("title,status,start_date,end_date,value,impressions,clicks").eq("organization_id",context.membership.organization_id).eq("partner_id",parsed.data.partner_id).is("deleted_at",null),context.supabase.from("kpi_records").select("metric,value,measurement_status,unit,source").eq("organization_id",context.membership.organization_id).eq("partner_id",parsed.data.partner_id).is("deleted_at",null).gte("period_end",parsed.data.period_start).lt("period_end",parsed.data.period_end)]);const partner=partnerResult.data;if(!partner)redirect(appendContactTab(`${path}?fout=pitchdeck`,formData));const campaigns=(campaignResult.data??[]).filter(item=>(!item.start_date||item.start_date<parsed.data.period_end)&&(!item.end_date||item.end_date>=parsed.data.period_start));try{const folder=await resolveDossierDriveFolder({supabase:context.supabase,organizationId:context.membership.organization_id,userId:context.user.id,entityType:"partner",entityId:partner.id,module:"sponsors",title:partner.name});const presentation=await createPresentationFromGoogleTemplate({template:"sponsor",name:`Pitchdeck - ${partner.name} - ${parsed.data.period_label}`,parentId:folder.id,replacements:{SPONSOR:partner.name,PERIODE:parsed.data.period_label,SAMENWERKING:partner.collaboration_type,GESCHATTE_WAARDE:partner.estimated_value==null?null:`€ ${Number(partner.estimated_value).toFixed(2)}`,CAMPAGNES:campaigns.map(x=>`${x.title} — ${x.status}`).join("\n"),GEREALISEERDE_WAARDE:`€ ${campaigns.reduce((sum,x)=>sum+Number(x.value??0),0).toFixed(2)}`,IMPRESSIES:campaigns.reduce((sum,x)=>sum+Number(x.impressions??0),0),KLIKS:campaigns.reduce((sum,x)=>sum+Number(x.clicks??0),0),KPI_RESULTATEN:(kpiResult.data??[]).map(x=>`${x.metric}: ${kpiValueLabel(x)} ${x.unit} (${x.source})`).join("\n")}});await saveDocumentMetadata({context,entityType:"partner",entityId:partner.id,document:presentation})}catch{redirect(appendContactTab(`${path}?fout=pitchdeck-genereren`,formData))}revalidatePath(path);redirect(appendContactTab(`${path}?succes=pitchdeck`,formData))}
 

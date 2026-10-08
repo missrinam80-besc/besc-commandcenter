@@ -1,10 +1,11 @@
+import * as contactTabHelpers from "../src/lib/contact-dossier-tabs.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
-const require=createRequire(import.meta.url);
+const require=((native) => (name: string) => name === "@/lib/contact-dossier-tabs" ? contactTabHelpers : native(name))(createRequire(import.meta.url));
 const id="10000000-0000-4000-8000-000000000001",org="20000000-0000-4000-8000-000000000001",candidate="30000000-0000-4000-8000-000000000002";
 type DbResult={data:Record<string,unknown>|null;error:{message:string}|null};
 type Query={select:()=>Query;eq:(k:string,v:unknown)=>Query;is:(k:string,v:unknown)=>Query;update:()=>Query;insert:()=>Query;maybeSingle:()=>Promise<DbResult>;then:(resolve:(value:DbResult)=>unknown)=>Promise<unknown>};
@@ -18,6 +19,7 @@ function fixture(mode="ok"){
  then(resolve:(value:DbResult)=>unknown){return Promise.resolve({data:null,error:null}).then(resolve);}};return q;},
  rpc(name:string,args:Record<string,unknown>){writes.push(`rpc:${name}`);assert.equal(args.p_organization_id,org);assert.equal(args.p_task_id,id);return Promise.resolve({data:mode==="zero"?null:id,error:mode==="error"?{message:"failed"}:null});}};
  function load(file:string){const m={exports:{} as Actions};runInNewContext(ts.transpileModule(readFileSync(new URL(`../${file}`,import.meta.url),"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{module:m,exports:m.exports,FormData,Date,require:(name:string)=>{
+      if (name === "@/lib/contact-dossier-tabs") return contactTabHelpers;
  if(name==="next/navigation")return{redirect:(url:string)=>{throw Error(url);}};
  if(name==="next/cache")return{revalidatePath:(p:string)=>invalidations.push(p)};
  if(name==="@/lib/auth-context")return{requireActiveMembership:async()=>({supabase,user:{id},membership:{organization_id:org}})};

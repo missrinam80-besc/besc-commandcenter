@@ -1,3 +1,4 @@
+import { hasPermission } from "@/lib/permissions";
 import { ExternalLink, FilePlus2 } from "lucide-react";
 import { generateSponsorReport } from "@/app/app/google-document-actions";
 import { requireActiveMembership } from "@/lib/auth-context";
@@ -35,13 +36,13 @@ export async function SponsorDocumentTools({ partnerId }: { partnerId: string })
       ) : (
         <div className="empty-state compact">
           <p>Maak een sponsorrapport op basis van het ingestelde Google Docs-template.</p>
-          <form action={generateSponsorReport}>
+          {hasPermission(membership,"manageOrganization") && <form action={generateSponsorReport}>
             <input type="hidden" name="partner_id" value={partnerId} />
             <button className="primary" type="submit">
               <FilePlus2 size={16} />
               Genereer sponsorrapport
             </button>
-          </form>
+          </form>}
         </div>
       )}
     </section>

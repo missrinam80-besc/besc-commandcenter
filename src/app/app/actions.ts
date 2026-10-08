@@ -1,4 +1,5 @@
 "use server";
+import { appendContactTab } from "@/lib/contact-dossier-tabs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -42,7 +43,7 @@ export async function createTask(formData: FormData) {
   });
   if (error || typeof taskId !== "string" || !z.string().uuid().safeParse(taskId).success) redirect("/app/taken?nieuw=1&fout=opslaan");
   const returnTo = parsed.data.return_to && /^\/app\/(projecten|events|campagnes|content|sponsors|community)\/[0-9a-f-]{36}$/i.test(parsed.data.return_to) ? parsed.data.return_to : "/app/taken";
-  revalidatePath("/app"); revalidatePath("/app/taken"); if (parsed.data.project_id) revalidatePath(`/app/projecten/${parsed.data.project_id}`); redirect(`${returnTo}?succes=taak-aangemaakt`);
+  revalidatePath("/app"); revalidatePath("/app/taken"); if (parsed.data.project_id) revalidatePath(`/app/projecten/${parsed.data.project_id}`); redirect(appendContactTab(`${returnTo}?succes=taak-aangemaakt`,formData));
 }
 
 export async function createProject(formData: FormData) {
