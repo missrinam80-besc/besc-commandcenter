@@ -9,13 +9,13 @@ De eventfiche heeft acht tabbladen. De titel, status en knop **Bewerken** blijve
 | Overzicht | Beschrijving, basisgegevens, annuleren en dossierbeheer. |
 | Planning & crew | Dagschema, streams, draaiboek en crew-/vrijwilligersshiften; betrokken personen en rollen; acties voor een taak of campagne. |
 | Materialen | Eventmaterialenlijst met registeritems of zelf omschreven materiaal, aantallen, herkomst, verantwoordelijke en opvolging. |
-| Giveaways | Voorbereide plek; registratie van items en uitdeling volgt later. |
+| Giveaways | Items, geplande/ontvangen/uitgedeelde aantallen, herkomst, verantwoordelijke en uitdeelafspraken. |
 | Inschrijvingen | Bestaande Eventbrite-link indien geregistreerd. Werkwijze, capaciteit en eigen inschrijvingen volgen later. |
 | Financiën | Gekoppelde budgetten, kosten en inkomsten. |
 | Documenten & koppelingen | Documenten, links, gerelateerde dossiers, eventmap, dossiergeneratie en Google Calendar. |
 | Communicatie | E-mailopvolging en Gmail-concepten. |
 
-Giveaways en inschrijvingsinstellingen hebben nog geen invoer of opgeslagen instellingen. Aan- of uitzetten per event wordt later toegevoegd. Een ontbrekende Eventbrite-link bewijst niet dat het event zonder inschrijvingen werkt.
+Inschrijvingsinstellingen hebben nog geen invoer of opgeslagen instellingen. Aan- of uitzetten per event wordt later toegevoegd. Een ontbrekende Eventbrite-link bewijst niet dat het event zonder inschrijvingen werkt.
 
 ## Materialen per event
 
@@ -36,3 +36,11 @@ Voeg een schemaonderdeel toe met een titel en type: Programma, Stream, Draaiboek
 De eventagenda heeft een dag- en weekweergave met een urenrooster en dagkolommen. Blokken staan op hun werkelijke tijden; gelijktijdige onderdelen staan naast elkaar. Gebruik de datumkiezer of pijlen om te navigeren. Nachtshiften lopen door op de volgende dag. Klik op een blok voor alle gegevens en de bewerkknop. Onderdelen zonder start- of eindtijd staan apart onder **Nog niet volledig ingepland**; de agenda verzint geen duur. De klok volgt Europe/Brussels, inclusief dagen van 23 of 25 uur bij de tijdswissel. Bij de herhaalde wintertijd wordt de UTC-offset bij de uuraanduiding vermeld. Programma is blauw, Stream paars, Draaiboek amber en Crew / vrijwilliger groen. De typenaam blijft zichtbaar naast de kleur; de vlakken passen bij het lichte en donkere thema. Praktische afspraken staan bij de details. De filters tonen één type. Voorstel, Bevestigd, Uitgevoerd en Vervallen worden handmatig toegekend. Overlappende toewijzingen aan dezelfde persoon binnen dit event krijgen een waarschuwing, ook over verschillende types. Aansluitende shifts en vervallen onderdelen geven geen waarschuwing. Bij onbekende tijden is overlap niet te beoordelen. Controle tussen verschillende events en beschikbaarheidsbeheer volgen later.
 
 Schemaonderdelen wijzigen geen bestaande dossierrollen, taken of Google Calendar. Draaiboekinstructies kunnen als praktische afspraken worden ingevoerd; bestaande documenten blijven op Documenten & koppelingen staan. Actieve leden kunnen bekijken; Events-bevoegdheid is nodig om te beheren. Verwijderen verwijdert uitsluitend het schemaonderdeel. Migratie `20261007205415_event_schedule.sql` is nodig op Cloud DEV vóór deployment.
+
+## Giveaways per event
+
+Kies **Item toevoegen** en vul een naam, gepland aantal, herkomst (eigen voorraad, sponsor/partner of aangekocht), eventuele leverancier en verantwoordelijke in. Ontvangen en uitgedeelde aantallen zijn optioneel: leeg betekent onbekend, 0 betekent bevestigd niets. Uitgedeeld mag niet hoger zijn dan ontvangen; voor een positief uitgedeeld aantal moet ontvangen bekend zijn. Het restant wordt alleen berekend als beide aantallen bekend zijn. Ontvangen mag hoger zijn dan gepland.
+
+Opvolging is een handmatige keuze: Nog te regelen, Geregeld, Ontvangen, In uitdeling, Afgerond of Vervallen. Een status bewijst geen aantallen. Uitdeelafspraken en voorwaarden zijn vrije tekst en kunnen in de lijst worden opengeklapt. Deze stap registreert items en totaalaantallen, geen winnaars, persoonlijke deelnemersgegevens of automatische loting. Er wordt niets gepubliceerd en geen voorraad, sponsorafspraak of financieel dossier automatisch gewijzigd.
+
+Actieve leden kunnen de lijst bekijken; Events-bevoegdheid is nodig om toe te voegen, te wijzigen of te verwijderen. Verwijderen verwijdert het item met zijn geregistreerde aantallen uit dit event. Organisatie- en dossiergrenzen blijven gecontroleerd. Voor deployment is migratie `20261008051115_event_giveaways.sql` op Cloud DEV nodig. De migratie gebruikt de bestaande organisatiegebonden sleutels uit de materialenmigratie.

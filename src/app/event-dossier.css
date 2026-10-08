@@ -59,6 +59,18 @@
 .event-tab-placeholder .row-action{display:inline-flex;gap:6px;align-items:center;margin-top:8px}
 @media(max-width:850px){.event-dossier-tabs{padding:14px 16px 0}.event-dossier-tabs a{font-size:11px;padding:7px 9px}}
 .event-material-list{display:grid}
+.event-giveaway-list{display:grid}
+.event-giveaway-list article{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto auto;gap:14px;align-items:start;padding:12px 0;border-bottom:1px solid var(--line)}
+.event-giveaway-list article:last-child{border-bottom:0}
+.event-giveaway-info{display:grid;gap:4px;min-width:0;overflow-wrap:anywhere}
+.event-giveaway-info strong{font-size:13px;line-height:1.45}
+.event-giveaway-info>span,.event-giveaway-info details{color:var(--muted);font-size:11px;line-height:1.5}
+.event-giveaway-info summary{cursor:pointer;color:var(--ink)}
+.event-giveaway-info details p{white-space:pre-wrap;color:var(--ink);font-size:12px;line-height:1.5;margin:6px 0 0}
+.event-giveaway-counts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:0;min-width:0}
+.event-giveaway-counts dt{font-size:10px;color:var(--muted);line-height:1.5}
+.event-giveaway-counts dd{font-size:12px;font-weight:650;line-height:1.5;color:var(--ink);margin:3px 0 0;overflow-wrap:anywhere}
+@media(max-width:850px){.event-giveaway-list article{grid-template-columns:minmax(0,1fr) auto}.event-giveaway-counts{grid-column:1;grid-row:2}.event-giveaway-list .event-material-status{grid-column:1;grid-row:3;width:fit-content}.event-giveaway-list .row-action{grid-column:2;grid-row:1}}
 .event-schedule-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .event-schedule-filters a{color:var(--ink);background:var(--theme-control);border:1px solid var(--line);border-radius:7px;padding:6px 9px;font-size:11px;text-decoration:none}
 .event-schedule-filters a[aria-current="page"]{border-color:var(--besc-red);font-weight:700}

@@ -1,3 +1,4 @@
+import { EventGiveawaysPanel } from "@/components/event-giveaways-panel";
 import { eventDossierTabs, resolveEventDossierTab } from "@/lib/event-dossier-tabs";
 import { EventSchedulePanel } from "@/components/event-schedule-panel";
 import { EventMaterialsPanel } from "@/components/event-materials-panel";
@@ -43,6 +44,9 @@ type CalendarLink = {
 };
 
 const driveErrors: Record<string, string> = {
+  "giveaway-velden": "Controleer de itemnaam en aantallen. Uitgedeeld mag niet hoger zijn dan ontvangen.",
+  "giveaway-opslaan": "Het item kon niet worden opgeslagen. Controleer of het event en de verantwoordelijke nog beschikbaar zijn.",
+  "giveaway-verwijderen": "Het item kon niet worden verwijderd. De lijst is mogelijk ondertussen gewijzigd.",
   "schema-velden": "Controleer de titel en tijden. De eindtijd moet na de starttijd liggen.",
   "schema-opslaan": "Het onderdeel kon niet worden opgeslagen. Controleer of het event en de toegewezen persoon nog beschikbaar zijn.",
   "schema-verwijderen": "Het onderdeel kon niet worden verwijderd. Het schema is mogelijk ondertussen gewijzigd.",
@@ -126,7 +130,7 @@ export default async function Event({
         {eventDossierTabs.map(tab => <Link key={tab.id} href={`?tab=${tab.id}`} scroll={false} aria-current={activeTab === tab.id ? "page" : undefined}>{tab.label}</Link>)}
       </nav>
       <div className="project-detail-body event-dossier">
-        {q.succes && <div className="success">{q.succes === "schema-opgeslagen" ? "Schemaonderdeel opgeslagen." : q.succes === "schema-verwijderd" ? "Schemaonderdeel verwijderd." : q.succes === "materiaal-opgeslagen" ? "Materiaal op de eventlijst opgeslagen." : q.succes === "materiaal-verwijderd" ? "Materiaal van de eventlijst verwijderd." : q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
+        {q.succes && <div className="success">{q.succes === "giveaway-opgeslagen" ? "Giveaway-item opgeslagen." : q.succes === "giveaway-verwijderd" ? "Giveaway-item verwijderd." : q.succes === "schema-opgeslagen" ? "Schemaonderdeel opgeslagen." : q.succes === "schema-verwijderd" ? "Schemaonderdeel verwijderd." : q.succes === "materiaal-opgeslagen" ? "Materiaal op de eventlijst opgeslagen." : q.succes === "materiaal-verwijderd" ? "Materiaal van de eventlijst verwijderd." : q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
         {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
         {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
         {q.bewerken && canManage && (
@@ -161,7 +165,7 @@ export default async function Event({
           <EventSchedulePanel eventId={id} selected={q.schema} kind={q.schema_type} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>
         </>}
         {activeTab === "materialen" && <EventMaterialsPanel eventId={id} selected={q.materiaal} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>}
-        {activeTab === "giveaways" && <section className="form-card event-tab-placeholder"><h2>Giveaway-items</h2><p>Het beheer van items, aantallen en uitdeling wordt in een volgende stap toegevoegd.</p></section>}
+        {activeTab === "giveaways" && <EventGiveawaysPanel eventId={id} selected={q.giveaway} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>}
         {activeTab === "inschrijvingen" && <section className="form-card event-tab-placeholder"><h2>Inschrijvingen</h2>{e.eventbrite_url ? <><p>Er is een Eventbrite-link bij dit event geregistreerd.</p><a className="row-action" href={e.eventbrite_url} target="_blank" rel="noreferrer"><ExternalLink size={14}/>Eventbrite openen</a></> : <p>Er is geen Eventbrite-link geregistreerd. De keuze om met of zonder inschrijvingen te werken wordt in een volgende stap toegevoegd.</p>}</section>}
         {activeTab === "financien" && <>
         <FinancialSummaryPanel budgets={budgetRows ?? []} expenses={expenseRows ?? []} income={incomeRows ?? []}/>
