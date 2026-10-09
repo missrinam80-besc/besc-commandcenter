@@ -1,32 +1,10 @@
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
-import Link from "next/link";
-import { Archive, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { isManager } from "@/lib/permissions";
-import { removeAsset } from "./actions";
-
-const statusLabels: Record<string, string> = {
-  planned: "Gepland",
-  active: "In gebruik",
-  maintenance: "Onderhoud",
-  loaned: "Uitgeleend",
-  retired: "Buiten gebruik",
-  lost: "Vermist",
-  archived: "Gearchiveerd",
-};
-
-const typeLabels: Record<string, string> = {
-  equipment: "Materiaal",
-  computer: "Computer",
-  streaming: "Streaming",
-  furniture: "Meubilair",
-  software: "Software/licentie",
-  vehicle: "Voertuig",
-  other: "Overige resource",
-};
+import {MaterialsInventory} from "@/components/materials-inventory";
+import "./materials.css";
 
 export default async function MaterialsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const q = await searchParams;
@@ -48,9 +26,6 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
           <p>ORGANISATIE & INVENTARIS</p>
           <h1>Materialen & resources</h1>
         </div>
-        <div className="project-actions">
-          {canManage && <Link className="primary" href="?nieuw=1"><Plus size={16}/>Nieuw item</Link>}
-        </div>
       </header>
       <div className="module-body">
         <p className="lead">
@@ -70,46 +45,7 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
             </div>
             <span>{rows.length}</span>
           </div>
-          <div className="operations-table">
-            <div className="operations-head">
-              <span>Item</span>
-              <span>Verantwoordelijke / locatie</span>
-              <span>Waarde</span>
-              <span>Koppeling</span>
-              <span>Status</span>
-              <span/>
-            </div>
-            {rows.map((item) => {
-              const relation = item.projects?.title || item.events?.title || item.campaigns?.title || "Niet gekoppeld";
-              return (
-                <article key={item.id}>
-                  <div>
-                    <strong>{item.name}</strong>
-                    <p>{typeLabels[item.asset_type] ?? item.asset_type}{item.serial_number ? ` · ${item.serial_number}` : ""}</p>
-                  </div>
-                  <span>{item.community_people?.display_name || "Niet toegewezen"}{item.location ? ` · ${item.location}` : ""}</span>
-                  <span>{formatCurrency(item.current_value ?? item.purchase_value)}<small>{item.acquired_date ? ` sinds ${formatDate(item.acquired_date)}` : ""}</small></span>
-                  <span>{relation}</span>
-                  <span className="badge purple">{statusLabels[item.status] ?? item.status}</span>
-                  <div>
-                    {item.document_url && <a className="row-action" href={item.document_url} target="_blank" rel="noreferrer"><ExternalLink size={13}/></a>}
-                    {canManage && <Link className="row-action" href={`?bewerken=${item.id}`}><Pencil size={13}/></Link>}
-                    {canManage && <details className="contact-dossier-actions"><summary>Acties</summary>
-                      <form action={removeAsset}>
-                        <input type="hidden" name="id" value={item.id}/><input type="hidden" name="mode" value="archive"/>
-                        <button><Archive size={14}/>Archiveren</button>
-                      </form>
-                      <form action={removeAsset}>
-                        <input type="hidden" name="id" value={item.id}/><input type="hidden" name="mode" value="delete"/>
-                        <ConfirmSubmitButton className="danger-button" message="Dit item verbergen uit de operationele inventaris?"><Trash2 size={14}/>Verwijderen</ConfirmSubmitButton>
-                      </form>
-                    </details>}
-                  </div>
-                </article>
-              );
-            })}
-            {!rows.length && <div className="empty">Nog geen materialen of resources geregistreerd.</div>}
-          </div>
+          {assetsResult.error?<p className="error-note" role="alert">De materiaallijst kon niet worden geladen. Probeer opnieuw.</p>:<MaterialsInventory canManage={canManage} rows={rows.map(item=>({id:item.id,name:item.name,asset_type:item.asset_type,status:item.status,location:item.location,serial_number:item.serial_number,document_url:item.document_url,ownerLabel:item.community_people?.display_name||"Niet toegewezen",relationLabel:item.projects?.title||item.events?.title||item.campaigns?.title||"Niet gekoppeld",valueLabel:formatCurrency(item.current_value??item.purchase_value),acquiredLabel:item.acquired_date?`Sinds ${formatDate(item.acquired_date)}`:""}))}/>}
         </section>
       </div>
     </AppShell>

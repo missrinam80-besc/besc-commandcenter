@@ -8,6 +8,7 @@ Deze wiki bundelt de handleidingen uit de repository in een klikbaar overzicht. 
 - [Gebruik en richtlijnen](Gebruik-en-richtlijnen.md)
 - [Dossiers aanmaken en bewerken](Dossiers-aanmaken-en-bewerken.md)
 - [Keuzevelden beheren](Keuzevelden.md)
+- [Materialen en bulkacties](Materialen-en-bulkacties.md)
 - [Rollen en profielen](Rollen-en-profielen.md)
 - [Project- en campagnefiches](Project-en-campagnefiches.md)
 - [Sponsor- en persoonsfiches](Sponsor-en-persoonsfiches.md)
