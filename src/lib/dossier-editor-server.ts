@@ -5,6 +5,7 @@ import {hasPermission,type Capability} from "./permissions";
 import {dossierEditorCatalog} from "./dossier-editor-catalog";
 import {editorFields,type EditorRecord} from "./dossier-editor-draft";
 import type {EditorOption} from "@/components/dossier-editor";
+import {loadManagedChoices,choiceEditorOptions} from "./dossier-choices-server";
 
 export async function loadDossierEditor(kind:string,id?:string,preset:EditorRecord={}){
  const cfg=dossierEditorCatalog[kind];if(!cfg)notFound();
@@ -35,7 +36,7 @@ export async function loadDossierEditor(kind:string,id?:string,preset:EditorReco
    parts[part.table]=(data??[]).filter(row=>!row.deleted_at&&(!row.organization_id||row.organization_id===membership.organization_id));
    if(part.table==="comments")for(const row of parts[part.table])permissions[`comments:${row.id}`]=row.author_id===user.id;
  }));
- const options:Record<string,EditorOption[]>={};
+ const options:Record<string,EditorOption[]>=choiceEditorOptions(await loadManagedChoices(supabase,membership.organization_id));
  const refs=new Set([cfg.table,...cfg.collections.map(part=>part.table)].flatMap(table=>editorFields(kind,table).flatMap(field=>field.reference?[field.reference]:[])));
  if(cfg.collections.some(part=>part.table==="record_relationships"))for(const target of ["projects","events","campaigns","content_items","partners","community_people","tasks"])refs.add(target);
  if(kind==="expense"&&!permissions.manageFinance)refs.delete("budget_envelopes");

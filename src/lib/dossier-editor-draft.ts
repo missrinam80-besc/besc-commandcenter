@@ -1,6 +1,7 @@
 import {dossierEditorCatalog,dossierFieldTab,type EditorConfig} from "./dossier-editor-catalog";
 import schemas from "./dossier-editor-schema.json";
 import {eventEditorValues,eventEditorStorageValues,eventEditorTimingError} from "./event-editor-timing";
+import {managedChoice,choiceKey} from "./dossier-choices";
 
 export type FieldSchema={name:string;type:string;required:boolean;default:unknown;options:string[];reference:string|null};
 export type EditorRecord=Record<string,unknown>;
@@ -40,7 +41,7 @@ export type EditorIssue={message:string;tab?:string;field?:string;rowId?:string;
 export function validateEditorBundle(bundle:EditorBundle,config:EditorConfig=dossierEditorCatalog[bundle.kind]):string[]{
  return [...new Set(validateEditorIssues(bundle,config).map(issue=>issue.message))];
 }
-export function validateEditorIssues(bundle:EditorBundle,config:EditorConfig=dossierEditorCatalog[bundle.kind]):EditorIssue[]{
+export function validateEditorIssues(bundle:EditorBundle,config:EditorConfig=dossierEditorCatalog[bundle.kind],choiceValues?:Record<string,string[]>):EditorIssue[]{
   if(!config||config!==dossierEditorCatalog[bundle.kind])return [{message:"Onbekend dossiertype."}];
   const problems:EditorIssue[]=[];
   let location:Omit<EditorIssue,"message">={};
@@ -79,7 +80,8 @@ export function validateEditorIssues(bundle:EditorBundle,config:EditorConfig=dos
       const value=all[field.name];
       if(field.required&&(value===null||value===undefined||value===""))add(`Vul ${field.name} in.`,field.name);
       if(value===null||value===undefined||value==="")continue;
-      if(field.options.length&&!field.options.includes(String(value)))add(`Kies een geldige waarde voor ${field.name}.`,field.name);
+      const allowed=managedChoice(table,field.name)?choiceValues?.[choiceKey(table,field.name)]:field.options.length?field.options:undefined;
+      if(allowed&&!allowed.includes(String(value)))add(`Kies een geldige waarde voor ${field.name}.`,field.name);
       if(/timestamp|timestamptz|^date$/.test(field.type)&&!Number.isFinite(new Date(String(value)).getTime()))add(`Vul een geldige datum of tijd in bij ${field.name}.`,field.name);
       if(field.type==="uuid"&&!uuid.test(String(value)))add(`Kies een geldige koppeling voor ${field.name}.`,field.name);
       if(field.type==="boolean"&&typeof value!=="boolean")add(`Gebruik een geldige ja/nee-keuze voor ${field.name}.`,field.name);
