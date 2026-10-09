@@ -3,8 +3,8 @@ import { scheduleKinds, scheduleStatuses, type EventScheduleItem } from "@/lib/e
 import { formatDateTimeLocal } from "@/lib/format";
 import { SearchablePersonPicker } from "@/components/searchable-person-picker";
 
-export function EventScheduleForm({ eventId, record, people }: {
-  eventId: string; record?: EventScheduleItem; people: { id: string; label: string }[];
+export function EventScheduleForm({ eventId, record, people, kinds=scheduleKinds }: {
+  eventId: string; record?: EventScheduleItem; people: { id: string; label: string }[]; kinds?:Record<string,string>;
 }) {
   const options = record?.person_id && !people.some(person => person.id === record.person_id)
     ? [...people, { id: record.person_id, label: "Eerder toegewezen persoon (niet meer beschikbaar)" }] : people;
@@ -13,7 +13,7 @@ export function EventScheduleForm({ eventId, record, people }: {
     {record && <input type="hidden" name="id" value={record.id}/>}
     <label>Titel<input name="title" required minLength={2} maxLength={180} defaultValue={record?.title ?? ""}/></label>
     <div className="form-row">
-      <label>Onderdeel<select name="kind" defaultValue={record?.kind ?? "program"}>{Object.entries(scheduleKinds).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+      <label>Onderdeel<select name="kind" required defaultValue={record?.kind ?? "program"}>{Object.entries(kinds).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       <label>Status<select name="status" defaultValue={record?.status ?? "draft"}>{Object.entries(scheduleStatuses).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
     </div>
     <div className="form-row">

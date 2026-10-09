@@ -17,6 +17,8 @@ Voor dossierwijzigingen: controleer aanmaken, bewerken, tabwissels, behoud van k
 
 Voor [beheerbare keuzevelden](Keuzevelden.md): voer `20261009074806_managed_dossier_choices.sql` uit vóór deployment van de bijbehorende app-image. Controleer toevoegen, hernoemen, kiezen in een fiche en de verwijderbeveiliging voor gebruikte opties. Vaste werkstroomkeuzes blijven beschermd.
 
+Voor beheerbare soorten agendaonderdelen: aanvullend `20261009095014_managed_agenda_types.sql` vóór deployment. Controleer een nieuwe soort in het agendaformulier, de uniforme editor, filters en gekleurde blokken. Hernoemen behoudt koppelingen en kleur; gebruikte soorten blijven tegen verwijderen beschermd.
+
 Nieuwe betaalde diensten of agentruns vragen een afzonderlijk besluit. De PDF-proef en nieuwe uploads in de lokale Storage-herstelomgeving vallen buiten de huidige DEV-acceptatie volgens het scopebesluit van 7 oktober.
 
 ## Historische controles

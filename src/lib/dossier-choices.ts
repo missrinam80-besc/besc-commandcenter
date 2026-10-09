@@ -6,6 +6,7 @@ export type DossierChoice={set_key:string;value:string;label:string;position:num
 // Only classifications. Workflow states, permissions, integration channels and routing stay fixed.
 export const managedChoiceFields:Record<string,string>={
  "events.event_type":"Events · Eventtype",
+ "event_schedule_items.kind":"Programma en inzet · Soort onderdeel",
  "content_items.content_type":"Content · Contenttype",
  "budget_envelopes.category":"Budgetten · Categorie",
  "expenses.category":"Kosten · Categorie",

@@ -6,6 +6,17 @@ insert into public.organization_members(organization_id,user_id,role,status) val
  ('11111111-1111-4111-8111-111111111111','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','member','active');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',true);
+
+-- Agenda classification uses the same guard, including renames and hidden archived uses.
+insert into public.dossier_choice_options(organization_id,set_key,value,label) values('11111111-1111-4111-8111-111111111111','event_schedule_items.kind','test_kind','TESTFIXTURE agenda type');
+insert into public.event_schedule_items(organization_id,kind,deleted_at) values('11111111-1111-4111-8111-111111111111','test_kind',now());
+update public.dossier_choice_options set label='TESTFIXTURE renamed agenda' where set_key='event_schedule_items.kind' and value='test_kind';
+do $$ begin
+ if (select count(*) from public.dossier_choice_options where set_key='event_schedule_items.kind')<>5 then raise exception 'agenda defaults not seeded';end if;
+ if (select usage_count from public.dossier_choice_usage('11111111-1111-4111-8111-111111111111') where set_key='event_schedule_items.kind' and value='test_kind')<>1 then raise exception 'agenda use not counted';end if;
+ begin delete from public.dossier_choice_options where set_key='event_schedule_items.kind' and value='test_kind';raise exception 'used agenda kind deleted';exception when foreign_key_violation then if sqlerrm<>'choice_in_use' then raise;end if;end;
+ begin insert into public.event_schedule_items(organization_id,kind) values('11111111-1111-4111-8111-111111111111','missing_kind');raise exception 'unknown agenda kind saved';exception when foreign_key_violation then if sqlerrm<>'choice_unavailable' then raise;end if;end;
+end $$;
 do $$ begin
  if (select count(*) from public.dossier_choice_options where set_key='events.event_type')<>10 then raise exception 'new organization defaults not seeded: count %, uid %, active %', (select count(*) from public.dossier_choice_options where set_key='events.event_type'),auth.uid(),private.is_active_member('11111111-1111-4111-8111-111111111111'); end if;
 end $$;
