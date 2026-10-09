@@ -65,7 +65,7 @@ test("Gebruik op de beheerpagina blokkeert verwijderen en toont uitleg",async()=
  const modules=editorLoader({"./keuzevelden.css":{},"@/components/app-shell":{AppShell:Shell},"@/components/confirm-submit-button":{ConfirmSubmitButton:Button},"@/lib/auth-context":{requirePermission:async()=>({membership:{organization_id:org},supabase:{from:()=>q,rpc:async()=>({data:[{set_key:"events.event_type",value:"nieuw_type",usage_count:2}],error:null})}})}});
  const Page=modules("src/app/app/beheer/keuzevelden/page.tsx").default as (p:unknown)=>Promise<React.ReactNode>;
  const html=renderToStaticMarkup(await Page({searchParams:Promise.resolve({lijst:"events.event_type"})}));
- assert.match(html,/In gebruik in 2 fiche/);assert.match(html,/<button disabled="" class="danger-button">Verwijderen<\/button>/);
+ assert.match(html,/In gebruik in 2 fiche/);assert.match(html,/<button disabled="" class="danger-button" aria-describedby="choice-usage-[^"]+">Verwijderen<\/button>/);
  assert.match(html,/Werkstroomkeuzes/);
 });
 test("Een mislukte gebruikscontrole blokkeert alle beheerwijzigingen",async()=>{
@@ -73,7 +73,7 @@ test("Een mislukte gebruikscontrole blokkeert alle beheerwijzigingen",async()=>{
  const modules=editorLoader({"./keuzevelden.css":{},"@/components/app-shell":{AppShell:Shell},"@/components/confirm-submit-button":{ConfirmSubmitButton:()=>null},"@/lib/dossier-choices-server":{loadManagedChoices:async()=>[]},"@/lib/auth-context":{requirePermission:async()=>({membership:{organization_id:org},supabase:{rpc:async()=>({data:null,error:{message:"unavailable"}})}})}});
  const Page=modules("src/app/app/beheer/keuzevelden/page.tsx").default as (p:unknown)=>Promise<React.ReactNode>;
  const html=renderToStaticMarkup(await Page({searchParams:Promise.resolve({lijst:"events.event_type"})}));
- assert.match(html,/Er kan niets worden gewijzigd/);assert.doesNotMatch(html,/Optie toevoegen|Wijzigingen opslaan|>Verwijderen</);
+ assert.match(html,/Er kan niets worden gewijzigd/);assert.doesNotMatch(html,/Optie toevoegen|>Opslaan<|>Verwijderen</);
 });
 test("De echte SQL-migratie beveiligt rechten, gekoppelde en gearchiveerde opties",async()=>{
  const sql=readFileSync("supabase/migrations/20261009074806_managed_dossier_choices.sql","utf8");
