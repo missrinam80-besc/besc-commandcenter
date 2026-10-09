@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/auth-context";
 import { formatDateTimeLocal, localDateTimeToIso } from "@/lib/format";
+import {loadManagedChoices} from "@/lib/dossier-choices-server";
 
 const optionalId = z.string().uuid().optional().or(z.literal(""));
 const localTime = z.string().optional().refine(value => {
@@ -16,7 +17,7 @@ const localTime = z.string().optional().refine(value => {
 const schema = z.object({
   event_id: z.string().uuid(), id: optionalId, person_id: optionalId,
   title: z.string().trim().min(2).max(180),
-  kind: z.enum(["program", "stream", "runbook", "shift"]),
+  kind: z.string().regex(/^[a-z0-9_]{1,80}$/),
   status: z.enum(["draft", "confirmed", "completed", "cancelled"]),
   starts_at: localTime, ends_at: localTime,
   location: z.string().trim().max(300).optional(), notes: z.string().trim().max(4000).optional(),
@@ -32,6 +33,9 @@ export async function saveEventSchedule(formData: FormData) {
   const selected = optionalId.safeParse(formData.get("id") ?? "");
   if (!parsed.success) failed(eventId.data, "velden", selected.success && selected.data ? selected.data : "nieuw");
   const { supabase, membership, user } = await requirePermission("manageEvents", `${path(eventId.data)}?tab=planning&fout=geen-toegang`);
+  let choices;
+  try{choices=await loadManagedChoices(supabase,membership.organization_id);}catch{failed(eventId.data,"soorten",parsed.data.id||"nieuw");}
+  if(!choices.some(row=>row.set_key==="event_schedule_items.kind"&&row.value===parsed.data.kind))failed(eventId.data,"soort",parsed.data.id||"nieuw");
   const { id, event_id, ...data } = parsed.data;
   const values = { ...data, person_id: data.person_id || null, location: data.location || null, notes: data.notes || null,
     starts_at: localDateTimeToIso(data.starts_at), ends_at: localDateTimeToIso(data.ends_at) };
@@ -39,7 +43,7 @@ export async function saveEventSchedule(formData: FormData) {
     ? supabase.from("event_schedule_items").update(values).eq("organization_id", membership.organization_id).eq("event_id", event_id).eq("id", id)
     : supabase.from("event_schedule_items").insert({ ...values, event_id, organization_id: membership.organization_id, created_by: user.id });
   const { data: saved, error } = await query.select("id").maybeSingle();
-  if (error || !saved || (id && saved.id !== id)) failed(event_id, "opslaan", id || "nieuw");
+  if (error || !saved || (id && saved.id !== id)) failed(event_id, error?.message==="choice_unavailable"?"soort":"opslaan", id || "nieuw");
   revalidatePath(path(event_id));
   redirect(`${path(event_id)}?tab=planning&succes=schema-opgeslagen`);
 }

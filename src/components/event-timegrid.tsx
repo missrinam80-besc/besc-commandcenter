@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { buildTimeGridDay, calendarWeekStart, initialCalendarDay, shiftCalendarDay } from "@/lib/event-timegrid";
-import { scheduleAgendaTime, scheduleConflicts, scheduleKinds, scheduleStatuses, type EventScheduleItem } from "@/lib/event-schedule";
+import { scheduleAgendaTime, scheduleConflicts, scheduleKinds, scheduleKindLabel, scheduleKindColor, scheduleStatuses, type EventScheduleItem } from "@/lib/event-schedule";
 import { formatDateTime } from "@/lib/format";
 
 const dayLabel = new Intl.DateTimeFormat("nl-BE", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
-export function EventTimeGrid({ rows, people, canEdit, conflictIds }: {
-  rows: EventScheduleItem[]; people: { id: string; label: string }[]; canEdit: boolean; conflictIds?: string[];
+export function EventTimeGrid({ rows, people, canEdit, conflictIds, kinds=scheduleKinds }: {
+  rows: EventScheduleItem[]; people: { id: string; label: string }[]; canEdit: boolean; conflictIds?: string[]; kinds?:Record<string,string>;
 }) {
   const [day, setDay] = useState(() => initialCalendarDay(rows));
   const [view, setView] = useState<"day" | "week">("week");
@@ -50,11 +50,11 @@ export function EventTimeGrid({ rows, people, canEdit, conflictIds }: {
             {date.ticks.map(tick => <div className="event-timegrid-hour" style={{ top: tick.minute }} key={tick.minute}><span>{tick.label}</span></div>)}
             <div className="event-timegrid-blocks">
               {date.segments.map(segment => <button type="button" className="event-timegrid-block" data-kind={segment.row.kind} data-status={segment.row.status} key={segment.row.id}
-                style={{ top: segment.start, height: Math.max(2, segment.end - segment.start), left: `${segment.lane * 100 / segment.lanes}%`, width: `${100 / segment.lanes}%` }}
-                aria-label={`${segment.row.title}, ${scheduleKinds[segment.row.kind]}, ${formatDateTime(segment.row.starts_at)} tot ${formatDateTime(segment.row.ends_at)}, ${personLabel(segment.row)}, ${scheduleStatuses[segment.row.status]}${conflicts.has(segment.row.id) ? ", overlappende toewijzing" : ""}`}
+                style={{ "--agenda-color":scheduleKindColor(segment.row.kind), top: segment.start, height: Math.max(2, segment.end - segment.start), left: `${segment.lane * 100 / segment.lanes}%`, width: `${100 / segment.lanes}%` } as CSSProperties}
+                aria-label={`${segment.row.title}, ${scheduleKindLabel(segment.row.kind,kinds)}, ${formatDateTime(segment.row.starts_at)} tot ${formatDateTime(segment.row.ends_at)}, ${personLabel(segment.row)}, ${scheduleStatuses[segment.row.status]}${conflicts.has(segment.row.id) ? ", overlappende toewijzing" : ""}`}
                 title={`${segment.row.title} · ${scheduleAgendaTime(segment.row.starts_at)}–${scheduleAgendaTime(segment.row.ends_at, segment.row.starts_at)}`}
                 onClick={() => setSelectedId(segment.row.id)}>
-                <strong>{segment.row.title}</strong><span>{scheduleKinds[segment.row.kind]}{conflicts.has(segment.row.id) ? " · !" : ""}</span>
+                <strong>{segment.row.title}</strong><span>{scheduleKindLabel(segment.row.kind,kinds)}{conflicts.has(segment.row.id) ? " · !" : ""}</span>
                 <span>{segment.continuesBefore ? "← " : ""}{scheduleAgendaTime(segment.row.starts_at)}–{scheduleAgendaTime(segment.row.ends_at, segment.row.starts_at)}{segment.continuesAfter ? " →" : ""}</span>
                 <span>{personLabel(segment.row)}</span>
               </button>)}
@@ -64,11 +64,11 @@ export function EventTimeGrid({ rows, people, canEdit, conflictIds }: {
       </div>
     </div></>}
     {incomplete.length > 0 && <section className="event-timegrid-incomplete"><h3>Nog niet volledig ingepland</h3><p>Deze onderdelen missen een start- of eindtijd en staan daarom apart.</p>
-      {incomplete.map(row => <button type="button" data-kind={row.kind} key={row.id} onClick={() => setSelectedId(row.id)}><strong>{row.title}</strong><span>{scheduleKinds[row.kind]} · {scheduleStatuses[row.status]} · {row.starts_at ? formatDateTime(row.starts_at) : "Tijd onbekend"}{row.starts_at ? " · einde onbekend" : ""}</span></button>)}
+      {incomplete.map(row => <button type="button" data-kind={row.kind} style={{"--agenda-color":scheduleKindColor(row.kind)} as CSSProperties} key={row.id} onClick={() => setSelectedId(row.id)}><strong>{row.title}</strong><span>{scheduleKindLabel(row.kind,kinds)} · {scheduleStatuses[row.status]} · {row.starts_at ? formatDateTime(row.starts_at) : "Tijd onbekend"}{row.starts_at ? " · einde onbekend" : ""}</span></button>)}
     </section>}
-    {selected && <section className="event-timegrid-details" ref={details} tabIndex={-1} data-kind={selected.kind} aria-label="Details van het agendaonderdeel">
+    {selected && <section className="event-timegrid-details" ref={details} tabIndex={-1} data-kind={selected.kind} style={{"--agenda-color":scheduleKindColor(selected.kind)} as CSSProperties} aria-label="Details van het agendaonderdeel">
       <div><h3>{selected.title}</h3><button type="button" aria-label="Details sluiten" onClick={() => setSelectedId(null)}><X size={16}/></button></div>
-      <p>{scheduleKinds[selected.kind]} · {scheduleStatuses[selected.status]}</p>
+      <p>{scheduleKindLabel(selected.kind,kinds)} · {scheduleStatuses[selected.status]}</p>
       <p>{formatDateTime(selected.starts_at, "Start onbekend")} → {formatDateTime(selected.ends_at, "Einde onbekend")}</p>
       <p>{personLabel(selected)}{selected.location ? ` · ${selected.location}` : ""}</p>
       {conflicts.has(selected.id) && <p className="event-agenda-conflict">Deze persoon heeft een overlappende toewijzing.</p>}

@@ -1,4 +1,5 @@
 // Synthetic, minimal PostgreSQL fixture. Never apply to an existing app database.
+export const agendaChoice={key:'event_schedule_items.kind',table:'event_schedule_items',field:'kind',values:['program','stream','runbook','shift'].map(value=>({value}))};
 export function choiceFixture(catalog) {
  let setup=`create schema auth;create schema private;
  create table public.organizations(id uuid primary key);

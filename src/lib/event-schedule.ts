@@ -1,7 +1,14 @@
-export const scheduleKinds = { program: "Programma", stream: "Stream", runbook: "Draaiboek", shift: "Crew / vrijwilliger" } as const;
+export const scheduleKinds:Record<string,string> = { program: "Programma", stream: "Stream", runbook: "Draaiboek", shift: "Crew / vrijwilliger" };
+export function scheduleKindLabel(kind:string,kinds:Record<string,string>=scheduleKinds){return Object.hasOwn(kinds,kind)?kinds[kind]:Object.hasOwn(scheduleKinds,kind)?scheduleKinds[kind]:kind.replaceAll("_"," ");}
+export function scheduleKindColor(kind:string){
+ const builtin:Record<string,string>={program:"#3975d4",stream:"#9461d4",runbook:"#b88622",shift:"#328866"};
+ if(Object.hasOwn(builtin,kind))return builtin[kind];
+ let hash=0;for(const char of kind)hash=(hash*31+char.charCodeAt(0))>>>0;
+ return `hsl(${hash%360} 55% 48%)`;
+}
 export const scheduleStatuses = { draft: "Voorstel", confirmed: "Bevestigd", completed: "Uitgevoerd", cancelled: "Vervallen" } as const;
 export type EventScheduleItem = {
-  id: string; title: string; kind: keyof typeof scheduleKinds; status: keyof typeof scheduleStatuses;
+  id: string; title: string; kind: string; status: keyof typeof scheduleStatuses;
   starts_at: string | null; ends_at: string | null; person_id: string | null;
   location: string | null; notes: string | null;
 };

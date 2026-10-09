@@ -8,11 +8,11 @@ import ts from "typescript";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { hasPermission } from "../src/lib/permissions.ts";
-import { scheduleKinds, scheduleStatuses, scheduleConflicts, scheduleAgendaDays, scheduleAgendaTime } from "../src/lib/event-schedule.ts";
+import { scheduleKinds, scheduleKindColor, scheduleKindLabel, scheduleStatuses, scheduleConflicts, scheduleAgendaDays, scheduleAgendaTime } from "../src/lib/event-schedule.ts";
 import { formatDateTime } from "../src/lib/format.ts";
 
-async function render(role="member", failure="", selected?:string, kind?:string, timed=false) {
-  const row={id:"fixture-row",title:"TESTFIXTURE stream",kind:"stream",status:"draft",starts_at:timed?"2026-10-08T00:00:00Z":null,ends_at:timed?"2026-10-08T02:00:00Z":null,person_id:null,location:null,notes:null};
+async function render(role="member", failure="", selected?:string, kind?:string, timed=false,rowKind="stream") {
+  const row={id:"fixture-row",title:"TESTFIXTURE stream",kind:rowKind,status:"draft",starts_at:timed?"2026-10-08T00:00:00Z":null,ends_at:timed?"2026-10-08T02:00:00Z":null,person_id:null,location:null,notes:null};
   const supabase={from:(table:string)=>{
     const q:Record<string,unknown>={};for(const method of ["select","eq","is","neq","order"])q[method]=()=>q;
     q.then=(resolve:(value:unknown)=>unknown)=>Promise.resolve({data:table==="event_schedule_items"?(failure==="items"?null:[row]):[],error:failure===(table==="event_schedule_items"?"items":"assets")?{code:"fixture"}:null}).then(resolve);return q;
@@ -22,7 +22,8 @@ async function render(role="member", failure="", selected?:string, kind?:string,
     "next/link":{default:({children,scroll,...props}:React.PropsWithChildren<Record<string,unknown>>)=>{void scroll;return React.createElement("a",props,children);}},
     "@/lib/event-timegrid":timegridHelpers,
     "@/lib/auth-context":{requireActiveMembership:async()=>({supabase,membership:{role,organization_id:"fixture-org"}})},
-    "@/lib/permissions":{hasPermission},"@/lib/event-schedule":{scheduleKinds,scheduleStatuses,scheduleConflicts,scheduleAgendaDays,scheduleAgendaTime},"@/lib/format":{formatDateTime},
+    "@/lib/permissions":{hasPermission},"@/lib/event-schedule":{scheduleKinds,scheduleKindColor,scheduleKindLabel,scheduleStatuses,scheduleConflicts,scheduleAgendaDays,scheduleAgendaTime},"@/lib/format":{formatDateTime},
+    "@/lib/dossier-choices-server":{loadManagedChoices:async()=>{if(failure==="kinds")throw Error("fixture failure");return Object.entries({...scheduleKinds,custom_kind:"TESTFIXTURE nieuwe soort",stream:"TESTFIXTURE hernoemde stream"}).map(([value,label])=>({set_key:"event_schedule_items.kind",value,label}));}},
     "@/components/form-modal":{FormModal:container},"@/components/confirm-submit-button":{ConfirmSubmitButton:container},
     "@/components/event-schedule-form":{EventScheduleForm:()=>React.createElement("div",{"data-editor":"yes"})},
     "@/app/app/events/[id]/schedule-actions":{deleteEventSchedule:()=>undefined},
@@ -43,3 +44,12 @@ test("beheerder bewerkt, vrijwilliger bekijkt en filters beperken de weergave",a
 test("agenda toont onbekende tijden apart en behoudt tekstuele type- en statuslabels",async()=>{const html=await render();assert.ok(html.includes("Eventagenda"));assert.ok(html.includes("Nog niet volledig ingepland"));assert.ok(html.includes("Tijd onbekend"));assert.ok(html.includes('data-kind="stream"'));assert.ok(html.includes("Voorstel"));assert.ok(html.includes("TESTFIXTURE stream"));});
 
 test("tijdrooster rendert uren, dagkolommen en proportionele blokken met typekleur",async()=>{const html=await render("member","",undefined,undefined,true);assert.ok(html.includes("event-timegrid-week"));assert.ok(html.includes("00:00"));assert.ok(html.includes("event-timegrid-block"));assert.ok(html.includes("height:120px"));assert.ok(html.includes('data-kind="stream"'));assert.ok(html.includes("Week"));assert.ok(html.includes("Dag"));});
+test("Nieuwe en hernoemde soorten werken in filters, bloklabels en kleuren",async()=>{
+ const html=await render("member","",undefined,"custom_kind",true,"custom_kind");
+ assert.match(html,/schema_type=custom_kind/);assert.match(html,/TESTFIXTURE nieuwe soort/);assert.match(html,/data-kind="custom_kind"/);
+ assert.ok(html.includes(`--agenda-color:${scheduleKindColor("custom_kind")}`));assert.doesNotMatch(html,/undefined/);
+ const renamed=await render();assert.match(renamed,/TESTFIXTURE hernoemde stream/);assert.ok(renamed.includes("--agenda-color:#9461d4"));
+});
+test("Een fout in de soortenlijst bewaart de agenda maar blokkeert bewerken",async()=>{
+ const html=await render("member","kinds","nieuw");assert.match(html,/soorten agendaonderdelen kunnen niet/);assert.match(html,/TESTFIXTURE stream/);assert.doesNotMatch(html,/data-editor="yes"|Onderdeel toevoegen/);
+});
