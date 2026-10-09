@@ -47,6 +47,8 @@ const driveErrors: Record<string, string> = {
   "giveaway-opslaan": "Het item kon niet worden opgeslagen. Controleer of het event en de verantwoordelijke nog beschikbaar zijn.",
   "giveaway-verwijderen": "Het item kon niet worden verwijderd. De lijst is mogelijk ondertussen gewijzigd.",
   "schema-velden": "Controleer de titel en tijden. De eindtijd moet na de starttijd liggen.",
+  "schema-soort": "De gekozen soort agendaonderdeel is niet meer beschikbaar. Kies een bestaande soort en sla opnieuw op.",
+  "schema-soorten": "De soorten agendaonderdelen kunnen niet worden gecontroleerd. Probeer opnieuw; er is niets opgeslagen.",
   "schema-opslaan": "Het onderdeel kon niet worden opgeslagen. Controleer of het event en de toegewezen persoon nog beschikbaar zijn.",
   "schema-verwijderen": "Het onderdeel kon niet worden verwijderd. Het schema is mogelijk ondertussen gewijzigd.",
   "materiaal-velden": "Controleer de naam, het aantal en de geplande ophaal- en retourtijd.",

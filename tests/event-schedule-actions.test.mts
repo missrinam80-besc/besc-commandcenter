@@ -8,7 +8,7 @@ import { hasPermission } from "../src/lib/permissions.ts";
 import { formatDateTimeLocal, localDateTimeToIso } from "../src/lib/format.ts";
 
 const eventId="10000000-0000-4000-8000-000000000001", itemId="20000000-0000-4000-8000-000000000001";
-function fixture(role="member", saved=true, error=false, capabilities:string[]=[]) {
+function fixture(role="member", saved=true, error=false, capabilities:string[]=[],choicesFail=false) {
   const writes:{table:string;kind:string;value:unknown}[]=[],filters:unknown[][]=[],invalidations:string[]=[];
   const supabase={from:(table:string)=>{
     const q:Record<string,unknown>={};
@@ -20,6 +20,7 @@ function fixture(role="member", saved=true, error=false, capabilities:string[]=[
     "next/navigation":{redirect:(url:string)=>{throw Error(url);}},
     "next/cache":{revalidatePath:(url:string)=>invalidations.push(url)},
     "@/lib/format":{formatDateTimeLocal,localDateTimeToIso},
+    "@/lib/dossier-choices-server":{loadManagedChoices:async()=>{if(choicesFail)throw Error("fixture failure");return ["program","stream","runbook","shift","custom_kind"].map(value=>({set_key:"event_schedule_items.kind",value}));}},
     "@/lib/auth-context":{requirePermission:async(cap:string,fallback:string)=>{
       assert.equal(cap,"manageEvents");if(!hasPermission({role,capabilities,finance_role:"none"},"manageEvents"))throw Error(fallback);
       return {supabase,membership:{organization_id:"fixture-org"},user:{id:"fixture-user"}};
@@ -40,7 +41,12 @@ test("schema beheert CRUD uitsluitend met Events-bevoegdheid en scope",async()=>
  const f=fixture("volunteer",true,false,["manageEvents"]);assert.match(await f.run(),/succes=schema-/);
 });
 test("ongeldige titel, type, status, persoon en tijden schrijven niets",async()=>{
- const cases:Record<string,string>[]=[{title:" "},{kind:"unknown"},{status:"unknown"},{person_id:"invalid"},{starts_at:"invalid"},{starts_at:"2026-03-29T02:30"},{ends_at:"2026-10-08T13:00"},{starts_at:"2026-10-08T14:00",ends_at:"2026-10-08T14:00"},{starts_at:"2026-10-08T14:00",ends_at:"2026-10-08T13:00"}];for(const values of cases){const f=fixture();assert.match(await f.run(values),/fout=schema-velden/);assert.equal(f.writes.length,0);}
+ const cases:Record<string,string>[]=[{title:" "},{kind:"bad value"},{status:"unknown"},{person_id:"invalid"},{starts_at:"invalid"},{starts_at:"2026-03-29T02:30"},{ends_at:"2026-10-08T13:00"},{starts_at:"2026-10-08T14:00",ends_at:"2026-10-08T14:00"},{starts_at:"2026-10-08T14:00",ends_at:"2026-10-08T13:00"}];for(const values of cases){const f=fixture();assert.match(await f.run(values),/fout=schema-velden/);assert.equal(f.writes.length,0);}
+});
+test("Een beheerde nieuwe soort slaat op; onbekende of niet-controleerbare soorten schrijven niets",async()=>{
+ const f=fixture();assert.match(await f.run({kind:"custom_kind"}),/succes=schema-opgeslagen/);assert.equal((f.writes[0].value as Record<string,unknown>).kind,"custom_kind");
+ const missing=fixture();assert.match(await missing.run({kind:"unknown"}),/fout=schema-soort/);assert.equal(missing.writes.length,0);
+ const broken=fixture("member",true,false,[],true);assert.match(await broken.run(),/fout=schema-soorten/);assert.equal(broken.writes.length,0);
 });
 test("nachtshift en ongetimed draaiboek slaan op zonder Calendar of dossierrollen te wijzigen",async()=>{
  const f=fixture();assert.match(await f.run({kind:"shift",starts_at:"2026-10-08T23:00",ends_at:"2026-10-09T03:00",person_id:itemId}),/succes=/);const data=f.writes[0].value as Record<string,unknown>;assert.equal(data.starts_at,"2026-10-08T21:00:00.000Z");assert.equal(data.ends_at,"2026-10-09T01:00:00.000Z");assert.equal(data.person_id,itemId);

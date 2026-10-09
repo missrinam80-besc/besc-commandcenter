@@ -5,19 +5,19 @@ import {renderToStaticMarkup} from "react-dom/server";
 import {readFileSync} from "node:fs";
 import {editorLoader} from "./helpers/editor-loader.mts";
 import {PGlite} from "@electric-sql/pglite";
-import {choiceFixture} from "./helpers/choice-fixture.mjs";
+import {choiceFixture,agendaChoice} from "./helpers/choice-fixture.mjs";
 const org="11111111-1111-4111-8111-111111111111";
 const load=editorLoader();
 const choices=load("src/lib/dossier-choices.ts") as {dossierChoiceSets:()=>{key:string;editable:boolean}[];choiceValue:(s:string)=>string};
 const draft=load("src/lib/dossier-editor-draft.ts") as {validateEditorIssues:(b:unknown,c:undefined,v:Record<string,string[]>)=>{field?:string}[]};
 
-test("Alle veertien indelingen zijn beheerbaar; werkstroomkeuzes blijven beschermd",()=>{
- const sets=choices.dossierChoiceSets();assert.equal(sets.filter(set=>set.editable).length,14);
- for(const key of ["events.event_type","expenses.category","administrative_documents.document_type"])assert.ok(sets.find(set=>set.key===key)?.editable);
- for(const key of ["events.status","expenses.status","tasks.priority","event_schedule_items.kind","google_resource_links.resource_type","social_post_variants.platform"])assert.equal(sets.find(set=>set.key===key)?.editable,false,key);
+test("Alle vijftien indelingen inclusief agendasoorten zijn beheerbaar; werkstroomkeuzes blijven beschermd",()=>{
+ const sets=choices.dossierChoiceSets();assert.equal(sets.filter(set=>set.editable).length,15);
+ for(const key of ["events.event_type","expenses.category","administrative_documents.document_type","event_schedule_items.kind"])assert.ok(sets.find(set=>set.key===key)?.editable);
+ for(const key of ["events.status","expenses.status","tasks.priority","event_schedule_items.status","google_resource_links.resource_type","social_post_variants.platform"])assert.equal(sets.find(set=>set.key===key)?.editable,false,key);
  const sql=readFileSync("supabase/migrations/20261009074806_managed_dossier_choices.sql","utf8");
  const catalog=JSON.parse(sql.match(/select '(.*)'::jsonb \$\$/)![1].replaceAll("''","'"));
- assert.equal(JSON.stringify(catalog.map((set:{key:string})=>set.key).sort()),JSON.stringify(sets.filter(set=>set.editable).map(set=>set.key).sort()));
+ assert.equal(JSON.stringify([...catalog.map((set:{key:string})=>set.key),agendaChoice.key].sort()),JSON.stringify(sets.filter(set=>set.editable).map(set=>set.key).sort()));
 });
 test("Een nieuwe categorie wordt toegelaten en een verdwenen keuze gericht geweigerd",()=>{
  const bundle={kind:"event",root:{id:org,new:false,values:{event_type:"nieuw_type"},base:{id:org,title:"TESTFIXTURE",event_type:"community"}},parts:[]};
@@ -30,6 +30,13 @@ test("De fiche toont de beheerde benaming in het keuzeveld",()=>{
  const Editor=modules("src/components/dossier-editor.tsx").DossierEditor as React.ComponentType<Record<string,unknown>>;
  const html=renderToStaticMarkup(React.createElement(Editor,{kind:"event",id:org,mode:"edit",cancelHref:"/app",record:{id:org,title:"TESTFIXTURE",event_type:"nieuw_type"},options:{"choices:events.event_type":[{id:"nieuw_type",label:"Nieuwe evoluerende eventvorm"}]},permissions:{}}));
  assert.match(html,/<option value="nieuw_type" selected="">Nieuwe evoluerende eventvorm<\/option>/);
+});
+test("Het agendaformulier gebruikt beheerde benamingen en voegt verwijderde soorten niet opnieuw toe",()=>{
+ const modules=editorLoader({"@/app/app/events/[id]/schedule-actions":{saveEventSchedule:()=>{}},"@/components/searchable-person-picker":{SearchablePersonPicker:()=>null}});
+ const Form=modules("src/components/event-schedule-form.tsx").EventScheduleForm as React.ComponentType<Record<string,unknown>>;
+ const html=renderToStaticMarkup(React.createElement(Form,{eventId:org,people:[],kinds:{program:"Hernoemd programma",test_kind:"Nieuwe soort"}}));
+ assert.match(html,/<option value="program" selected="">Hernoemd programma<\/option>/);assert.match(html,/<option value="test_kind">Nieuwe soort<\/option>/);
+ assert.doesNotMatch(html,/<option value="stream"|<option value="shift"|<option value="runbook"/);
 });
 
 function actionLoader(result:{data:unknown;error:unknown}){
@@ -73,7 +80,10 @@ test("De echte SQL-migratie beveiligt rechten, gekoppelde en gearchiveerde optie
  const catalog=JSON.parse(sql.match(/select '(.*)'::jsonb \$\$/)![1].replaceAll("''","'"));
  const db=new PGlite();
  try{
-  await db.exec("create role anon;create role authenticated;"+choiceFixture(catalog)+sql);
+  await db.exec("create role anon;create role authenticated;"+choiceFixture([...catalog,agendaChoice])+sql);
+  await db.exec(readFileSync("supabase/migrations/20261009095014_managed_agenda_types.sql","utf8"));
+  const actual=await db.query<{key:string}>("select v->>'key' as key from jsonb_array_elements(private.dossier_choice_catalog()) v");
+  assert.equal(JSON.stringify(actual.rows.map(row=>row.key).sort()),JSON.stringify(choices.dossierChoiceSets().filter(set=>set.editable).map(set=>set.key).sort()));
   await db.exec(readFileSync("tests/dossier-choices.test.sql","utf8"));
  }finally{await db.close();}
 });
