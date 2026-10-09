@@ -9,6 +9,8 @@ export function editorIssueText(issue:EditorIssue){
 
 type StorageError={code?:string;message?:string;details?:string|null};
 const causes:Record<string,string>={
+ choice_unavailable:"Een gekozen type of categorie is ondertussen verwijderd of niet beschikbaar voor deze organisatie. Vernieuw de keuzes en selecteer een beschikbare optie.",
+ choice_no_access:"Je hebt geen toegang tot de keuzes van deze organisatie.",
  dossier_no_access:"Je hebt geen bevoegdheid voor de fiche of een gewijzigd onderdeel. Controleer de bewerkrechten voor de betrokken onderdelen.",
  dossier_unavailable:"De fiche of een gewijzigd onderdeel is verwijderd of niet meer toegankelijk. Vernieuw de fiche en vergelijk je invoer.",
  dossier_reference_unavailable:"Een gekoppeld dossier, persoon of account is verwijderd, inactief of niet toegankelijk. Kies een beschikbare koppeling.",

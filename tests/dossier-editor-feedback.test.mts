@@ -50,7 +50,7 @@ test("Herkenbare kolom- en koppelingsfouten wijzen naar veilige veldmetadata",()
  assert.equal(unknown.issues,undefined);assert.ok(!JSON.stringify(unknown).includes("private_table"));
 });
 test("Server vertaalt de werkelijke RPC-fout en behoudt een mislukte opslag als fout",async()=>{
- const modules=editorLoader({"next/cache":{revalidatePath:()=>{}},"@/lib/auth-context":{requireActiveMembership:async()=>({membership:{role:"admin",organization_id:rootId},supabase:{rpc:async()=>({data:null,error:{code:"23514",message:'new row violates check constraint "event_schedule_items_title_check"',details:"SECRET"}})}})}});
+ const modules=editorLoader({"next/cache":{revalidatePath:()=>{}},"@/lib/auth-context":{requireActiveMembership:async()=>({membership:{role:"admin",organization_id:rootId},supabase:{from:()=>{const q={select(){return q},eq(){return q},order(){return q},then(resolve:(result:unknown)=>unknown){return Promise.resolve({data:[],error:null}).then(resolve)}};return q},rpc:async()=>({data:null,error:{code:"23514",message:'new row violates check constraint "event_schedule_items_title_check"',details:"SECRET"}})}})}});
  const {saveDossierEditor}=modules("src/app/app/dossier-editor-actions.ts") as {saveDossierEditor:(b:Bundle)=>Promise<{ok:boolean;message:string;issues?:Issue[]}>};
  const result=await saveDossierEditor(fixture());assert.equal(result.ok,false);assert.equal(result.issues?.[0].field,"title");assert.ok(!JSON.stringify(result).includes("SECRET"));
 });

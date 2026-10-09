@@ -15,6 +15,8 @@ De acceptatieomgeving is Cloud DEV. Gebruik onderstaande werkwijze voor nieuwe w
 
 Voor dossierwijzigingen: controleer aanmaken, bewerken, tabwissels, behoud van koppelingen, gezamenlijke opslag en fouten zonder gedeeltelijke opslag. Goedkeuren, betalen en externe communicatie blijven afzonderlijke acties.
 
+Voor [beheerbare keuzevelden](Keuzevelden.md): voer `20261009074806_managed_dossier_choices.sql` uit vóór deployment van de bijbehorende app-image. Controleer toevoegen, hernoemen, kiezen in een fiche en de verwijderbeveiliging voor gebruikte opties. Vaste werkstroomkeuzes blijven beschermd.
+
 Nieuwe betaalde diensten of agentruns vragen een afzonderlijk besluit. De PDF-proef en nieuwe uploads in de lokale Storage-herstelomgeving vallen buiten de huidige DEV-acceptatie volgens het scopebesluit van 7 oktober.
 
 ## Historische controles

@@ -1,0 +1,5 @@
+.choice-management-row{padding:16px 0;border-bottom:1px solid var(--line)}
+.choice-management-row>form:first-child{display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+.choice-management-row>form:first-child label:first-of-type{flex:1;min-width:180px}
+.choice-management-row input[type="number"]{max-width:100px}
+.choice-management-row p{font-size:12px;color:var(--muted)}

@@ -9,6 +9,7 @@ import {dossierFieldLabel,dossierChoiceLabel} from "@/lib/dossier-editor-labels"
 import {formatDateTimeLocal,localDateTimeToIso} from "@/lib/format";
 import {eventPartnerIds,eventPartnerForRow,selectEventPartners} from "@/lib/event-editor-partners";
 import {editorIssueText} from "@/lib/dossier-editor-feedback";
+import {managedChoice,choiceKey,choiceOptionKey} from "@/lib/dossier-choices";
 import {hasDossierDriveFolder,unlinkDossierDriveFolder} from "@/lib/dossier-drive-unlink";
 
 export type EditorOption={id:string;label:string;searchText?:string};
@@ -63,7 +64,8 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
     const value=values[field.name]??"",label=dossierFieldLabel(field.name),inputId=`${field.name}-${prefix}`;
     const invalid=issues.some(issue=>issue.field===field.name&&issue.rowId===prefix);
     const shared={id:inputId,disabled:readonly||saving,"aria-required":field.required,"aria-invalid":invalid||undefined,"aria-describedby":invalid?"dossier-save-feedback":undefined};
-    const known=field.options.filter(choice=>field.name==="target_type"?['project','event','campaign','content','partner','community_person','task'].includes(choice):field.name==="resource_type"?['document','folder'].includes(choice):field.name==="status"&&table==="expenses"?!['paid','approved','reimbursed'].includes(choice):field.name==="status"&&table==="budget_envelopes"?choice!=="approved":true);
+    const managed=managedChoice(table,field.name),managedOptions=options[choiceOptionKey(table,field.name)]??[];
+    const known=(managed?managedOptions.map(option=>option.id):field.options).filter(choice=>field.name==="target_type"?['project','event','campaign','content','partner','community_person','task'].includes(choice):field.name==="resource_type"?['document','folder'].includes(choice):field.name==="status"&&table==="expenses"?!['paid','approved','reimbursed'].includes(choice):field.name==="status"&&table==="budget_envelopes"?choice!=="approved":true);
     const relationTable=({project:"projects",event:"events",campaign:"campaigns",content:"content_items",partner:"partners",community_person:"community_people",task:"tasks"} as Record<string,string>)[String(values.target_type??"")];
     const candidates=field.name==="target_id"?options[relationTable]??[]:field.reference?options[field.reference]??[]:options[field.name]??[];
     const linkedPending=(draft.parts[field.reference??""]??[]).filter(row=>!row.deleted).map(row=>({id:row.id,label:String(row.values.title??row.values.name??"Nieuw onderdeel")}));
@@ -71,7 +73,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
     if(kind==="event"&&table==="events"&&field.name==="partner_id")return <MultiReferenceField key={field.name} id={inputId} choices={choices} selected={eventPartnerIds(draft)} disabled={readonly||saving||permissions.eventSponsors===false} onChange={ids=>{setTouched(true);setDraft(current=>selectEventPartners(current,ids,()=>crypto.randomUUID()));}}/>;
     if(field.type==="boolean")return <label className="inline-check" key={field.name}><input {...shared} type="checkbox" checked={Boolean(value)} onChange={e=>change(field.name,e.target.checked)}/>{label}</label>;
     if(field.type==="uuid")return <ReferenceField key={field.name} id={inputId} label={label} value={String(value)} choices={choices} disabled={readonly||saving} required={field.required} onChange={value=>change(field.name,value)}/>;
-    if(known.length)return <label key={field.name} htmlFor={inputId}>{label}<select {...shared} value={String(value)} onChange={e=>change(field.name,e.target.value||null)}><option value="">Kies…</option>{known.map(choice=><option key={choice} value={choice}>{dossierChoiceLabel(choice)}</option>)}{value&&!known.includes(String(value))&&<option value={String(value)}>{dossierChoiceLabel(String(value))}</option>}</select></label>;
+    if(known.length||managed)return <label key={field.name} htmlFor={inputId}>{label}<select {...shared} value={String(value)} onChange={e=>change(field.name,e.target.value||null)}><option value="">Kies…</option>{known.map(choice=><option key={choice} value={choice}>{managed?managedOptions.find(option=>option.id===choice)?.label:dossierChoiceLabel(choice)}</option>)}{value&&!known.includes(String(value))&&<option value={String(value)}>{dossierChoiceLabel(String(value))}</option>}</select></label>;
     if(field.type.endsWith("[]"))return <ArrayField key={field.name} id={inputId} label={label} value={value} disabled={readonly||saving} onChange={value=>change(field.name,value)}/>;
     if(isRichTextField(field.name))return <RichTextField key={field.name} id={inputId} label={label} value={String(value)} disabled={readonly||saving} onChange={value=>change(field.name,value||null)}/>;
     if(table==="events"&&["start_date","end_date"].includes(field.name)){
@@ -86,7 +88,9 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
   }
   async function save(event:FormEvent){
     event.preventDefault();if(saving||!onSave)return;
-    const bundle=buildEditorBundle(draft),problems=validateEditorIssues(bundle);
+    const choiceValues=Object.fromEntries(Object.entries(options).filter(([key])=>key.startsWith("choices:")).map(([key,rows])=>[key.slice(8),rows.map(row=>row.id)]));
+    for(const def of [cfg,...cfg.collections])for(const field of editorFields(kind,def.table))if(managedChoice(def.table,field.name))choiceValues[choiceKey(def.table,field.name)]??=[];
+    const bundle=buildEditorBundle(draft),problems=validateEditorIssues(bundle,cfg,choiceValues);
     setIssues(problems);
     if(problems.length){setMessage("Controleer de onderstaande velden. Er is niets opgeslagen.");return;}
     setSaving(true);setMessage("");
