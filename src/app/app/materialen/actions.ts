@@ -4,8 +4,22 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requirePermission } from "@/lib/auth-context";
+import {assetBulkSchema,type AssetBulkInput} from "@/lib/asset-bulk";
 
 const MATERIALS_PATH = "/app/materialen";
+export async function bulkAssetAction(input:AssetBulkInput){
+ const parsed=assetBulkSchema.safeParse(input);
+ if(!parsed.success)return {ok:false,message:"Selecteer items en controleer de gekozen velden. Een locatie mag maximaal 300 tekens bevatten."};
+ const {supabase,membership}=await requirePermission("manageOrganization",`${MATERIALS_PATH}?fout=geen-toegang`);
+ const values=parsed.data;
+ const {data,error}=await supabase.rpc("bulk_asset_action",{p_organization_id:membership.organization_id,p_ids:values.ids,p_mode:values.mode,p_change_location:values.changeLocation,p_location:values.location||null,p_change_status:values.changeStatus,p_status:values.status??null});
+ if(error)return {ok:false,message:error.message==="asset_selection_unavailable"?"Een geselecteerd item is niet meer beschikbaar of je hebt er geen toegang toe. Er is niets gewijzigd. Vernieuw de lijst en selecteer opnieuw.":error.code==="42501"?"Je hebt geen bevoegdheid om deze materialen te wijzigen. Er is niets gewijzigd.":error.message==="asset_bulk_fields"?"Controleer de locatie en status. Er is niets gewijzigd.":"De bulkactie kon niet worden bevestigd. Vernieuw de lijst voordat je opnieuw probeert."};
+ if(data!==values.ids.length)return {ok:false,message:"De bulkactie kon niet volledig worden bevestigd. Vernieuw de lijst voordat je opnieuw probeert."};
+ revalidatePath(MATERIALS_PATH);
+ revalidatePath("/app/events","layout");revalidatePath("/app/projecten","layout");revalidatePath("/app/campagnes","layout");
+ const operation=values.mode==="archive"?"gearchiveerd":values.mode==="delete"?"verwijderd":"bijgewerkt";
+ return {ok:true,message:`${data} ${data===1?"item":"items"} ${operation}.`};
+}
 const optionalUuid = z.string().uuid().optional().or(z.literal(""));
 const optionalMoney = z.preprocess((value) => value === "" ? undefined : value, z.coerce.number().min(0).optional());
 const schema = z.object({

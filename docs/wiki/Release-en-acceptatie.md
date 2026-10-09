@@ -15,6 +15,8 @@ De acceptatieomgeving is Cloud DEV. Gebruik onderstaande werkwijze voor nieuwe w
 
 Voor dossierwijzigingen: controleer aanmaken, bewerken, tabwissels, behoud van koppelingen, gezamenlijke opslag en fouten zonder gedeeltelijke opslag. Goedkeuren, betalen en externe communicatie blijven afzonderlijke acties.
 
+Voor [bulkacties op materialen](Materialen-en-bulkacties.md): voer `20261009100412_bulk_asset_actions.sql` uit vóór deployment. Controleer selectie, afzonderlijke en gecombineerde locatie-/statuswijzigingen, bevestigingen voor archiveren/verwijderen en volledige terugdraaiing bij fouten.
+
 Voor [beheerbare keuzevelden](Keuzevelden.md): voer `20261009074806_managed_dossier_choices.sql` uit vóór deployment van de bijbehorende app-image. Controleer toevoegen, hernoemen, kiezen in een fiche en de verwijderbeveiliging voor gebruikte opties. Vaste werkstroomkeuzes blijven beschermd.
 
 Voor beheerbare soorten agendaonderdelen: aanvullend `20261009095014_managed_agenda_types.sql` vóór deployment. Controleer een nieuwe soort in het agendaformulier, de uniforme editor, filters en gekleurde blokken. Hernoemen behoudt koppelingen en kleur; gebruikte soorten blijven tegen verwijderen beschermd.
