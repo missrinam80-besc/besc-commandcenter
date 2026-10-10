@@ -11,6 +11,7 @@ GitHub bewaart code en documentatie; databasegegevens en uploads hebben een afzo
 - [Editorbestanden, migraties en repositoryonderhoud](Repositoryonderhoud.md)
 
 - [DEV_DEPLOYMENT](handleidingen/DEV_DEPLOYMENT.md)
+- [BESC bot-API en DEV-leesacceptatie](handleidingen/BESC_BOT_API_READ.md)
 - [Supabase koppelen](handleidingen/SUPABASE_SETUP.md)
 - [BESC Command Center lokaal en op VPS draaien](handleidingen/DOCKER_VPS_SETUP.md)
 - [Backup en restore](handleidingen/BACKUP_EN_RESTORE.md)

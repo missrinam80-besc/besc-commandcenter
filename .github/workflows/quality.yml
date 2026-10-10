@@ -91,3 +91,6 @@ jobs:
           NEXT_PUBLIC_SITE_URL: https://commandcenter.besc.be
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: test-publishable-key
+
+      - name: Bot-API-routes en upstreamannulering controleren
+        run: node scripts/check-bot-api-local.mjs
