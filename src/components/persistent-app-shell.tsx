@@ -25,6 +25,7 @@ type NavigationItem = {
   roles?: OrganizationRole[];
   financeRoles?: FinanceRole[];
   counter?: "inbox" | "approvals";
+  tickets?: boolean;
 };
 type NavigationGroup = {
   label: string;
@@ -39,6 +40,7 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Mijn werk", href: "/app/taken", icon: CheckCircle2 },
       { label: "Inbox", href: "/app/inbox", icon: Inbox, roles: ["admin", "board", "member"], counter: "inbox" },
+      { label: "Supporttickets", href: "/app/tickets", icon: Mail, tickets: true },
       { label: "Kalender", href: "/app/kalender", icon: CalendarDays },
       { label: "Kost indienen", href: "/app/financien?nieuw=kost", icon: CircleDollarSign },
       { label: "Goedkeuringen", href: "/app/goedkeuringen", icon: CheckCircle2, roles: ["admin", "board", "member"], counter: "approvals" },
@@ -151,7 +153,8 @@ function helpHref(active: string) {
   return `/app/kennisbank?zoeken=${encodeURIComponent(query)}`;
 }
 
-function canSeeItem(item: NavigationItem, role: OrganizationRole, financeRole: FinanceRole) {
+function canSeeItem(item: NavigationItem, role: OrganizationRole, financeRole: FinanceRole, canManageTickets: boolean) {
+  if (item.tickets) return canManageTickets;
   if (!item.roles && !item.financeRoles) return true;
   return Boolean(item.roles?.includes(role) || item.financeRoles?.includes(financeRole));
 }
@@ -162,17 +165,19 @@ function Navigation({
   financeRole,
   inboxCount,
   approvalCount,
+  canManageTickets,
 }: {
   active: string;
   role: OrganizationRole;
   financeRole: FinanceRole;
   inboxCount: number;
   approvalCount: number;
+  canManageTickets: boolean;
 }) {
   return (
     <nav className="navigation-groups" aria-label="Hoofdnavigatie">
       {navigationGroups.map((group, index) => {
-        const items = group.items.filter((item) => canSeeItem(item, role, financeRole));
+        const items = group.items.filter((item) => canSeeItem(item, role, financeRole, canManageTickets));
         const containsActive = items.some((item) => item.label === active);
         if (!items.length) return null;
         const GroupIcon = group.icon;
@@ -271,7 +276,7 @@ export function PersistentAppShell({ children, initialData }: { children: ReactN
           <span>Command Center</span>
         </Link>
         <PrimaryNavigation active={active} notificationCount={notificationCount ?? 0}/>
-        <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
+        <Navigation canManageTickets={data.canManageTickets} active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
         <div className="sidebar-utility">
           <Link className="context-help-link" href={helpHref(active)}>
             <CircleHelp size={17}/><span>Help bij deze pagina</span>
@@ -297,7 +302,7 @@ export function PersistentAppShell({ children, initialData }: { children: ReactN
             <span>{name} · {role}</span>
           </div>
           <PrimaryNavigation active={active} notificationCount={notificationCount ?? 0}/>
-          <Navigation active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
+          <Navigation canManageTickets={data.canManageTickets} active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
           <div className="mobile-navigation-search">
             <Link className="context-help-link" href={helpHref(active)}>
               <CircleHelp size={17}/>Help bij deze pagina

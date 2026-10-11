@@ -29,7 +29,7 @@ export async function proxy(request: NextRequest) {
   if (user && shouldCheckAppAccess) {
     const enriched = await supabase
       .from("organization_members")
-      .select("role,finance_role,status,organization_access_roles(capabilities)")
+      .select("organization_id,role,finance_role,status,organization_access_roles(organization_id,deleted_at,capabilities)")
       .eq("user_id", user.id)
       .eq("status", "active")
       .limit(1)
@@ -37,7 +37,7 @@ export async function proxy(request: NextRequest) {
     const { data: membership } = enriched.error
       ? await supabase
         .from("organization_members")
-        .select("role,finance_role,status")
+        .select("organization_id,role,finance_role,status")
         .eq("user_id", user.id)
         .eq("status", "active")
         .limit(1)
@@ -46,8 +46,8 @@ export async function proxy(request: NextRequest) {
     if (!membership) {
       return redirectWithCookies(new URL("/wachten-op-goedkeuring", request.url), response);
     }
-    const customRole = (membership as { organization_access_roles?: { capabilities?: string[] | null } | null }).organization_access_roles;
-    const access = { ...membership, capabilities: customRole?.capabilities ?? null };
+    const customRole = (membership as { organization_access_roles?: { organization_id: string; deleted_at: string | null; capabilities?: string[] | null } | null }).organization_access_roles;
+    const access = { ...membership, capabilities: customRole && customRole.organization_id === membership.organization_id && customRole.deleted_at === null ? customRole.capabilities ?? null : null };
     if (!canViewInternalPath(request.nextUrl.pathname, access, request.nextUrl.searchParams)) {
       return redirectWithCookies(new URL("/app?fout=geen-toegang", request.url), response);
     }
