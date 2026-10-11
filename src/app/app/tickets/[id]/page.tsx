@@ -24,7 +24,7 @@ export default async function Ticket({ params, searchParams }: { params: Promise
     .eq("organization_id",membership.organization_id).eq("ticket_id",id).in("message_id",messageIds).limit(50) : { data: [], error: null };
   const hidden = <><input type="hidden" name="ticket_id" value={id}/><input type="hidden" name="version" value={ticket.version}/></>;
   const closed = ticket.status === "closed";
-  return <AppShell active="Supporttickets"><header className="topbar module-top ticket-detail-top"><div><p>SUPPORTTICKET</p><h1>{ticket.subject}</h1></div><Link className="secondary" href="/app/tickets">Alle tickets</Link></header>
+  return <AppShell active="Discordtickets"><header className="topbar module-top ticket-detail-top"><div><p>DISCORDTICKET</p><h1>{ticket.subject}</h1></div><Link className="secondary" href="/app/tickets">Alle tickets</Link></header>
     <div className="module-body ticket-layout">
       {query.fout && <p className="error-note" role="alert">{ticketErrors[query.fout] ?? ticketErrors.upstream_unavailable}</p>}
       {query.opgeslagen && <p className="ticket-success" role="status">Opgeslagen. Externe antwoorden worden afzonderlijk door Discord bevestigd.</p>}
