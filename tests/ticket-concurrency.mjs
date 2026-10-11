@@ -19,6 +19,7 @@ async function sql(query){const r=await processSql(query).done;assert.equal(r.co
 await sql('create database besc_ticket_fixture;');env={...process.env,PGDATABASE:'besc_ticket_fixture'};
 const org='10000000-0000-4000-8000-000000000001',user='20000000-0000-4000-8000-000000000001',guild='1067893182387474432',actor='111111111111111111',parent='222222222222222222',thread='333333333333333333';
 await sql(`do $$begin if not exists(select 1 from pg_roles where rolname='service_role') then create role service_role bypassrls;end if;end$$;
+ alter role service_role bypassrls;
  create schema auth;create schema private;grant usage on schema private,auth to authenticated,service_role;
  create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  create type member_role as enum ('admin','board','member','volunteer');
