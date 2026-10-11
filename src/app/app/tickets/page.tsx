@@ -14,8 +14,8 @@ export default async function Tickets({ searchParams }: { searchParams: Promise<
   if (status) query = query.eq("status", status);
   const [tickets, cleanup] = await Promise.all([query, supabase.from("support_ticket_deliveries").select("id,state,last_error")
     .eq("organization_id",membership.organization_id).is("ticket_id",null).eq("kind","delete_thread").neq("state","delivered").order("created_at").limit(50)]);
-  return <AppShell active="Supporttickets">
-    <header className="topbar module-top"><div><p>RELATIES & COMMUNICATIE</p><h1>Supporttickets</h1></div></header>
+  return <AppShell active="Discordtickets">
+    <header className="topbar module-top"><div><p>RELATIES & COMMUNICATIE</p><h1>Discordtickets</h1></div></header>
     <div className="module-body ticket-overview">
       <p className="lead">Behandel Discordvragen binnen je organisatie. Gesloten tickets en gesprekken worden 180 dagen na sluiten verwijderd.</p>
       {(tickets.error || cleanup.error) && <p className="error-note">Tickets konden niet worden geladen. Controleer de inrichting van de ticketmodule.</p>}

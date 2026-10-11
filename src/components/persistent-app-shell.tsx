@@ -40,10 +40,10 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Mijn werk", href: "/app/taken", icon: CheckCircle2 },
       { label: "Inbox", href: "/app/inbox", icon: Inbox, roles: ["admin", "board", "member"], counter: "inbox" },
-      { label: "Supporttickets", href: "/app/tickets", icon: Mail, tickets: true },
       { label: "Kalender", href: "/app/kalender", icon: CalendarDays },
       { label: "Kost indienen", href: "/app/financien?nieuw=kost", icon: CircleDollarSign },
       { label: "Goedkeuringen", href: "/app/goedkeuringen", icon: CheckCircle2, roles: ["admin", "board", "member"], counter: "approvals" },
+      { label: "Discordtickets", href: "/app/tickets", icon: Mail, tickets: true },
     ],
   },
   {
