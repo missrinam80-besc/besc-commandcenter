@@ -5,6 +5,7 @@ import { handleTicketRequest, type TicketStore } from "../src/lib/ticket-api.ts"
 import { hashBotKey, BotRateLimiter, parseBotClients, type BotClient } from "../src/lib/bot-api.ts";
 import { hasPermission } from "../src/lib/permissions.ts";
 import { canViewInternalPath } from "../src/lib/route-permissions.ts";
+import { accessMatrixForRole } from "../src/lib/access-matrix.ts";
 
 const org="10000000-0000-4000-8000-000000000001",guild="1067893182387474432",actor="111111111111111111",parent="222222222222222222";
 const key=`bb_ticket-fixture.${"a".repeat(43)}`;
@@ -87,6 +88,9 @@ for(const role of ["admin","board","member","volunteer"])test(`Ticket page and s
  assert.equal(hasPermission(base,"manageTickets"),allowed);assert.equal(canViewInternalPath("/app/tickets/x",base),allowed);
  assert.equal(canViewInternalPath("/app/tickets",{...base,capabilities:["manageTickets"]}),true);
  assert.equal(canViewInternalPath("/app/events",{...base,capabilities:["manageTickets"]}),role!=="volunteer");
+ const matrix=accessMatrixForRole(role as "admin"|"board"|"member"|"volunteer").find(p=>p.key==="tickets")!;
+ assert.equal(matrix.view,allowed?"yes":"no");assert.equal(matrix.edit,allowed?"yes":"no");
+ for(const key of ["create","archive","delete","export"] as const)assert.equal(matrix[key],"no");
 });
 test("Shared bot contract fixtures are accepted by actual API validation",async()=>{
  const fixtures=JSON.parse(readFileSync(new URL("../docs/contracts/ticketing-v1.fixtures.json",import.meta.url),"utf8"));

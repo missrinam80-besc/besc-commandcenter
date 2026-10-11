@@ -107,7 +107,7 @@ function isManagerLike(membership: MembershipAccess) {
 function canView(policy: AreaPolicy, membership: MembershipAccess | null): AccessDecision {
   if (!membership) return policy.key === "home" ? "no" : "no";
   const paths: Record<string, string> = {
-    home: "/app", inbox: "/app/inbox", tasks: "/app/taken", projects: "/app/projecten", events: "/app/events",
+    home: "/app", inbox: "/app/inbox", tickets: "/app/tickets", tasks: "/app/taken", projects: "/app/projecten", events: "/app/events",
     campaigns: "/app/campagnes", social: "/app/social", community: "/app/community", sponsors: "/app/sponsors",
     communication: "/app/communicatie", content: "/app/content", shop: "/app/shop", newsletters: "/app/nieuwsbrieven",
     ai: "/app/ai-hub", meetings: "/app/vergaderingen", administration: "/app/administratie", finance: "/app/financien",
@@ -122,6 +122,7 @@ function canView(policy: AreaPolicy, membership: MembershipAccess | null): Acces
 }
 
 function canCreate(policy: AreaPolicy, membership: MembershipAccess | null): AccessDecision {
+  if (policy.key === "tickets") return "no"; // Intake belongs to the limited bot API.
   if (!membership) return "no";
   if (policy.key === "finance" && hasPermission(membership, "submitExpenses")) return policy.manageCapability && hasPermission(membership, policy.manageCapability) ? "yes" : "own";
   if (policy.activeMemberCreate) return "yes";
@@ -130,6 +131,7 @@ function canCreate(policy: AreaPolicy, membership: MembershipAccess | null): Acc
 }
 
 function canMutate(policy: AreaPolicy, membership: MembershipAccess | null, archiveOrDelete = false): AccessDecision {
+  if (policy.key === "tickets" && archiveOrDelete) return "no";
   if (!membership) return "no";
   if (policy.key === "tasks") return membership.role === "admin" ? "yes" : policy.activeMemberEdit ?? "own";
   if (policy.key === "finance" && !archiveOrDelete && hasPermission(membership, "submitExpenses")) return hasPermission(membership, "manageFinance") ? "yes" : "own";
@@ -138,6 +140,7 @@ function canMutate(policy: AreaPolicy, membership: MembershipAccess | null, arch
 }
 
 function canDelete(policy: AreaPolicy, membership: MembershipAccess | null): AccessDecision {
+  if (policy.key === "tickets") return "no"; // Deletion belongs to the retention job.
   if (!membership || membership.role !== "admin") return "no";
   return canMutate(policy, membership, true);
 }
