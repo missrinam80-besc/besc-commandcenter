@@ -2,10 +2,11 @@ import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { canViewInternalPath } from "./route-permissions.ts";
 import type { MembershipAccess } from "./permissions.ts";
 
-export type BotScope = "identity:read" | "account:read" | "events:read";
+export type BotScope = "identity:read" | "account:read" | "events:read" | "tickets:create" | "tickets:own:read" | "tickets:ingest" | "tickets:deliver";
 export type BotClient = {
   id: string; keyHash: string; organizationId: string; guildId: string;
   scopes: BotScope[]; expiresAt: string; revoked: boolean;
+  ticketParentChannelId?: string;
 };
 export type BotMember = MembershipAccess & { organization_id: string; status: string };
 export type BotEvent = {
@@ -20,7 +21,7 @@ export interface BotStore {
 export const hashBotKey = (key: string) => createHash("sha256").update(key).digest("hex");
 const snowflake = /^[1-9]\d{16,19}$/;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const scopes: BotScope[] = ["identity:read", "account:read", "events:read"];
+const scopes: BotScope[] = ["identity:read", "account:read", "events:read", "tickets:create", "tickets:own:read", "tickets:ingest", "tickets:deliver"];
 const MAX_EVENT_OFFSET = 99999;
 
 export function parseBotClients(raw: string | undefined): BotClient[] {
@@ -38,6 +39,8 @@ export function parseBotClients(raw: string | undefined): BotClient[] {
       || !Array.isArray(c.scopes) || !c.scopes.length || c.scopes.some(s => !scopes.includes(s))
       || typeof c.expiresAt !== "string" || !Number.isFinite(Date.parse(c.expiresAt))
       || typeof c.revoked !== "boolean") throw Error("invalid_bot_clients");
+    if ((c.ticketParentChannelId !== undefined && !snowflake.test(c.ticketParentChannelId))
+      || (c.scopes.some(s => s.startsWith("tickets:")) && !c.ticketParentChannelId)) throw Error("invalid_bot_clients");
     ids.add(c.id);
     return c;
   });
@@ -62,6 +65,15 @@ export class BotRateLimiter {
 }
 const defaultLimiter = new BotRateLimiter();
 
+// Shared by the read API and the narrowly scoped ticket API.
+export function authenticateBotClient(request: Request, clients: BotClient[], now = Date.now()) {
+  const match = /^Bearer (bb_([a-z0-9-]{3,64})\.[A-Za-z0-9_-]{43})$/.exec(request.headers.get("authorization") ?? "");
+  const client = match && clients.find(c => c.id === match[2]);
+  if (!match || !client || client.revoked || Date.parse(client.expiresAt) <= now
+    || !timingSafeEqual(Buffer.from(hashBotKey(match[1]), "hex"), Buffer.from(client.keyHash, "hex"))) return null;
+  return client;
+}
+
 export async function handleBotRequest(request: Request, deps: {
   clients: BotClient[]; store: BotStore; limiter?: BotRateLimiter; now?: number;
   audit?: (record: { requestId: string; clientId: string | null; resource: string; status: number; code: string }) => void;
@@ -82,13 +94,9 @@ export async function handleBotRequest(request: Request, deps: {
   };
   try {
     if (request.method !== "GET") throw new ApiFailure(405, "read_only");
-    const authorization = request.headers.get("authorization") ?? "";
-    const match = /^Bearer (bb_([a-z0-9-]{3,64})\.[A-Za-z0-9_-]{43})$/.exec(authorization);
-    if (!match) throw new ApiFailure(401, "invalid_client");
-    const client = deps.clients.find(c => c.id === match[2]);
     const now = deps.now ?? Date.now();
-    if (!client || client.revoked || Date.parse(client.expiresAt) <= now
-      || !timingSafeEqual(Buffer.from(hashBotKey(match[1]), "hex"), Buffer.from(client.keyHash, "hex"))) {
+    const client = authenticateBotClient(request, deps.clients, now);
+    if (!client) {
       throw new ApiFailure(401, "invalid_client");
     }
     clientId = client.id;
@@ -102,7 +110,7 @@ export async function handleBotRequest(request: Request, deps: {
       if (!allowed.includes(key) || url.searchParams.getAll(key).length !== 1) throw new ApiFailure(400, "invalid_query");
     }
     if (url.searchParams.get("guild_id") !== client.guildId) throw new ApiFailure(403, "guild_not_allowed");
-    if (resource === "identity") return reply(200, { clientId: client.id, scopes: client.scopes, readOnly: true });
+    if (resource === "identity") return reply(200, { clientId: client.id, scopes: client.scopes, readOnly: !client.scopes.some(s => s.startsWith("tickets:")) });
     const discordId = url.searchParams.get("discord_user_id") ?? "";
     if (!snowflake.test(discordId)) throw new ApiFailure(400, "invalid_discord_id");
     const offsetText = url.searchParams.get("offset") ?? "0";

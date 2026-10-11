@@ -67,6 +67,7 @@ type AreaPolicy = {
 };
 
 export const accessPolicies: AreaPolicy[] = [
+  { key: "tickets", label: "Supporttickets", manageCapability: "manageTickets", viewCapability: "manageTickets", dataScope: "Alleen bevoegde ticketmedewerkers binnen de organisatie; geen algemene crewtoegang." },
   { key: "home", label: "Home", activeMemberView: true, dataScope: "Eigen werkvoorraad en organisatiedata binnen BESC." },
   { key: "inbox", label: "Inbox", manageCapability: "manageInbox", activeMemberView: true, dataScope: "Alle inboxitems binnen de organisatie." },
   { key: "tasks", label: "Taken", activeMemberView: true, activeMemberCreate: true, activeMemberEdit: "own", dataScope: "Organisatietaken; focus op eigen of toegewezen taken." },

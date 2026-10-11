@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { requireActiveMembership } from "@/lib/auth-context";
-import { type FinanceRole, type OrganizationRole, organizationRoleLabels } from "@/lib/permissions";
+import { hasPermission, type FinanceRole, type OrganizationRole, organizationRoleLabels } from "@/lib/permissions";
 
 export const getAppShellContext = cache(async function getAppShellContext() {
   const { supabase, user, membership } = await requireActiveMembership();
@@ -25,6 +25,7 @@ export const getAppShellContext = cache(async function getAppShellContext() {
   const financeRole = membership.finance_role as FinanceRole;
   return {
     membershipRole, financeRole,
+    canManageTickets: hasPermission(membership, "manageTickets"),
     name: profile?.display_name || user.email?.split("@")[0] || "Gebruiker",
     role: organizationRoleLabels[membershipRole] || "Crew",
     theme: profile?.theme_preference || "system",

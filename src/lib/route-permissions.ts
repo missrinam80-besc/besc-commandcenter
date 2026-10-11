@@ -1,4 +1,4 @@
-import type { Capability, MembershipAccess } from "./permissions";
+import { hasPermission, type Capability, type MembershipAccess } from "./permissions.ts";
 
 const adminOnlyPrefixes = [
   "/app/beheer",
@@ -41,6 +41,7 @@ function canViewFinancePath(pathname: string, searchParams: URLSearchParams, mem
 }
 
 export function canViewInternalPath(pathname: string, membership: MembershipAccess, searchParams = new URLSearchParams()) {
+  if (pathname === "/app/tickets" || pathname.startsWith("/app/tickets/")) return hasPermission(membership, "manageTickets");
   if (membership.role === "admin") return true;
   if (startsWithAny(pathname, adminOnlyPrefixes)) return false;
   if (membership.role === "board") return true;
@@ -62,6 +63,7 @@ export function requiredCapabilityForQuery(
 ): Capability | null {
   const createMode = searchParams.get("nieuw");
   const editMode = searchParams.has("bewerken");
+  if (pathname === "/app/tickets" || pathname.startsWith("/app/tickets/")) return "manageTickets";
   if (!createMode && !editMode) return null;
 
   if (pathname === "/app/taken") return null;
