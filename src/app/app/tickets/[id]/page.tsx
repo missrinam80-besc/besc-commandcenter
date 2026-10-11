@@ -19,13 +19,16 @@ export default async function Ticket({ params, searchParams }: { params: Promise
     supabase.from("support_ticket_deliveries").select("id,state,kind,last_error").eq("organization_id",membership.organization_id).eq("ticket_id",id).order("sequence",{ascending:false}).limit(50),
     supabase.rpc("ticket_staff_candidates",{p_org:membership.organization_id}),
   ]);
+  const messageIds = (messages.data ?? []).filter(m=>m.direction==='staff').map(m=>m.id);
+  const messageDeliveries = messageIds.length ? await supabase.from("support_ticket_deliveries").select("message_id,state")
+    .eq("organization_id",membership.organization_id).eq("ticket_id",id).in("message_id",messageIds).limit(50) : { data: [], error: null };
   const hidden = <><input type="hidden" name="ticket_id" value={id}/><input type="hidden" name="version" value={ticket.version}/></>;
   const closed = ticket.status === "closed";
   return <AppShell active="Supporttickets"><header className="topbar module-top"><div><p>SUPPORTTICKET</p><h1>{ticket.subject}</h1></div><Link className="secondary" href="/app/tickets">Alle tickets</Link></header>
     <div className="module-body ticket-layout">
       {query.fout && <p className="error-note" role="alert">{ticketErrors[query.fout] ?? ticketErrors.upstream_unavailable}</p>}
       {query.opgeslagen && <p role="status">Opgeslagen. Externe antwoorden worden afzonderlijk door Discord bevestigd.</p>}
-      {(messages.error||deliveries.error||candidates.error) && <p className="error-note">Niet alle ticketgegevens konden worden geladen.</p>}
+      {(messages.error||deliveries.error||candidates.error||messageDeliveries.error) && <p className="error-note">Niet alle ticketgegevens konden worden geladen.</p>}
       <section className="panel"><h2>Behandeling</h2><p>{ticketLinkLabels[ticket.link_status]}</p><p>Aanvrager: Discord {ticket.requester_discord_id}</p>
       {ticket.thread_id && <a className="secondary" href={`https://discord.com/channels/${ticket.guild_id}/${ticket.thread_id}`} target="_blank" rel="noreferrer">Open privéthread</a>}
       {closed ? <p>Gesloten · verwijderen vanaf {new Date(ticket.purge_at).toLocaleString("nl-BE",{timeZone:"Europe/Brussels"})}</p> : <>
@@ -33,7 +36,7 @@ export default async function Ticket({ params, searchParams }: { params: Promise
         <form action={updateTicket} className="ticket-toolbar">{hidden}<input type="hidden" name="action" value="status"/><label>Status<select name="status" defaultValue={ticket.status}>{Object.entries(ticketStatuses).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><button className="secondary">Status opslaan</button></form>
       </>}</section>
       <section className="panel"><h2>Gesprek en interne notities</h2><p>Bijlagen worden in deze versie niet overgenomen. Interne notities blijven uitsluitend in Command Center.</p>
-        {[...(messages.data??[])].reverse().map(m=><article className={`ticket-message ${m.direction==='internal'?'ticket-note':''}`} key={m.id}><strong>{m.direction==='internal'?'Interne notitie':m.direction==='staff'?'Antwoord medewerker':'Aanvrager'}</strong><time>{new Date(m.created_at).toLocaleString("nl-BE",{timeZone:"Europe/Brussels"})}</time><p>{m.content}</p></article>)}
+        {[...(messages.data??[])].reverse().map(m=><article className={`ticket-message ${m.direction==='internal'?'ticket-note':''}`} key={m.id}><strong>{m.direction==='internal'?'Interne notitie':m.direction==='staff'?'Antwoord medewerker':'Aanvrager'}</strong><time>{new Date(m.created_at).toLocaleString("nl-BE",{timeZone:"Europe/Brussels"})}</time>{m.direction==='staff'&&<small>{ticketDeliveryLabels[messageDeliveries.data?.find(d=>d.message_id===m.id)?.state??'']??'Verzendstatus niet beschikbaar'}</small>}<p>{m.content}</p></article>)}
         <div className="ticket-toolbar">{messagePage>1&&<Link className="secondary" href={`?pagina=${messagePage-1}`}>Nieuwere berichten</Link>}{messagePage*50<(messages.count??0)&&<Link className="secondary" href={`?pagina=${messagePage+1}`}>Oudere berichten</Link>}</div>
         {!closed && <div className="ticket-compose">{["internal","reply"].map(action=><form action={updateTicket} key={action}>{hidden}<input type="hidden" name="action" value={action}/><label>{action==='internal'?'Interne notitie':'Extern antwoord'}<textarea name="content" maxLength={4000} required rows={4}/></label><button className={action==='internal'?'secondary':'primary'} disabled={action==='reply'&&ticket.link_status!=='linked'}>{action==='internal'?'Notitie bewaren':'Versturen naar Discord'}</button></form>)}</div>}
       </section>

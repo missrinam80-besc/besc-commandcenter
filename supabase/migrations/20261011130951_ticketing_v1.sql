@@ -55,6 +55,7 @@ create table public.support_ticket_audit (
 );
 create table public.support_ticket_deliveries (
  id uuid primary key default gen_random_uuid(), organization_id uuid not null, ticket_id uuid,
+ message_id uuid references public.support_ticket_messages(id) on delete cascade,
  client_id text not null, guild_id text not null, parent_channel_id text not null, thread_id text, marker_ticket_id uuid,
  kind text not null check(kind in ('create_thread','send_message','close_thread','delete_thread')),
  payload jsonb not null default '{}', sequence bigint generated always as identity,
@@ -138,8 +139,8 @@ begin
    values(p_org,t.id,'requester',actor,p_data->>'content') returning id into message;
   insert into public.support_ticket_deliveries(organization_id,ticket_id,client_id,guild_id,parent_channel_id,kind,payload)
    values(p_org,t.id,p_client,p_guild,t.parent_channel_id,'create_thread',jsonb_build_object('marker','besc-ticket-'||t.id,'requester_discord_id',actor));
-  insert into public.support_ticket_deliveries(organization_id,ticket_id,client_id,guild_id,parent_channel_id,kind,payload)
-   values(p_org,t.id,p_client,p_guild,t.parent_channel_id,'send_message',jsonb_build_object('message_id',message,'content',p_data->>'content'));
+  insert into public.support_ticket_deliveries(organization_id,ticket_id,message_id,client_id,guild_id,parent_channel_id,kind,payload)
+   values(p_org,t.id,message,p_client,p_guild,t.parent_channel_id,'send_message',jsonb_build_object('message_id',message,'content',p_data->>'content'));
   insert into public.support_ticket_audit(organization_id,ticket_id,actor_discord_id,action) values(p_org,t.id,actor,'created');
   result:=jsonb_build_object('ticketId',t.id,'status',t.status,'linkStatus',t.link_status,'threadId',null);
  elsif p_op in ('own','ingest') then
@@ -243,8 +244,8 @@ begin
   insert into public.support_ticket_messages(organization_id,ticket_id,direction,author_user_id,content)
    values(p_org,t.id,case when p_action='internal' then 'internal' else 'staff' end,actor,p_data->>'content') returning id into message;
   if p_action='reply' then
-   insert into public.support_ticket_deliveries(organization_id,ticket_id,client_id,guild_id,parent_channel_id,kind,payload)
-    values(p_org,t.id,t.client_id,t.guild_id,t.parent_channel_id,'send_message',jsonb_build_object('message_id',message,'content',p_data->>'content'));
+   insert into public.support_ticket_deliveries(organization_id,ticket_id,message_id,client_id,guild_id,parent_channel_id,kind,payload)
+    values(p_org,t.id,message,t.client_id,t.guild_id,t.parent_channel_id,'send_message',jsonb_build_object('message_id',message,'content',p_data->>'content'));
   end if;
  elsif p_action='status' then
   new_status:=p_data->>'status';

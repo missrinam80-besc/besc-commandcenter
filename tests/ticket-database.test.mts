@@ -101,6 +101,8 @@ test("Real SQL: leases, uncertain recovery, ordered messages, staff replies, clo
   assert.equal((await op("complete",{delivery_id:d.id,worker_id:worker,lease_token:d.leaseToken,thread_id:thread})).error,"invalid_delivery_result");
   await op("complete",{delivery_id:d.id,worker_id:worker,lease_token:d.leaseToken,thread_id:thread,message_id:parent});
   await login(1);assert.equal((await staff(ticket,1,"reply",{content:"EXTERNAL ANSWER"})).version,2);
+  await db.exec("reset role");assert.equal((await db.query("select d.id from support_ticket_deliveries d join support_ticket_messages m on m.id=d.message_id where m.content='EXTERNAL ANSWER' and d.state='pending'")).rows.length,1);
+  await login(1);
   assert.equal((await staff(ticket,2,"status",{status:"waiting_requester"})).version,3);
   const source=snow();const incoming={ticket_id:ticket,discord_user_id:actor,parent_channel_id:parent,thread_id:thread,source_message_id:source,idempotency_key:source,request_hash:"c".repeat(64),content:"reply from requester"};
   assert.equal((await op("ingest",{...incoming,thread_id:parent})).error,"thread_not_allowed");
