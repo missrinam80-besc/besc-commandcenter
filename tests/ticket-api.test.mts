@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import { handleTicketRequest, type TicketStore } from "../src/lib/ticket-api.ts";
 import { hashBotKey, BotRateLimiter, parseBotClients, type BotClient } from "../src/lib/bot-api.ts";
 import { hasPermission } from "../src/lib/permissions.ts";
@@ -86,4 +87,15 @@ for(const role of ["admin","board","member","volunteer"])test(`Ticket page and s
  assert.equal(hasPermission(base,"manageTickets"),allowed);assert.equal(canViewInternalPath("/app/tickets/x",base),allowed);
  assert.equal(canViewInternalPath("/app/tickets",{...base,capabilities:["manageTickets"]}),true);
  assert.equal(canViewInternalPath("/app/events",{...base,capabilities:["manageTickets"]}),role!=="volunteer");
+});
+test("Shared bot contract fixtures are accepted by actual API validation",async()=>{
+ const fixtures=JSON.parse(readFileSync(new URL("../docs/contracts/ticketing-v1.fixtures.json",import.meta.url),"utf8"));
+ assert.equal(fixtures.contract,"besc-ticketing-v1");
+ for(const name of ["intake","own","ingest","claim","createThreadComplete","sendMessageComplete","uncertainFailure"]){
+  const example=fixtures[name];const f=fixture();
+  const headers:Record<string,string>={};
+  if(example.idempotencyKey)headers["idempotency-key"]=name==="intake"?actor:example.idempotencyKey;
+  const response=await f.run(example.path.replace("/api/v1/bot/",""),example.body??{},headers,example.method);
+  assert.equal(response.status,name==="intake"?201:200,name);assert.equal(f.calls.length,1);
+ }
 });

@@ -62,6 +62,9 @@ test("Real SQL: durable intake, atomic effects, own access, RLS and live shared 
    assert.equal((await db.query<{ok:boolean}>("select private.can_manage_tickets($1) ok",[org])).rows[0].ok,c.ok);
    assert.equal(hasPermission({role:c.role,finance_role:"none",capabilities:c.cap&&!c.deleted&&!c.foreign?["manageTickets"]:[]},"manageTickets")&&!c.pending,c.ok);
    assert.equal((await db.query("select * from support_tickets")).rows.length,c.ok?1:0);
+   for(const table of ["support_ticket_messages","support_ticket_audit","support_ticket_deliveries"])assert.equal((await db.query(`select * from ${table}`)).rows.length>0,c.ok);
+   for(const table of ["support_ticket_idempotency","support_ticket_rate_limits"])await assert.rejects(db.query(`select * from ${table}`));
+   await assert.rejects(db.query("select private.ticket_staff($1,$2)",[org,uid(1)]));
    await assert.rejects(db.query("update support_tickets set subject='bypass'"));
    await assert.rejects(db.query("select ticket_bot_operation($1,'x',$2,'claim','{}')",[org,guild]));
    if(c.ok)assert.ok(Array.isArray((await db.query<{c:unknown}>("select ticket_staff_candidates($1) c",[org])).rows[0].c));
@@ -74,7 +77,11 @@ test("Real SQL: durable intake, atomic effects, own access, RLS and live shared 
   assert.equal(JSON.stringify(await op("own",own)).includes("INTERNAL SECRET"),false);
   await db.exec("reset role");await db.query("update organization_access_roles set deleted_at=now() where id=$1",[uid(105)]);
   await login(5);await assert.rejects(staff(String(a.ticketId),2,"internal",{content:"revoked"}));
-  await db.exec("reset role;set role anon");await assert.rejects(db.query("select * from support_tickets"));await assert.rejects(db.query("select ticket_staff_candidates($1)",[org]));
+  await db.exec("reset role;set role anon");
+  for(const table of ["support_tickets","support_ticket_messages","support_ticket_audit","support_ticket_deliveries","support_ticket_idempotency","support_ticket_rate_limits"])await assert.rejects(db.query(`select * from ${table}`));
+  await assert.rejects(db.query("select ticket_staff_candidates($1)",[org]));
+  await db.exec("reset role");
+  assert.equal((await db.query("select p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('ticket_bot_operation','ticket_staff_action','ticket_staff_candidates','ticket_retry_cleanup','purge_support_tickets') and p.prosecdef")).rows.length,0);
  }finally{await db.close();}
 });
 
