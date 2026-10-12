@@ -22,7 +22,7 @@ revoke all on public.project_materials from public,anon,authenticated;
 grant select,insert,update,delete on public.project_materials to authenticated;
 create policy "members read project materials" on public.project_materials for select to authenticated using(private.is_active_member(organization_id));
 create policy "managers insert project materials" on public.project_materials for insert to authenticated with check(private.can_manage_projects(organization_id) and created_by=(select auth.uid()) and exists(select 1 from public.projects p where p.organization_id=project_materials.organization_id and p.id=project_id and p.deleted_at is null));
-create policy "managers update project materials" on public.project_materials for update to authenticated using(private.can_manage_projects(organization_id)) with check(private.can_manage_projects(organization_id));
+create policy "managers update project materials" on public.project_materials for update to authenticated using(private.can_manage_projects(organization_id)) with check(private.can_manage_projects(organization_id) and exists(select 1 from public.projects p where p.organization_id=project_materials.organization_id and p.id=project_id and p.deleted_at is null));
 create policy "managers delete project materials" on public.project_materials for delete to authenticated using(private.can_manage_projects(organization_id));
 create index project_materials_asset_idx on public.project_materials(organization_id,asset_id);
 
@@ -67,8 +67,8 @@ begin
  return new;
 end $$;
 revoke all on function private.guard_material_reservation() from public,anon,authenticated;
-create trigger guard_event_asset_reservation before insert or update on public.event_materials for each row execute function private.guard_material_reservation();
-create trigger guard_project_asset_reservation before insert or update on public.project_materials for each row execute function private.guard_material_reservation();
+create trigger guard_event_asset_reservation before insert or update of asset_id,status,pickup_at,return_at,event_id,organization_id on public.event_materials for each row execute function private.guard_material_reservation();
+create trigger guard_project_asset_reservation before insert or update of asset_id,status,starts_at,ends_at,project_id,organization_id on public.project_materials for each row execute function private.guard_material_reservation();
 
 -- A repair and an overlapping reservation cannot bypass the shared lock.
 create or replace function private.guard_task_repair_asset() returns trigger language plpgsql security definer set search_path='' as $$
@@ -99,15 +99,23 @@ drop trigger guard_task_repair_asset on public.tasks;
 create trigger guard_task_repair_asset before insert or update of repair_asset_id,organization_id,status on public.tasks for each row execute function private.guard_task_repair_asset();
 
 create function private.recheck_material_period() returns trigger language plpgsql security definer set search_path='' as $$
-declare row_id uuid;
+declare material record;
 begin
  if tg_table_name='events' then
-  for row_id in select id from public.event_materials where organization_id=new.organization_id and event_id=new.id order by asset_id,id loop
-   update public.event_materials set pickup_at=pickup_at where id=row_id;
+  if (new.start_at,new.end_at,new.start_date,new.end_date) is not distinct from (old.start_at,old.end_at,old.start_date,old.end_date) then return new;end if;
+  for material in select id,pickup_at,return_at from public.event_materials where organization_id=new.organization_id and event_id=new.id and asset_id is not null and status not in ('returned','cancelled') order by asset_id,id loop
+   if private.asset_use_window(coalesce(material.pickup_at,new.start_at),coalesce(material.return_at,new.end_at),new.start_date,new.end_date)
+    is distinct from private.asset_use_window(coalesce(material.pickup_at,old.start_at),coalesce(material.return_at,old.end_at),old.start_date,old.end_date) then
+    update public.event_materials set pickup_at=pickup_at where id=material.id;
+   end if;
   end loop;
  else
-  for row_id in select id from public.project_materials where organization_id=new.organization_id and project_id=new.id order by asset_id,id loop
-   update public.project_materials set starts_at=starts_at where id=row_id;
+  if (new.start_date,new.due_date) is not distinct from (old.start_date,old.due_date) then return new;end if;
+  for material in select id,starts_at,ends_at from public.project_materials where organization_id=new.organization_id and project_id=new.id and status not in ('returned','cancelled') order by asset_id,id loop
+   if private.asset_use_window(material.starts_at,material.ends_at,new.start_date,new.due_date)
+    is distinct from private.asset_use_window(material.starts_at,material.ends_at,old.start_date,old.due_date) then
+    update public.project_materials set starts_at=starts_at where id=material.id;
+   end if;
   end loop;
  end if;
  return new;
