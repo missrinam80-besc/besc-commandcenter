@@ -140,6 +140,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
       {cfg.collections.filter(part=>part.tab===item.id).map(part=>{
         const rows=(draft.parts[part.table]??[]).filter(row=>kind!=="event"||part.table!=="record_relationships"||!eventPartnerForRow(row,id)),canManage=permissions[part.table]===true;
         return <section className="dossier-editor-collection" key={part.table}><div className="form-heading"><h3>{part.label}</h3>{canManage&&(!part.singleton||!rows.some(row=>!row.deleted))&&<button type="button" disabled={saving} onClick={()=>addRow(part)}>Toevoegen</button>}</div>
+          {["event_materials","project_materials"].includes(part.table)&&<p className="form-help">Vul de gebruiksperiode in of gebruik de event- of projectperiode. Materiaal met een overlappende reservering of een open hersteltaak is niet selecteerbaar. Op andere data blijft het reserveerbaar.</p>}
           {!rows.length&&<p className="form-help">Nog geen onderdelen toegevoegd.</p>}
           {!canManage&&<p className="form-help">Je kunt deze onderdelen bekijken. Wijzigen vraagt een aanvullende bevoegdheid.</p>}
           {rows.map(row=>{

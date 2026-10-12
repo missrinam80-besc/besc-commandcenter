@@ -3,6 +3,7 @@ create function private.canonical_document_url(value text) returns text language
 declare cleaned text; google_key text;
 begin
  cleaned:=regexp_replace(btrim(value),'#.*$','');
+ cleaned:=regexp_replace(cleaned,'^(https?://)([^/?#]+)',lower(substring(cleaned from '^(https?://[^/?#]+)')));
  if cleaned ~ '^https?://drive[.]google[.]com/(open|uc)[?]' then
   google_key:=substring(cleaned from '[?&]id=([A-Za-z0-9_-]+)');
   if google_key is not null then return 'https://drive.google.com/file/d/'||google_key;end if;
@@ -183,4 +184,3 @@ begin
  end loop;
 end $$;
 commit;
-
