@@ -1,0 +1,81 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFileSync } from "node:fs";
+import { PGlite } from "@electric-sql/pglite";
+
+const org="10000000-0000-4000-8000-000000000001", other="10000000-0000-4000-8000-000000000002";
+const user="20000000-0000-4000-8000-000000000001", volunteer="20000000-0000-4000-8000-000000000002";
+const event="30000000-0000-4000-8000-000000000001", foreignEvent="30000000-0000-4000-8000-000000000002";
+const asset="40000000-0000-4000-8000-000000000001", foreignAsset="40000000-0000-4000-8000-000000000002";
+const person="50000000-0000-4000-8000-000000000001", foreignPerson="50000000-0000-4000-8000-000000000002";
+
+test("activiteiten en agenda bewaren organisatie, event, rechten en gebruikte koppelingen",async()=>{
+ const db=new PGlite();try{
+ await db.exec(`create role authenticated; create role anon; create schema auth; create schema private;
+      create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+      grant usage on schema auth,private to authenticated;
+      create table public.organizations(id uuid primary key); create table public.profiles(id uuid primary key);
+      create table public.organization_members(organization_id uuid,user_id uuid,status text,role text,capabilities text[] default '{}');
+      create table public.events(id uuid primary key,organization_id uuid,title text,deleted_at timestamptz,updated_at timestamptz default now(),unique(organization_id,id));
+      create table public.assets(id uuid primary key,organization_id uuid,name text,status text,deleted_at timestamptz);
+      create table public.community_people(id uuid primary key,organization_id uuid,status text,deleted_at timestamptz);
+      create function private.is_active_member(org_id uuid) returns boolean language sql stable security definer set search_path='' as $$select exists(select 1 from public.organization_members where organization_id=org_id and user_id=auth.uid() and status='active')$$;
+      create function private.can_manage_events(org_id uuid) returns boolean language sql stable security definer set search_path='' as $$select exists(select 1 from public.organization_members where organization_id=org_id and user_id=auth.uid() and status='active' and (role in('admin','board','member') or 'manageEvents'=any(capabilities)))$$;
+      grant select,update on public.events to authenticated;grant select on public.assets,public.community_people to authenticated;
+      alter table public.events enable row level security;alter table public.assets enable row level security;alter table public.community_people enable row level security;
+      create policy event_read on public.events for select to authenticated using(private.is_active_member(organization_id));
+      create policy event_write on public.events for update to authenticated using(private.can_manage_events(organization_id)) with check(private.can_manage_events(organization_id));
+      create policy asset_read on public.assets for select to authenticated using(private.is_active_member(organization_id));
+      create policy person_read on public.community_people for select to authenticated using(private.is_active_member(organization_id));
+      insert into public.organizations values('${org}'),('${other}');insert into public.profiles values('${user}'),('${volunteer}');
+      insert into public.organization_members(organization_id,user_id,status,role) values('${org}','${user}','active','member'),('${org}','${volunteer}','active','volunteer');
+      insert into public.events(id,organization_id,title) values('${event}','${org}','TESTFIXTURE event'),('${foreignEvent}','${other}','TESTFIXTURE foreign');
+      insert into public.assets values('${asset}','${org}','Camera','active',null),('${foreignAsset}','${other}','Andere camera','active',null);
+      insert into public.community_people values('${person}','${org}','active',null),('${foreignPerson}','${other}','active',null);`);
+ for(const name of ["20261007193759_event_materials.sql","20261007205415_event_schedule.sql"])await db.exec(readFileSync(new URL(`../supabase/migrations/${name}`,import.meta.url),"utf8"));
+ await db.exec(`create table public.dossier_choice_options(set_key text,value text,label text);
+ insert into public.dossier_choice_options values('event_schedule_items.kind','stream','Stream'),('event_schedule_items.kind','stream','Eigen label');
+ create function private.fixture_block_choice() returns trigger language plpgsql as $$begin raise exception 'choice_no_access';end$$;
+ create trigger guard_dossier_choice_option before update on dossier_choice_options for each row execute function private.fixture_block_choice();
+ create function private.dossier_choice_catalog() returns jsonb language sql as $$select '[{"key":"event_schedule_items.kind","values":[{"value":"stream","label":"Stream"}]}]'::jsonb$$;
+ alter table public.organization_members add column access_role_id uuid;
+ create table public.organization_access_roles(id uuid,organization_id uuid,deleted_at timestamptz,capabilities text[]);
+ grant select on public.organization_members,public.organization_access_roles to authenticated;
+ create function private.can_manage_finance(o uuid) returns boolean language sql as $$select false$$;
+ create function private.can_manage_content(o uuid) returns boolean language sql as $$select false$$;
+ create function private.can_manage_projects(o uuid) returns boolean language sql as $$select false$$;
+ grant insert on public.events to authenticated;
+ create policy event_insert on public.events for insert to authenticated with check(private.can_manage_events(organization_id));`);
+ for(const name of ["20261012195715_event_activities_agenda.sql","20261012195737_event_editor_catalog.sql"])await db.exec(readFileSync(new URL(`../supabase/migrations/${name}`,import.meta.url),"utf8"));
+ assert.deepEqual((await db.query<{label:string}>("select label from dossier_choice_options order by label")).rows.map(r=>r.label),["Eigen label","Streamer/content creator"]);
+ await db.exec(`set role authenticated;set request.jwt.claim.sub='${user}';`);
+ const activity=(await db.query<{id:string}>(`insert into public.event_activities(organization_id,event_id,title,description,created_by) values('${org}','${event}',' TESTFIXTURE activiteit ','**uitleg**','${user}') returning id`)).rows[0].id;
+ assert.equal((await db.query<{title:string}>('select title from event_activities')).rows[0].title,"TESTFIXTURE activiteit");
+ await assert.rejects(db.exec(`update event_activities set event_id='${foreignEvent}' where id='${activity}'`));
+ await assert.rejects(db.exec(`insert into event_activities(organization_id,event_id,title,created_by) values('${other}','${foreignEvent}','TESTFIXTURE','${user}')`));
+ const sibling="30000000-0000-4000-8000-000000000003";
+ await db.exec(`reset role;insert into events(id,organization_id,title) values('${sibling}','${org}','TESTFIXTURE sibling');set role authenticated;`);
+ await assert.rejects(db.exec(`insert into event_schedule_items(organization_id,event_id,title,activity_id,created_by) values('${org}','${sibling}','TESTFIXTURE verkeerde activiteit','${activity}','${user}')`));
+ const slot=(await db.query<{id:string}>(`insert into event_schedule_items(organization_id,event_id,title,activity_id,created_by) values('${org}','${event}','TESTFIXTURE slot','${activity}','${user}') returning id`)).rows[0].id;
+ await assert.rejects(db.exec(`delete from event_activities where id='${activity}'`));
+ await db.exec(`set request.jwt.claim.sub='${volunteer}';`);
+ assert.equal((await db.query('select * from event_activities')).rows.length,1);
+ assert.equal((await db.query(`update event_activities set title='Changed' where id='${activity}' returning id`)).rows.length,0);
+ assert.equal((await db.query(`delete from event_activities where id='${activity}' returning id`)).rows.length,0);
+ await assert.rejects(db.exec(`insert into event_activities(organization_id,event_id,title,created_by) values('${org}','${event}','TESTFIXTURE','${volunteer}')`));
+ await db.exec(`set request.jwt.claim.sub='${user}';`);
+ // A real uniform-editor save creates the activity before the new agenda reference.
+ const root=(await db.query<{record:unknown}>(`select to_jsonb(e) record from events e where id='${event}'`)).rows[0].record;
+ const fresh="60000000-0000-4000-8000-000000000001",freshSlot="60000000-0000-4000-8000-000000000002";
+ const bundle={kind:"event",root:{id:event,new:false,base:root,values:{}},parts:[{collection:"event_schedule_items",id:freshSlot,new:true,base:null,values:{title:"TESTFIXTURE gekoppeld",activity_id:fresh}},{collection:"event_activities",id:fresh,new:true,base:null,values:{title:"TESTFIXTURE nieuwe activiteit",description:"Uitleg",position:1}}]};
+ await db.query('select save_dossier_bundle($1,$2::jsonb)',[org,JSON.stringify(bundle)]);
+ assert.equal((await db.query<{activity_id:string}>(`select activity_id from event_schedule_items where id='${freshSlot}'`)).rows[0].activity_id,fresh);
+ // Delete-before-unlink is safe inside one atomic transaction with deferred binding.
+ await db.exec(`begin;delete from event_activities where id='${activity}';update event_schedule_items set activity_id=null where id='${slot}';commit;`);
+ assert.equal((await db.query(`select * from event_activities where id='${activity}'`)).rows.length,0);
+ await db.exec(`reset role;update events set deleted_at=now() where id='${event}';set role authenticated;`);
+ assert.equal((await db.query('select * from event_activities')).rows.length,0);
+ assert.equal((await db.query(`update event_activities set title='Changed' where id='${fresh}' returning id`)).rows.length,0);
+ await db.exec('set role anon');await assert.rejects(db.query('select * from event_activities'));
+ }finally{await db.close();}
+});

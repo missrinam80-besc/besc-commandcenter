@@ -40,7 +40,8 @@ export const dossierEditorCatalog:Record<string,EditorConfig>={
   event:config("events","Event","/app/events","manageEvents","title description event_type status priority owner_id start_date end_date start_at end_at location is_online role_besc expected_attendees eventbrite_url stream_url",eventDossierTabs,[
     collection("tasks","Eventtaken","planning","id","title description status priority due_at project_id",{through:true,entityValue:"event",capability:"manageProjects"}),
     assignments("event_id","planning"),
-    collection("event_schedule_items","Programma en inzet","planning","event_id","title kind starts_at ends_at person_id location status notes"),
+    collection("event_activities","Activiteiten en uitleg","activiteiten","event_id","title description position"),
+    collection("event_schedule_items","Programma en inzet","planning","event_id","title kind activity_id starts_at ends_at person_id location status notes"),
     collection("event_materials","Materialen","materialen","event_id","name asset_id quantity source provider location pickup_at return_at status notes responsible_person_id"),
     collection("event_giveaways","Giveaways","giveaways","event_id","name quantity_planned quantity_received quantity_distributed status responsible_person_id source provider notes"),
     collection("event_registration_settings","Inschrijvingsinstellingen","inschrijvingen","event_id","mode capacity external_url notes",{key:"event_id",singleton:true}),

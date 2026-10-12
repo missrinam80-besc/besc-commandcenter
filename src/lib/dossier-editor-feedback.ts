@@ -43,6 +43,7 @@ export function dossierStorageFeedback(error:StorageError,bundle:EditorBundle):{
  if(code==="42883"||code==="PGRST202")return {message:"De gezamenlijke opslagfunctie ontbreekt of is nog niet beschikbaar. Controleer de dossiermigratie en de databankversie."};
  if(causes[original])return {message:causes[original]};
  const constraint=original.match(/constraint "([a-z0-9_]+)"/i)?.[1];
+ if(code==="23503"&&["event_schedule_activity_binding","event_schedule_items_activity_id_fkey"].includes(constraint??""))return {message:bundle.parts.some(part=>part.collection==="event_activities"&&part.delete)?"Een activiteit is nog gekoppeld aan de planning. Koppel haar eerst los voordat je verwijdert. Er is niets opgeslagen.":"De gekozen activiteit is niet beschikbaar in dit event. Kies een activiteit uit de eigen activiteitenlijst. Er is niets opgeslagen."};
  const cfg=dossierEditorCatalog[bundle.kind];
  const definitions=[{table:cfg.table,fields:cfg.fields,label:cfg.label,tab:undefined},...cfg.collections];
  // PostgreSQL metadata identifies a column, but not a safe row identity. Show candidates.
@@ -56,6 +57,10 @@ export function dossierStorageFeedback(error:StorageError,bundle:EditorBundle):{
   const changes=def.table===cfg.table?[bundle.root]:bundle.parts.filter(part=>part.collection===def.table&&!part.delete);
   const issues=changes.map(change=>({message,field,tab:def.tab??dossierFieldTab(field,cfg),rowId:change.id,collection:def.table===cfg.table?undefined:def.table,label:def.table===cfg.table?def.label:`${def.label}: ${String(change.values.title??change.values.name??change.base?.title??change.base?.name??"onderdeel")}`}));
   return {message:"De databank heeft het volgende veld afgewezen. Controleer de genoemde fiche of onderdelen; er is niets opgeslagen.",issues};
+ }
+ if(code==="23514"&&constraint&&constraint.startsWith("event_activities_")){
+  const field=constraint==="event_activities_title_check"?"title":constraint==="event_activities_description_check"?"description":constraint==="event_activities_position_check"?"position":undefined;
+  if(field){const message=field==="title"?"De titel van de activiteit moet 2 tot 180 tekens bevatten.":field==="description"?"De uitleg mag maximaal 16000 tekens bevatten.":"Gebruik een geheel getal vanaf 0 voor de volgorde.";return {message:"Controleer de onderstaande activiteiten; er is niets opgeslagen.",issues:bundle.parts.filter(part=>part.collection==="event_activities"&&!part.delete).map(part=>({message,field,collection:part.collection,rowId:part.id,tab:"activiteiten",label:`Activiteit: ${String(part.values.title??part.base?.title??"onderdeel")}`}))};}
  }
  if(code==="23514"&&constraint&&scheduleChecks[constraint]){
   const [field,message]=scheduleChecks[constraint];

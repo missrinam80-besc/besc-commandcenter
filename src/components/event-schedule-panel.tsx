@@ -1,3 +1,4 @@
+import type {EventAgendaPeriod} from "@/lib/event-agenda-range";
 import { EventTimeGrid } from "@/components/event-timegrid";
 import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
@@ -11,12 +12,14 @@ import { FormModal } from "@/components/form-modal";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { deleteEventSchedule } from "@/app/app/events/[id]/schedule-actions";
 
-export async function EventSchedulePanel({ eventId, selected, people, peopleError = false, kind }: {
-  eventId: string; selected?: string; people: { id: string; label: string }[]; peopleError?: boolean; kind?: string;
+export async function EventSchedulePanel({ eventId, selected, people, peopleError = false, kind, eventPeriod }: {
+  eventId: string; selected?: string; people: { id: string; label: string }[]; peopleError?: boolean; kind?: string; eventPeriod?:EventAgendaPeriod;
 }) {
   const { supabase, membership } = await requireActiveMembership();
-  const result = await supabase.from("event_schedule_items").select("id,title,kind,status,starts_at,ends_at,person_id,location,notes")
+  const result = await supabase.from("event_schedule_items").select("id,title,kind,activity_id,status,starts_at,ends_at,person_id,location,notes")
     .eq("organization_id", membership.organization_id).eq("event_id", eventId).order("starts_at", { ascending: true, nullsFirst: false }).order("created_at");
+  const activitiesResult=await supabase.from("event_activities").select("id,title").eq("organization_id",membership.organization_id).eq("event_id",eventId).order("position").order("created_at");
+  const activities=activitiesResult.data??[];
   const rows = (result.data ?? []) as EventScheduleItem[];
   let kinds:Record<string,string>=scheduleKinds,kindsError=false;
   try{kinds=Object.fromEntries((await loadManagedChoices(supabase,membership.organization_id)).filter(row=>row.set_key==="event_schedule_items.kind").map(row=>[row.value,row.label]));if(!Object.keys(kinds).length)throw Error("Geen soorten beschikbaar");}catch{kindsError=true;}
@@ -24,9 +27,9 @@ export async function EventSchedulePanel({ eventId, selected, people, peopleErro
   const conflicts = scheduleConflicts(rows);
   const filter = kind && Object.hasOwn(kinds, kind) ? kind : "";
   const visible = filter ? rows.filter(row => row.kind === filter) : rows;
-  const canEdit = hasPermission(membership, "manageEvents") && !result.error && !peopleError && !kindsError;
+  const canEdit = hasPermission(membership, "manageEvents") && !result.error && !peopleError && !kindsError && !activitiesResult.error;
   return <section className="form-card event-schedule-panel">
-    <div className="form-heading"><div><span className="eyebrow">PROGRAMMA EN INZET</span><h2>Eventagenda</h2></div>
+    <div className="form-heading event-agenda-heading"><div><span className="eyebrow">PROGRAMMA EN INZET</span><h2>Eventagenda</h2></div>
       {canEdit && <Link className="row-action" href="?tab=planning&schema=nieuw"><Plus size={14}/>Onderdeel toevoegen</Link>}
     </div>
     <nav className="event-schedule-filters" aria-label="Schema filteren">
@@ -34,15 +37,17 @@ export async function EventSchedulePanel({ eventId, selected, people, peopleErro
       {Object.entries(kinds).map(([value, label]) => <Link key={value} data-kind={value} style={{"--agenda-color":scheduleKindColor(value)} as CSSProperties} href={`?tab=planning&schema_type=${encodeURIComponent(value)}`} scroll={false} aria-current={filter === value ? "page" : undefined}><span className="event-agenda-dot" aria-hidden="true"/>{label}</Link>)}
     </nav>
     {result.error ? <p className="error-note" role="alert">Het schema kon niet worden geladen. Probeer opnieuw; controleer bij ingebruikname of de inrichting is afgerond.</p> : <>
+      {activitiesResult.error && <p className="error-note" role="alert">De activiteitenlijst kon niet worden geladen. Wijzigen is tijdelijk niet beschikbaar.</p>}
       {peopleError && <p className="error-note" role="alert">De personenlijst kon niet worden geladen. Wijzigen is tijdelijk niet beschikbaar.</p>}
       {kindsError && <p className="error-note" role="alert">De soorten agendaonderdelen kunnen niet worden geladen. Wijzigen is tijdelijk niet beschikbaar.</p>}
       {conflicts.size > 0 && <p className="error-note" role="status">Er zijn overlappende toewijzingen in dit event. Controleer de gemarkeerde onderdelen.</p>}
-      {visible.length > 0 && <EventTimeGrid rows={visible} people={people} kinds={kinds} canEdit={canEdit} conflictIds={[...conflicts]}/>}
+      {visible.length > 0 && <EventTimeGrid rows={visible} people={people} kinds={kinds} canEdit={canEdit} conflictIds={[...conflicts]} activities={activities} eventPeriod={eventPeriod}/>}
       {!visible.length && <p className="empty-inline">{rows.length ? "Geen onderdelen voor dit filter." : "Nog geen schema of shifts toegevoegd."}</p>}
       {selected && selected !== "nieuw" && !current && <p className="error-note">Dit onderdeel staat niet meer in het schema.</p>}
     </>}
+    {canEdit && <div className="event-agenda-add-footer"><Link className="row-action" href="?tab=planning&schema=nieuw"><Plus size={14}/>Onderdeel toevoegen</Link></div>}
     {canEdit && (selected === "nieuw" || current) && <FormModal title={current ? "Schemaonderdeel bewerken" : "Schemaonderdeel toevoegen"} closeHref="?tab=planning">
-      <EventScheduleForm eventId={eventId} record={current} people={people} kinds={kinds}/>
+      <EventScheduleForm eventId={eventId} record={current} people={people} kinds={kinds} activities={activities}/>
       {current && <form className="modal-danger-zone" action={deleteEventSchedule}><input type="hidden" name="event_id" value={eventId}/><input type="hidden" name="id" value={current.id}/><ConfirmSubmitButton className="danger-button" message="Dit onderdeel uit het eventschema verwijderen? De persoon en bestaande dossierrollen blijven behouden."><Trash2 size={14}/>Onderdeel verwijderen</ConfirmSubmitButton></form>}
     </FormModal>}
   </section>;
