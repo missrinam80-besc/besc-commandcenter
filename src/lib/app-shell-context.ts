@@ -25,6 +25,7 @@ export const getAppShellContext = cache(async function getAppShellContext() {
   const financeRole = membership.finance_role as FinanceRole;
   return {
     membershipRole, financeRole,
+    canManageDiscordBot: hasPermission(membership, "manageDiscordBot"),
     canManageTickets: hasPermission(membership, "manageTickets"),
     name: profile?.display_name || user.email?.split("@")[0] || "Gebruiker",
     role: organizationRoleLabels[membershipRole] || "Crew",

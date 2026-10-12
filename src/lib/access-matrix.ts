@@ -67,6 +67,7 @@ type AreaPolicy = {
 };
 
 export const accessPolicies: AreaPolicy[] = [
+  { key:"discordbot", label:"Discordbot", viewCapability:"manageDiscordBot", manageCapability:"manageDiscordBot", dataScope:"Alleen botconfiguratie; geen ticketinhoud of rollenbeheer." },
   { key: "tickets", label: "Discordtickets", manageCapability: "manageTickets", viewCapability: "manageTickets", dataScope: "Alleen bevoegde ticketmedewerkers binnen de organisatie; geen algemene crewtoegang." },
   { key: "home", label: "Home", activeMemberView: true, dataScope: "Eigen werkvoorraad en organisatiedata binnen BESC." },
   { key: "inbox", label: "Inbox", manageCapability: "manageInbox", activeMemberView: true, dataScope: "Alle inboxitems binnen de organisatie." },
@@ -107,7 +108,7 @@ function isManagerLike(membership: MembershipAccess) {
 function canView(policy: AreaPolicy, membership: MembershipAccess | null): AccessDecision {
   if (!membership) return policy.key === "home" ? "no" : "no";
   const paths: Record<string, string> = {
-    home: "/app", inbox: "/app/inbox", tickets: "/app/tickets", tasks: "/app/taken", projects: "/app/projecten", events: "/app/events",
+    discordbot: "/app/beheer/discordbot", home: "/app", inbox: "/app/inbox", tickets: "/app/tickets", tasks: "/app/taken", projects: "/app/projecten", events: "/app/events",
     campaigns: "/app/campagnes", social: "/app/social", community: "/app/community", sponsors: "/app/sponsors",
     communication: "/app/communicatie", content: "/app/content", shop: "/app/shop", newsletters: "/app/nieuwsbrieven",
     ai: "/app/ai-hub", meetings: "/app/vergaderingen", administration: "/app/administratie", finance: "/app/financien",
