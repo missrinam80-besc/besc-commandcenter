@@ -145,7 +145,7 @@ begin
     on conflict(organization_id,canonical_url) do update set restricted_finance=document_registry.restricted_finance or excluded.restricted_finance returning id into doc_id;
    insert into public.document_registry_sources(organization_id,table_name,record_id,field_name,document_id)
     values(source_org,tg_table_name,(row_data->>'id')::uuid,field,doc_id)
-    on conflict(organization_id,table_name,record_id,field_name) do update set document_id=excluded.document_id;
+    on conflict on constraint document_registry_sources_pkey do update set document_id=excluded.document_id;
   end if;
  end loop;
  if tg_op='DELETE' then return old;end if;return new;
@@ -179,7 +179,7 @@ begin
     values((item->>'organization_id')::uuid,left(coalesce(item->>'title',item->>'name','Document'),120),source_url,finance,coalesce((item->>'created_by')::uuid,(item->>'submitted_by')::uuid))
     on conflict(organization_id,canonical_url) do update set restricted_finance=document_registry.restricted_finance or excluded.restricted_finance returning id into doc_id;
    insert into public.document_registry_sources values((item->>'organization_id')::uuid,table_name,(item->>'id')::uuid,field_name,doc_id)
-    on conflict(organization_id,table_name,record_id,field_name) do update set document_id=excluded.document_id;
+    on conflict on constraint document_registry_sources_pkey do update set document_id=excluded.document_id;
   end loop;
  end loop;
 end $$;
