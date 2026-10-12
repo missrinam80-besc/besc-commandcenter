@@ -19,7 +19,7 @@ async function sql(query){const result=await processSql(query).done;assert.equal
 await sql('create database besc_asset_fiche_fixture;');
 env={...process.env,PGDATABASE:'besc_asset_fiche_fixture'};
 const migration=name=>readFileSync('supabase/migrations/'+name,'utf8');
-let fixture=readFileSync('tests/helpers/asset-fiche-fixture.sql','utf8').replace('create role anon;create role authenticated;',"do $$begin if not exists(select from pg_roles where rolname='anon')then create role anon;end if;if not exists(select from pg_roles where rolname='authenticated')then create role authenticated;end if;end$$;");
+let fixture=readFileSync('tests/helpers/asset-fiche-fixture.sql','utf8').replace('create role anon;create role authenticated;',()=>"do $$begin if not exists(select from pg_roles where rolname='anon')then create role anon;end if;if not exists(select from pg_roles where rolname='authenticated')then create role authenticated;end if;end$$;");
 fixture+=migration('20260803163000_add_assets_and_shop_relations.sql').split('alter table public.shop_products')[0];
 fixture+="create unique index asset_fixture_key on assets(organization_id,id);create table event_materials(id uuid primary key,organization_id uuid,event_id uuid,asset_id uuid,status text default 'arranged',pickup_at timestamptz,return_at timestamptz);grant select,insert,update,delete on event_materials to authenticated;";
 fixture+=migration('20260803103432_add_record_links_and_relationships.sql').split('create table public.record_relationships')[0];
