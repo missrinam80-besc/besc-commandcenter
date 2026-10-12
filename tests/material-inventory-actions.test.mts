@@ -11,7 +11,7 @@ for(const role of ["admin","board","member","volunteer"])test(`Inventaris respec
   "@/components/dossier-editor-gate":{dossierEditorGate:async()=>null},
   "@/components/app-shell":{AppShell:({children}:React.PropsWithChildren)=>React.createElement("div",null,children)},
   "@/components/confirm-submit-button":{ConfirmSubmitButton:({children,...props}:React.PropsWithChildren<Record<string,unknown>>)=>React.createElement("button",props,children)},
-  "@/lib/auth-context":{requireActiveMembership:async()=>({supabase:{from:()=>query},membership:{organization_id:"fixture-org",role}})},
+  "@/lib/auth-context":{requireActiveMembership:async()=>({supabase:{from:()=>query,rpc:async()=>({data:[],error:null})},membership:{organization_id:"fixture-org",role}})},
   "./materials.css":{},
   "next/navigation":{useRouter:()=>({push(){},refresh(){}})},
   "@/app/app/materialen/actions":{bulkAssetAction:()=>{}},

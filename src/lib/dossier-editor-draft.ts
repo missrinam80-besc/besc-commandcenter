@@ -1,4 +1,5 @@
 import {dossierEditorCatalog,dossierFieldTab,type EditorConfig} from "./dossier-editor-catalog";
+import {assetStorageValues} from "./asset-followup";
 import schemas from "./dossier-editor-schema.json";
 import {eventEditorValues,eventEditorStorageValues,eventEditorTimingError} from "./event-editor-timing";
 import {managedChoice,choiceKey} from "./dossier-choices";
@@ -25,7 +26,7 @@ function changed(values:EditorRecord,base:EditorRecord|null,allowed:string[]):Ed
 }
 export function buildEditorBundle(draft:DossierDraft):EditorBundle {
   const cfg=dossierEditorCatalog[draft.kind];if(!cfg)throw Error("Onbekend dossiertype");
-  const root={id:draft.id,new:!draft.base,values:changed(draft.kind==="event"?eventEditorStorageValues(draft.values):draft.values,draft.base,cfg.fields),base:draft.base};
+  const root={id:draft.id,new:!draft.base,values:changed(draft.kind==="event"?eventEditorStorageValues(draft.values):draft.kind==="asset"?assetStorageValues(draft.values):draft.values,draft.base,cfg.fields),base:draft.base};
   const parts:EditorChange[]=[];
   for(const part of cfg.collections)for(const row of draft.parts[part.table]??[]){
     if(row.deleted&&!row.base)continue;
@@ -64,6 +65,7 @@ export function validateEditorIssues(bundle:EditorBundle,config:EditorConfig=dos
     if(change.delete){if(index===0)add("Verwijderen van de fiche is een aparte dossieractie.");continue;}
     for(const name of Object.keys(change.values))if(!fields.includes(name))add("Deze wijziging bevat een veld dat niet bij het dossier hoort.");
     const all={...change.base,...change.values};
+    if(table==="assets"&&change.new&&!all.acquisition_type)add("Kies of het materiaal aangekocht, geleend of gekregen is.","acquisition_type");
     if(table==="event_schedule_items"){
       if(!all.kind)add("Kies een soort onderdeel.","kind");
       if(!all.status)add("Kies een status voor het tijdslot.","status");

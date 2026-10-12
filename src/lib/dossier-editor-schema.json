@@ -62,6 +62,14 @@
         "reference": "projects"
       },
       {
+        "name": "repair_asset_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
         "name": "content_id",
         "type": "uuid",
         "required": false,
@@ -107,6 +115,14 @@
       }
     ],
     "record_links": [
+      {
+        "name": "document_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "document_registry"
+      },
       {
         "name": "label",
         "type": "text",
@@ -377,6 +393,61 @@
       {
         "name": "due_at",
         "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      }
+    ],
+    "project_materials": [
+      {
+        "name": "asset_id",
+        "type": "uuid",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "starts_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "ends_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "default": "arranged",
+        "options": [
+          "arranged",
+          "in_use",
+          "returned",
+          "cancelled"
+        ],
+        "reference": null
+      },
+      {
+        "name": "notes",
+        "type": "text",
         "required": false,
         "default": null,
         "options": [],
@@ -905,6 +976,14 @@
       }
     ],
     "record_links": [
+      {
+        "name": "document_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "document_registry"
+      },
       {
         "name": "label",
         "type": "text",
@@ -2010,6 +2089,14 @@
     ],
     "record_links": [
       {
+        "name": "document_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "document_registry"
+      },
+      {
         "name": "label",
         "type": "text",
         "required": true,
@@ -2904,6 +2991,14 @@
     ],
     "record_links": [
       {
+        "name": "document_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "document_registry"
+      },
+      {
         "name": "label",
         "type": "text",
         "required": true,
@@ -3312,6 +3407,14 @@
       }
     ],
     "record_links": [
+      {
+        "name": "document_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "document_registry"
+      },
       {
         "name": "label",
         "type": "text",
@@ -3779,6 +3882,14 @@
     ],
     "record_links": [
       {
+        "name": "document_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "document_registry"
+      },
+      {
         "name": "label",
         "type": "text",
         "required": true,
@@ -4106,6 +4217,14 @@
     ],
     "record_links": [
       {
+        "name": "document_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "document_registry"
+      },
+      {
         "name": "label",
         "type": "text",
         "required": true,
@@ -4391,6 +4510,14 @@
       }
     ],
     "record_links": [
+      {
+        "name": "document_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "document_registry"
+      },
       {
         "name": "label",
         "type": "text",
@@ -4684,6 +4811,14 @@
       }
     ],
     "record_links": [
+      {
+        "name": "document_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "document_registry"
+      },
       {
         "name": "label",
         "type": "text",
@@ -5724,6 +5859,14 @@
     ],
     "record_links": [
       {
+        "name": "document_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "document_registry"
+      },
+      {
         "name": "label",
         "type": "text",
         "required": true,
@@ -5936,6 +6079,14 @@
     ],
     "record_links": [
       {
+        "name": "document_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "document_registry"
+      },
+      {
         "name": "label",
         "type": "text",
         "required": true,
@@ -6089,6 +6240,18 @@
         "reference": null
       },
       {
+        "name": "acquisition_type",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [
+          "purchased",
+          "borrowed",
+          "gifted"
+        ],
+        "reference": null
+      },
+      {
         "name": "serial_number",
         "type": "text",
         "required": false,
@@ -6145,42 +6308,58 @@
         "reference": "partners"
       },
       {
-        "name": "project_id",
-        "type": "uuid",
-        "required": false,
-        "default": null,
-        "options": [],
-        "reference": "projects"
-      },
-      {
-        "name": "event_id",
-        "type": "uuid",
-        "required": false,
-        "default": null,
-        "options": [],
-        "reference": "events"
-      },
-      {
-        "name": "campaign_id",
-        "type": "uuid",
-        "required": false,
-        "default": null,
-        "options": [],
-        "reference": "campaigns"
-      },
-      {
-        "name": "document_url",
+        "name": "notes",
         "type": "text",
         "required": false,
         "default": null,
         "options": [],
         "reference": null
-      },
+      }
+    ],
+    "asset_document_links": [
       {
-        "name": "notes",
-        "type": "text",
+        "name": "document_id",
+        "type": "uuid",
         "required": false,
         "default": null,
+        "options": [],
+        "reference": "document_registry"
+      },
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "link_type",
+        "type": "text",
+        "required": false,
+        "default": "document",
+        "options": [
+          "document",
+          "invoice",
+          "repair",
+          "website",
+          "other"
+        ],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
         "options": [],
         "reference": null
       }

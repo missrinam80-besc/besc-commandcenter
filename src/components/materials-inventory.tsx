@@ -2,8 +2,8 @@
 import {useState,useTransition,type FormEvent} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
-import {Archive,MapPin,Pencil,Plus,Trash2,ExternalLink} from "lucide-react";
-import {bulkAssetAction} from "@/app/app/materialen/actions";
+import {Archive,Copy,MapPin,Pencil,Plus,Trash2,ExternalLink} from "lucide-react";
+import {bulkAssetAction,duplicateAssets} from "@/app/app/materialen/actions";
 import {assetStatuses,type AssetListRow} from "@/lib/asset-bulk";
 const types:Record<string,string>={equipment:"Materiaal",computer:"Computer",streaming:"Streaming",furniture:"Meubilair",software:"Software/licentie",vehicle:"Voertuig",other:"Overige resource"};
 export function MaterialsInventory({rows,canManage}:{rows:AssetListRow[];canManage:boolean}){
@@ -31,6 +31,7 @@ export function MaterialsInventory({rows,canManage}:{rows:AssetListRow[];canMana
   {canManage&&<div className="materials-toolbar" role="group" aria-label="Acties voor geselecteerde materialen">
    <Link className="primary" href="?nieuw=1"><Plus size={16}/>Nieuw item</Link>
    <button type="button" disabled={pending||count!==1} onClick={()=>router.push(`?bewerken=${ids[0]}`)}><Pencil size={16}/>Bewerken</button>
+   <button type="button" disabled={pending||!count||count>100} onClick={()=>startTransition(async()=>{const result=await duplicateAssets(ids);setFeedback(result);if(result.ok){setSelected([]);router.refresh();}})}><Copy size={16}/>Dupliceren</button>
    <button type="button" disabled={pending||!count} aria-expanded={showBulk} aria-controls="materials-bulk-form" onClick={()=>setShowBulk(value=>!value)}><MapPin size={16}/>Locatie / status aanpassen</button>
    <button type="button" disabled={pending||!count} onClick={()=>run("archive")}><Archive size={16}/>Archiveren</button>
    <button type="button" className="danger-button" disabled={pending||!count} onClick={()=>run("delete")}><Trash2 size={16}/>Verwijderen</button>
@@ -48,11 +49,11 @@ export function MaterialsInventory({rows,canManage}:{rows:AssetListRow[];canMana
   </form>}
   <div className="materials-table-scroll"><table className="materials-table"><thead><tr>
    {canManage&&<th scope="col"><label className="materials-check"><input type="checkbox" aria-label="Alle getoonde materialen selecteren" checked={Boolean(rows.length&&count===rows.length)} disabled={pending||!rows.length} ref={node=>{if(node)node.indeterminate=count>0&&count<rows.length;}} onChange={event=>{setSelected(event.target.checked?rows.map(row=>row.id):[]);setFeedback(null);}}/>Alles</label></th>}
-   <th scope="col">Item</th><th scope="col">Verantwoordelijke / locatie</th><th scope="col">Waarde</th><th scope="col">Koppeling</th><th scope="col">Status</th>
+   <th scope="col">Item</th><th scope="col">Verantwoordelijke / locatie</th><th scope="col">Waarde</th><th scope="col">Planning</th><th scope="col">Status</th>
   </tr></thead><tbody>{rows.map(item=><tr key={item.id} data-selected={ids.includes(item.id)||undefined}>
    {canManage&&<td><input type="checkbox" aria-label={`${item.name} selecteren`} checked={ids.includes(item.id)} disabled={pending} onChange={()=>toggle(item.id)}/></td>}
    <td><strong>{item.name}</strong><small>{types[item.asset_type]??item.asset_type}{item.serial_number?` · ${item.serial_number}`:""}</small>{item.document_url&&<a href={item.document_url} target="_blank" rel="noreferrer"><ExternalLink size={13}/>Document</a>}</td>
-   <td>{item.ownerLabel}{item.location&&<small>{item.location}</small>}</td><td>{item.valueLabel}<small>{item.acquiredLabel}</small></td><td>{item.relationLabel}</td><td><span className="badge purple">{assetStatuses[item.status as keyof typeof assetStatuses]??item.status}</span></td>
+   <td>{item.ownerLabel}{item.location&&<small>{item.location}</small>}</td><td>{item.valueLabel}<small>{item.acquiredLabel}</small></td><td>{item.relationLabel}</td><td><span className="badge purple">{item.statusLabel??assetStatuses[item.status as keyof typeof assetStatuses]??item.status}</span></td>
   </tr>)}</tbody></table>{!rows.length&&<p className="empty">Nog geen materialen of resources geregistreerd.</p>}</div>
  </>;
 }

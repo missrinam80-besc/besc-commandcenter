@@ -47,3 +47,15 @@
 .app-shell .dossier-editor .dossier-error-link{background:transparent;border:0;padding:3px 0;text-align:left;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
 .app-shell .dossier-editor .dossier-error-link:hover{background:transparent;text-decoration-thickness:2px}
 .dossier-editor [aria-invalid="true"]{outline:2px solid var(--theme-danger);outline-offset:1px}
+
+.asset-planning { margin-bottom:18px; }
+.asset-planning-state { display:grid; gap:5px; padding:13px 15px; background:var(--theme-control); border:1px solid var(--line); border-radius:9px; margin-bottom:18px; }
+.asset-planning-state strong { font-size:12px; }
+.asset-planning-state span,.asset-planning article span { font-size:10px; color:var(--muted); line-height:1.5; }
+.asset-planning h3 { font:500 18px Georgia,serif; margin:20px 0 10px; }
+.asset-planning article { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 0; border-bottom:1px solid var(--line); }
+.asset-planning article div { display:grid; gap:5px; min-width:0; }
+.asset-planning a { font-size:12px; color:var(--ink); overflow-wrap:anywhere; }
+.asset-repair-action { display:inline-flex; align-items:center; padding:9px 12px; border:1px solid var(--line); border-radius:8px; background:var(--theme-control); color:var(--ink); font-size:11px; font-weight:700; text-decoration:none; }
+.asset-repair-action:focus-visible { outline:2px solid var(--besc-red); outline-offset:3px; }
+@media(max-width:600px) { .asset-planning article { align-items:start; flex-direction:column; gap:7px; } }

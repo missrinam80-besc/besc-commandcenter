@@ -1,3 +1,5 @@
+import {DocumentRegistryPanel} from "@/components/document-registry-panel";
+import "./documents.css";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -235,7 +237,7 @@ export default async function DocumentsPage({
         <div><p>GOOGLE WORKSPACE</p><h1>Documentregister</h1></div>
         <a className="primary" href="https://drive.google.com/drive/shared-drives" target="_blank" rel="noreferrer"><Cloud size={16}/>Open Google Drive</a>
       </header>
-      <div className="module-body">
+      <div className="module-body"><DocumentRegistryPanel searchParams={Promise.resolve(query)}/>
         <p className="lead">Notulen, eventdossiers en sponsorrapporten centraal opgevolgd. Bestanden blijven in Google Drive; Supabase bewaart alleen links en metadata.</p>
         {query.succes === "goedkeuring-aangevraagd" && <div className="success">Het document is ter goedkeuring voorgelegd.</div>}
         {query.succes === "document-verwijderd" && <div className="success">De documentregistratie is verwijderd. Het bestand in Google Drive is behouden.</div>}

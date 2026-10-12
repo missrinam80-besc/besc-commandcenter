@@ -1,3 +1,5 @@
+import {requirePermission} from "@/lib/auth-context";
+import {notFound} from "next/navigation";
 import {DossierWorkspace} from "./dossier-workspace";
 import {dossierEditorCatalog} from "@/lib/dossier-editor-catalog";
 import type {EditorRecord} from "@/lib/dossier-editor-draft";
@@ -23,6 +25,15 @@ export async function dossierEditorGate({kind,module,id,query,group}:{kind?:stri
  const returnTo=group==="finance"?"/app/financien":group==="shop"?"/app/shop":group==="administration"?"/app/administratie":`${parent?.path??cfg.path}${id?`/${id}`:""}`;
  const preset:EditorRecord={};
  if(!editing&&id&&parent){const foreignKey=({project:"project_id",event:"event_id",campaign:"campaign_id",partner:"partner_id"} as Record<string,string>)[parentKind!];if(foreignKey&&cfg.fields.includes(foreignKey))preset[foreignKey]=id;}
+ if(target==="task"&&!editing&&parentKind==="asset"&&query.herstel_asset_id){
+  if(!/^[0-9a-f-]{36}$/i.test(query.herstel_asset_id))notFound();
+  const {supabase,membership}=await requirePermission("manageOrganization");
+  const {data:asset,error}=await supabase.from("assets").select("id,name").eq("organization_id",membership.organization_id).eq("id",query.herstel_asset_id).is("deleted_at",null).maybeSingle();
+  if(error)throw Error("Het materiaal voor de herstelling kan niet worden geladen.");
+  if(!asset)notFound();
+  preset.repair_asset_id=asset.id;
+  preset.title="Herstelling — "+asset.name;
+ }
  const context=!editing&&id&&parent?.entity?{type:parent.entity,id}:undefined;
  return <DossierWorkspace kind={target} id={editing?id??query.bewerken:undefined} active={names[parentKind??target]??names[target]} returnTo={returnTo} preset={preset} initialTab={query.tab} context={context}/>;
 }
