@@ -83,3 +83,5 @@
 .ticket-cleanup h2 { font:500 20px Georgia,serif; margin:0 0 10px; }
 .ticket-cleanup>p { color:var(--muted); font-size:11px; line-height:1.6; margin:0 0 14px; }
 .ticket-cleanup .ticket-toolbar { font-size:11px; padding:10px 0; border-top:1px solid var(--line); align-items:center; }
+
+.ticket-intake{border:1px solid var(--line);border-radius:9px;background:var(--theme-control);padding:14px;margin:16px 0;font-size:12px}.ticket-intake summary{cursor:pointer;font-weight:700}.ticket-intake div{margin-top:14px}.ticket-intake p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}

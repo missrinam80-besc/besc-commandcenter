@@ -93,6 +93,15 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: fixture-only
 
+      - name: Gelijktijdig Discordbotbeheer en typed ticketintake controleren
+        run: node tests/discord-config-concurrency.mjs
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGDATABASE: besc_concurrency_fixture
+          PGUSER: postgres
+          PGPASSWORD: fixture-only
+
       - name: DEV-tokenopslag bewaken
         run: python3 tests/test_besc_dev_agent_token.py
 
@@ -116,3 +125,6 @@ jobs:
 
       - name: Ticket-API-routes en responsebodyannulering controleren
         run: node scripts/check-ticket-api-local.mjs
+
+      - name: Discordconfiguratie- en typed-intakeroutes controleren
+        run: node scripts/check-discord-config-api-local.mjs

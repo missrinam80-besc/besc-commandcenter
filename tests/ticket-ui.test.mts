@@ -21,7 +21,7 @@ function fixture(denied=false){
  },async rpc(...args:unknown[]){seen.push(["rpc",...args]);return{data:[]};}};
  const dependencies={"@/lib/auth-context":{async requirePermission(capability:string){assert.equal(capability,"manageTickets");if(denied)throw Error("denied");return{supabase:db,membership:{organization_id:org}};}},
   "@/components/app-shell":{AppShell:({children}:{children:React.ReactNode})=>React.createElement("main",null,children)},
-  "@/lib/tickets":labels,"../actions":{updateTicket:()=>{}},"./actions":{retryTicketCleanup:()=>{}},
+  "@/lib/permissions":{hasPermission:()=>false},"@/lib/tickets":labels,"../actions":{updateTicket:()=>{}},"./actions":{retryTicketCleanup:()=>{}},
   "next/link":{default:({children,...props}:{children:React.ReactNode})=>React.createElement("a",props,children)},"next/navigation":{notFound:()=>{throw Error("not_found");}}};
  return{seen,dependencies};
 }

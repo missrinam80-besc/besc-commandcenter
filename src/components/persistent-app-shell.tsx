@@ -26,6 +26,7 @@ type NavigationItem = {
   financeRoles?: FinanceRole[];
   counter?: "inbox" | "approvals";
   tickets?: boolean;
+  discordbot?: boolean;
 };
 type NavigationGroup = {
   label: string;
@@ -102,6 +103,7 @@ const navigationGroups: NavigationGroup[] = [
     label: "Beheer",
     icon: CloudCog,
     items: [
+      { label: "Discordbot", href:"/app/beheer/discordbot", icon:Bot, discordbot:true },
       { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin"] },
       { label: "CSV-import", href: "/app/beheer/import", icon: FolderKanban, roles: ["admin"] },
       { label: "Rechtencontrole", href: "/app/beheer/rechten", icon: ShieldCheck, roles: ["admin"] },
@@ -154,7 +156,8 @@ function helpHref(active: string) {
   return `/app/kennisbank?zoeken=${encodeURIComponent(query)}`;
 }
 
-function canSeeItem(item: NavigationItem, role: OrganizationRole, financeRole: FinanceRole, canManageTickets: boolean) {
+function canSeeItem(item: NavigationItem, role: OrganizationRole, financeRole: FinanceRole, canManageTickets: boolean, canManageDiscordBot: boolean) {
+  if (item.discordbot) return canManageDiscordBot;
   if (item.tickets) return canManageTickets;
   if (!item.roles && !item.financeRoles) return true;
   return Boolean(item.roles?.includes(role) || item.financeRoles?.includes(financeRole));
@@ -167,6 +170,7 @@ function Navigation({
   inboxCount,
   approvalCount,
   canManageTickets,
+  canManageDiscordBot,
 }: {
   active: string;
   role: OrganizationRole;
@@ -174,11 +178,12 @@ function Navigation({
   inboxCount: number;
   approvalCount: number;
   canManageTickets: boolean;
+  canManageDiscordBot: boolean;
 }) {
   return (
     <nav className="navigation-groups" aria-label="Hoofdnavigatie">
       {navigationGroups.map((group, index) => {
-        const items = group.items.filter((item) => canSeeItem(item, role, financeRole, canManageTickets));
+        const items = group.items.filter((item) => canSeeItem(item, role, financeRole, canManageTickets, canManageDiscordBot));
         const containsActive = items.some((item) => item.label === active);
         if (!items.length) return null;
         const GroupIcon = group.icon;
@@ -277,7 +282,7 @@ export function PersistentAppShell({ children, initialData }: { children: ReactN
           <span>Command Center</span>
         </Link>
         <PrimaryNavigation active={active} notificationCount={notificationCount ?? 0}/>
-        <Navigation canManageTickets={data.canManageTickets} active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
+        <Navigation canManageTickets={data.canManageTickets} canManageDiscordBot={data.canManageDiscordBot} active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
         <div className="sidebar-utility">
           <Link className="context-help-link" href={helpHref(active)}>
             <CircleHelp size={17}/><span>Help bij deze pagina</span>
@@ -303,7 +308,7 @@ export function PersistentAppShell({ children, initialData }: { children: ReactN
             <span>{name} · {role}</span>
           </div>
           <PrimaryNavigation active={active} notificationCount={notificationCount ?? 0}/>
-          <Navigation canManageTickets={data.canManageTickets} active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
+          <Navigation canManageTickets={data.canManageTickets} canManageDiscordBot={data.canManageDiscordBot} active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
           <div className="mobile-navigation-search">
             <Link className="context-help-link" href={helpHref(active)}>
               <CircleHelp size={17}/>Help bij deze pagina

@@ -7,7 +7,7 @@ export interface TicketStore {
 const snowflake = /^[1-9]\d{16,19}$/;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const limiter = new BotRateLimiter(120);
-const errors: Record<string, number> = { rate_limited: 429, idempotency_conflict: 409, source_conflict: 409,
+const errors: Record<string, number> = { channel_not_allowed:403, rate_limited: 429, idempotency_conflict: 409, source_conflict: 409,
   ticket_expired: 410, interaction_expired: 410, ticket_unavailable: 404, delivery_unavailable: 404,
   ticket_closed: 409, thread_not_allowed: 403, thread_conflict: 409, lease_conflict: 409, invalid_delivery_result: 400 };
 class Failure extends Error {
@@ -85,7 +85,7 @@ export async function handleTicketRequest(request: Request, deps: { clients: Bot
     if (["create","own","ingest"].includes(op)) field("discord_user_id", snowflake);
     if (["create","ingest"].includes(op)) {
       field("parent_channel_id", snowflake);
-      if (data.parent_channel_id !== client.ticketParentChannelId) throw new Failure(403, "channel_not_allowed");
+      if (op === "create" && data.parent_channel_id !== client.ticketParentChannelId) throw new Failure(403, "channel_not_allowed");
       if (typeof data.content !== "string" || data.content.trim().length < 1 || data.content.length > 4000) throw new Failure(400, "invalid_content");
       data.content = data.content.trim();
       const key = request.headers.get("idempotency-key") ?? "";
@@ -107,7 +107,7 @@ export async function handleTicketRequest(request: Request, deps: { clients: Bot
       if (data.thread_absent !== undefined && typeof data.thread_absent !== "boolean") throw new Failure(400, "invalid_delivery_result");
       if (data.thread_absent !== true || data.thread_id !== undefined) field("thread_id", snowflake);
       if (data.message_id !== undefined) field("message_id", snowflake);
-      if (data.parent_channel_id !== undefined && data.parent_channel_id !== client.ticketParentChannelId) throw new Failure(403, "channel_not_allowed");
+      if (data.parent_channel_id !== undefined && (typeof data.parent_channel_id !== "string" || !snowflake.test(data.parent_channel_id))) throw new Failure(403, "channel_not_allowed");
     }
     if (op === "fail") {
       if (!["discord_unavailable","permission_denied","thread_missing","unexpected_participants","duplicate_marker","outcome_unknown"].includes(String(data.error_code)) || typeof data.uncertain !== "boolean") throw new Failure(400, "invalid_failure");

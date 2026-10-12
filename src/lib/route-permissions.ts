@@ -41,6 +41,7 @@ function canViewFinancePath(pathname: string, searchParams: URLSearchParams, mem
 }
 
 export function canViewInternalPath(pathname: string, membership: MembershipAccess, searchParams = new URLSearchParams()) {
+  if (pathname === "/app/beheer/discordbot" || pathname.startsWith("/app/beheer/discordbot/")) return hasPermission(membership, "manageDiscordBot");
   if (pathname === "/app/tickets" || pathname.startsWith("/app/tickets/")) return hasPermission(membership, "manageTickets");
   if (membership.role === "admin") return true;
   if (startsWithAny(pathname, adminOnlyPrefixes)) return false;
@@ -61,6 +62,7 @@ export function requiredCapabilityForQuery(
   pathname: string,
   searchParams: URLSearchParams,
 ): Capability | null {
+  if (pathname === "/app/beheer/discordbot" || pathname.startsWith("/app/beheer/discordbot/")) return "manageDiscordBot";
   const createMode = searchParams.get("nieuw");
   const editMode = searchParams.has("bewerken");
   if (pathname === "/app/tickets" || pathname.startsWith("/app/tickets/")) return "manageTickets";

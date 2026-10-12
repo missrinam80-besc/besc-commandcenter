@@ -2,7 +2,7 @@ import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { canViewInternalPath } from "./route-permissions.ts";
 import type { MembershipAccess } from "./permissions.ts";
 
-export type BotScope = "identity:read" | "account:read" | "events:read" | "tickets:create" | "tickets:own:read" | "tickets:ingest" | "tickets:deliver";
+export type BotScope = "identity:read" | "account:read" | "events:read" | "tickets:create" | "tickets:own:read" | "tickets:ingest" | "tickets:deliver" | "bot-config:read" | "bot-config:report" | "bot-config:deliver";
 export type BotClient = {
   id: string; keyHash: string; organizationId: string; guildId: string;
   scopes: BotScope[]; expiresAt: string; revoked: boolean;
@@ -21,7 +21,7 @@ export interface BotStore {
 export const hashBotKey = (key: string) => createHash("sha256").update(key).digest("hex");
 const snowflake = /^[1-9]\d{16,19}$/;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const scopes: BotScope[] = ["identity:read", "account:read", "events:read", "tickets:create", "tickets:own:read", "tickets:ingest", "tickets:deliver"];
+const scopes: BotScope[] = ["identity:read", "account:read", "events:read", "tickets:create", "tickets:own:read", "tickets:ingest", "tickets:deliver", "bot-config:read", "bot-config:report", "bot-config:deliver"];
 const MAX_EVENT_OFFSET = 99999;
 
 export function parseBotClients(raw: string | undefined): BotClient[] {
@@ -110,7 +110,7 @@ export async function handleBotRequest(request: Request, deps: {
       if (!allowed.includes(key) || url.searchParams.getAll(key).length !== 1) throw new ApiFailure(400, "invalid_query");
     }
     if (url.searchParams.get("guild_id") !== client.guildId) throw new ApiFailure(403, "guild_not_allowed");
-    if (resource === "identity") return reply(200, { clientId: client.id, scopes: client.scopes, readOnly: !client.scopes.some(s => s.startsWith("tickets:")) });
+    if (resource === "identity") return reply(200, { clientId: client.id, scopes: client.scopes, readOnly: !client.scopes.some(s => s.startsWith("tickets:") || s === "bot-config:report" || s === "bot-config:deliver") });
     const discordId = url.searchParams.get("discord_user_id") ?? "";
     if (!snowflake.test(discordId)) throw new ApiFailure(400, "invalid_discord_id");
     const offsetText = url.searchParams.get("offset") ?? "0";
