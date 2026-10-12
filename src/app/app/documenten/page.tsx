@@ -237,11 +237,12 @@ export default async function DocumentsPage({
         <div><p>GOOGLE WORKSPACE</p><h1>Documentregister</h1></div>
         <a className="primary" href="https://drive.google.com/drive/shared-drives" target="_blank" rel="noreferrer"><Cloud size={16}/>Open Google Drive</a>
       </header>
-      <div className="module-body"><DocumentRegistryPanel searchParams={Promise.resolve(query)}/>
-        <p className="lead">Notulen, eventdossiers en sponsorrapporten centraal opgevolgd. Bestanden blijven in Google Drive; Supabase bewaart alleen links en metadata.</p>
+      <div className="module-body documents-page"><DocumentRegistryPanel searchParams={Promise.resolve(query)}/>
+        <div className="documents-section-heading"><div><p className="eyebrow">DOSSIERDOCUMENTEN</p><h2>Generatie en goedkeuring</h2></div></div>
+        <p className="lead">Volg notulen, eventdossiers en sponsorrapporten op. Open een bestaand document, vraag goedkeuring aan of ga naar de fiche om een ontbrekend document te genereren.</p>
         {query.succes === "goedkeuring-aangevraagd" && <div className="success">Het document is ter goedkeuring voorgelegd.</div>}
         {query.succes === "document-verwijderd" && <div className="success">De documentregistratie is verwijderd. Het bestand in Google Drive is behouden.</div>}
-        {query.fout && <div className="error-note">De goedkeuringsactie is mislukt ({query.fout}).</div>}
+        {query.fout && !["velden", "opslaan"].includes(query.fout) && <div className="error-note">De documentactie is mislukt ({query.fout}).</div>}
         <section className="drive-principle">
           <Cloud size={20}/>
           <div><strong>Google Drive blijft de documentbron</strong><span>Een ontbrekend document is een verwachte output waarvoor nog geen Google-document geregistreerd is.</span></div>
@@ -287,7 +288,7 @@ export default async function DocumentsPage({
                           className="document-delete"
                           message="De registratie verdwijnt uit het Command Center. Het Google Drive-bestand zelf blijft bestaan. Doorgaan?"
                         >
-                          Verwijderen
+                          Registratie verwijderen
                         </ConfirmSubmitButton>
                       </form>
                     )}
