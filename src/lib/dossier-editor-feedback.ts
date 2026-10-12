@@ -62,6 +62,8 @@ export function dossierStorageFeedback(error:StorageError,bundle:EditorBundle):{
   const issues=bundle.parts.filter(part=>part.collection==="event_schedule_items"&&!part.delete).map(part=>({message,field,collection:part.collection,rowId:part.id,tab:cfg.collections.find(c=>c.table===part.collection)?.tab,label:`Programma en inzet: ${String(part.values.title??part.base?.title??"tijdslot")}`}));
   return {message:"De databank weigert een regel voor een tijdslot. Controleer de onderstaande onderdelen; de databank vermeldt niet welk tijdslot de fout veroorzaakte.",issues};
  }
+ const business:Record<string,string>={asset_already_reserved:"Dit materiaal is al gereserveerd voor een overlappende periode. Kies andere data of een ander item.",asset_in_repair:"Dit materiaal is in herstelling. Rond de hersteltaak eerst af of kies een ander item.",asset_unavailable:"Dit materiaal is niet beschikbaar. Kies een ander item.",asset_reservation_period_required:"Vul een begin- en eindmoment in voor de materiaalreservering, of vul de event- of projectperiode aan.",document_already_linked:"Dit document is al gekoppeld aan deze fiche. Gebruik de bestaande koppeling.",invalid_document_link:"Vul een label en een volledige http- of https-link in."};
+ if(business[String(error.message??"")])return {message:business[String(error.message)]+" Er is niets opgeslagen."};
  const messages:Record<string,string>={
   "42501":"Geen schrijfrechten voor de fiche of een gewijzigd onderdeel. Controleer je bewerkrechten en de toegang tot gekoppelde dossiers.",
   "23503":"Een gekoppeld dossier, persoon of account bestaat niet meer of hoort niet bij deze organisatie. Kies opnieuw een beschikbare koppeling.",

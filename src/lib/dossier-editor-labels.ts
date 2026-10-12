@@ -6,3 +6,8 @@ export function dossierFieldLabel(name:string){return labels[name]??name.replace
 Object.assign(labels,{phone:"Telefoon",birth_date:"Geboortedatum",started_on:"Actief sinds",stopped_on:"Actief tot",role_description:"Rol en afspraken",avatar_url:"Profielfoto",contact_name:"Algemene contactnaam",last_contact:"Laatste contact",product_family:"Productfamilie",bundle_kind:"Publicatiebundel",template_variant:"Opmaak",preheader:"Voorbeeldtekst inbox",hero_image_url:"Hoofdafbeelding",hero_image_alt:"Beschrijving hoofdafbeelding",source_type:"Dossiertype",source_id:"Dossier"});
 Object.assign(choices,{chair:"Voorzitter",vice_chair:"Ondervoorzitter",secretary:"Secretaris",treasurer:"Boekhouder",director:"Bestuurder",daily_management:"Dagelijks bestuur",general_assembly:"Algemene vergadering",board:"Bestuur",finance:"Financiën",member:"Crew",staff:"Ondersteuner",task:"Taak",project:"Project",event:"Event",campaign:"Campagne",content:"Content",community_person:"Communitycontact",insurance:"Verzekering",tax:"Belasting",subsidy:"Subsidie",procedure:"Procedure",guide:"Handleiding",policy:"Beleid",faq:"Veelgestelde vragen",onboarding:"Intake",template:"Sjabloon"});
 export function dossierChoiceLabel(value:string){return choices[value]??value.replaceAll("_"," ");}
+
+Object.assign(labels,{acquisition_type:"Herkomst materiaal",repair_asset_id:"Materiaal voor herstelling"});
+Object.assign(choices,{equipment:"Materiaal",computer:"Computer",streaming:"Streamingmateriaal",furniture:"Meubilair",software:"Software / licentie",vehicle:"Voertuig",maintenance:"Onderhoud / herstelling",loaned:"Uitgeleend",retired:"Buiten gebruik",lost:"Vermist",gifted:"Gekregen",invoice:"Factuur",repair:"Herstelbon"});
+
+Object.assign(labels,{document_id:"Document"});

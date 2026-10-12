@@ -83,6 +83,7 @@ const navigationGroups: NavigationGroup[] = [
       { label: "VZW-administratie", href: "/app/administratie", icon: Landmark, roles: ["admin", "board"] },
       { label: "Financiën", href: "/app/financien", icon: CircleDollarSign, roles: ["admin", "board"], financeRoles: ["submitter", "approver", "treasurer", "approver_treasurer"] },
       { label: "Materialen & resources", href: "/app/materialen", icon: Boxes, roles: ["admin", "board", "member"] },
+      { label: "Documenten & Drive", href: "/app/documenten", icon: BookOpen, roles: ["admin", "board", "member"] },
       { label: "Kennisbank", href: "/app/kennisbank", icon: BookOpen },
     ],
   },

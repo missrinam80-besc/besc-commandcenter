@@ -6,16 +6,16 @@ import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 const native=createRequire(import.meta.url),cache=new Map();
 function load(file){
- file=path.resolve(file);if(cache.has(file))return cache.get(file);
+ file=path.resolve(file);if(!fs.existsSync(file)&&file.endsWith(".ts"))file=file.slice(0,-3)+".tsx";if(cache.has(file))return cache.get(file);
  const compiled={exports:{}};
- const localRequire=name=>name==='next/navigation'?{useRouter:()=>({push(){},refresh(){}})}:name.startsWith('@/')?load('src/'+name.slice(2)+'.ts'):name.startsWith('.')?(name.endsWith('.json')?JSON.parse(fs.readFileSync(path.resolve(path.dirname(file),name),'utf8')):load(path.resolve(path.dirname(file),name+'.ts'))):native(name);
+ const localRequire=name=>name==='next/link'?{default:({children,...props})=>React.createElement('a',props,children)}:name==='./asset-planning'?load('src/components/asset-planning.tsx'):name==='next/navigation'?{useRouter:()=>({push(){},refresh(){}})}:name.startsWith('@/')?load('src/'+name.slice(2)+'.ts'):name.startsWith('.')?(name.endsWith('.json')?JSON.parse(fs.readFileSync(path.resolve(path.dirname(file),name),'utf8')):load(path.resolve(path.dirname(file),name.endsWith('.ts')?name:name+'.ts'))):native(name);
  new Function('module','exports','require',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText)(compiled,compiled.exports,localRequire);
  cache.set(file,compiled.exports);return compiled.exports;
 }
 const catalog=load('src/lib/dossier-editor-catalog.ts').dossierEditorCatalog;
 const Editor=load('src/components/dossier-editor.tsx').DossierEditor;
 const escape=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
-const forms=Object.entries(catalog).map(([kind,cfg])=>`<div class="example" data-kind="${kind}" ${kind==='event'?'':'hidden'}>${renderToStaticMarkup(React.createElement(Editor,{kind,id:'11111111-1111-4111-8111-111111111111',mode:'create',cancelHref:'#',permissions:Object.fromEntries(cfg.collections.map(part=>[part.table,true]))}))}</div>`).join('');
+const forms=Object.entries(catalog).map(([kind,cfg])=>`<div class="example" data-kind="${kind}" ${kind==='event'?'':'hidden'}>${renderToStaticMarkup(React.createElement(Editor,{kind,id:'11111111-1111-4111-8111-111111111111',mode:'create',initialValues:kind==='asset'?{acquisition_type:'purchased'}:{},cancelHref:'#',permissions:Object.fromEntries(cfg.collections.map(part=>[part.table,true]))}))}</div>`).join('');
 const options=Object.entries(catalog).map(([kind,cfg])=>`<option value="${kind}" ${kind==='event'?'selected':''}>${escape(cfg.label)}</option>`).join('');
 const css=fs.readFileSync('src/components/dossier-editor.css','utf8');
 // Use the app stylesheet, so the preview cannot hide missing shared styles.

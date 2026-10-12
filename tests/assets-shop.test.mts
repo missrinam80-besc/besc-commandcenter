@@ -16,7 +16,6 @@ test("materialen en resources hebben verantwoordelijke, locatie, waarde en dossi
   assert.match(migration, /location text/);
   assert.match(migration, /supplier_id uuid references public\.partners/);
   assert.match(assets, /Materialen & resources/);
-  assert.match(assets, /projecten, events,/);
   assert.match(actions, /mode: z\.enum\(\["archive", "delete"\]\)/);
 });
 

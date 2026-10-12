@@ -8,7 +8,7 @@ const fields=(s:string)=>s.split(" ").filter(Boolean);
 const commonTabs=[{id:"algemeen",label:"Algemeen"},{id:"planning",label:"Planning & opvolging"},{id:"dossiers",label:"Gekoppelde dossiers"},{id:"documenten",label:"Documenten & koppelingen"}] as const;
 const collection=(table:string,label:string,tab:string,parentField:string,columns:string,extra:Partial<EditorCollection>={}):EditorCollection=>({table,label,tab,parentField,fields:fields(columns),...extra});
 const links=(entity:string):EditorCollection[]=>[
-  collection("record_links","Bronlinks","documenten","entity_id","label url link_type position",{entityField:"entity_type",entityValue:entity}),
+  collection("record_links","Bronlinks","documenten","entity_id","document_id label url link_type position",{entityField:"entity_type",entityValue:entity}),
   collection("record_relationships","Dossierrelaties","dossiers","source_id","target_type target_id source_type source_id relationship_type",{entityField:"source_type",entityValue:entity}),
 ];
 const finance=(parentField:string):EditorCollection[]=>[
@@ -26,12 +26,12 @@ function config(table:string,label:string,path:string,capability:string,columns:
 // Explicit allowlist shared by the UI and its database transaction. Identity, audit,
 // credentials, approval signatures and membership administration are never fields.
 export const dossierEditorCatalog:Record<string,EditorConfig>={
-  task:config("tasks","Taak","/app/taken","active","title description status priority due_at project_id",commonTabs,[
+  task:config("tasks","Taak","/app/taken","active","title description status priority due_at project_id repair_asset_id",commonTabs,[
     collection("task_checklist_items","Checklist","planning","task_id","title is_done position"),
     collection("task_assignees","Verantwoordelijken","planning","task_id","user_id",{key:"user_id"}),
   ],"task"),
   project:config("projects","Project","/app/projecten","manageProjects","title description status priority owner_id start_date due_date drive_url goal deliverables acceptance_criteria closure_evaluation",projectTabs,[
-    tasks("project_id","planning"),collection("project_milestones","Mijlpalen","planning","project_id","title due_date is_done"),
+    tasks("project_id","planning"),collection("project_materials","Materiaalreserveringen","planning","project_id","asset_id name starts_at ends_at status notes"),collection("project_milestones","Mijlpalen","planning","project_id","title due_date is_done"),
     collection("project_members","Projectaccounts","team","project_id","user_id",{key:"user_id"}),assignments("project_id","team"),
     collection("campaigns","Campagnes","dossiers","project_id","title campaign_type status priority notes start_date end_date channels",{capability:"manageOrganization"}),
     ...finance("project_id"),documents("project"),
@@ -79,7 +79,7 @@ export const dossierEditorCatalog:Record<string,EditorConfig>={
   income:config("income_entries","Inkomst","/app/financien/inkomsten","manageFinance","title budget_id income_type status amount expected_date received_at payer invoice_number proof_url notes project_id event_id campaign_id partner_id merch_launch_id",commonTabs),
   product:config("shop_products","Product","/app/shop/producten","manageOrganization","name product_type status price style platforms description asset_url shop_url owner_id supplier_id producer_id project_id campaign_id",commonTabs,[],"shop_product"),
   launch:config("merch_launches","Lancering","/app/shop/lanceringen","manageOrganization","title collection_name status launch_date timing description drive_url owner_id project_id campaign_id partner_id",commonTabs,[],"merch_launch"),
-  asset:config("assets","Materiaal / resource","/app/materialen","manageOrganization","name asset_type status serial_number owner_person_id location acquired_date purchase_value current_value supplier_id project_id event_id campaign_id document_url notes",commonTabs),
+  asset:config("assets","Materiaal / resource","/app/materialen","manageOrganization","name asset_type status acquisition_type serial_number owner_person_id location acquired_date purchase_value current_value supplier_id notes",[{id:"algemeen",label:"Algemeen"},{id:"planning",label:"Planning & opvolging"},{id:"documenten",label:"Documenten"}],[collection("asset_document_links","Documentlinks","documenten","asset_id","document_id label url link_type position")]),
   newsletter:config("newsletters","Nieuwsbrief","/app/nieuwsbrieven","manageContent","title subject body_text mailing_list_id email_template_id",commonTabs),
   member:config("association_members","VZW-lid","/app/administratie","manageOrganization","full_name email membership_type status joined_on left_on member_number voting_right address notes",commonTabs),
   mandate:config("governance_mandates","Bestuursmandaat","/app/administratie","manageOrganization","member_id role role_label start_date end_date status appointment_document_url notes",commonTabs),
@@ -94,6 +94,7 @@ dossierEditorCatalog.newsletter.capability="manageOrganization";
 
 export function dossierFieldTab(name:string,config:EditorConfig) {
   const has=(tab:string)=>config.tabs.some(t=>t.id===tab);
+  if(config.table==="tasks"&&name==="repair_asset_id")return "planning";
   if(/^(budget|value|estimated_value|amount|planned_amount|price|purchase_value|current_value)/.test(name)&&has("financien"))return "financien";
   if(/^(reporting_status|results_summary|impressions|clicks)$/.test(name)&&has("resultaten"))return "resultaten";
   if(/^(project_id|event_id|campaign_id|partner_id|content_id|merch_launch_id|budget_id|supplier_id)$/.test(name)&&has("dossiers"))return "dossiers";

@@ -1,5 +1,5 @@
 import {z} from "zod";
-export const assetStatuses={planned:"Gepland",active:"In gebruik",maintenance:"Onderhoud",loaned:"Uitgeleend",retired:"Buiten gebruik",lost:"Vermist",archived:"Gearchiveerd"} as const;
+export const assetStatuses={planned:"Gepland",active:"Beschikbaar",maintenance:"Onderhoud",loaned:"Uitgeleend",retired:"Buiten gebruik",lost:"Vermist",archived:"Gearchiveerd"} as const;
 export const assetBulkSchema=z.object({
  ids:z.array(z.string().uuid()).min(1).max(1000).refine(ids=>new Set(ids).size===ids.length),
  mode:z.enum(["update","archive","delete"]),
@@ -12,4 +12,4 @@ export const assetBulkSchema=z.object({
  if(value.changeStatus&&!value.status)ctx.addIssue({code:"custom",path:["status"],message:"Kies een status."});
 });
 export type AssetBulkInput=z.input<typeof assetBulkSchema>;
-export type AssetListRow={id:string;name:string;asset_type:string;status:string;location:string|null;serial_number:string|null;valueLabel:string;acquiredLabel:string;ownerLabel:string;relationLabel:string;document_url:string|null};
+export type AssetListRow={id:string;name:string;asset_type:string;status:string;location:string|null;serial_number:string|null;valueLabel:string;acquiredLabel:string;ownerLabel:string;relationLabel:string;document_url:string|null;statusLabel?:string};

@@ -83,3 +83,13 @@ export async function removeAsset(formData: FormData) {
   revalidatePath(MATERIALS_PATH);
   redirect(`${MATERIALS_PATH}?succes=verwijderd`);
 }
+
+export async function duplicateAssets(ids:string[]){
+ const parsed=z.array(z.string().uuid()).min(1).max(100).refine(values=>new Set(values).size===values.length).safeParse(ids);
+ if(!parsed.success)return {ok:false,message:"Selecteer 1 tot 100 materiaalitems om te dupliceren."};
+ const {supabase,membership}=await requirePermission("manageOrganization");
+ const {data,error}=await supabase.rpc("duplicate_assets",{p_organization_id:membership.organization_id,p_ids:parsed.data});
+ if(error||!Array.isArray(data)||data.length!==ids.length)return {ok:false,message:"Dupliceren kon niet worden bevestigd. Vernieuw de lijst voordat je opnieuw probeert."};
+ revalidatePath(MATERIALS_PATH);
+ return {ok:true,message:data.length+" materiaalitems gedupliceerd. Serienummers, reserveringen en hersteltaken zijn niet gekopieerd."};
+}

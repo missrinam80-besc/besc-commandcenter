@@ -14,7 +14,7 @@ export function editorLoader(overrides:Record<string,unknown>={}){
    if(name in overrides)return overrides[name];
    if(name.endsWith(".json"))return native(resolve(dirname(file),name));
    if(name.startsWith("@/lib/"))return load(`src/lib/${name.slice(6)}.ts`);
-   if(name.startsWith("./")||name.startsWith("../")){const base=resolve(dirname(file),name);return load(existsSync(`${base}.ts`)?`${base}.ts`:`${base}.tsx`);}
+   if(name.startsWith("./")||name.startsWith("../")){const base=resolve(dirname(file),name);return load(existsSync(base)?base:existsSync(`${base}.ts`)?`${base}.ts`:`${base}.tsx`);}
    return native(name);
   };
   runInNewContext(ts.transpileModule(readFileSync(file,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText,{module:compiled,exports:compiled.exports,require,URL});
