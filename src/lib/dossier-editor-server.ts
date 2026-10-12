@@ -36,6 +36,7 @@ export async function loadDossierEditor(kind:string,id?:string,preset:EditorReco
    const {data,error}=await query;
    if(error){if(!permissions[part.table]){parts[part.table]=[];return;}throw Error(`De onderdelen van ${part.label} kunnen niet worden geladen.`);}
    parts[part.table]=(data??[]).filter(row=>!row.deleted_at&&(!row.organization_id||row.organization_id===membership.organization_id));
+   if(part.table==="event_activities")parts[part.table].sort((a,b)=>Number(a.position)-Number(b.position)||String(a.created_at).localeCompare(String(b.created_at)));
    if(part.table==="comments")for(const row of parts[part.table])permissions[`comments:${row.id}`]=row.author_id===user.id;
  }));
  let assetFollowup:AssetFollowup|undefined;
@@ -70,6 +71,7 @@ export async function loadDossierEditor(kind:string,id?:string,preset:EditorReco
      options[table]=(data??[]).map(row=>({id:row.user_id,label:String((row.profiles as unknown as {display_name?:string}|null)?.display_name??"Account")}));return;
    }
    let lookup=supabase.from(table).select("*").eq("organization_id",membership.organization_id).limit(1000);
+   if(table==="event_activities")lookup=lookup.eq("event_id",id??"00000000-0000-4000-8000-000000000000").order("position");
    if(table==="document_registry")lookup=lookup.order("label").order("id");
    const {data,error}=await lookup;
    if(error){options[table]=[];return;}

@@ -15,7 +15,7 @@ const localTime = z.string().optional().refine(value => {
   return Boolean(stamp && formatDateTimeLocal(stamp) === value);
 });
 const schema = z.object({
-  event_id: z.string().uuid(), id: optionalId, person_id: optionalId,
+  event_id: z.string().uuid(), id: optionalId, person_id: optionalId, activity_id: optionalId,
   title: z.string().trim().min(2).max(180),
   kind: z.string().regex(/^[a-z0-9_]{1,80}$/),
   status: z.enum(["draft", "confirmed", "completed", "cancelled"]),
@@ -33,11 +33,12 @@ export async function saveEventSchedule(formData: FormData) {
   const selected = optionalId.safeParse(formData.get("id") ?? "");
   if (!parsed.success) failed(eventId.data, "velden", selected.success && selected.data ? selected.data : "nieuw");
   const { supabase, membership, user } = await requirePermission("manageEvents", `${path(eventId.data)}?tab=planning&fout=geen-toegang`);
+  if(parsed.data.activity_id){const activity=await supabase.from("event_activities").select("id").eq("organization_id",membership.organization_id).eq("event_id",eventId.data).eq("id",parsed.data.activity_id).maybeSingle();if(activity.error||!activity.data)failed(eventId.data,"activiteit",parsed.data.id||"nieuw");}
   let choices;
   try{choices=await loadManagedChoices(supabase,membership.organization_id);}catch{failed(eventId.data,"soorten",parsed.data.id||"nieuw");}
   if(!choices.some(row=>row.set_key==="event_schedule_items.kind"&&row.value===parsed.data.kind))failed(eventId.data,"soort",parsed.data.id||"nieuw");
   const { id, event_id, ...data } = parsed.data;
-  const values = { ...data, person_id: data.person_id || null, location: data.location || null, notes: data.notes || null,
+  const values = { ...data, activity_id:data.activity_id||null, person_id: data.person_id || null, location: data.location || null, notes: data.notes || null,
     starts_at: localDateTimeToIso(data.starts_at), ends_at: localDateTimeToIso(data.ends_at) };
   const query = id
     ? supabase.from("event_schedule_items").update(values).eq("organization_id", membership.organization_id).eq("event_id", event_id).eq("id", id)

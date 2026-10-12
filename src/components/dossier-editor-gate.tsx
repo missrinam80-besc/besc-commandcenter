@@ -14,7 +14,7 @@ export async function dossierEditorGate({kind,module,id,query,group}:{kind?:stri
  if(group==="finance")target=({budget:"budget",kost:"expense",inkomst:"income"} as Record<string,string>)[query.nieuw??""];
  if(group==="shop")target=({product:"product",lancering:"launch"} as Record<string,string>)[query.nieuw??""];
  if(group==="administration")target=({lid:"member",mandaat:"mandate",deadline:"deadline",document:"administration"} as Record<string,string>)[query.nieuw??""]??(["member","mandate","deadline","administration"].includes(query.fiche??"")?query.fiche:undefined);
- const eventPart=parentKind==="event"&&["materiaal","schema","giveaway","inschrijving","financieel"].some(key=>Boolean(query[key]));
+ const eventPart=parentKind==="event"&&["materiaal","schema","activiteit","giveaway","inschrijving","financieel"].some(key=>Boolean(query[key]));
  const editing=(Boolean(query.bewerken)||eventPart)&&!query.nieuw;
  if(!editing&&query.nieuw&&query.nieuw!=="1")target=creationKinds[query.nieuw]??target;
  if(!query.nieuw&&!editing||!target||!dossierEditorCatalog[target])return null;

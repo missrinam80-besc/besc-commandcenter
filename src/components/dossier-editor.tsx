@@ -86,7 +86,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
     const relationTable=({project:"projects",event:"events",campaign:"campaigns",content:"content_items",partner:"partners",community_person:"community_people",task:"tasks"} as Record<string,string>)[String(values.target_type??"")];
     const candidates=field.name==="target_id"?options[relationTable]??[]:field.reference?options[field.reference]??[]:options[field.name]??[];
     const linkedPending=(draft.parts[field.reference??""]??[]).filter(row=>!row.deleted).map(row=>({id:row.id,label:String(row.values.title??row.values.name??"Nieuw onderdeel")}));
-    let adjustedCandidates=candidates;
+    let adjustedCandidates=field.name==="activity_id"?candidates.filter(option=>!(draft.parts.event_activities??[]).some(row=>row.id===option.id&&row.deleted)):candidates;
     if(field.name==="asset_id"&&["event_materials","project_materials"].includes(table)){
       const period=materialPeriod(table,values,kind==="event"?eventEditorStorageValues(draft.values):draft.values);
       adjustedCandidates=candidates.map(option=>{const reason=materialBlocked(assetCalendar.find(row=>row.id===option.id),period,table,String(values.id??prefix));return {...option,disabled:Boolean(reason),label:option.label+(reason?" — "+reason:"")};});
@@ -139,7 +139,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
       {kind==="asset"&&item.id==="planning"&&<><AssetPlanning followup={assetFollowup} status={String(draft.values.status??"active")}/>{mode==="edit"?<Link className="asset-repair-action" href={"/app/materialen?nieuw=taak&herstel_asset_id="+id}>Hersteltaak aanmaken</Link>:<p className="form-help">Sla het materiaal eerst op om een hersteltaak te koppelen.</p>}</>}
       {cfg.collections.filter(part=>part.tab===item.id).map(part=>{
         const rows=(draft.parts[part.table]??[]).filter(row=>kind!=="event"||part.table!=="record_relationships"||!eventPartnerForRow(row,id)),canManage=permissions[part.table]===true;
-        return <section className="dossier-editor-collection" key={part.table}><div className="form-heading"><h3>{part.label}</h3>{canManage&&(!part.singleton||!rows.some(row=>!row.deleted))&&<button type="button" disabled={saving} onClick={()=>addRow(part)}>Toevoegen</button>}</div>
+        return <section className={`dossier-editor-collection ${part.table==="event_schedule_items"?"event-agenda-editor-collection":""}`} key={part.table}><div className="form-heading"><h3>{part.label}</h3>{canManage&&(!part.singleton||!rows.some(row=>!row.deleted))&&<button type="button" disabled={saving} onClick={()=>addRow(part)}>Toevoegen</button>}</div>
           {["event_materials","project_materials"].includes(part.table)&&<p className="form-help">Vul de gebruiksperiode in of gebruik de event- of projectperiode. Materiaal met een overlappende reservering of een open hersteltaak is niet selecteerbaar. Op andere data blijft het reserveerbaar.</p>}
           {!rows.length&&<p className="form-help">Nog geen onderdelen toegevoegd.</p>}
           {!canManage&&<p className="form-help">Je kunt deze onderdelen bekijken. Wijzigen vraagt een aanvullende bevoegdheid.</p>}
@@ -149,6 +149,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
             const values=incoming?{...row.values,target_type:row.values.source_type,target_id:row.values.source_id}:row.values;
             return <details key={row.localId} open={!row.base||row.deleted||issues.some(issue=>issue.rowId===row.id&&issue.collection===part.table)} className={`dossier-editor-row ${row.deleted?"pending-removal":""}`}><summary>{String(row.values.title??row.values.name??row.values.label??part.label)}{row.deleted?" — wordt verwijderd":""}</summary><div className="dossier-editor-fields">{!row.deleted&&editorFields(kind,part.table).filter(field=>part.table!=="record_relationships"||!['source_id','source_type'].includes(field.name)).map(field=>input(field,values,(name,value)=>updateRow(part,row,incoming?name.replace(/^target_/,"source_"):name,value),!canEdit,row.localId,part.table))}</div>{canManage&&!canEdit&&<p className="form-help">Alleen de auteur kan deze opmerking wijzigen.</p>}{canManage&&!part.singleton&&<button type="button" disabled={saving} className="row-action" onClick={()=>toggleRemoval(part,row)}>{row.deleted?"Verwijdering ongedaan maken":"Verwijderen bij opslaan"}</button>}</details>;
           })}
+          {part.table==="event_schedule_items"&&canManage&&<div className="event-agenda-add-footer"><button type="button" disabled={saving} className="row-action" onClick={()=>addRow(part)}>Onderdeel toevoegen</button></div>}
         </section>;
       })}
       {!visibleRootFields.some(field=>dossierFieldTab(field.name,cfg)===item.id)&&!cfg.collections.some(part=>part.tab===item.id)&&!(kind==="asset"&&item.id==="planning")&&<p className="form-help">Dit onderdeel bevat weergaven of afzonderlijke acties. Hier zijn geen fichevelden om in te vullen.</p>}

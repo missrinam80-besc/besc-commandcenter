@@ -3,8 +3,8 @@ import { scheduleKinds, scheduleStatuses, type EventScheduleItem } from "@/lib/e
 import { formatDateTimeLocal } from "@/lib/format";
 import { SearchablePersonPicker } from "@/components/searchable-person-picker";
 
-export function EventScheduleForm({ eventId, record, people, kinds=scheduleKinds }: {
-  eventId: string; record?: EventScheduleItem; people: { id: string; label: string }[]; kinds?:Record<string,string>;
+export function EventScheduleForm({ eventId, record, people, activities=[], kinds=scheduleKinds }: {
+  eventId: string; record?: EventScheduleItem; people: { id: string; label: string }[]; kinds?:Record<string,string>;activities?:{id:string;title:string}[];
 }) {
   const options = record?.person_id && !people.some(person => person.id === record.person_id)
     ? [...people, { id: record.person_id, label: "Eerder toegewezen persoon (niet meer beschikbaar)" }] : people;
@@ -16,6 +16,7 @@ export function EventScheduleForm({ eventId, record, people, kinds=scheduleKinds
       <label>Onderdeel<select name="kind" required defaultValue={record?.kind ?? "program"}>{Object.entries(kinds).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       <label>Status<select name="status" defaultValue={record?.status ?? "draft"}>{Object.entries(scheduleStatuses).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
     </div>
+    <label>Activiteit (optioneel)<select name="activity_id" defaultValue={record?.activity_id??""}><option value="">Geen activiteit gekoppeld</option>{activities.map(activity=><option key={activity.id} value={activity.id}>{activity.title}</option>)}</select><small>Kies een activiteit uit de activiteitenlijst van dit event.</small></label>
     <div className="form-row">
       <label>Start<input type="datetime-local" name="starts_at" defaultValue={formatDateTimeLocal(record?.starts_at)}/></label>
       <label>Einde<input type="datetime-local" name="ends_at" defaultValue={formatDateTimeLocal(record?.ends_at)}/></label>

@@ -3,21 +3,27 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { buildTimeGridDay, calendarWeekStart, initialCalendarDay, shiftCalendarDay } from "@/lib/event-timegrid";
-import { scheduleAgendaTime, scheduleConflicts, scheduleKinds, scheduleKindLabel, scheduleKindColor, scheduleStatuses, type EventScheduleItem } from "@/lib/event-schedule";
+import { buildTimeGridDay, initialCalendarDay } from "@/lib/event-timegrid";
+import { scheduleAgendaDays, scheduleAgendaTime, scheduleConflicts, scheduleKinds, scheduleKindLabel, scheduleKindColor, scheduleStatuses, type EventScheduleItem } from "@/lib/event-schedule";
 import { formatDateTime } from "@/lib/format";
 
+import {relevantAgendaIntervals,visibleAgendaDays,nextRelevantAgendaDay,isRelevantAgendaDay,type EventAgendaPeriod} from "@/lib/event-agenda-range";
+
 const dayLabel = new Intl.DateTimeFormat("nl-BE", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
-export function EventTimeGrid({ rows, people, canEdit, conflictIds, kinds=scheduleKinds }: {
-  rows: EventScheduleItem[]; people: { id: string; label: string }[]; canEdit: boolean; conflictIds?: string[]; kinds?:Record<string,string>;
+export function EventTimeGrid({ rows, people, canEdit, conflictIds, kinds=scheduleKinds, activities=[], eventPeriod={} }: {
+  rows: EventScheduleItem[]; people: { id: string; label: string }[]; canEdit: boolean; conflictIds?: string[]; kinds?:Record<string,string>; activities?:{id:string;title:string}[]; eventPeriod?:EventAgendaPeriod;
 }) {
   const [day, setDay] = useState(() => initialCalendarDay(rows));
-  const [view, setView] = useState<"day" | "week">("week");
+  const [view, setView] = useState<"day" | "week" | "list">("week");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const details = useRef<HTMLElement>(null);
-  const firstDay = view === "week" ? calendarWeekStart(day) : day;
-  const days = Array.from({ length: view === "week" ? 7 : 1 }, (_, index) => buildTimeGridDay(rows, shiftCalendarDay(firstDay, index)));
+  const intervals=relevantAgendaIntervals(rows,eventPeriod);
+  const activeDay=isRelevantAgendaDay(day,intervals)?day:intervals[0]?.start??day;
+  const calendarView=view==="day"?"day":"week";
+  const previous=nextRelevantAgendaDay(activeDay,-1,calendarView,intervals),next=nextRelevantAgendaDay(activeDay,1,calendarView,intervals);
+  const days=visibleAgendaDays(activeDay,calendarView,intervals).map(date=>buildTimeGridDay(rows,date));
+  const firstDay=days[0]?.day??activeDay;
   const earliest = Math.min(...days.flatMap(item => item.segments.map(segment => segment.start)));
   useEffect(() => {
     if (scroller.current) scroller.current.scrollTop = Number.isFinite(earliest) ? Math.max(0, earliest - 60) : 480;
@@ -33,17 +39,20 @@ export function EventTimeGrid({ rows, people, canEdit, conflictIds, kinds=schedu
   const hasTimed = rows.some(row => row.starts_at && row.ends_at);
   const conflicts = new Set(conflictIds ?? [...scheduleConflicts(rows)]);
   const personLabel = (row: EventScheduleItem) => people.find(person => person.id === row.person_id)?.label || (row.person_id ? "Eerder toegewezen persoon" : "Nog niet toegewezen");
+  const activityTitle=(row:EventScheduleItem)=>activities.find(activity=>activity.id===row.activity_id)?.title;
   return <div className="event-timegrid">
-    {hasTimed && <><div className="event-timegrid-toolbar">
-      <div><button type="button" aria-label={view === "week" ? "Vorige week" : "Vorige dag"} onClick={() => setDay(shiftCalendarDay(day, view === "week" ? -7 : -1))}><ChevronLeft size={16}/></button>
-        <label>Datum<input aria-label="Agendadatum" type="date" value={day} onChange={event => { if (/^\d{4}-\d{2}-\d{2}$/.test(event.target.value)) setDay(event.target.value); }}/></label>
-        <button type="button" aria-label={view === "week" ? "Volgende week" : "Volgende dag"} onClick={() => setDay(shiftCalendarDay(day, view === "week" ? 7 : 1))}><ChevronRight size={16}/></button>
-      </div>
-      <div><button type="button" aria-pressed={view === "day"} onClick={() => setView("day")}>Dag</button><button type="button" aria-pressed={view === "week"} onClick={() => setView("week")}>Week</button></div>
+    <div className="event-timegrid-toolbar">
+      {view!=="list" && intervals.length>0 && <div><button type="button" disabled={!previous} aria-label={view === "week" ? "Vorige week" : "Vorige dag"} onClick={() => {if(previous)setDay(previous);}}><ChevronLeft size={16}/></button>
+        <label>Datum<input aria-label="Agendadatum" type="date" value={activeDay} min={intervals[0]?.start} max={intervals.at(-1)?.end} onChange={event => {const chosen=event.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(chosen)){setDay(isRelevantAgendaDay(chosen,intervals)?chosen:intervals.find(span=>span.start>chosen)?.start??intervals.at(-1)?.end??chosen);}}}/></label>
+        <button type="button" disabled={!next} aria-label={view === "week" ? "Volgende week" : "Volgende dag"} onClick={() => {if(next)setDay(next);}}><ChevronRight size={16}/></button>
+      </div>}
+      <div><button type="button" aria-pressed={view === "day"} onClick={() => setView("day")}>Dag</button><button type="button" aria-pressed={view === "week"} onClick={() => setView("week")}>Week</button><button type="button" aria-pressed={view === "list"} onClick={() => setView("list")}>Lijst</button></div>
     </div>
+    {view==="list" && <div className="event-agenda-list">{scheduleAgendaDays(rows).map(group=><section key={group.key}><h3>{group.label}</h3>{group.items.map(row=><button id={`agenda-${row.id}`} type="button" key={row.id} data-kind={row.kind} style={{"--agenda-color":scheduleKindColor(row.kind)} as CSSProperties} onClick={()=>setSelectedId(row.id)}><span className="event-agenda-list-time">{row.starts_at?scheduleAgendaTime(row.starts_at):"Tijd onbekend"}{row.ends_at?` – ${scheduleAgendaTime(row.ends_at,row.starts_at)}`:" · einde onbekend"}</span><span><strong>{row.title}</strong><span>{scheduleKindLabel(row.kind,kinds)} · {scheduleStatuses[row.status]}</span>{activityTitle(row)&&<span>Activiteit: {activityTitle(row)}</span>}<span>{personLabel(row)}{row.location?` · ${row.location}`:""}</span>{conflicts.has(row.id)&&<span className="event-agenda-conflict">Overlappende toewijzing</span>}</span></button>)}</section>)}</div>}
+    {view!=="list" && hasTimed && days.length>0 && <>
     <p className="event-timegrid-hint">Tijden in België · Klik op een blok voor alle gegevens.</p>
     <div className="event-timegrid-scroll" ref={scroller} tabIndex={0} aria-label="Eventagenda met uren en dagen">
-      <div className={`event-timegrid-columns event-timegrid-${view}`}>
+      <div className={`event-timegrid-columns event-timegrid-${view}`} style={{gridTemplateColumns:`repeat(${days.length}, minmax(190px, 1fr))`,minWidth:days.length*190}}>
         {days.map(date => <section className="event-timegrid-day" key={date.day} aria-label={date.day}>
           <h3>{dayLabel.format(new Date(`${date.day}T12:00:00Z`))}</h3>
           <div className="event-timegrid-hours" style={{ height: date.minutes }}>
@@ -63,7 +72,7 @@ export function EventTimeGrid({ rows, people, canEdit, conflictIds, kinds=schedu
         </section>)}
       </div>
     </div></>}
-    {incomplete.length > 0 && <section className="event-timegrid-incomplete"><h3>Nog niet volledig ingepland</h3><p>Deze onderdelen missen een start- of eindtijd en staan daarom apart.</p>
+    {view!=="list" && incomplete.length > 0 && <section className="event-timegrid-incomplete"><h3>Nog niet volledig ingepland</h3><p>Deze onderdelen missen een start- of eindtijd en staan daarom apart.</p>
       {incomplete.map(row => <button type="button" data-kind={row.kind} style={{"--agenda-color":scheduleKindColor(row.kind)} as CSSProperties} key={row.id} onClick={() => setSelectedId(row.id)}><strong>{row.title}</strong><span>{scheduleKindLabel(row.kind,kinds)} · {scheduleStatuses[row.status]} · {row.starts_at ? formatDateTime(row.starts_at) : "Tijd onbekend"}{row.starts_at ? " · einde onbekend" : ""}</span></button>)}
     </section>}
     {selected && <section className="event-timegrid-details" ref={details} tabIndex={-1} data-kind={selected.kind} style={{"--agenda-color":scheduleKindColor(selected.kind)} as CSSProperties} aria-label="Details van het agendaonderdeel">
@@ -72,6 +81,7 @@ export function EventTimeGrid({ rows, people, canEdit, conflictIds, kinds=schedu
       <p>{formatDateTime(selected.starts_at, "Start onbekend")} → {formatDateTime(selected.ends_at, "Einde onbekend")}</p>
       <p>{personLabel(selected)}{selected.location ? ` · ${selected.location}` : ""}</p>
       {conflicts.has(selected.id) && <p className="event-agenda-conflict">Deze persoon heeft een overlappende toewijzing.</p>}
+      {selected.activity_id && activityTitle(selected) && <p>Activiteit: <Link href={`?tab=activiteiten#activiteit-${selected.activity_id}`}>{activityTitle(selected)}</Link></p>}
       {selected.notes && <p className="event-timegrid-notes">{selected.notes}</p>}
       {canEdit && <Link className="row-action" href={`?tab=planning&schema=${selected.id}`}>Bewerken</Link>}
     </section>}

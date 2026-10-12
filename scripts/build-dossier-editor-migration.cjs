@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports -- Build-time, fixed catalog compilation; not a user-supplied SQL generator. */
 const fs=require('node:fs');
 const path=require('node:path');
-const latestCatalog=fs.readdirSync('supabase/migrations').filter(name=>name.endsWith('_asset_editor_catalog.sql')).sort().at(-1);
+const latestCatalog=fs.readdirSync('supabase/migrations').filter(name=>name.endsWith('_editor_catalog.sql')).sort().at(-1);
 const historicTarget='supabase/migrations/20261008094405_unified_dossier_editor.sql';
 const checking=process.argv.includes('--check');
 const outputIndex=process.argv.indexOf('--output');

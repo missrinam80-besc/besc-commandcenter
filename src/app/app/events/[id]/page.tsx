@@ -3,6 +3,7 @@ import { EventRegistrationsPanel } from "@/components/event-registrations-panel"
 import { EventFinancePanel } from "@/components/event-finance-panel";
 import { EventGiveawaysPanel } from "@/components/event-giveaways-panel";
 import { eventDossierTabs, resolveEventDossierTab } from "@/lib/event-dossier-tabs";
+import { EventActivitiesPanel } from "@/components/event-activities-panel";
 import { EventSchedulePanel } from "@/components/event-schedule-panel";
 import { EventMaterialsPanel } from "@/components/event-materials-panel";
 import { toPersonPickerOptions } from "@/lib/person-picker";
@@ -46,6 +47,11 @@ const driveErrors: Record<string, string> = {
   "giveaway-velden": "Controleer de itemnaam en aantallen. Uitgedeeld mag niet hoger zijn dan ontvangen.",
   "giveaway-opslaan": "Het item kon niet worden opgeslagen. Controleer of het event en de verantwoordelijke nog beschikbaar zijn.",
   "giveaway-verwijderen": "Het item kon niet worden verwijderd. De lijst is mogelijk ondertussen gewijzigd.",
+  "activiteit-velden":"Controleer de titel, uitleg en volgorde van de activiteit.",
+  "activiteit-opslaan":"De activiteit kon niet worden opgeslagen. Controleer je bevoegdheden en probeer opnieuw.",
+  "activiteit-gekoppeld":"Deze activiteit is gekoppeld aan de planning. Koppel haar eerst los; verwijderen is nu geblokkeerd.",
+  "activiteit-verwijderen":"De activiteit kon niet worden verwijderd. Vernieuw de lijst en probeer opnieuw.",
+  "schema-activiteit":"De gekozen activiteit is niet beschikbaar in dit event. Kies een activiteit uit de eigen activiteitenlijst.",
   "schema-velden": "Controleer de titel en tijden. De eindtijd moet na de starttijd liggen.",
   "schema-soort": "De gekozen soort agendaonderdeel is niet meer beschikbaar. Kies een bestaande soort en sla opnieuw op.",
   "schema-soorten": "De soorten agendaonderdelen kunnen niet worden gecontroleerd. Probeer opnieuw; er is niets opgeslagen.",
@@ -130,7 +136,7 @@ export default async function Event({
         {eventDossierTabs.map(tab => <Link key={tab.id} href={`?tab=${tab.id}`} scroll={false} aria-current={activeTab === tab.id ? "page" : undefined}>{tab.label}</Link>)}
       </nav>
       <div className="project-detail-body event-dossier">
-        {q.succes && <div className="success">{q.succes === "inschrijving-opgeslagen" ? "Inschrijvingen bijgewerkt." : q.succes === "financieel-opgeslagen" ? "Financiële registratie opgeslagen." : q.succes === "giveaway-opgeslagen" ? "Giveaway-item opgeslagen." : q.succes === "giveaway-verwijderd" ? "Giveaway-item verwijderd." : q.succes === "schema-opgeslagen" ? "Schemaonderdeel opgeslagen." : q.succes === "schema-verwijderd" ? "Schemaonderdeel verwijderd." : q.succes === "materiaal-opgeslagen" ? "Materiaal op de eventlijst opgeslagen." : q.succes === "materiaal-verwijderd" ? "Materiaal van de eventlijst verwijderd." : q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
+        {q.succes && <div className="success">{q.succes === "activiteit-opgeslagen" ? "Activiteit opgeslagen." : q.succes === "activiteit-verwijderd" ? "Activiteit verwijderd." : q.succes === "inschrijving-opgeslagen" ? "Inschrijvingen bijgewerkt." : q.succes === "financieel-opgeslagen" ? "Financiële registratie opgeslagen." : q.succes === "giveaway-opgeslagen" ? "Giveaway-item opgeslagen." : q.succes === "giveaway-verwijderd" ? "Giveaway-item verwijderd." : q.succes === "schema-opgeslagen" ? "Schemaonderdeel opgeslagen." : q.succes === "schema-verwijderd" ? "Schemaonderdeel verwijderd." : q.succes === "materiaal-opgeslagen" ? "Materiaal op de eventlijst opgeslagen." : q.succes === "materiaal-verwijderd" ? "Materiaal van de eventlijst verwijderd." : q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
         {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
         {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
 
@@ -154,10 +160,11 @@ export default async function Event({
         <div className="event-tab-actions">{canManage && !["cancelled", "archived", "completed"].includes(e.status) && <form action={cancelEvent}><input type="hidden" name="id" value={id}/><ConfirmSubmitButton className="danger-button" message="Dit event annuleren? Het event blijft bewaard en wordt als geannuleerd zichtbaar in Google Calendar.">Event annuleren</ConfirmSubmitButton></form>}</div>
         <RecordLifecyclePanel entity="event" id={id} label="Event" isArchived={e.status === "archived"} canManage={canManage}/>
         </>}
+        {activeTab === "activiteiten" && <EventActivitiesPanel eventId={id} selected={q.activiteit}/>}
         {activeTab === "planning" && <>
           <div className="event-tab-actions"><Link href="?tab=planning&nieuw=taak">Taak toevoegen</Link>{canManageCampaigns && <Link href="?tab=planning&nieuw=campagne">Campagne toevoegen</Link>}</div>
         <PeopleAssignmentsPanel entityType="event" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)} canManage={canManage} closeHref="?tab=planning" selected={q.betrokkene}/>
-          <EventSchedulePanel eventId={id} selected={q.schema} kind={q.schema_type} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>
+          <EventSchedulePanel eventId={id} eventPeriod={{start_date:e.start_date,end_date:e.end_date,start_at:e.start_at,end_at:e.end_at}} selected={q.schema} kind={q.schema_type} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>
         </>}
         {activeTab === "materialen" && <EventMaterialsPanel eventId={id} selected={q.materiaal} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>}
         {activeTab === "giveaways" && <EventGiveawaysPanel eventId={id} selected={q.giveaway} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>}

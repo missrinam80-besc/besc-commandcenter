@@ -131,3 +131,14 @@
 .event-finance-panel .financial-related-lists article { display:flex; flex-direction:column; gap:.25rem; padding:.6rem 0; }
 
 .event-dossier > :is(.event-registrations-panel,.event-finance-panel) { grid-column:1/-1; }
+
+.event-agenda-heading,.event-agenda-editor-collection>.form-heading{position:sticky;top:0;z-index:5;background:var(--theme-surface);padding:8px 0;border-bottom:1px solid var(--line)}
+.event-agenda-add-footer{display:flex;justify-content:flex-end;padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
+.event-timegrid-toolbar button:disabled{opacity:.45;cursor:default}
+.event-agenda-list{display:grid;gap:16px}.event-agenda-list h3{font-family:inherit;font-size:12px;font-weight:750;margin:0 0 8px}
+.app-shell .event-agenda-list button{display:grid;grid-template-columns:150px 1fr;width:100%;text-align:left;gap:12px;margin-top:6px;padding:10px 12px;border:1px solid var(--line);border-left:3px solid var(--agenda-color);border-radius:8px;background:color-mix(in srgb,var(--agenda-color) 8%,var(--theme-surface));color:var(--ink)}
+.event-agenda-list button:hover{background:color-mix(in srgb,var(--agenda-color) 16%,var(--theme-surface))}.event-agenda-list button:focus-visible{outline:2px solid var(--besc-red);outline-offset:2px}
+.event-agenda-list button span span{display:block;margin-top:3px;font-size:11px;color:var(--muted)}.event-agenda-list strong{font-size:12px}.event-agenda-list-time{font-size:11px;font-weight:650}
+.event-activities-list{display:grid;gap:14px}.event-activities-list article{padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--theme-control);scroll-margin-top:80px}.event-activities-list h3{font-size:14px;margin:0}.event-activity-planning{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;font-size:11px}.event-activity-planning a{color:var(--ink);text-decoration:underline}
+.event-activities-panel form>label{display:grid;gap:6px;margin-bottom:12px}
+@media(max-width:600px){.app-shell .event-agenda-list button{grid-template-columns:1fr;gap:5px}.event-agenda-heading{flex-wrap:wrap}}

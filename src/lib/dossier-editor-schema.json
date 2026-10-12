@@ -1390,6 +1390,32 @@
         "reference": null
       }
     ],
+    "event_activities": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "options": [],
+        "reference": null
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "options": [],
+        "reference": null
+      }
+    ],
     "event_schedule_items": [
       {
         "name": "title",
@@ -1411,6 +1437,14 @@
           "shift"
         ],
         "reference": null
+      },
+      {
+        "name": "activity_id",
+        "type": "uuid",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": "event_activities"
       },
       {
         "name": "starts_at",

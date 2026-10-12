@@ -54,3 +54,11 @@ test("Server vertaalt de werkelijke RPC-fout en behoudt een mislukte opslag als 
  const {saveDossierEditor}=modules("src/app/app/dossier-editor-actions.ts") as {saveDossierEditor:(b:Bundle)=>Promise<{ok:boolean;message:string;issues?:Issue[]}>};
  const result=await saveDossierEditor(fixture());assert.equal(result.ok,false);assert.equal(result.issues?.[0].field,"title");assert.ok(!JSON.stringify(result).includes("SECRET"));
 });
+
+test("Gekoppelde activiteiten melden verwijderbeveiliging en eigen eventkeuze",()=>{
+ const bundle=fixture();bundle.parts.push({collection:"event_activities",id:rootId,new:false,base:null,values:{},delete:true} as never);
+ const removed=feedback.dossierStorageFeedback({code:"23503",message:'violates constraint "event_schedule_activity_binding"'},bundle);assert.match(removed.message,/eerst los/);
+ const chosen=feedback.dossierStorageFeedback({code:"23503",message:'violates constraint "event_schedule_activity_binding"'},fixture());assert.match(chosen.message,/eigen activiteitenlijst/);
+ const invalid=fixture();invalid.parts=[{collection:"event_activities",id:rowId,new:true,base:null,values:{title:"x",description:"x".repeat(16001),position:-1}}];
+ assert.deepEqual(Array.from(validateEditorIssues(invalid),i=>i.field),["title","description","position"]);
+});

@@ -66,7 +66,13 @@ export function validateEditorIssues(bundle:EditorBundle,config:EditorConfig=dos
     for(const name of Object.keys(change.values))if(!fields.includes(name))add("Deze wijziging bevat een veld dat niet bij het dossier hoort.");
     const all={...change.base,...change.values};
     if(table==="assets"&&change.new&&!all.acquisition_type)add("Kies of het materiaal aangekocht, geleend of gekregen is.","acquisition_type");
+    if(table==="event_activities"){
+      const title=String(all.title??"").trim();if(title.length<2||title.length>180)add("De titel van de activiteit moet 2 tot 180 tekens bevatten.","title");
+      if(String(all.description??"").length>16000)add("De uitleg mag maximaal 16000 tekens bevatten.","description");
+      if(!Number.isInteger(all.position)||Number(all.position)<0)add("Gebruik een geheel getal vanaf 0 voor de volgorde.","position");
+    }
     if(table==="event_schedule_items"){
+      if(all.activity_id&&bundle.parts.some(part=>part.collection==="event_activities"&&part.id===all.activity_id&&part.delete))add("Deze activiteit wordt verwijderd. Koppel het programmaonderdeel eerst los of kies een andere activiteit.","activity_id");
       if(!all.kind)add("Kies een soort onderdeel.","kind");
       if(!all.status)add("Kies een status voor het tijdslot.","status");
       const start=all.starts_at,end=all.ends_at;
