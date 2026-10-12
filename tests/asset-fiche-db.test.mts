@@ -6,7 +6,7 @@ import {assetStorageValues,materialBlocked} from "../src/lib/asset-followup.ts";
 const org="11111111-1111-4111-8111-111111111111",other="22222222-2222-4222-8222-222222222222",actor="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const id=(n:number)=>"33333333-3333-4333-8333-"+String(n).padStart(12,"0");
 const migration=(name:string)=>readFileSync("supabase/migrations/"+name,"utf8");
-async function setup(){
+async function setup(beforeMigrations?:(db:PGlite)=>Promise<void>){
  const db=new PGlite();
  await db.exec(readFileSync("tests/helpers/asset-fiche-fixture.sql","utf8"));
  await db.exec(migration("20260803163000_add_assets_and_shop_relations.sql").split("alter table public.shop_products")[0]);
@@ -18,6 +18,7 @@ async function setup(){
  await db.query("insert into organizations values($1),($2)",[org,other]);
  await db.query("insert into profiles values($1)",[actor]);
  await db.query("insert into organization_members values($1,$2,'admin','active',null)",[org,actor]);
+ if(beforeMigrations)await beforeMigrations(db);
  for(const name of ["20261012125349_asset_fiche_followup.sql","20261012125922_central_document_registry.sql","20261012125923_asset_reservations.sql","20261012130608_duplicate_materials.sql","20261012125447_asset_editor_catalog.sql"])await db.exec(migration(name));
  await db.exec("set role authenticated;");
  await db.query("select set_config('request.jwt.claim.sub',$1,false)",[actor]);
@@ -74,5 +75,25 @@ test("Actual migrations protect shared document identity, organization boundarie
   assert.equal((await db.query<{n:number}>("select count(*)::integer n from document_registry where url='https://example.com/private-invoice'")).rows[0].n,0);
   assert.equal((await db.query<{n:number}>("select count(*)::integer n from document_registry_sources where table_name='expenses'")).rows[0].n,0);
   await assert.rejects(db.query("select duplicate_assets($1,array[$2::uuid])",[org,id(1)]),/asset_no_access/);
+ }finally{await db.close();}
+});
+
+test("Backfill preserves legacy links, timestamps and unknown acquisition while deduplicating documents",async()=>{
+ let previousTimestamp:unknown;
+ const db=await setup(async db=>{
+  await db.query("insert into assets(id,organization_id,name,created_by,purchase_value,document_url) values($1,$2,'TESTFIXTURE bestaand',$3,75,'https://drive.google.com/file/d/legacy-shared/view')",[id(80),org,actor]);
+  previousTimestamp=(await db.query<{updated_at:unknown}>("select updated_at from assets where id=$1",[id(80)])).rows[0].updated_at;
+  await db.query("insert into record_links(organization_id,entity_type,entity_id,label,url,created_by) values($1,'project',$2,'TESTFIXTURE bestaande link','https://docs.google.com/document/d/legacy-shared/edit',$3)",[org,id(81),actor]);
+  await db.query("insert into google_resource_links(organization_id,entity_type,entity_id,name,resource_type,google_id,web_url,created_by) values($1,'event',$2,'TESTFIXTURE bestaand Google-document','document','legacy-shared','https://docs.google.com/document/d/legacy-shared/edit#heading',$3)",[org,id(82),actor]);
+ });
+ try{
+  const asset=(await db.query<{purchase_value:string;acquisition_type:string|null;document_url:string;updated_at:unknown}>("select purchase_value,acquisition_type,document_url,updated_at from assets where id=$1",[id(80)])).rows[0];
+  assert.equal(Number(asset.purchase_value),75);
+  assert.equal(asset.acquisition_type,null);
+  assert.equal(asset.document_url,"https://drive.google.com/file/d/legacy-shared/view");
+  assert.deepEqual(asset.updated_at,previousTimestamp);
+  assert.equal((await db.query<{n:number}>("select count(*)::integer n from document_registry")).rows[0].n,1);
+  assert.equal((await db.query<{n:number}>("select count(*)::integer n from google_resource_links")).rows[0].n,1);
+  assert.equal((await db.query<{n:number}>("select count(*)::integer n from record_links")).rows[0].n,1);
  }finally{await db.close();}
 });
