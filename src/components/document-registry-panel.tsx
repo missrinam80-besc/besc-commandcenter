@@ -23,9 +23,9 @@ export async function DocumentRegistryPanel({searchParams}:{searchParams:Promise
  }
 
  return <section className="documents-register"><p className="lead">Eén register voor documentlinks. Kies een bestaand document in een fiche of voeg daar een nieuwe link toe; die verschijnt automatisch hier.</p>
- {q.fout&&<p className="error-note">Het document kon niet worden toegevoegd. Controleer het label en de volledige http- of https-link.</p>}
+ {["velden","opslaan"].includes(q.fout??"")&&<p className="error-note">Het document kon niet worden toegevoegd. Controleer het label en de volledige http- of https-link.</p>}
  {q.melding==="bestaand"&&<p className="success" role="status">Deze documentlink staat al in het register. Kies het bestaande document in je fiche.</p>}
- {q.succes&&<p className="success" role="status">Document toegevoegd.</p>}
+ {q.succes==="toegevoegd"&&<p className="success" role="status">Document toegevoegd.</p>}
  <form className="documents-search"><label>Zoek op label<input name="zoek" defaultValue={term}/></label><button>Zoeken</button></form>
  {hasPermission(membership,"manageOrganization")&&<details className="form-card"><summary>Nieuw document toevoegen</summary><form action={addRegistryDocument}><label>Label<input name="label" required maxLength={120}/></label><label>Documentlink<input name="url" type="url" required maxLength={2000}/></label><div className="form-actions"><button className="primary">Toevoegen</button></div></form></details>}
  <section className="project-task-section"><div className="section-heading"><h2>Documentregister</h2><span>{count??0} documenten</span></div>{(error||assets.error||links.error||sources.error||google.error)?<p className="error-note">Het documentregister kon niet worden geladen. Controleer de migratie.</p>:<><div className="documents-table-scroll"><table><thead><tr><th>Label</th><th>Link</th><th>Gekoppelde fiches</th></tr></thead><tbody>{data?.map(doc=><tr key={doc.id}><td>{doc.label}</td><td><a href={doc.url} target="_blank" rel="noreferrer">Open document</a></td><td>{attachments(doc.id).map(row=><a className="document-fiche-link" key={row.href} href={row.href}>{row.label}</a>)}{!attachments(doc.id).length&&<span>Nog niet gekoppeld</span>}</td></tr>)}</tbody></table></div>{!data?.length&&<p className="form-help">Geen documenten gevonden.</p>}</>}

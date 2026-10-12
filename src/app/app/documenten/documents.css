@@ -1,2 +1,59 @@
 .documents-register .documents-search{display:flex;align-items:end;gap:10px;margin-bottom:18px}.documents-search label{display:grid;gap:6px;font-size:11px;font-weight:700}.documents-search input{border:1px solid var(--line);background:var(--theme-field);color:var(--ink);border-radius:8px;padding:9px 12px}.documents-search button,.documents-register nav a{padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--theme-control);color:var(--ink);font-size:11px;text-decoration:none}.documents-register summary{cursor:pointer;font-size:12px;font-weight:700}.documents-register details form{margin-top:16px}.documents-register .form-card{margin-bottom:18px}.documents-table-scroll{overflow:auto}.documents-register table{width:100%;border-collapse:collapse;font-size:12px}.documents-register th,.documents-register td{text-align:left;padding:12px;border-bottom:1px solid var(--line)}.documents-register th{color:var(--muted);font-size:10px;text-transform:uppercase}.documents-register td a{color:var(--ink)}.documents-register nav{display:flex;justify-content:end;gap:8px;margin-top:14px}.documents-register .form-card input{background:var(--theme-field);color:var(--ink)}@media(max-width:600px){.documents-search{flex-wrap:wrap}.documents-search label{width:100%}}
 .document-fiche-link{display:block;margin:4px 0}.documents-register{margin-bottom:28px}.documents-register td{overflow-wrap:anywhere}
+
+/* Keep document controls readable and consistent with both app themes. */
+.documents-page { min-width:0; }
+.documents-section-heading { margin:28px 0 12px; }
+.documents-section-heading .eyebrow { font-size:9px; letter-spacing:.14em; color:var(--muted); margin:0 0 6px; }
+.documents-section-heading h2 { font:500 21px Georgia,serif; margin:0; }
+.documents-page .drive-principle { background:var(--theme-control); border-color:var(--line); color:var(--ink); }
+.documents-page .drive-principle span { color:var(--muted); font-size:11px; line-height:1.5; }
+.documents-page .drive-stats article,.documents-page .drive-filters,.documents-page .drive-register,.documents-page .drive-dossier-summary { background:var(--theme-surface); }
+.documents-page .drive-stats span { font-size:11px; }
+.documents-page .drive-filters { flex-wrap:wrap; gap:12px; padding:16px; }
+.documents-page .drive-filters>label { font-size:10px; gap:6px; }
+.documents-page .drive-search { min-width:200px; }
+.documents-page .drive-filters :is(input,select) { min-height:36px; background:var(--theme-field); color:var(--ink); font-size:11px; }
+.documents-page :is(.drive-filters button,.document-actions button,.document-actions a,.drive-missing,.documents-search button) { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:34px; padding:8px 11px; border:1px solid var(--line); border-radius:8px; background:var(--theme-control); color:var(--ink); font-size:11px; font-weight:700; line-height:1.4; white-space:nowrap; text-decoration:none; cursor:pointer; box-sizing:border-box; }
+.documents-page :is(.document-actions a,.document-actions button,.drive-missing):hover { border-color:var(--muted); }
+.documents-page :is(button,a,input,select,summary):focus-visible { outline:2px solid var(--besc-red); outline-offset:3px; }
+.documents-page .drive-register-head,.documents-page .drive-register article { grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(90px,.5fr) minmax(245px,1.2fr); gap:16px; }
+.documents-page .drive-register-head { background:var(--theme-control); font-size:9px; letter-spacing:.06em; }
+.documents-page .drive-register article { padding:16px; border-color:var(--line); }
+.documents-page .drive-register article strong { font-size:12px; white-space:normal; overflow-wrap:anywhere; }
+.documents-page .drive-register article small { font-size:10px; line-height:1.5; white-space:normal; }
+.documents-page .drive-source { font-size:10px; line-height:1.5; background:var(--theme-control); color:var(--ink); }
+.documents-page .document-status { font-size:10px; white-space:nowrap; }
+.documents-page .drive-register article>.document-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-width:0; }
+.documents-page .document-actions form { margin:0; flex:0 0 auto; }
+.documents-page .document-actions .drive-open { width:auto; flex:0 0 auto; background:var(--theme-control); color:var(--ink); }
+.documents-page .document-actions .document-delete { color:var(--besc-red); background:transparent; }
+.documents-page .document-actions small { flex-basis:100%; }
+.documents-page .drive-dossier-grid article { border-color:var(--line); }
+.documents-page .drive-dossier-grid strong,.documents-page .drive-dossier-grid a { font-size:11px; }
+.documents-page .drive-dossier-grid span { font-size:10px; }
+.documents-page .documents-search label { flex:1; min-width:200px; }
+.documents-page .documents-search input { width:100%; box-sizing:border-box; }
+.documents-page .documents-register td:nth-child(2) a { display:inline-flex; padding:7px 10px; border:1px solid var(--line); border-radius:8px; background:var(--theme-control); white-space:nowrap; text-decoration:none; font-size:11px; }
+.documents-page .document-fiche-link { font-size:11px; }
+.documents-page .documents-register details form { display:grid; gap:12px; }
+.documents-page .documents-register details form label { display:grid; gap:6px; font-size:11px; }
+.documents-page .documents-register details form input { min-height:36px; padding:9px 12px; border:1px solid var(--line); border-radius:8px; }
+@media(max-width:1200px) {
+ .documents-page .drive-register-head { display:none; }
+ .documents-page .drive-register article { grid-template-columns:minmax(0,1fr) auto; gap:12px; }
+ .documents-page .drive-register article>div:first-child { grid-column:1/-1; }
+ .documents-page .drive-register article>.document-actions { grid-column:1/-1; padding-top:10px; border-top:1px solid var(--line); }
+ .documents-page .drive-register article>.drive-missing { grid-column:1/-1; }
+}
+@media(max-width:650px) {
+ .documents-page .drive-register article { padding:14px; }
+ .documents-page .drive-filters { flex-direction:column; align-items:stretch; }
+ .documents-page .drive-source { max-width:none; white-space:normal; }
+ .documents-page .drive-search { min-width:0; }
+ .documents-page .drive-dossier-summary summary { gap:12px; flex-wrap:wrap; }
+ .documents-page .documents-search { align-items:stretch; }
+}
+.documents-page .document-actions .document-delete { color:var(--theme-danger); }
+.documents-page .document-status.available { background:var(--theme-control); color:var(--theme-success); border:1px solid var(--line); }
+.documents-page .document-status.missing { background:var(--theme-control); color:var(--theme-warning); border:1px solid var(--line); }
