@@ -188,7 +188,7 @@ test("Alle 22 editors hebben één formulier, één opslaanknop en bereikbare pa
   for(const part of cfg.collections)assert.ok(cfg.tabs.some(tab=>tab.id===part.tab),`${kind}.${part.table}`);
   const html=renderToStaticMarkup(React.createElement(Component,{kind,id,mode:"create",cancelHref:"/app",permissions:{}}));
   assert.equal((html.match(/<form /g)||[]).length,1,kind);assert.equal((html.match(/type="submit"/g)||[]).length,1,kind);
-  assert.match(html,/type="submit" disabled=""/);assert.equal((html.match(/role="tabpanel"/g)||[]).length,cfg.tabs.length>1?cfg.tabs.length:0,kind);
+  assert.match(html,/type="submit" disabled=""/);assert.equal((html.match(/role="tabpanel"/g)||[]).length,kind==="inbox"?0:cfg.tabs.length,kind);
   if(kind==="inbox"){assert.doesNotMatch(html,/role="tab(list)?"/);for(const field of cfg.fields)assert.ok(html.includes(`id="${field}-${id}"`),`inbox.${field}`);}
  }
 });
