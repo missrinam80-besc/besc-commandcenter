@@ -16,10 +16,11 @@ async function render(role="member", failure="", selected?:string, kind?:string,
   const row={id:"fixture-row",title:"TESTFIXTURE stream",kind:rowKind,status:"draft",starts_at:timed?"2026-10-08T00:00:00Z":null,ends_at:timed?"2026-10-08T02:00:00Z":null,person_id:null,location:null,notes:null};
   const supabase={from:(table:string)=>{
     const q:Record<string,unknown>={};for(const method of ["select","eq","is","neq","order"])q[method]=()=>q;
-    q.then=(resolve:(value:unknown)=>unknown)=>Promise.resolve({data:table==="event_schedule_items"?(failure==="items"?null:[row]):[],error:failure===(table==="event_schedule_items"?"items":"assets")?{code:"fixture"}:null}).then(resolve);return q;
+    q.then=(resolve:(value:unknown)=>unknown)=>Promise.resolve({data:table==="event_schedule_items"?(failure==="items"?null:[row]):[],error:failure===(table==="event_schedule_items"?"items":"activities")?{code:"fixture"}:null}).then(resolve);return q;
   }};
   const container=({children}:React.PropsWithChildren)=>React.createElement("section",null,children);
   const overrides:Record<string,unknown>={
+    "@/components/event-agenda-export":{EventAgendaExport:()=>React.createElement("button",{"data-export":"yes"},"Afdrukken / PDF")},
     "next/link":{default:({children,scroll,...props}:React.PropsWithChildren<Record<string,unknown>>)=>{void scroll;return React.createElement("a",props,children);}},
     "@/lib/event-timegrid":timegridHelpers,"@/lib/event-agenda-range":rangeHelpers,
     "@/lib/auth-context":{requireActiveMembership:async()=>({supabase,membership:{role,organization_id:"fixture-org"}})},
@@ -53,4 +54,9 @@ test("Nieuwe en hernoemde soorten werken in filters, bloklabels en kleuren",asyn
 });
 test("Een fout in de soortenlijst bewaart de agenda maar blokkeert bewerken",async()=>{
  const html=await render("member","kinds","nieuw");assert.match(html,/soorten agendaonderdelen kunnen niet/);assert.match(html,/TESTFIXTURE stream/);assert.doesNotMatch(html,/data-editor="yes"|Onderdeel toevoegen/);
+});
+
+test("afdrukken is beschikbaar voor kijkers maar niet bij onvolledige brongegevens",async()=>{
+ assert.match(await render("volunteer"),/data-export="yes"/);
+ for(const failure of ["items","people","kinds","activities"])assert.doesNotMatch(await render("member",failure),/data-export="yes"/);
 });

@@ -164,7 +164,7 @@ export default async function Event({
         {activeTab === "planning" && <>
           <div className="event-tab-actions"><Link href="?tab=planning&nieuw=taak">Taak toevoegen</Link>{canManageCampaigns && <Link href="?tab=planning&nieuw=campagne">Campagne toevoegen</Link>}</div>
         <PeopleAssignmentsPanel entityType="event" entityId={id} assignments={(assignmentRows ?? []) as never[]} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)} canManage={canManage} closeHref="?tab=planning" selected={q.betrokkene}/>
-          <EventSchedulePanel eventId={id} eventPeriod={{start_date:e.start_date,end_date:e.end_date,start_at:e.start_at,end_at:e.end_at}} selected={q.schema} kind={q.schema_type} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>
+          <EventSchedulePanel eventId={id} eventTitle={e.title} eventPeriod={{start_date:e.start_date,end_date:e.end_date,start_at:e.start_at,end_at:e.end_at}} selected={q.schema} kind={q.schema_type} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>
         </>}
         {activeTab === "materialen" && <EventMaterialsPanel eventId={id} selected={q.materiaal} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>}
         {activeTab === "giveaways" && <EventGiveawaysPanel eventId={id} selected={q.giveaway} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>}

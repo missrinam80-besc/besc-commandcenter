@@ -1,4 +1,5 @@
 import type {EventAgendaPeriod} from "@/lib/event-agenda-range";
+import {EventAgendaExport} from "@/components/event-agenda-export";
 import { EventTimeGrid } from "@/components/event-timegrid";
 import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
@@ -12,8 +13,8 @@ import { FormModal } from "@/components/form-modal";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { deleteEventSchedule } from "@/app/app/events/[id]/schedule-actions";
 
-export async function EventSchedulePanel({ eventId, selected, people, peopleError = false, kind, eventPeriod }: {
-  eventId: string; selected?: string; people: { id: string; label: string }[]; peopleError?: boolean; kind?: string; eventPeriod?:EventAgendaPeriod;
+export async function EventSchedulePanel({ eventId, selected, people, peopleError = false, kind, eventPeriod, eventTitle }: {
+  eventId: string; eventTitle: string; selected?: string; people: { id: string; label: string }[]; peopleError?: boolean; kind?: string; eventPeriod?:EventAgendaPeriod;
 }) {
   const { supabase, membership } = await requireActiveMembership();
   const result = await supabase.from("event_schedule_items").select("id,title,kind,activity_id,status,starts_at,ends_at,person_id,location,notes")
@@ -32,6 +33,7 @@ export async function EventSchedulePanel({ eventId, selected, people, peopleErro
     <div className="form-heading event-agenda-heading"><div><span className="eyebrow">PROGRAMMA EN INZET</span><h2>Eventagenda</h2></div>
       {canEdit && <Link className="row-action" href="?tab=planning&schema=nieuw"><Plus size={14}/>Onderdeel toevoegen</Link>}
     </div>
+    {!result.error&&!peopleError&&!kindsError&&!activitiesResult.error&&<div className="event-agenda-export-action"><EventAgendaExport key={filter} eventTitle={eventTitle} rows={rows} people={people} kinds={kinds} activities={activities} initialCategory={filter}/></div>}
     <nav className="event-schedule-filters" aria-label="Schema filteren">
       <Link href="?tab=planning" scroll={false} aria-current={!filter ? "page" : undefined}>Alles</Link>
       {Object.entries(kinds).map(([value, label]) => <Link key={value} data-kind={value} style={{"--agenda-color":scheduleKindColor(value)} as CSSProperties} href={`?tab=planning&schema_type=${encodeURIComponent(value)}`} scroll={false} aria-current={filter === value ? "page" : undefined}><span className="event-agenda-dot" aria-hidden="true"/>{label}</Link>)}
