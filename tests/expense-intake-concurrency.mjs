@@ -18,7 +18,7 @@ function processSql(query,interactive=false){
 async function sql(query){const result=await processSql(query).done;assert.equal(result.code,0,result.err);return result.out.trim();}
 
 await sql('create database besc_expense_intake_fixture;');env={...process.env,PGDATABASE:'besc_expense_intake_fixture'};
-const fixture=readFileSync(new URL('./helpers/expense-intake-fixture.sql',import.meta.url),'utf8').replace('create role authenticated;create role anon;',`do $$begin if not exists(select 1 from pg_roles where rolname='authenticated') then create role authenticated;end if;if not exists(select 1 from pg_roles where rolname='anon') then create role anon;end if;end$$;`);
+const fixture=readFileSync(new URL('./helpers/expense-intake-fixture.sql',import.meta.url),'utf8').replace('create role authenticated;create role anon;',()=>`do $$begin if not exists(select 1 from pg_roles where rolname='authenticated') then create role authenticated;end if;if not exists(select 1 from pg_roles where rolname='anon') then create role anon;end if;end$$;`);
 await sql(fixture+readFileSync(new URL('../supabase/migrations/20261014120609_expense_inbox_intake.sql',import.meta.url),'utf8'));
 const payload={title:'TESTFIXTURE kost',amount:10,expense_date:'2026-10-14',supplier:'TESTFIXTURE',invoice_number:'BON',claimant_name:'TESTFIXTURE',notes:'TESTFIXTURE',event_id:'',proof:null};
 async function overlap(first,second,actor,phase){
