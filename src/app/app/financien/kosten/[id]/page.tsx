@@ -1,3 +1,4 @@
+import {ExpenseIntakePanel,loadExpenseIntake,type ExpenseIntakeRecord} from "@/components/expense-intake-panel";
 import {MarkdownContent} from "@/components/markdown-field";
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
@@ -32,6 +33,8 @@ export default async function Page({
   ]);
   if (!expenseResult.data) notFound();
   const expense = expenseResult.data;
+  const intake=expense.expense_intake_id?await loadExpenseIntake("expense_id",id):null;
+  const hasUploadedProof=Boolean(intake?.data?.payload?.proof);
   const canManage = hasPermission(membership, "manageFinance");
   const transition = (value: string, label: string) => (
     <form action={updateExpenseWorkflow}>
@@ -69,7 +72,7 @@ export default async function Page({
               <article><span>Datum</span><strong>{expense.expense_date || "—"}</strong></article>
               <article><span>Budget</span><strong>{expense.budget_envelopes?.name || "—"}</strong></article>
             </section>
-            {["paid", "reimbursed"].includes(expense.status) && !expense.proof_url && (
+            {["paid", "reimbursed"].includes(expense.status) && !expense.proof_url && !hasUploadedProof && (
               <div className="attention-bar"><div><strong>Bewijsstuk ontbreekt</strong><span>Een betaalde kost hoort een factuur of betaalbewijs in Google Drive te hebben.</span></div></div>
             )}
             <section className="form-card record-notes">
@@ -83,6 +86,7 @@ export default async function Page({
                 <div><dt>Notities</dt><dd><MarkdownContent>{expense.notes || "—"}</MarkdownContent></dd></div>
               </dl>
             </section>
+            {intake?.error?<p className="error-note">Het ingezonden bewijsstuk kon niet worden geladen.</p>:intake?.data&&<ExpenseIntakePanel record={intake.data as ExpenseIntakeRecord}/>}
             <ApprovalPanel entityType="expense" entityId={id} sourceHref={`/app/financien/kosten/${id}`} title="Kost goedkeuren"/>
             {canManage && (
               <section className="activity-card">

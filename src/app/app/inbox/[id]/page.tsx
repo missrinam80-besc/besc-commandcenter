@@ -1,3 +1,4 @@
+import {ExpenseIntakePanel} from "@/components/expense-intake-panel";
 import {MarkdownContent} from "@/components/markdown-field";
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
@@ -83,7 +84,7 @@ export default async function InboxItemPage({
           <Link href="/app/inbox">← Terug naar inbox</Link>
           <span className="eyebrow">INBOXITEM</span>
           <h1>{item.title}</h1>
-          <p>Ingediend via {item.source} op {new Date(item.created_at).toLocaleDateString("nl-BE")}</p>
+          <p>Ingediend via {item.source==="expense_submission"?"Kost indienen":item.source} op {new Date(item.created_at).toLocaleDateString("nl-BE")}</p>
         </div>
         <div className="project-actions">
           {item.status === "processed" && (
@@ -96,7 +97,7 @@ export default async function InboxItemPage({
         </div>
       </header>
       <div className="project-detail-body">
-        {query.fout && <div className="error-note">De actie is mislukt ({query.fout}).</div>}
+        {query.fout && <div className="error-note">{({"geen-financiele-toegang":"Omzetten naar een kostenitem vraagt zowel inboxbeheer als financiële bevoegdheid.","kost-omzetten":"De kost kon niet worden omgezet. Vernieuw de fiche en controleer de verwerkingsstatus en je bevoegdheden. Er is geen gedeeltelijke omzetting opgeslagen.","kost-kies-kostenitem":"Gebruik de knop ‘Omzetten naar kostenitem’ bij deze kostindiening."} as Record<string,string>)[query.fout]??`De actie is mislukt (${query.fout}).`}</div>}
         {query.succes && <div className="success">Het inboxitem werd bijgewerkt.</div>}
 
         {(
@@ -104,7 +105,7 @@ export default async function InboxItemPage({
             <section className="project-summary">
               <article><span>Status</span><strong>{statusLabels[item.status] ?? item.status}</strong></article>
               <article><span>Prioriteit</span><strong>{priorityLabels[item.priority] ?? item.priority}</strong></article>
-              <article><span>Bron</span><strong>{item.source}</strong></article>
+              <article><span>Bron</span><strong>{item.source==="expense_submission"?"Kostindiening":item.source}</strong></article>
               <article><span>Bijgewerkt</span><strong>{new Date(item.updated_at).toLocaleDateString("nl-BE")}</strong></article>
             </section>
             <section className="form-card record-notes">
@@ -112,7 +113,8 @@ export default async function InboxItemPage({
               <MarkdownContent>{item.description || "Er werd geen beschrijving toegevoegd."}</MarkdownContent>
             </section>
 
-            {item.status !== "processed" && (
+            {item.source==="expense_submission"&&<ExpenseIntakePanel inboxId={item.id}/>}
+            {item.status !== "processed" && item.source!=="expense_submission" && (
               <section className="form-card inbox-conversion">
                 <div className="form-heading"><div><h2>Omzetten naar BESC-werk</h2><p>Titel, beschrijving en prioriteit worden overgenomen.</p></div></div>
                 <div className="conversion-groups">

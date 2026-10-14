@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import {hasPermission} from "@/lib/permissions";
 import { requirePermission } from "@/lib/auth-context";
 
 const idSchema = z.string().uuid();
@@ -48,7 +49,7 @@ export async function convertInboxItem(formData: FormData) {
     id: idSchema,
     target: z.enum([
       "task", "project", "content", "event", "campaign", "social",
-      "volunteer", "sponsor", "meeting", "knowledge", "product", "launch",
+      "volunteer", "sponsor", "meeting", "knowledge", "product", "launch", "expense",
     ]),
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/app/inbox?fout=velden");
@@ -58,14 +59,22 @@ export async function convertInboxItem(formData: FormData) {
     "manageInbox",
     detailPath(id, "?fout=geen-toegang"),
   );
+  if(target==="expense"){
+    if(!hasPermission(membership,"manageFinance"))redirect(detailPath(id,"?fout=geen-financiele-toegang"));
+    const result=await supabase.rpc("convert_expense_intake",{p_org:membership.organization_id,p_id:id});
+    if(result.error||!result.data)redirect(detailPath(id,"?fout=kost-omzetten"));
+    revalidatePath("/app/inbox");revalidatePath(detailPath(id));revalidatePath("/app/financien");
+    redirect(`/app/financien/kosten/${result.data}?succes=omgezet`);
+  }
   const { data: item } = await supabase
     .from("inbox_items")
-    .select("id,title,description,priority,status")
+    .select("id,title,description,priority,status,source")
     .eq("id", id)
     .eq("organization_id", membership.organization_id)
     .is("deleted_at", null)
     .maybeSingle();
   if (!item) redirect("/app/inbox?fout=niet-gevonden");
+  if(item.source==="expense_submission")redirect(detailPath(id,"?fout=kost-kies-kostenitem"));
   if (item.status === "processed") redirect(detailPath(id, "?fout=al-verwerkt"));
 
   let destination = "/app/inbox";
