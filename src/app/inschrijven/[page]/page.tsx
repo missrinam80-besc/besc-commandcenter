@@ -1,3 +1,4 @@
+import {withBotUpstream} from "@/lib/bot-api-upstream";
 import {randomUUID} from "node:crypto";
 import {notFound} from "next/navigation";
 import {z} from "zod";
@@ -11,7 +12,7 @@ export const dynamic="force-dynamic";
 export const metadata={title:"Tijdslot aanvragen · BESC",robots:{index:false,follow:false},referrer:"no-referrer" as const};
 export default async function SlotRegistration({params,searchParams}:{params:Promise<{page:string}>;searchParams:Promise<{aanvraag?:string}>}){
  const {page}=await params,q=await searchParams;if(!z.string().uuid().safeParse(page).success)notFound();
- let data:{title:string;slots:EventTimeSlot[]}|null=null;try{const result=await createAdminClient().rpc("event_slot_public",{pid:page,op:"list",d:{}});if(!result.error)data=result.data;}catch{}
+ let data:{title:string;slots:EventTimeSlot[]}|null=null;try{const result=await withBotUpstream(async fetcher=>await createAdminClient(fetcher).rpc("event_slot_public",{pid:page,op:"list",d:{}}));if(!result.error)data=result.data;}catch{}
  if(!data)return <main className="slot-public-page"><h1>Inschrijven niet beschikbaar</h1><p>De inschrijfpagina is gesloten of kan tijdelijk niet worden geladen. Neem contact op met de eventeigenaar.</p></main>;
  return <main className="slot-public-page"><header><p className="eyebrow">BESC · CREW & STREAMERS</p><h1>{data.title}</h1><p>Kies een tijdslot. Voorlopige aanvragen tellen mee voor de beschikbare plaatsen. Alle tijden zijn Belgische tijd.</p></header>
  {q.aanvraag&&z.string().uuid().safeParse(q.aanvraag).success&&<SlotVerificationForm page={page} requestId={q.aanvraag}/>}

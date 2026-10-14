@@ -27,6 +27,7 @@ create index event_slot_bookings_slot_idx on public.event_slot_bookings(slot_id,
 create index event_slot_bookings_ip_idx on public.event_slot_bookings(ip_hash,created_at);
 create index event_slot_bookings_rate_idx on public.event_slot_bookings(event_id,email,created_at);
 alter table public.event_schedule_items add column slot_booking_id uuid unique references public.event_slot_bookings(id),add column booking_name text;
+alter table public.event_schedule_items add constraint slot_schedule_name_binding check((slot_booking_id is null)=(booking_name is null));
 
 create table private.event_slot_messages(
  id uuid primary key default gen_random_uuid(),booking_id uuid not null references public.event_slot_bookings(id),organization_id uuid not null,
@@ -34,7 +35,7 @@ create table private.event_slot_messages(
  subject text not null,body text not null,
  state text not null default 'queued' check(state in('queued','leased','dispatching','sent','failed','uncertain')),
  attempts integer not null default 0,next_attempt_at timestamptz not null default now(),lease_token uuid,lease_until timestamptz,worker text,
- draft_id text,message_id text,error_code text,created_at timestamptz not null default now(),sent_at timestamptz,
+ draft_id text,message_id text,error_code text,created_at timestamptz not null default clock_timestamp(),sent_at timestamptz,
  unique(booking_id,kind));
 create index event_slot_messages_pending_idx on private.event_slot_messages(channel,state,next_attempt_at);
 alter table public.event_slot_pages enable row level security;
@@ -188,7 +189,9 @@ begin
  select * into p from public.event_slot_pages where public_id=pid and published;
  if not found then raise exception 'slot_page_unavailable';end if;
  select * into e from public.events where id=p.event_id and organization_id=p.organization_id and deleted_at is null and status not in('completed','cancelled','archived') for share;
- if not found or e.owner_id is null or not exists(select 1 from public.organization_members where organization_id=e.organization_id and user_id=e.owner_id and status='active') then raise exception 'slot_page_unavailable';end if;
+ if not found or e.owner_id is null then raise exception 'slot_page_unavailable';end if;
+ perform 1 from public.organization_members where organization_id=e.organization_id and user_id=e.owner_id and status='active' for share;
+ if not found then raise exception 'slot_page_unavailable';end if;
  select * into p from public.event_slot_pages where public_id=pid and published for share;
  if not found then raise exception 'slot_page_unavailable';end if;
  if op='list' then
@@ -212,22 +215,23 @@ begin
   return jsonb_build_object('status','pending');
  end if;
  if op<>'request' then raise exception 'invalid_slot_operation';end if;
- perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(e.id::text,7349));
  if coalesce(d->>'ip_hash','') !~ '^[a-f0-9]{64}$' then raise exception 'invalid_request_source';end if;
+ perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('slot-ip:'||(d->>'ip_hash'),9153));
+ perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(e.id::text,7349));
  if (select count(*) from public.event_slot_bookings where ip_hash=d->>'ip_hash' and created_at>clock_timestamp()-interval '1 hour')>=20 then raise exception 'slot_rate_limited';end if;
  select * into s from public.event_time_slots where id=(d->>'slot_id')::uuid and event_id=e.id and organization_id=e.organization_id for update;
  if not found or not s.is_open or s.starts_at<=clock_timestamp() then raise exception 'slot_closed';end if;
  select * into b from public.event_slot_bookings where id=(d->>'id')::uuid;
  if found then
-  if b.slot_id<>s.id or b.email<>lower(btrim(d->>'email')) or b.name<>btrim(d->>'name') then raise exception 'slot_idempotency_conflict';end if;
+  if b.source<>'public' or b.slot_id<>s.id or b.email<>lower(btrim(d->>'email')) or b.name<>btrim(d->>'name') or b.channel<>coalesce(d->>'channel','email') or b.account_user_id is distinct from nullif(d->>'account_user_id','')::uuid or b.discord_user_id is distinct from nullif(d->>'discord_user_id','') then raise exception 'slot_idempotency_conflict';end if;
   return jsonb_build_object('received',true);
  end if;
  if (select count(*) from public.event_slot_bookings where event_id=e.id and email=lower(btrim(d->>'email')) and created_at>clock_timestamp()-interval '1 hour')>=5
  or (select count(*) from public.event_slot_bookings where event_id=e.id and created_at>clock_timestamp()-interval '1 hour')>=500 then raise exception 'slot_rate_limited';end if;
  update public.event_slot_bookings set status='expired' where slot_id=s.id and email=lower(btrim(d->>'email')) and status='unverified' and verification_expires_at<=clock_timestamp();
- if exists(select 1 from public.event_slot_bookings where slot_id=s.id and email=lower(btrim(d->>'email')) and status in('unverified','pending','confirmed')) then return jsonb_build_object('received',true);end if;
  select count(*) into used from public.event_slot_bookings where slot_id=s.id and status in('pending','confirmed');
  if used>=s.capacity then raise exception 'slot_full';end if;
+ if exists(select 1 from public.event_slot_bookings where slot_id=s.id and email=lower(btrim(d->>'email')) and status in('unverified','pending','confirmed')) then return jsonb_build_object('received',true);end if;
  if d->>'hash' !~ '^[a-f0-9]{64}$' or char_length(d->>'verification_url')>2000 then raise exception 'invalid_verification';end if;
  insert into public.event_slot_bookings(id,organization_id,event_id,slot_id,name,email,status,source,verification_hash,verification_expires_at,account_user_id,discord_user_id,channel,ip_hash)
  values((d->>'id')::uuid,e.organization_id,e.id,s.id,btrim(d->>'name'),lower(btrim(d->>'email')),'unverified','public',d->>'hash',clock_timestamp()+interval '30 minutes',nullif(d->>'account_user_id','')::uuid,nullif(d->>'discord_user_id',''),coalesce(d->>'channel','email'),d->>'ip_hash') returning * into b;

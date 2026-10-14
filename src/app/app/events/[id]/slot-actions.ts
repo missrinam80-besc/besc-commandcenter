@@ -1,4 +1,5 @@
 "use server";
+import {after} from "next/server";
 import {z} from "zod";
 import {revalidatePath} from "next/cache";
 import {requireActiveMembership} from "@/lib/auth-context";
@@ -10,7 +11,7 @@ async function ownerOperation(fd:FormData,op:string,data:Record<string,unknown>)
  const {supabase,membership}=await requireActiveMembership();
  const r=await supabase.rpc("event_slot_owner",{o:membership.organization_id,eid:event.data,op,d:data});
  if(r.error)return {ok:false,message:slotError(r.error)};
- revalidatePath(`/app/events/${event.data}`);if(["book","decide","retry_message"].includes(op)&&r.data?.id){try{await flushSlotEmails(r.data.id,2);}catch{}}
+ revalidatePath(`/app/events/${event.data}`);if(["book","decide","retry_message"].includes(op)&&r.data?.id){const bookingId=r.data.id;after(async()=>{try{await flushSlotEmails(bookingId,2);}catch{}});}
  return {ok:true,message:"Opgeslagen."};
 }
 export async function saveEventTimeSlot(_state:SlotActionResult,fd:FormData):Promise<SlotActionResult>{const p=slotSchema.safeParse({...Object.fromEntries(fd),is_open:fd.get("is_open")==="on"});if(!p.success)return {ok:false,message:p.error.issues[0]?.message??"Controleer de slotgegevens."};return ownerOperation(fd,"save_slot",p.data);}

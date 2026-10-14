@@ -1,4 +1,6 @@
 "use server";
+import {after} from "next/server";
+import {withBotUpstream} from "@/lib/bot-api-upstream";
 import {randomBytes} from "node:crypto";
 import {headers} from "next/headers";
 import {revalidatePath} from "next/cache";
@@ -20,18 +22,20 @@ export async function startSlotRequest(_previous:SlotActionResult=empty,fd:FormD
  try{let identity:Record<string,string>={};
  if(values.channel==="discord"){
   if(process.env.BESC_SLOT_DISCORD_NOTIFICATIONS_ENABLED!=="true")return {ok:false,message:"Discordmeldingen zijn nog niet beschikbaar. Kies e-mail."};
-  const db=await createClient(),r=await db.auth.getUser(),user=r.data.user;
+  const {r,user,discord,profile}=await withBotUpstream(async fetcher=>{
+  const db=await createClient(fetcher),r=await db.auth.getUser(),user=r.data.user;
   const discord=discordIdentityDetails(findIdentity(user?.identities,"discord"));
   const profile=user?await db.from("profiles").select("id,discord_user_id").eq("id",user.id).maybeSingle():null;
+  return {r,user,discord,profile};});
   if(r.error||!user?.email_confirmed_at||user.email?.toLowerCase()!==values.email||!discord||profile?.error||profile?.data?.discord_user_id!==discord.userId)return {ok:false,message:"Log in met het account dat bij dit e-mailadres hoort en koppel je Discord-account, of kies e-mail."};
   identity={account_user_id:user.id,discord_user_id:discord.userId};
  }
  const token=randomBytes(32).toString("base64url"),head=await headers();
  // Caddy must overwrite X-Forwarded-For. Use the last trusted proxy hop; never store the raw address.
  const ip=head.get("x-forwarded-for")?.split(",").at(-1)?.trim()||"proxy-address-unavailable";
- const admin=createAdminClient();const result=await admin.rpc("event_slot_public",{pid:page,op:"request",d:{...values,...identity,hash:slotTokenHash(token),ip_hash:slotRequestHash(ip),verification_url:`${slotOrigin()}/inschrijven/${page}?aanvraag=${values.id}#code=${token}`}});
+ const result=await withBotUpstream(async fetcher=>await createAdminClient(fetcher).rpc("event_slot_public",{pid:page,op:"request",d:{...values,...identity,hash:slotTokenHash(token),ip_hash:slotRequestHash(ip),verification_url:`${slotOrigin()}/inschrijven/${page}?aanvraag=${values.id}#code=${token}`}}));
  if(result.error)return {ok:false,message:slotError(result.error)};
- try{await flushSlotEmails(values.id);}catch{}
+ after(async()=>{try{await flushSlotEmails(values.id);}catch{}});
  return {ok:true,message:"Controleer je mailbox. Bij een nieuwe aanvraag ontvang je een bevestigingslink die 30 minuten geldig is. Pas na bevestiging wordt een plek voorlopig gereserveerd."};
  }catch{return {ok:false,message:"De aanvraag kon niet worden bevestigd. Probeer later opnieuw."};}
 }
@@ -39,8 +43,8 @@ export async function verifySlotRequest(_previous:SlotActionResult=empty,fd:Form
  void _previous;
  const p=z.object({page:z.string().uuid(),id:z.string().uuid(),token:z.string().regex(/^[A-Za-z0-9_-]{43}$/)}).safeParse(Object.fromEntries(fd));
  if(!p.success)return {ok:false,message:"Open de volledige bevestigingslink uit je e-mail."};
- try{const r=await createAdminClient().rpc("event_slot_public",{pid:p.data.page,op:"verify",d:{id:p.data.id,hash:slotTokenHash(p.data.token)}});if(r.error)return {ok:false,message:slotError(r.error)};
- revalidatePath("/app/events/[id]","page");try{await flushSlotEmails(p.data.id);}catch{}
+ try{const r=await withBotUpstream(async fetcher=>await createAdminClient(fetcher).rpc("event_slot_public",{pid:p.data.page,op:"verify",d:{id:p.data.id,hash:slotTokenHash(p.data.token)}}));if(r.error)return {ok:false,message:slotError(r.error)};
+ revalidatePath("/app/events/[id]","page");after(async()=>{try{await flushSlotEmails(p.data.id);}catch{}});
  return {ok:true,message:r.data?.status==="confirmed"?"Deze boeking is al bevestigd.":"Je e-mailadres is bevestigd en je aanvraag is voorlopig gereserveerd. De eventeigenaar beslist over de definitieve bevestiging. Je ontvangt daarover bericht."};
  }catch{return {ok:false,message:"Bevestigen is tijdelijk niet beschikbaar. Probeer het opnieuw."};}
 }
