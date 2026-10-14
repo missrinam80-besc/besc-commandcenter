@@ -15,7 +15,7 @@ function load(file:string):Record<string,unknown>{
  runInNewContext(ts.transpileModule(readFileSync(file,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText,{module:compiled,exports:compiled.exports,require,URL});
  return cache[file]=compiled.exports;
 }
-const catalog=load("src/lib/dossier-editor-catalog.ts").dossierEditorCatalog as Record<string,{table:string;tabs:{id:string}[];collections:{table:string;tab:string}[]}>;
+const catalog=load("src/lib/dossier-editor-catalog.ts").dossierEditorCatalog as Record<string,{table:string;fields:string[];tabs:{id:string}[];collections:{table:string;tab:string}[]}>;
 type Row={localId:string;id:string;values:Record<string,unknown>;base:Record<string,unknown>|null;deleted:boolean};
 type Draft={kind:string;id:string;values:Record<string,unknown>;base:Record<string,unknown>|null;parts:Record<string,Row[]>};
 type Change={id:string;new:boolean;values:Record<string,unknown>;base:Record<string,unknown>|null;delete?:boolean;collection?:string};
@@ -188,6 +188,7 @@ test("Alle 22 editors hebben één formulier, één opslaanknop en bereikbare pa
   for(const part of cfg.collections)assert.ok(cfg.tabs.some(tab=>tab.id===part.tab),`${kind}.${part.table}`);
   const html=renderToStaticMarkup(React.createElement(Component,{kind,id,mode:"create",cancelHref:"/app",permissions:{}}));
   assert.equal((html.match(/<form /g)||[]).length,1,kind);assert.equal((html.match(/type="submit"/g)||[]).length,1,kind);
-  assert.match(html,/type="submit" disabled=""/);assert.equal((html.match(/role="tabpanel"/g)||[]).length,cfg.tabs.length,kind);
+  assert.match(html,/type="submit" disabled=""/);assert.equal((html.match(/role="tabpanel"/g)||[]).length,kind==="inbox"?0:cfg.tabs.length,kind);
+  if(kind==="inbox"){assert.doesNotMatch(html,/role="tab(list)?"/);for(const field of cfg.fields)assert.ok(html.includes(`id="${field}-${id}"`),`inbox.${field}`);}
  }
 });
