@@ -1,3 +1,4 @@
+import {loadEventRows} from "../src/lib/event-slot-rows.ts";
 import * as rangeHelpers from "../src/lib/event-agenda-range.ts";
 import * as timegridHelpers from "../src/lib/event-timegrid.ts";
 import assert from "node:assert/strict";
@@ -9,22 +10,23 @@ import ts from "typescript";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { hasPermission } from "../src/lib/permissions.ts";
-import { scheduleKinds, scheduleKindColor, scheduleKindLabel, scheduleStatuses, scheduleConflicts, scheduleAgendaDays, scheduleAgendaTime } from "../src/lib/event-schedule.ts";
+import { scheduleStatusLabel,scheduleKinds, scheduleKindColor, scheduleKindLabel, scheduleStatuses, scheduleConflicts, scheduleAgendaDays, scheduleAgendaTime } from "../src/lib/event-schedule.ts";
 import { formatDateTime } from "../src/lib/format.ts";
 
 async function render(role="member", failure="", selected?:string, kind?:string, timed=false,rowKind="stream") {
   const row={id:"fixture-row",title:"TESTFIXTURE stream",kind:rowKind,status:"draft",starts_at:timed?"2026-10-08T00:00:00Z":null,ends_at:timed?"2026-10-08T02:00:00Z":null,person_id:null,location:null,notes:null};
   const supabase={from:(table:string)=>{
-    const q:Record<string,unknown>={};for(const method of ["select","eq","is","neq","order"])q[method]=()=>q;
+    const q:Record<string,unknown>={};for(const method of ["select","eq","is","neq","order","range"])q[method]=()=>q;
     q.then=(resolve:(value:unknown)=>unknown)=>Promise.resolve({data:table==="event_schedule_items"?(failure==="items"?null:[row]):[],error:failure===(table==="event_schedule_items"?"items":"activities")?{code:"fixture"}:null}).then(resolve);return q;
   }};
   const container=({children}:React.PropsWithChildren)=>React.createElement("section",null,children);
   const overrides:Record<string,unknown>={
     "@/components/event-agenda-export":{EventAgendaExport:()=>React.createElement("button",{"data-export":"yes"},"Afdrukken / PDF")},
+    "@/lib/event-slot-rows":{loadEventRows},
     "next/link":{default:({children,scroll,...props}:React.PropsWithChildren<Record<string,unknown>>)=>{void scroll;return React.createElement("a",props,children);}},
     "@/lib/event-timegrid":timegridHelpers,"@/lib/event-agenda-range":rangeHelpers,
     "@/lib/auth-context":{requireActiveMembership:async()=>({supabase,membership:{role,organization_id:"fixture-org"}})},
-    "@/lib/permissions":{hasPermission},"@/lib/event-schedule":{scheduleKinds,scheduleKindColor,scheduleKindLabel,scheduleStatuses,scheduleConflicts,scheduleAgendaDays,scheduleAgendaTime},"@/lib/format":{formatDateTime},
+    "@/lib/permissions":{hasPermission},"@/lib/event-schedule":{scheduleStatusLabel,scheduleKinds,scheduleKindColor,scheduleKindLabel,scheduleStatuses,scheduleConflicts,scheduleAgendaDays,scheduleAgendaTime},"@/lib/format":{formatDateTime},
     "@/lib/dossier-choices-server":{loadManagedChoices:async()=>{if(failure==="kinds")throw Error("fixture failure");return Object.entries({...scheduleKinds,custom_kind:"TESTFIXTURE nieuwe soort",stream:"TESTFIXTURE hernoemde stream"}).map(([value,label])=>({set_key:"event_schedule_items.kind",value,label}));}},
     "@/components/form-modal":{FormModal:container},"@/components/confirm-submit-button":{ConfirmSubmitButton:container},
     "@/components/event-schedule-form":{EventScheduleForm:()=>React.createElement("div",{"data-editor":"yes"})},

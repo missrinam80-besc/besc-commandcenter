@@ -10,8 +10,11 @@ export const scheduleStatuses = { draft: "Voorstel", confirmed: "Bevestigd", com
 export type EventScheduleItem = {
   id: string; title: string; kind: string; status: keyof typeof scheduleStatuses;
   starts_at: string | null; ends_at: string | null; person_id: string | null;
+  slot_booking_id?:string|null; booking_name?:string|null;
   location: string | null; notes: string | null; activity_id?: string | null;
 };
+
+export function scheduleStatusLabel(row:EventScheduleItem){return row.slot_booking_id&&row.status==="draft"?"Voorlopig":scheduleStatuses[row.status];}
 
 const agendaDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels", year: "numeric", month: "2-digit", day: "2-digit" });
 const agendaDateLabel = new Intl.DateTimeFormat("nl-BE", { timeZone: "Europe/Brussels", weekday: "long", day: "numeric", month: "long", year: "numeric" });

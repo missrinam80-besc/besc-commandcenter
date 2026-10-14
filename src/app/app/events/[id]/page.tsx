@@ -1,4 +1,5 @@
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
+import {EventSlotBookingsPanel} from "@/components/event-slot-bookings-panel";
 import { EventRegistrationsPanel } from "@/components/event-registrations-panel";
 import { EventFinancePanel } from "@/components/event-finance-panel";
 import { EventGiveawaysPanel } from "@/components/event-giveaways-panel";
@@ -168,7 +169,7 @@ export default async function Event({
         </>}
         {activeTab === "materialen" && <EventMaterialsPanel eventId={id} selected={q.materiaal} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>}
         {activeTab === "giveaways" && <EventGiveawaysPanel eventId={id} selected={q.giveaway} people={toPersonPickerOptions(centralPeopleRows ?? [])} peopleError={Boolean(centralPeopleError)}/>}
-        {activeTab === "inschrijvingen" && <EventRegistrationsPanel eventId={id} legacyUrl={e.eventbrite_url} selected={q.inschrijving}/>}
+        {activeTab === "inschrijvingen" && <><EventSlotBookingsPanel eventId={id} ownerId={e.owner_id}/><EventRegistrationsPanel eventId={id} legacyUrl={e.eventbrite_url} selected={q.inschrijving}/></>}
         {activeTab === "financien" && <EventFinancePanel eventId={id} eventTitle={e.title} projectId={e.project_id} selected={q.financieel}/>}
         {activeTab === "documenten" && <>
           <div className="event-tab-actions">

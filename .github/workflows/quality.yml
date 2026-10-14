@@ -111,6 +111,15 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: fixture-only
 
+      - name: Gelijktijdige tijdslotboekingen en eigenaarbeslissingen controleren
+        run: node tests/event-slot-concurrency.mjs
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGDATABASE: besc_concurrency_fixture
+          PGUSER: postgres
+          PGPASSWORD: fixture-only
+
       - name: DEV-tokenopslag bewaken
         run: python3 tests/test_besc_dev_agent_token.py
 

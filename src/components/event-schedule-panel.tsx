@@ -1,3 +1,4 @@
+import {loadEventRows} from "@/lib/event-slot-rows";
 import type {EventAgendaPeriod} from "@/lib/event-agenda-range";
 import {EventAgendaExport} from "@/components/event-agenda-export";
 import { EventTimeGrid } from "@/components/event-timegrid";
@@ -17,8 +18,8 @@ export async function EventSchedulePanel({ eventId, selected, people, peopleErro
   eventId: string; eventTitle: string; selected?: string; people: { id: string; label: string }[]; peopleError?: boolean; kind?: string; eventPeriod?:EventAgendaPeriod;
 }) {
   const { supabase, membership } = await requireActiveMembership();
-  const result = await supabase.from("event_schedule_items").select("id,title,kind,activity_id,status,starts_at,ends_at,person_id,location,notes")
-    .eq("organization_id", membership.organization_id).eq("event_id", eventId).order("starts_at", { ascending: true, nullsFirst: false }).order("created_at");
+  const result = await loadEventRows<EventScheduleItem>((from,to)=>supabase.from("event_schedule_items").select("id,title,kind,activity_id,status,starts_at,ends_at,person_id,location,notes,slot_booking_id,booking_name")
+    .eq("organization_id", membership.organization_id).eq("event_id", eventId).order("starts_at", { ascending: true, nullsFirst: false }).order("created_at").order("id").range(from,to));
   const activitiesResult=await supabase.from("event_activities").select("id,title").eq("organization_id",membership.organization_id).eq("event_id",eventId).order("position").order("created_at");
   const activities=activitiesResult.data??[];
   const rows = (result.data ?? []) as EventScheduleItem[];
@@ -48,7 +49,8 @@ export async function EventSchedulePanel({ eventId, selected, people, peopleErro
       {selected && selected !== "nieuw" && !current && <p className="error-note">Dit onderdeel staat niet meer in het schema.</p>}
     </>}
     {canEdit && <div className="event-agenda-add-footer"><Link className="row-action" href="?tab=planning&schema=nieuw"><Plus size={14}/>Onderdeel toevoegen</Link></div>}
-    {canEdit && (selected === "nieuw" || current) && <FormModal title={current ? "Schemaonderdeel bewerken" : "Schemaonderdeel toevoegen"} closeHref="?tab=planning">
+    {current?.slot_booking_id&&<p className="form-help">Deze boeking wordt beheerd via <Link href="?tab=inschrijvingen">Tijdslots en boekingen</Link>.</p>}
+    {canEdit && !current?.slot_booking_id && (selected === "nieuw" || current) && <FormModal title={current ? "Schemaonderdeel bewerken" : "Schemaonderdeel toevoegen"} closeHref="?tab=planning">
       <EventScheduleForm eventId={eventId} record={current} people={people} kinds={kinds} activities={activities}/>
       {current && <form className="modal-danger-zone" action={deleteEventSchedule}><input type="hidden" name="event_id" value={eventId}/><input type="hidden" name="id" value={current.id}/><ConfirmSubmitButton className="danger-button" message="Dit onderdeel uit het eventschema verwijderen? De persoon en bestaande dossierrollen blijven behouden."><Trash2 size={14}/>Onderdeel verwijderen</ConfirmSubmitButton></form>}
     </FormModal>}

@@ -1,0 +1,3 @@
+import assert from "node:assert/strict";import test from "node:test";import {loadEventRows} from "../src/lib/event-slot-rows.ts";
+test("agenda en eigenaarsoverzicht laden voorbij de standaard paginagrens",async()=>{const seen:number[]=[];const result=await loadEventRows(async(from,to)=>{seen.push(from);assert.equal(to,from+499);return {data:Array.from({length:from===0?500:3},(_,i)=>from+i),error:null};});assert.equal(result.data?.length,503);assert.deepEqual(seen,[0,500]);});
+test("fout op een volgende pagina wordt geen gedeeltelijke agenda of capaciteitstelling",async()=>{const result=await loadEventRows(async from=>from===0?{data:Array(500).fill(1) as number[],error:null}:{data:null,error:Error("fixture")});assert.equal(result.data,null);assert.ok(result.error);});

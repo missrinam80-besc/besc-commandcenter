@@ -1,0 +1,20 @@
+create role authenticated;create role anon;create role service_role bypassrls;
+create schema auth;create schema private;
+create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+grant usage on schema auth,private to authenticated,service_role;
+create table organizations(id uuid primary key);
+create table profiles(id uuid primary key);
+create table organization_members(organization_id uuid,user_id uuid,status text,role text);
+create function private.is_active_member(o uuid) returns boolean language sql stable security definer as $$select exists(select 1 from public.organization_members where organization_id=o and user_id=auth.uid() and status='active')$$;
+create function private.can_manage_events(o uuid) returns boolean language sql stable security definer as $$select private.is_active_member(o)$$;
+create table events(id uuid primary key,organization_id uuid,owner_id uuid,title text,status text default 'planning',deleted_at timestamptz,unique(organization_id,id));
+create table community_people(id uuid primary key,organization_id uuid,deleted_at timestamptz,status text,unique(organization_id,id));
+create table notifications(id uuid primary key default gen_random_uuid(),organization_id uuid,user_id uuid,type text,title text,body text,href text);
+insert into organizations values('10000000-0000-4000-8000-000000000001'),('10000000-0000-4000-8000-000000000002');
+insert into profiles values('20000000-0000-4000-8000-000000000001'),('20000000-0000-4000-8000-000000000002'),('20000000-0000-4000-8000-000000000003');
+insert into organization_members values('10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','active','member'),('10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000002','active','admin'),('10000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000003','active','admin');
+insert into events(id,organization_id,owner_id,title) values('30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','TESTFIXTURE event');
+grant select,update on events,community_people to authenticated;
+
+create table dossier_choice_options(organization_id uuid,set_key text,value text,primary key(organization_id,set_key,value));
+insert into dossier_choice_options select id,'event_schedule_items.kind',k from organizations cross join unnest(array['shift','stream']) k;

@@ -51,14 +51,14 @@ export function gmailRawMessage(input: {
     .toString("base64url");
 }
 
-async function delegatedGmailToken() {
+async function delegatedGmailToken(signal?:AbortSignal) {
   const config = googleGmailConfiguration();
   if (!config.configured) throw new Error("GOOGLE_GMAIL_SENDER ontbreekt of is geen geldig e-mailadres.");
-  return googleAccessToken({ scopes: [gmailScope] });
+  return googleAccessToken({ scopes: [gmailScope],signal });
 }
 
 async function gmailJson<T>(path: string, init: RequestInit) {
-  const token = await delegatedGmailToken();
+  const token = await delegatedGmailToken(init.signal??undefined);
   const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/${path}`, {
     ...init,
     headers: {
@@ -81,18 +81,19 @@ export async function saveGmailDraft(input: {
   subject: string;
   body: string;
   html?: string;
-}) {
+},signal?:AbortSignal) {
   const sender = googleGmailConfiguration().sender;
   const payload = { message: { raw: gmailRawMessage({ ...input, sender }) } };
   return gmailJson<{ id: string; message?: { id?: string; threadId?: string } }>(
     input.draftId ? `drafts/${encodeURIComponent(input.draftId)}` : "drafts",
-    { method: input.draftId ? "PUT" : "POST", body: JSON.stringify(payload) },
+    { method: input.draftId ? "PUT" : "POST", body: JSON.stringify(payload),signal },
   );
 }
 
-export async function sendGmailDraft(draftId: string) {
+export async function sendGmailDraft(draftId: string,signal?:AbortSignal) {
   return gmailJson<{ id: string; threadId?: string }>("drafts/send", {
     method: "POST",
     body: JSON.stringify({ id: draftId }),
+    signal,
   });
 }
