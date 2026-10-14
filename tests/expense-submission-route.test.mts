@@ -46,6 +46,8 @@ function harness(role:string) {
     "@/components/markdown-field":{MarkdownContent:passthrough},
     "@/components/finance-navigation":{FinanceNavigation:()=>null},
     "@/components/approval-panel":{ApprovalPanel:()=>null},
+    "@/components/expense-intake-page":{ExpenseIntakePage:()=>React.createElement("section",null,"Kost indienen",React.createElement("form",null,"Submission form"))},
+    "@/components/expense-intake-panel":{ExpenseIntakePanel:()=>null,loadExpenseIntake:async()=>({data:null,error:null})},
     "@/components/finance-forms":{BudgetForm:()=>null,IncomeForm:()=>null,ExpenseForm:()=>React.createElement("form",null,"Submission form")},
     "@/app/app/financien/actions":{updateExpenseWorkflow:()=>{}},
   };
