@@ -345,6 +345,11 @@
 .app-shell[data-theme] :where(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),textarea,select,.field){background:var(--theme-field)!important;border-color:var(--line)!important;color:var(--ink)!important;box-shadow:none}
 .app-shell[data-theme] :where(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),textarea,select,.field):hover{background:var(--theme-field-hover)!important}
 .app-shell[data-theme] :where(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),textarea,select,.field):focus,.app-shell[data-theme] :where(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),textarea,select):focus-visible{border-color:var(--orange)!important;outline:3px solid var(--theme-focus);outline-offset:1px}
+/* Compound search controls use one surface and one focus boundary. */
+.app-shell[data-theme] :is(.search,.audit-search>span,.global-search-form,.global-search-dialog>form) input:not([type="hidden"]),
+.app-shell[data-theme] :is(.search,.audit-search>span,.global-search-form,.global-search-dialog>form) input:not([type="hidden"]):is(:hover,:focus,:focus-visible){background:transparent!important;outline:none;box-shadow:none}
+.app-shell[data-theme] :is(.global-search-form,.global-search-dialog){background:var(--theme-surface);color:var(--ink);border-color:var(--line)}
+.app-shell[data-theme] :is(.search,.audit-search>span,.global-search-form,.global-search-dialog>form):focus-within{border-color:var(--orange);outline:3px solid var(--theme-focus);outline-offset:1px;box-shadow:none}
 .app-shell[data-theme] input[type="file"]::file-selector-button{margin:-8px 10px -8px -8px;border:0;border-right:1px solid var(--line);background:var(--theme-control);color:var(--theme-control-text);padding:10px 12px;cursor:pointer}
 .app-shell[data-theme] input[type="file"]::file-selector-button:hover{background:var(--theme-control-hover)}
 .app-shell[data-theme] :where(button:not(.primary):not(.login-submit):not(.discord-button):not(.discord-connect):not(.danger-button),a.row-action,.account-preference-link){background-color:var(--theme-control);border-color:var(--line);color:var(--theme-control-text)}
