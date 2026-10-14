@@ -70,7 +70,7 @@ export const dossierEditorCatalog:Record<string,EditorConfig>={
   meeting:config("meetings","Vergadering","/app/vergaderingen","manageOrganization","title meeting_type status meeting_at ends_at attendees notes decisions action_points minutes_url",commonTabs,[
     collection("meeting_action_items","Actiepunten","planning","meeting_id","title assignee_text status task_id"),documents("meeting"),
   ],"meeting"),
-  inbox:config("inbox_items","Inboxdossier","/app/inbox","manageInbox","title description source status priority reviewer_id",commonTabs),
+  inbox:config("inbox_items","Inboxdossier","/app/inbox","manageInbox","title description source status priority reviewer_id",[{id:"algemeen",label:"Algemeen"}]),
   knowledge:config("knowledge_articles","Kennisartikel","/app/kennisbank","manageOrganization","title article_type status category_id owner_id summary body tags review_due_date drive_url",commonTabs),
   budget:config("budget_envelopes","Budget","/app/financien/budgetten","manageFinance","name category status planned_amount start_date end_date notes project_id event_id campaign_id partner_id merch_launch_id owner_id",commonTabs,[
     collection("expenses","Kosten","planning","budget_id","title category status amount expense_date supplier invoice_number proof_url notes",{capability:"manageFinance"}),
