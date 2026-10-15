@@ -20,3 +20,9 @@ test("lange tekst blijft volledig en HTML wordt als tekst behandeld",()=>{
  const title="<script>niet uitvoeren</script> "+"Lange titel ".repeat(100);const html=render({rows:[{...props.rows[0],title,notes:"<img src=x>"}]});assert.match(html,/&lt;script&gt;/);assert.match(html,/&lt;img/);assert.ok(html.includes("Lange titel ".repeat(100).trim()));assert.doesNotMatch(html,/<script>|<img/);
 });
 test("lege categoriekeuze toont een expliciete lege staat",()=>{assert.match(render({category:"missing"}),/Geen agendaonderdelen voor deze selectie/);});
+
+
+test("geannuleerde boekingen verdwijnen uit lijst en PDF zonder gewone vervallen onderdelen te verbergen",()=>{
+ const rows=[{...props.rows[0],id:"cancelled-booking",title:"VERBORGEN BOEKING",status:"cancelled",slot_booking_id:"booking"},{...props.rows[0],id:"pending-booking",title:"VOORLOPIGE BOEKING",status:"draft",slot_booking_id:"pending"},{...props.rows[0],id:"regular",title:"GEWOON VERVALLEN",status:"cancelled"}];
+ for(const view of ["agenda","list"]){const html=render({rows,view});assert.doesNotMatch(html,/VERBORGEN BOEKING/);assert.match(html,/VOORLOPIGE BOEKING/);assert.match(html,/GEWOON VERVALLEN/);assert.match(html,/2 onderdelen/);}
+});

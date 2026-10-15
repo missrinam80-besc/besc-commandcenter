@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { scheduleConflicts, scheduleAgendaDays, scheduleAgendaTime, type EventScheduleItem } from "../src/lib/event-schedule.ts";
+import { scheduleVisibleRows, scheduleConflicts, scheduleAgendaDays, scheduleAgendaTime, type EventScheduleItem } from "../src/lib/event-schedule.ts";
 import { resolveEventDossierTab } from "../src/lib/event-dossier-tabs.ts";
 
 const item = (id: string, starts_at: string | null, ends_at: string | null, extra: Partial<EventScheduleItem> = {}): EventScheduleItem => ({
@@ -29,4 +29,9 @@ test("agenda sorteert en groepeert op Belgische datum, niet UTC, met onbekende t
 });
 test("agenda vermeldt de einddatum van nachtshiften en volgt de zomer-/wintertijd",()=>{
  assert.equal(scheduleAgendaTime("2026-10-08T21:00:00Z"),"23:00");assert.equal(scheduleAgendaTime("2026-12-08T21:00:00Z"),"22:00");assert.match(scheduleAgendaTime("2026-10-09T01:00:00Z","2026-10-08T21:00:00Z"),/9.*2026.*03:00/);assert.equal(scheduleAgendaTime(null),"Onbekend");
+});
+
+test("agenda verbergt uitsluitend geannuleerde boekingsprojecties en behoudt bronhistoriek",()=>{
+ const rows=[item("cancelled-booking",null,null,{slot_booking_id:"booking",status:"cancelled"}),item("pending",null,null,{slot_booking_id:"pending",status:"draft"}),item("confirmed",null,null,{slot_booking_id:"confirmed"}),item("regular",null,null,{status:"cancelled"})];
+ assert.deepEqual(scheduleVisibleRows(rows).map(r=>r.id),["pending","confirmed","regular"]);assert.equal(rows.length,4);
 });

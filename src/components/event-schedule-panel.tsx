@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { hasPermission } from "@/lib/permissions";
-import { scheduleKinds, scheduleKindColor, scheduleConflicts, type EventScheduleItem } from "@/lib/event-schedule";
+import { scheduleVisibleRows, scheduleKinds, scheduleKindColor, scheduleConflicts, type EventScheduleItem } from "@/lib/event-schedule";
 import {loadManagedChoices} from "@/lib/dossier-choices-server";
 import type {CSSProperties} from "react";
 import { EventScheduleForm } from "@/components/event-schedule-form";
@@ -22,7 +22,7 @@ export async function EventSchedulePanel({ eventId, selected, people, peopleErro
     .eq("organization_id", membership.organization_id).eq("event_id", eventId).order("starts_at", { ascending: true, nullsFirst: false }).order("created_at").order("id").range(from,to));
   const activitiesResult=await supabase.from("event_activities").select("id,title").eq("organization_id",membership.organization_id).eq("event_id",eventId).order("position").order("created_at");
   const activities=activitiesResult.data??[];
-  const rows = (result.data ?? []) as EventScheduleItem[];
+  const rows = scheduleVisibleRows((result.data ?? []) as EventScheduleItem[]);
   let kinds:Record<string,string>=scheduleKinds,kindsError=false;
   try{kinds=Object.fromEntries((await loadManagedChoices(supabase,membership.organization_id)).filter(row=>row.set_key==="event_schedule_items.kind").map(row=>[row.value,row.label]));if(!Object.keys(kinds).length)throw Error("Geen soorten beschikbaar");}catch{kindsError=true;}
   const current = rows.find(row => row.id === selected);
