@@ -3,17 +3,18 @@
 import {useEffect,useRef,useState} from "react";
 import {createPortal} from "react-dom";
 import {Printer, X} from "lucide-react";
-import {scheduleAgendaDays,scheduleAgendaTime,scheduleKindLabel,scheduleKindColor,scheduleStatusLabel,type EventScheduleItem} from "@/lib/event-schedule";
+import {scheduleVisibleRows,scheduleAgendaDays,scheduleAgendaTime,scheduleKindLabel,scheduleKindColor,scheduleStatusLabel,type EventScheduleItem} from "@/lib/event-schedule";
 import "./event-agenda-export.css";
 
 type ExportProps={eventTitle:string;rows:EventScheduleItem[];kinds:Record<string,string>;people:{id:string;label:string}[];activities:{id:string;title:string}[]};
 export function EventAgendaPrintDocument({eventTitle,rows,kinds,people,activities,category="",view="list"}:ExportProps&{category?:string;view?:"list"|"agenda"}){
-  const selected=category?rows.filter(row=>row.kind===category):rows;
+  const visible=scheduleVisibleRows(rows);
+  const selected=category?visible.filter(row=>row.kind===category):visible;
   const person=(row:EventScheduleItem)=>row.booking_name||people.find(item=>item.id===row.person_id)?.label||(row.person_id?"Eerder toegewezen persoon":"Nog niet toegewezen");
   const activity=(row:EventScheduleItem)=>activities.find(item=>item.id===row.activity_id)?.title;
   const time=(row:EventScheduleItem)=>`${row.starts_at?scheduleAgendaTime(row.starts_at):"Start onbekend"} – ${row.ends_at?scheduleAgendaTime(row.ends_at,row.starts_at):"Einde onbekend"}`;
   return <article className={`agenda-print-document agenda-print-${view}`}>
-    <header><p>BESC · Eventagenda</p><h1>{eventTitle}</h1><p>{category?scheduleKindLabel(category,kinds):"Alle categorieën"} · {view==="list"?"Lijstweergave":"Dagagenda"} · Tijden in België (Europe/Brussels)</p><p>{selected.length} onderdeel{selected.length===1?"":"en"}</p></header>
+    <header><p>BESC · Eventagenda</p><h1>{eventTitle}</h1><p>{category?scheduleKindLabel(category,kinds):"Alle categorieën"} · {view==="list"?"Lijstweergave":"Dagagenda"} · Tijden in België (Europe/Brussels)</p><p>{selected.length} {selected.length===1?"onderdeel":"onderdelen"}</p></header>
     {!selected.length&&<p>Geen agendaonderdelen voor deze selectie.</p>}
     {scheduleAgendaDays(selected).map(day=><section className="agenda-print-day" key={day.key}>
       <h2>{day.label}</h2>

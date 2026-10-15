@@ -10,11 +10,11 @@ import ts from "typescript";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { hasPermission } from "../src/lib/permissions.ts";
-import { scheduleStatusLabel,scheduleKinds, scheduleKindColor, scheduleKindLabel, scheduleStatuses, scheduleConflicts, scheduleAgendaDays, scheduleAgendaTime } from "../src/lib/event-schedule.ts";
+import { scheduleVisibleRows,scheduleStatusLabel,scheduleKinds, scheduleKindColor, scheduleKindLabel, scheduleStatuses, scheduleConflicts, scheduleAgendaDays, scheduleAgendaTime } from "../src/lib/event-schedule.ts";
 import { formatDateTime } from "../src/lib/format.ts";
 
-async function render(role="member", failure="", selected?:string, kind?:string, timed=false,rowKind="stream") {
-  const row={id:"fixture-row",title:"TESTFIXTURE stream",kind:rowKind,status:"draft",starts_at:timed?"2026-10-08T00:00:00Z":null,ends_at:timed?"2026-10-08T02:00:00Z":null,person_id:null,location:null,notes:null};
+async function render(role="member", failure="", selected?:string, kind?:string, timed=false,rowKind="stream",cancelledBooking=false) {
+  const row={slot_booking_id:cancelledBooking?"booking":null,id:"fixture-row",title:"TESTFIXTURE stream",kind:rowKind,status:cancelledBooking?"cancelled":"draft",starts_at:timed?"2026-10-08T00:00:00Z":null,ends_at:timed?"2026-10-08T02:00:00Z":null,person_id:null,location:null,notes:null};
   const supabase={from:(table:string)=>{
     const q:Record<string,unknown>={};for(const method of ["select","eq","is","neq","order","range"])q[method]=()=>q;
     q.then=(resolve:(value:unknown)=>unknown)=>Promise.resolve({data:table==="event_schedule_items"?(failure==="items"?null:[row]):[],error:failure===(table==="event_schedule_items"?"items":"activities")?{code:"fixture"}:null}).then(resolve);return q;
@@ -26,7 +26,7 @@ async function render(role="member", failure="", selected?:string, kind?:string,
     "next/link":{default:({children,scroll,...props}:React.PropsWithChildren<Record<string,unknown>>)=>{void scroll;return React.createElement("a",props,children);}},
     "@/lib/event-timegrid":timegridHelpers,"@/lib/event-agenda-range":rangeHelpers,
     "@/lib/auth-context":{requireActiveMembership:async()=>({supabase,membership:{role,organization_id:"fixture-org"}})},
-    "@/lib/permissions":{hasPermission},"@/lib/event-schedule":{scheduleStatusLabel,scheduleKinds,scheduleKindColor,scheduleKindLabel,scheduleStatuses,scheduleConflicts,scheduleAgendaDays,scheduleAgendaTime},"@/lib/format":{formatDateTime},
+    "@/lib/permissions":{hasPermission},"@/lib/event-schedule":{scheduleVisibleRows,scheduleStatusLabel,scheduleKinds,scheduleKindColor,scheduleKindLabel,scheduleStatuses,scheduleConflicts,scheduleAgendaDays,scheduleAgendaTime},"@/lib/format":{formatDateTime},
     "@/lib/dossier-choices-server":{loadManagedChoices:async()=>{if(failure==="kinds")throw Error("fixture failure");return Object.entries({...scheduleKinds,custom_kind:"TESTFIXTURE nieuwe soort",stream:"TESTFIXTURE hernoemde stream"}).map(([value,label])=>({set_key:"event_schedule_items.kind",value,label}));}},
     "@/components/form-modal":{FormModal:container},"@/components/confirm-submit-button":{ConfirmSubmitButton:container},
     "@/components/event-schedule-form":{EventScheduleForm:()=>React.createElement("div",{"data-editor":"yes"})},
@@ -61,4 +61,9 @@ test("Een fout in de soortenlijst bewaart de agenda maar blokkeert bewerken",asy
 test("afdrukken is beschikbaar voor kijkers maar niet bij onvolledige brongegevens",async()=>{
  assert.match(await render("volunteer"),/data-export="yes"/);
  for(const failure of ["items","people","kinds","activities"])assert.doesNotMatch(await render("member",failure),/data-export="yes"/);
+});
+
+test("geannuleerde boeking verdwijnt uit eventagenda en direct geopende detailweergave",async()=>{
+ const html=await render("member","","fixture-row",undefined,true,"stream",true);
+ assert.doesNotMatch(html,/TESTFIXTURE stream|data-editor="yes"|event-timegrid-block/);assert.match(html,/Dit onderdeel staat niet meer in het schema/);
 });

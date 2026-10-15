@@ -15,6 +15,8 @@ export type EventScheduleItem = {
 };
 
 export function scheduleStatusLabel(row:EventScheduleItem){return row.slot_booking_id&&row.status==="draft"?"Voorlopig":scheduleStatuses[row.status];}
+// Keep the booking history, but remove cancelled booking projections from the agenda.
+export function scheduleVisibleRows(rows:EventScheduleItem[]){return rows.filter(row=>!(row.slot_booking_id&&row.status==="cancelled"));}
 
 const agendaDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels", year: "numeric", month: "2-digit", day: "2-digit" });
 const agendaDateLabel = new Intl.DateTimeFormat("nl-BE", { timeZone: "Europe/Brussels", weekday: "long", day: "numeric", month: "long", year: "numeric" });
