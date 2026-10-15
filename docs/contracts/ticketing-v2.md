@@ -40,6 +40,13 @@ Kanalen worden apart met `check_channel` geverifieerd. Publicatie vereist contro
 
 ## Concepten, edities en configuratie
 
+`GET ticket-config` levert voor iedere geregistreerde server altijd een niet-null `configurationRevisionId` (UUID), ook bij lege configuratie, gepauzeerde intake of ontbrekende/verouderde runtime. De UUID is opgeslagen op de server en wordt niet tijdens GET gegenereerd. De aanvullende migratie `20261015115523_discord_configuration_revision.sql` vult alleen ontbrekende revisies aan; bestaande UUID's blijven behouden. Nieuwe servers krijgen direct een UUID bij aanmaak.
+
+De revisie wisselt bij relevante opgeslagen wijzigingen: applicationbinding, intake aan/uit, de runtime-featureverzameling, typebeschikbaarheid en gepubliceerde paneelbindingen/uitschakeling. Gewone GETs, herhaalde heartbeats, featurevolgorde, weergavenamen en conceptwijzigingen zonder beschikbaarheidswijziging houden de UUID gelijk. Gepubliceerde type-/paneeledities blijven immutable. `generatedAt` is het moment van het antwoord, geen configuratierevisie.
+
+De UUID identificeert de opgeslagen configuratie, niet de tijdsafhankelijke runtimebeschikbaarheid. De bot moet de volledige actuele response blijven beoordelen: bij een verouderde runtime wordt intake fail-closed leeg teruggegeven, ook zonder databasewijziging. Gebruik de UUID dus niet om deze controles of een actuele response over te slaan. Responses blijven `no-store`. Een onbekende org/guildbinding blijft `server_unavailable`; er wordt door GET geen server aangemaakt.
+
+
 Typeconcept: name (1–80), description (0–100), active, eligibility (`everyone`/`linked`), parentChannelId, formTitle (1–45), subjectQuestionId (tekstvraag-ID of null), sortOrder (0–9999), embed, questions (1–5).
 
 Vraag: stabiele id (1–40, letters/cijfers/_/-), label (1–45), description (0–100), placeholder (0–100), required. `short`/`paragraph` hebben minLength en maxLength (0/1–4000, minimum ≤ maximum). `single`/`multi` hebben 1–25 unieke `{value,label}`-opties, maxValues ≤ optieaantal; single heeft maxValues=1. De keuzeantwoorden zijn altijd arrays, ook bij single. IDs blijven bij ordenen en labelwijzigingen gelijk.
