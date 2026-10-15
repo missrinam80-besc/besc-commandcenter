@@ -47,7 +47,9 @@ let tokenCache: { cacheKey: string; token: string; expiresAt: number } | null = 
 
 export async function googleAccessToken(options: {
   scopes?: readonly string[];
+  signal?: AbortSignal;
 } = {}) {
+  options.signal?.throwIfAborted();
   const config = googleWorkspaceConfiguration();
   if (!config.configured) throw new Error(`Ontbrekende Google-configuratie: ${config.missing.join(", ")}`);
   const scopes = options.scopes?.length ? [...options.scopes] : [...googleApiScopes];
@@ -55,6 +57,7 @@ export async function googleAccessToken(options: {
   if (tokenCache?.cacheKey === cacheKey && tokenCache.expiresAt > Date.now() + 60_000) return tokenCache.token;
 
   const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+    signal: options.signal,
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({

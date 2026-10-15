@@ -3,13 +3,13 @@
 import {useEffect,useRef,useState} from "react";
 import {createPortal} from "react-dom";
 import {Printer, X} from "lucide-react";
-import {scheduleAgendaDays,scheduleAgendaTime,scheduleKindLabel,scheduleKindColor,scheduleStatuses,type EventScheduleItem} from "@/lib/event-schedule";
+import {scheduleAgendaDays,scheduleAgendaTime,scheduleKindLabel,scheduleKindColor,scheduleStatusLabel,type EventScheduleItem} from "@/lib/event-schedule";
 import "./event-agenda-export.css";
 
 type ExportProps={eventTitle:string;rows:EventScheduleItem[];kinds:Record<string,string>;people:{id:string;label:string}[];activities:{id:string;title:string}[]};
 export function EventAgendaPrintDocument({eventTitle,rows,kinds,people,activities,category="",view="list"}:ExportProps&{category?:string;view?:"list"|"agenda"}){
   const selected=category?rows.filter(row=>row.kind===category):rows;
-  const person=(row:EventScheduleItem)=>people.find(item=>item.id===row.person_id)?.label||(row.person_id?"Eerder toegewezen persoon":"Nog niet toegewezen");
+  const person=(row:EventScheduleItem)=>row.booking_name||people.find(item=>item.id===row.person_id)?.label||(row.person_id?"Eerder toegewezen persoon":"Nog niet toegewezen");
   const activity=(row:EventScheduleItem)=>activities.find(item=>item.id===row.activity_id)?.title;
   const time=(row:EventScheduleItem)=>`${row.starts_at?scheduleAgendaTime(row.starts_at):"Start onbekend"} – ${row.ends_at?scheduleAgendaTime(row.ends_at,row.starts_at):"Einde onbekend"}`;
   return <article className={`agenda-print-document agenda-print-${view}`}>
@@ -18,9 +18,9 @@ export function EventAgendaPrintDocument({eventTitle,rows,kinds,people,activitie
     {scheduleAgendaDays(selected).map(day=><section className="agenda-print-day" key={day.key}>
       <h2>{day.label}</h2>
       {view==="list"?<table><thead><tr><th scope="col">Tijd</th><th scope="col">Onderdeel</th><th scope="col">Persoon / locatie</th></tr></thead><tbody>{day.items.map(row=><tr key={row.id}>
-        <td>{time(row)}</td><td><strong>{row.title}</strong><span>{scheduleKindLabel(row.kind,kinds)} · {scheduleStatuses[row.status]}</span>{activity(row)&&<span>Activiteit: {activity(row)}</span>}{row.notes&&<p>{row.notes}</p>}</td><td>{person(row)}{row.location&&<span>{row.location}</span>}</td>
+        <td>{time(row)}</td><td><strong>{row.title}</strong><span>{scheduleKindLabel(row.kind,kinds)} · {scheduleStatusLabel(row)}</span>{activity(row)&&<span>Activiteit: {activity(row)}</span>}{row.notes&&<p>{row.notes}</p>}</td><td>{person(row)}{row.location&&<span>{row.location}</span>}</td>
       </tr>)}</tbody></table>:<div className="agenda-print-timeline">{day.items.map(row=><article key={row.id}>
-        <div className="agenda-print-time">{time(row)}</div><div className="agenda-print-entry" style={{borderLeftColor:scheduleKindColor(row.kind)}}><p>{scheduleKindLabel(row.kind,kinds)} · {scheduleStatuses[row.status]}</p><h3>{row.title}</h3>{activity(row)&&<p>Activiteit: {activity(row)}</p>}<p>{person(row)}{row.location?` · ${row.location}`:""}</p>{row.notes&&<p className="agenda-print-notes">{row.notes}</p>}</div>
+        <div className="agenda-print-time">{time(row)}</div><div className="agenda-print-entry" style={{borderLeftColor:scheduleKindColor(row.kind)}}><p>{scheduleKindLabel(row.kind,kinds)} · {scheduleStatusLabel(row)}</p><h3>{row.title}</h3>{activity(row)&&<p>Activiteit: {activity(row)}</p>}<p>{person(row)}{row.location?` · ${row.location}`:""}</p>{row.notes&&<p className="agenda-print-notes">{row.notes}</p>}</div>
       </article>)}</div>}
     </section>)}
   </article>;
