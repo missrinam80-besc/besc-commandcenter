@@ -529,5 +529,14 @@
       "parse": []
     },
     "withdrawn": false
+  },
+  "emptyConfigResponse": {
+    "schemaVersion": 2,
+    "guildId": "1067893182387474432",
+    "configurationRevisionId": "20000000-0000-4000-8000-000000000019",
+    "generatedAt": "2026-10-15T11:00:00.000Z",
+    "features": [],
+    "panels": [],
+    "typeRevisions": []
   }
 }

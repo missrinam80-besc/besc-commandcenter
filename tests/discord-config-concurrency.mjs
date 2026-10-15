@@ -45,7 +45,8 @@ async function overlap(first,second,role,phase,rollback=false){
 }
 
 await sql(`create table auth.identities(user_id uuid,provider text,provider_id text,identity_data jsonb);
-${readFileSync(new URL('../supabase/migrations/20261012185859_discord_ticketing_v2.sql',import.meta.url),'utf8')}`);
+${readFileSync(new URL('../supabase/migrations/20261012185859_discord_ticketing_v2.sql',import.meta.url),'utf8')}
+${readFileSync(new URL('../supabase/migrations/20261015115523_discord_configuration_revision.sql',import.meta.url),'utf8')}`);
 const f=JSON.parse(readFileSync(new URL('../docs/contracts/ticketing-v2.fixtures.json',import.meta.url),'utf8'));
 const server='30000000-0000-4000-8000-000000000001',type='30000000-0000-4000-8000-000000000002',revision='30000000-0000-4000-8000-000000000003',panel='30000000-0000-4000-8000-000000000004',panelRevision='30000000-0000-4000-8000-000000000005';
 const draft={...f.typeDraft,parentChannelId:parent};
@@ -61,3 +62,15 @@ const intent=JSON.parse(await sql(`set role service_role;${cfg('intent',{discord
 const key=fresh(),input={discord_user_id:actor,type_revision_id:revision,intake_intent_id:intent,answers:{onderwerp:'TESTFIXTURE',omschrijving:'Private example',omgeving:['discord']},idempotency_key:key,request_hash:'b'.repeat(64)};
 const output=await overlap(cfg('intake',input),cfg('intake',input),'service_role','typed-intake');assert.match(output,/ticketId/);assert.equal(await sql('select count(*) from support_tickets'),'1');assert.equal(await sql('select count(*) from support_ticket_deliveries'),'2');
 console.log('Two actual overlapping sessions passed: concept version conflict and typed-intake replay without duplicate effects.');
+
+// Independent GETs keep the same persisted revision, even while serialized on
+// the server lock; rolled-back changes must never escape into the response.
+const beforeRevision=await sql(`select configuration_revision_id from discord_bot_servers where id='${server}'`);
+const repeated=JSON.parse(await overlap(cfg('config',{}),cfg('config',{}),'service_role','config-read'));
+assert.equal(repeated.configurationRevisionId,beforeRevision);
+const rolledBack=JSON.parse(await overlap(`update discord_bot_servers set intake_active=false where id='${server}';`,cfg('config',{}),'service_role','config-rollback',true));
+assert.equal(rolledBack.configurationRevisionId,beforeRevision);assert.ok(rolledBack.features.length);
+const paused=JSON.parse(await overlap(`update discord_bot_servers set intake_active=false where id='${server}';`,cfg('config',{}),'service_role','config-pause'));
+assert.notEqual(paused.configurationRevisionId,beforeRevision);assert.deepEqual(paused.features,[]);assert.deepEqual(paused.panels,[]);assert.deepEqual(paused.typeRevisions,[]);
+assert.equal(JSON.parse(await sql(`set role service_role;${cfg('config',{})}`)).configurationRevisionId,paused.configurationRevisionId);
+console.log('PASS: stable concurrent config reads, rolled-back revision isolation and committed pause visibility.');
