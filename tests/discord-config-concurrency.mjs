@@ -20,7 +20,7 @@ await sql('create database besc_config_fixture;');env={...process.env,PGDATABASE
 const org='10000000-0000-4000-8000-000000000001',user='20000000-0000-4000-8000-000000000001',guild='1067893182387474432',actor='111111111111111111',parent='222222222222222222';
 await sql(`do $$begin if not exists(select 1 from pg_roles where rolname='service_role') then create role service_role bypassrls;end if;end$$;
  alter role service_role bypassrls;
- create schema auth;create schema private;grant usage on schema private,auth to authenticated,service_role;
+ create schema auth;create schema private;grant usage on schema private,auth to authenticated;grant usage on schema auth to service_role;
  create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  create type member_role as enum ('admin','board','member','volunteer');
  create table organizations(id uuid primary key);create table profiles(id uuid primary key,display_name text);
@@ -47,7 +47,8 @@ async function overlap(first,second,role,phase,rollback=false){
 await sql(`create table auth.identities(user_id uuid,provider text,provider_id text,identity_data jsonb);
 ${readFileSync(new URL('../supabase/migrations/20261012185859_discord_ticketing_v2.sql',import.meta.url),'utf8')}
 ${readFileSync(new URL('../supabase/migrations/20261015115523_discord_configuration_revision.sql',import.meta.url),'utf8')}
-${readFileSync(new URL('../supabase/migrations/20261016062843_discord_channel_check_contract.sql',import.meta.url),'utf8')}`);
+${readFileSync(new URL('../supabase/migrations/20261016062843_discord_channel_check_contract.sql',import.meta.url),'utf8')}
+${readFileSync(new URL('../supabase/migrations/20261016083106_discord_ticket_intake_schema_access.sql',import.meta.url),'utf8')}`);
 const f=JSON.parse(readFileSync(new URL('../docs/contracts/ticketing-v2.fixtures.json',import.meta.url),'utf8'));
 const server='30000000-0000-4000-8000-000000000001',type='30000000-0000-4000-8000-000000000002',revision='30000000-0000-4000-8000-000000000003',panel='30000000-0000-4000-8000-000000000004',panelRevision='30000000-0000-4000-8000-000000000005';
 const draft={...f.typeDraft,parentChannelId:parent};
