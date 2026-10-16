@@ -20,7 +20,7 @@ const org='10000000-0000-4000-8000-000000000001',other='10000000-0000-4000-8000-
 
 const snow=()=>((BigInt(Date.now()-1420070400000)<<BigInt(22))+BigInt(Math.floor(Math.random()*100000))).toString();
 
-async function setup(legacy=false,upgrade=true){const db=new PGlite();await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema private;grant usage on schema private,auth to authenticated;grant usage on schema auth to service_role;create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;create table auth.identities(user_id uuid,provider text,provider_id text,identity_data jsonb);create table organizations(id uuid primary key);create table profiles(id uuid primary key,display_name text);create table organization_access_roles(id uuid primary key,organization_id uuid,capabilities text[],deleted_at timestamptz);create table organization_members(organization_id uuid,user_id uuid,role text,status text,access_role_id uuid);grant select on organizations,profiles,organization_members,organization_access_roles to service_role;`);await db.exec(readFileSync(new URL('../supabase/migrations/20261011130951_ticketing_v1.sql',import.meta.url),'utf8'));await db.query('insert into organizations values($1),($2)',[org,other]);await db.query("insert into profiles values($1,'TESTFIXTURE');insert into organization_members values($2,$1,'admin','active',null)",[user,org]).catch(async()=>{await db.query("insert into profiles values($1,'TESTFIXTURE')",[user]);await db.query("insert into organization_members values($1,$2,'admin','active',null)",[org,user]);});await db.query("insert into auth.identities values($1,'discord',$2,$3)",[user,actor,JSON.stringify({provider_id:actor})]);if(legacy){await db.query("insert into support_tickets(id,organization_id,client_id,guild_id,requester_discord_id,subject,parent_channel_id,thread_id,link_status) values($1,$2,'fixture-client',$3,$4,'TESTFIXTURE — Oud ticket',$5,$4,'linked')",[user,org,guild,actor,parent]);await db.query("insert into support_ticket_messages(organization_id,ticket_id,direction,content) values($1,$2,'internal','Bestaande interne notitie')",[org,user]);}await db.exec(readFileSync(new URL('../supabase/migrations/20261012185859_discord_ticketing_v2.sql',import.meta.url),'utf8'));if(upgrade){await db.exec(readFileSync(new URL('../supabase/migrations/20261015115523_discord_configuration_revision.sql',import.meta.url),'utf8'));await db.exec(readFileSync(new URL('../supabase/migrations/20261016062843_discord_channel_check_contract.sql',import.meta.url),'utf8'));await db.exec(readFileSync(new URL('../supabase/migrations/20261016083106_discord_ticket_intake_schema_access.sql',import.meta.url),'utf8'));}
+async function setup(legacy=false,upgrade=true){const db=new PGlite();await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema private;grant usage on schema private,auth to authenticated;grant usage on schema auth to service_role;create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;create table auth.identities(user_id uuid,provider text,provider_id text,identity_data jsonb);create table organizations(id uuid primary key);create table profiles(id uuid primary key,display_name text);create table organization_access_roles(id uuid primary key,organization_id uuid,capabilities text[],deleted_at timestamptz);create table organization_members(organization_id uuid,user_id uuid,role text,status text,access_role_id uuid);grant select on organizations,profiles,organization_members,organization_access_roles to service_role;`);await db.exec(readFileSync(new URL('../supabase/migrations/20261011130951_ticketing_v1.sql',import.meta.url),'utf8'));await db.query('insert into organizations values($1),($2)',[org,other]);await db.query("insert into profiles values($1,'TESTFIXTURE');insert into organization_members values($2,$1,'admin','active',null)",[user,org]).catch(async()=>{await db.query("insert into profiles values($1,'TESTFIXTURE')",[user]);await db.query("insert into organization_members values($1,$2,'admin','active',null)",[org,user]);});await db.query("insert into auth.identities values($1,'discord',$2,$3)",[user,actor,JSON.stringify({provider_id:actor})]);if(legacy){await db.query("insert into support_tickets(id,organization_id,client_id,guild_id,requester_discord_id,subject,parent_channel_id,thread_id,link_status) values($1,$2,'fixture-client',$3,$4,'TESTFIXTURE — Oud ticket',$5,$4,'linked')",[user,org,guild,actor,parent]);await db.query("insert into support_ticket_messages(organization_id,ticket_id,direction,content) values($1,$2,'internal','Bestaande interne notitie')",[org,user]);}await db.exec(readFileSync(new URL('../supabase/migrations/20261012185859_discord_ticketing_v2.sql',import.meta.url),'utf8'));if(upgrade){await db.exec(readFileSync(new URL('../supabase/migrations/20261015115523_discord_configuration_revision.sql',import.meta.url),'utf8'));await db.exec(readFileSync(new URL('../supabase/migrations/20261016062843_discord_channel_check_contract.sql',import.meta.url),'utf8'));await db.exec(readFileSync(new URL('../supabase/migrations/20261016083106_discord_ticket_intake_schema_access.sql',import.meta.url),'utf8'));await db.exec(readFileSync(new URL('../supabase/migrations/20261016102010_discord_ticket_intake_transcript.sql',import.meta.url),'utf8'));}
 
  const staff=async(server:string|null,op:string,data:object)=>{await db.exec('reset role;set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);return (await db.query<{r:Record<string,unknown>}>('select discord_bot_staff_action($1,$2,$3,$4) r',[org,server,op,JSON.stringify(data)])).rows[0].r;};
 
@@ -50,11 +50,33 @@ test('Intake schema access: reproduce 42501 without fixture-only grant, then res
  } finally { await db.close(); }
 });
 
+test('Transcript renders snapshot choice labels, optional blanks and complete Unicode within bot delivery limits',async()=>{
+ const {db}=await setup();try{
+  const base=blankType(parent),draft={...base,questions:[base.questions[0],
+   {id:'single',label:'Kies één',description:'',placeholder:'',kind:'single',required:true,maxValues:1,options:[{value:'internal_a',label:'Optie A'},{value:'internal_b',label:'Optie B'}]},
+   {id:'multi',label:'Kies meerdere',description:'',placeholder:'',kind:'multi',required:true,maxValues:2,options:[{value:'internal_a',label:'Optie A'},{value:'internal_b',label:'Optie B'},{value:'internal_c',label:'Optie C'}]},
+   {...base.questions[1],id:'optional',label:'Extra uitleg',required:false}]};
+  await db.exec('set role service_role');
+  const chunks=(await db.query<{part:number;content:string}>('select * from private.discord_intake_transcript($1,$2)',[JSON.stringify(draft),JSON.stringify({onderwerp:'TESTFIXTURE',single:['internal_b'],multi:['internal_c','internal_a']})])).rows;
+  assert.equal(chunks.length,1);assert.match(chunks[0].content,/Kies één\nOptie B/);assert.match(chunks[0].content,/Kies meerdere\nOptie A, Optie C/);
+  assert.match(chunks[0].content,/Extra uitleg\n\(Niet ingevuld\)/);assert.ok(!chunks[0].content.includes('internal_'));
+  const questions=Array.from({length:5},(_,n)=>({...base.questions[1],id:'q'+n,label:'Vraag '+n,maxLength:4000}));
+  const answers=Object.fromEntries(questions.map(q=>[q.id,'😀'.repeat(2000)]));
+  const long=(await db.query<{part:number;content:string}>('select * from private.discord_intake_transcript($1,$2)',[JSON.stringify({...base,questions}),JSON.stringify(answers)])).rows;
+  assert.ok(long.length>1);assert.ok(long.every(c=>c.content.length<=4000));assert.deepEqual(long.map(c=>c.part),long.map((_,n)=>n+1));
+  const combined=long.map(c=>c.content.replace(/^Jouw ingevulde antwoorden \(deel \d+\)\n\n/,'')).join('');
+  assert.equal(combined,questions.map(q=>q.label+'\n'+answers[q.id]+'\n\n').join(''));
+  await db.exec('reset role;set role authenticated');
+  await assert.rejects(db.query('select * from private.discord_intake_transcript($1,$2)',[JSON.stringify(draft),JSON.stringify({})]),(e:unknown)=>Boolean(e&&typeof e==='object'&&'code' in e&&e.code==='42501'));
+ }finally{await db.close();}
+});
+
 test('Botbeheer is los van ticketbehandeling en rollenbeheer',()=>{const member={role:'volunteer',finance_role:'none',capabilities:['manageDiscordBot']};assert.equal(hasPermission(member,'manageDiscordBot'),true);assert.equal(hasPermission(member,'manageTickets'),false);assert.equal(hasPermission(member,'manageUsers'),false);assert.equal(canViewInternalPath('/app/beheer/discordbot',member),true);assert.equal(canViewInternalPath('/app/tickets',member),false);assert.equal(hasPermission({role:'board',finance_role:'none'},'manageDiscordBot'),true);});
 
 test('Formulier en embed begrenzen input en behouden stabiele vraag/keuze-IDs',()=>{const t=blankType(parent);assert.ok(typeDraftSchema.safeParse(t).success);assert.throws(()=>normalizeTicketAnswers(t,{onderwerp:'a',omschrijving:'b',unknown:'x'}));assert.throws(()=>normalizeTicketAnswers(t,{onderwerp:'',omschrijving:'b'}));assert.equal(typeDraftSchema.safeParse({...t,questions:Array(6).fill(t.questions[0])}).success,false);assert.equal(typeDraftSchema.safeParse({...t,embed:{...t.embed,imageUrl:'https://example.com'}}).success,false);const url=new URL(discordInstallUrl(guild,app));assert.equal(BigInt(url.searchParams.get('permissions')!)&BigInt(8),BigInt(0));});
 
 test('Actual SQL: isolated concepts, runtime gates, publication, immutable snapshots and durable intake',async()=>{const{db,staff,bot}=await setup();try{
+
 
  const created=await staff(null,'server_create',{name:'TESTFIXTURE',guildId:guild,applicationId:app});assert.ok(created.serverId);const server=String(created.serverId);
 
@@ -140,9 +162,17 @@ test('Actual SQL: isolated concepts, runtime gates, publication, immutable snaps
 
  await db.exec('reset role');const ticket=(await db.query<{intake_answers:unknown;intake_snapshot:unknown}>('select intake_answers,intake_snapshot from support_tickets')).rows[0];assert.equal(JSON.stringify(ticket.intake_answers).includes('Private antwoorden'),true);assert.equal(JSON.stringify(await bot('config',{})).includes('Private antwoorden'),false);
 
- await db.exec('reset role');assert.equal((await db.query('select * from support_ticket_deliveries')).rows.length,2);assert.equal((await db.query('select * from discord_bot_config_deliveries')).rows.length,4);
+ await db.exec('reset role');assert.equal((await db.query('select * from support_ticket_deliveries')).rows.length,3);assert.equal((await db.query('select * from discord_bot_config_deliveries')).rows.length,4);
+ const transcript=(await db.query<{content:string}>("select content from support_ticket_messages where content like 'Jouw ingevulde antwoorden%'")).rows;
+ assert.equal(transcript.length,1);assert.match(transcript[0].content,/Onderwerp\nTESTFIXTURE/);assert.match(transcript[0].content,/Waarmee kunnen we je helpen\?\nPrivate antwoorden/);
+ const outgoing=(await db.query<{content:string;parent_channel_id:string;guild_id:string;client_id:string}>("select payload->>'content' content,parent_channel_id,guild_id,client_id from support_ticket_deliveries where payload->>'content' like 'Jouw ingevulde antwoorden%'")).rows;
+ assert.deepEqual(outgoing,[{content:transcript[0].content,parent_channel_id:parent,guild_id:guild,client_id:'fixture-client'}]);
+ // Reattaching identical data cannot enqueue another transcript, nor can a later type edit rewrite it.
+ await db.query('update support_tickets set intake_answers=intake_answers where id=$1',[first.ticketId]);
+ assert.equal((await db.query("select count(*)::int n from support_ticket_messages where content like 'Jouw ingevulde antwoorden%'")).rows[0].n,1);
 
  await staff(server,'type_save',{id:type,version:3,draft:{...draft,name:'Nieuwe naam'}});await db.exec('reset role');assert.deepEqual((await db.query<{intake_snapshot:unknown}>('select intake_snapshot from support_tickets')).rows[0]?.intake_snapshot,ticket.intake_snapshot);
+ assert.deepEqual((await db.query<{content:string}>("select content from support_ticket_messages where content like 'Jouw ingevulde antwoorden%'")).rows,transcript);
 
 
 
@@ -279,7 +309,7 @@ test('Contractmigratie verandert geen bestaande onzekere/geleasede opdrachten of
   await staff(server,'check_channel',{channelId:parent});await bot('claim',{worker_id:'worker_123'});await db.exec('reset role');
   const before=(await db.query('select * from discord_bot_config_deliveries')).rows;const servers=(await db.query('select * from discord_bot_servers')).rows;
   const acl=(await db.query("select proacl::text as acl,prosecdef,proowner from pg_proc where oid='private.discord_staff_action(uuid,uuid,text,jsonb)'::regprocedure")).rows;
-  await db.exec(readFileSync(new URL('../supabase/migrations/20261016062843_discord_channel_check_contract.sql',import.meta.url),'utf8'));await db.exec(readFileSync(new URL('../supabase/migrations/20261016083106_discord_ticket_intake_schema_access.sql',import.meta.url),'utf8'));
+  await db.exec(readFileSync(new URL('../supabase/migrations/20261016062843_discord_channel_check_contract.sql',import.meta.url),'utf8'));await db.exec(readFileSync(new URL('../supabase/migrations/20261016083106_discord_ticket_intake_schema_access.sql',import.meta.url),'utf8'));await db.exec(readFileSync(new URL('../supabase/migrations/20261016102010_discord_ticket_intake_transcript.sql',import.meta.url),'utf8'));
   assert.deepEqual((await db.query('select * from discord_bot_config_deliveries')).rows,before);assert.deepEqual((await db.query('select * from discord_bot_servers')).rows,servers);assert.deepEqual((await db.query("select proacl::text as acl,prosecdef,proowner from pg_proc where oid='private.discord_staff_action(uuid,uuid,text,jsonb)'::regprocedure")).rows,acl);
  }finally{await db.close();}
 });
