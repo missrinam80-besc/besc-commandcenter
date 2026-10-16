@@ -24,7 +24,7 @@ type NavigationItem = {
   icon: ComponentType<{ size?: number }>;
   roles?: OrganizationRole[];
   financeRoles?: FinanceRole[];
-  counter?: "inbox" | "approvals";
+  counter?: "inbox" | "approvals" | "tickets";
   tickets?: boolean;
   discordbot?: boolean;
 };
@@ -44,7 +44,7 @@ const navigationGroups: NavigationGroup[] = [
       { label: "Kalender", href: "/app/kalender", icon: CalendarDays },
       { label: "Kost indienen", href: "/app/financien?nieuw=kost", icon: CircleDollarSign },
       { label: "Goedkeuringen", href: "/app/goedkeuringen", icon: CheckCircle2, roles: ["admin", "board", "member"], counter: "approvals" },
-      { label: "Discordtickets", href: "/app/tickets", icon: Mail, tickets: true },
+      { label: "Discordtickets", href: "/app/tickets", icon: Mail, tickets: true, counter: "tickets" },
     ],
   },
   {
@@ -169,6 +169,7 @@ function Navigation({
   financeRole,
   inboxCount,
   approvalCount,
+  ticketCount,
   canManageTickets,
   canManageDiscordBot,
 }: {
@@ -177,6 +178,7 @@ function Navigation({
   financeRole: FinanceRole;
   inboxCount: number;
   approvalCount: number;
+  ticketCount: number;
   canManageTickets: boolean;
   canManageDiscordBot: boolean;
 }) {
@@ -196,12 +198,12 @@ function Navigation({
             <div className="navigation-items">
               {items.map((item) => {
                 const Icon = item.icon;
-                const count = item.counter === "inbox" ? inboxCount : item.counter === "approvals" ? approvalCount : 0;
+                const count = item.counter === "inbox" ? inboxCount : item.counter === "approvals" ? approvalCount : item.counter === "tickets" ? ticketCount : 0;
                 return (
                   <Link className={active === item.label ? "active" : ""} href={item.href} aria-current={active === item.label ? "page" : undefined} key={`${group.label}:${item.label}:${item.href}`}>
                     <Icon size={17}/>
                     <span>{item.label}</span>
-                    {count > 0 && <b>{count > 99 ? "99+" : count}</b>}
+                    {count > 0 && <b title={item.counter === "tickets" ? `${count} open Discordtickets` : undefined}>{count > 99 ? "99+" : count}</b>}
                   </Link>
                 );
               })}
@@ -270,7 +272,7 @@ export function PersistentAppShell({ children, initialData }: { children: ReactN
   const update = useState(() => (data: AppShellData, active: string, pathname: string) => setPage({ data, active, pathname }))[0];
   const data = page?.data || initialData;
   const active = page?.pathname === pathname ? page.active : activeForPath(pathname);
-  const { membershipRole, financeRole, name, role, inboxCount, notificationCount, approvalCount } = data;
+  const { membershipRole, financeRole, name, role, inboxCount, notificationCount, approvalCount, ticketCount } = data;
   const mobileNavigation = useRef<HTMLDetailsElement>(null);
   useEffect(() => { if (mobileNavigation.current) mobileNavigation.current.open = false; }, [pathname]);
   return (
@@ -282,7 +284,7 @@ export function PersistentAppShell({ children, initialData }: { children: ReactN
           <span>Command Center</span>
         </Link>
         <PrimaryNavigation active={active} notificationCount={notificationCount ?? 0}/>
-        <Navigation canManageTickets={data.canManageTickets} canManageDiscordBot={data.canManageDiscordBot} active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
+        <Navigation canManageTickets={data.canManageTickets} canManageDiscordBot={data.canManageDiscordBot} active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0} ticketCount={ticketCount ?? 0}/>
         <div className="sidebar-utility">
           <Link className="context-help-link" href={helpHref(active)}>
             <CircleHelp size={17}/><span>Help bij deze pagina</span>
@@ -308,7 +310,7 @@ export function PersistentAppShell({ children, initialData }: { children: ReactN
             <span>{name} · {role}</span>
           </div>
           <PrimaryNavigation active={active} notificationCount={notificationCount ?? 0}/>
-          <Navigation canManageTickets={data.canManageTickets} canManageDiscordBot={data.canManageDiscordBot} active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0}/>
+          <Navigation canManageTickets={data.canManageTickets} canManageDiscordBot={data.canManageDiscordBot} active={active} role={membershipRole} financeRole={financeRole} inboxCount={inboxCount ?? 0} approvalCount={approvalCount ?? 0} ticketCount={ticketCount ?? 0}/>
           <div className="mobile-navigation-search">
             <Link className="context-help-link" href={helpHref(active)}>
               <CircleHelp size={17}/>Help bij deze pagina
