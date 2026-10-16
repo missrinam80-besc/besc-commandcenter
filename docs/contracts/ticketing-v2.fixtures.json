@@ -538,5 +538,28 @@
     "features": [],
     "panels": [],
     "typeRevisions": []
+  },
+  "channelCheckDelivery": {
+    "id": "20000000-0000-4000-8000-000000000008",
+    "kind": "check_channel",
+    "guildId": "1067893182387474432",
+    "channelId": "1558853872766689382",
+    "panelId": null,
+    "revisionId": null,
+    "messageId": null,
+    "payload": {
+      "channelId": "1558853872766689382",
+      "applicationId": "1558542661265129474"
+    },
+    "payloadHash": "43feea9bde0458d8a7850f448003762343f9ed3d3375b3753218bad3d2880ef0",
+    "leaseToken": "20000000-0000-4000-8000-000000000009",
+    "leasedUntil": "2026-10-12T19:01:00.000Z",
+    "nonce": "1",
+    "marker": "besc-panel-20000000-0000-4000-8000-000000000008",
+    "reconcile": false,
+    "allowedMentions": {
+      "parse": []
+    },
+    "withdrawn": false
   }
 }

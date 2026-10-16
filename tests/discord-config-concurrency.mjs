@@ -46,7 +46,8 @@ async function overlap(first,second,role,phase,rollback=false){
 
 await sql(`create table auth.identities(user_id uuid,provider text,provider_id text,identity_data jsonb);
 ${readFileSync(new URL('../supabase/migrations/20261012185859_discord_ticketing_v2.sql',import.meta.url),'utf8')}
-${readFileSync(new URL('../supabase/migrations/20261015115523_discord_configuration_revision.sql',import.meta.url),'utf8')}`);
+${readFileSync(new URL('../supabase/migrations/20261015115523_discord_configuration_revision.sql',import.meta.url),'utf8')}
+${readFileSync(new URL('../supabase/migrations/20261016062843_discord_channel_check_contract.sql',import.meta.url),'utf8')}`);
 const f=JSON.parse(readFileSync(new URL('../docs/contracts/ticketing-v2.fixtures.json',import.meta.url),'utf8'));
 const server='30000000-0000-4000-8000-000000000001',type='30000000-0000-4000-8000-000000000002',revision='30000000-0000-4000-8000-000000000003',panel='30000000-0000-4000-8000-000000000004',panelRevision='30000000-0000-4000-8000-000000000005';
 const draft={...f.typeDraft,parentChannelId:parent};

@@ -97,3 +97,12 @@ Snapshots en antwoorden staan op support_tickets en worden via de bestaande 180-
 CC-migratie en DEV-deploy volgen pas na review. Alleen daarna een concreet behouden clientrecord met drie extra configuratiescopes inlezen; geen automatisch verruimen van de actieve key. Nieuwe runtime rapporteren, eigen installatie/kanalen controleren en vervolgens de testserver activeren. Extra guilds blijven concept.
 
 De botchat implementeert onmiddellijke modalreactie/cacheverlies, panelinteractions, schema-2-ingest met opgeslagen parents, claim/complete/fail en reconcile tegen deze fixtures. Lokale CC-tests bewijzen geen live Discordpermission- of leveringscontrole. Live acceptatie omvat drie types, concept zonder Discordeffect, oude intent na nieuw formulier, uitschakeling, reprise zonder dubbel paneel/ticket, oude threads/retentie, ongekoppelde actor en scheiding van beheer- en behandelrechten.
+
+
+## Aanvullende contractcorrectie: kanaalcontrole
+
+Een `check_channel`-delivery bevat `channelId` zowel op de envelop als in de payload. De payload is `{applicationId, channelId}`; beide bindingen moeten overeenkomen met de server en het opgeslagen doelkanaal. CC berekent `payloadHash` nadat beide velden zijn ingevuld. De bestaande botvalidator blijft ongewijzigd.
+
+Migratie `20261016062843_discord_channel_check_contract.sql` corrigeert uitsluitend het aanmaken van nieuwe kanaalcontroles via de bestaande beheerflow. Ze verandert geen serverinstellingen, intake, credentials, featureflags of bestaande deliveries. Een eerder gemaakte foutieve opdracht kan daarom nog leased/uncertain zijn of haar retrylimiet bereikt hebben. Maak daarvoor geen duplicaat en reset niets automatisch: leg eerst veilige metadata en de actuele lease vast en spreek afzonderlijk gecontroleerd herstel af.
+
+Een leveringsstatus `Bevestigd` betekent dat het antwoord is opgeslagen. Voor `verify_server_admin` moet bovendien de positieve beheeruitslag worden gecontroleerd; de bot kan ook `is_admin=false` teruggeven. Voor kanaalcontrole moeten `permissions_ok` en eventuele ontbrekende rechten worden beoordeeld.
