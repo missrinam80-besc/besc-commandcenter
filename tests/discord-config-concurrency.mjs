@@ -48,7 +48,8 @@ await sql(`create table auth.identities(user_id uuid,provider text,provider_id t
 ${readFileSync(new URL('../supabase/migrations/20261012185859_discord_ticketing_v2.sql',import.meta.url),'utf8')}
 ${readFileSync(new URL('../supabase/migrations/20261015115523_discord_configuration_revision.sql',import.meta.url),'utf8')}
 ${readFileSync(new URL('../supabase/migrations/20261016062843_discord_channel_check_contract.sql',import.meta.url),'utf8')}
-${readFileSync(new URL('../supabase/migrations/20261016083106_discord_ticket_intake_schema_access.sql',import.meta.url),'utf8')}`);
+${readFileSync(new URL('../supabase/migrations/20261016083106_discord_ticket_intake_schema_access.sql',import.meta.url),'utf8')}
+${readFileSync(new URL('../supabase/migrations/20261016102010_discord_ticket_intake_transcript.sql',import.meta.url),'utf8')}`);
 const f=JSON.parse(readFileSync(new URL('../docs/contracts/ticketing-v2.fixtures.json',import.meta.url),'utf8'));
 const server='30000000-0000-4000-8000-000000000001',type='30000000-0000-4000-8000-000000000002',revision='30000000-0000-4000-8000-000000000003',panel='30000000-0000-4000-8000-000000000004',panelRevision='30000000-0000-4000-8000-000000000005';
 const draft={...f.typeDraft,parentChannelId:parent};
@@ -62,7 +63,7 @@ const staffSave=name=>`select discord_bot_staff_action('${org}','${server}','typ
 assert.match(await overlap(staffSave('TESTFIXTURE first'),staffSave('TESTFIXTURE second'),'authenticated','config-version'),/version_conflict/);
 const intent=JSON.parse(await sql(`set role service_role;${cfg('intent',{discord_user_id:actor,type_revision_id:revision,source:'slash',idempotency_key:fresh(),request_hash:'a'.repeat(64)})}`)).intentId;
 const key=fresh(),input={discord_user_id:actor,type_revision_id:revision,intake_intent_id:intent,answers:{onderwerp:'TESTFIXTURE',omschrijving:'Private example',omgeving:['discord']},idempotency_key:key,request_hash:'b'.repeat(64)};
-const output=await overlap(cfg('intake',input),cfg('intake',input),'service_role','typed-intake');assert.match(output,/ticketId/);assert.equal(await sql('select count(*) from support_tickets'),'1');assert.equal(await sql('select count(*) from support_ticket_deliveries'),'2');
+const output=await overlap(cfg('intake',input),cfg('intake',input),'service_role','typed-intake');assert.match(output,/ticketId/);assert.equal(await sql('select count(*) from support_tickets'),'1');assert.equal(await sql('select count(*) from support_ticket_deliveries'),'3');assert.equal(await sql("select count(*) from support_ticket_messages where content like 'Jouw ingevulde antwoorden%'"),'1');
 console.log('Two actual overlapping sessions passed: concept version conflict and typed-intake replay without duplicate effects.');
 
 // Independent GETs keep the same persisted revision, even while serialized on
