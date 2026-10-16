@@ -1,0 +1,54 @@
+BESC Ticketing V2 — DEV-acceptatie, bijgewerkt 16 oktober 2026
+
+Conclusie
+De normale ticketflow en de hieronder genoemde herstel- en revisiescenario’s zijn live door de gebruiker bevestigd. De gebruiker kiest ervoor de verlopen-formuliertest over te slaan; aparte accounts voor de rolverdelingstest zijn niet beschikbaar. Dit is een beperkte DEV-acceptatie met expliciet openstaande scenario’s, geen verklaring dat alle uitgebreide acceptatiestappen live zijn uitgevoerd.
+
+Omgeving en scheiding
+Command Center: https://cc-dev.belgianstreamerscommunity.be
+Organisatie: 999b6af9-479c-4082-b9d8-fa0a78aefac5
+Testserver: 1067893182387474432
+Discordapplicatie: 1558542661265129474
+Ticketclient: besc-discord-tickets-dev
+Intakekanaal: 1558853872766689382
+Command Center draait op BESCSRVDEV. De bot blijft in zijn eigen repo en lokale map en op de aparte server 104.248.194.147 / BESCSRVDEV-02.
+Door de gebruiker laatst bevestigde botimage:
+ghcr.io/missrinam80-besc/besc-discordbot@sha256:c6b7bf440b9e2428751acb0851104d095f15c7f4a2f4e472e72a3fdc853e5100
+Bot-PR 7: 9050b2966c569ba19e5862eefe48da0ff01f4d0f; lokale suite en CI: 216 tests geslaagd.
+
+Live bevestigd door gebruiker
+- Iedereen-type met ongekoppeld account zonder moderatorrechten: één ticket, één privéthread en tekst-/keuzeantwoorden in CC.
+- Gekoppeld-only type weigert ongekoppeld account; gekoppeld actief account kan indienen.
+- Discordbericht naar CC en extern CC-antwoord naar Discord werken.
+- Interne notities blijven uitsluitend in CC.
+- Sluiten vanuit CC vergrendelt en archiveert de thread; gesprek blijft bewaard.
+- Formulier sluiten zonder versturen maakt niets aan.
+- Reeds geopend formulier versturen na uitschakelen van het paneel wordt privé geweigerd; geen ticket of thread.
+- Enkelvoudige en meervoudige keuzefragen werken.
+- Antwoordentranscript verschijnt in de privéthread van nieuwe tickets.
+- Dropdownreset en opnieuw kiezen van hetzelfde type werken na eenmalig verversen van de bestaande Discordclientweergave. De eerste resetfix, bot-PR 6, was hiervoor onvoldoende; PR 7 vernieuwt de componentidentiteit.
+- Oude formuliereditie na herpublicatie: het oude formulier wordt verwerkt met het oude vraaglabel ‘Kies één testoptie’. Het getoonde transcript bewijst behoud van het oude label en gekozen optie B; er wordt voor die specifieke inzending geen onbewezen A+C-combinatie aangenomen.
+- Een nieuw geopend formulier toont ‘Kies één testoptie — versie 2’.
+- Cacheverlies na botrestart vóór de formulierknop: eerste klik laadt opnieuw; tweede klik opent de juiste editie. De daaropvolgende inzending levert volgens de gebruiker precies één ticket/thread met juist transcript op.
+Deze bevestigingen zijn afkomstig uit deze chat en de aangeleverde screenshots. Privégesprekken zijn niet onafhankelijk door Codex uitgelezen.
+
+Rechtstreeks in CC-webbeheer gecontroleerd
+- Voor de revisietest is alleen het label van de enkelvoudige testvraag gewijzigd. Type: a58b182e-2b3c-4dc0-b5eb-db10c9ebd02d.
+- Publicatie op hetzelfde keuzevragenpaneel, b8daab20-d3f2-4070-8eda-a48866517379; paneelconceptversie 3.
+- Botbericht behouden: 1560596544112296027.
+- Installatie-/beheerbewijs, kanaalcontrole en nieuwe publicatie waren alle Bevestigd.
+- De algemene serverintake bleef geactiveerd; het eerdere basisacceptatiepaneel bleef buiten gebruik.
+Dit zijn vastgelegde controles tijdens de proef, geen actuele serveruitlezing bij iedere latere raadpleging.
+
+Bewust niet live uitgevoerd
+- Verlopen intent/formulier: op verzoek van gebruiker overgeslagen. Niet als geslaagd markeren.
+- Beheer-only versus ticketmedewerker met aparte accounts: niet uitgevoerd; gebruiker heeft geen geschikte testaccounts. Geen rechten of accounts hiervoor aangemaakt.
+
+Overige grenzen
+- Gecontroleerde crash tijdens paneelpublicatie, verloren complete-response en exacte submitreplay zijn niet afzonderlijk live met foutinjectie bewezen. De bot- en CC-suites bevatten lokale tests voor idempotency/reconciliatie; lokale tests zijn geen live effectbewijs.
+- Een afzonderlijk nieuw parentkanaal met oude threads is niet live getest.
+- De bestaande retentiejob voor 180 dagen na sluiten is eerder als actief en geslaagd bevestigd. Een daadwerkelijke purge van V2-antwoorden, snapshots en intents is in deze acceptatieronde niet live bewezen; geen echte tickets vervroegd verwijderd.
+- Lange transcripten/Unicode zijn lokaal getest; niet in deze ronde afzonderlijk live bewezen.
+- Geen MEE6-wijziging. Geen productieacceptatie.
+
+Volgende fase
+Discord-DM’s voor tijdslotboekingen blijven een afzonderlijke acceptatiestap. Laatst bevestigde configuratie: BESC_SLOT_WORKER_ENABLED=false op botserver en BESC_SLOT_DISCORD_NOTIFICATIONS_ENABLED=false op CC. Deze waarden zijn bij het opstellen van dit verslag niet opnieuw op de servers uitgelezen. Geen activering, nieuw paneel of testbericht als gevolg van dit verslag.
