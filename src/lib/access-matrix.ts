@@ -67,6 +67,7 @@ type AreaPolicy = {
 };
 
 export const accessPolicies: AreaPolicy[] = [
+  { key: "rewards", label: "BESC Bucks en XP", activeMemberView: true, manageCapability: "manageRewards", dataScope: "Eigen saldo en aanvragen voor gekoppelde leden; beheer uitsluitend met Bucks-bevoegdheid binnen de organisatie." },
   { key:"discordbot", label:"Discordbot", viewCapability:"manageDiscordBot", manageCapability:"manageDiscordBot", dataScope:"Alleen botconfiguratie; geen ticketinhoud of rollenbeheer." },
   { key: "tickets", label: "Discordtickets", manageCapability: "manageTickets", viewCapability: "manageTickets", dataScope: "Alleen bevoegde ticketmedewerkers binnen de organisatie; geen algemene crewtoegang." },
   { key: "home", label: "Home", activeMemberView: true, dataScope: "Eigen werkvoorraad en organisatiedata binnen BESC." },
@@ -108,7 +109,7 @@ function isManagerLike(membership: MembershipAccess) {
 function canView(policy: AreaPolicy, membership: MembershipAccess | null): AccessDecision {
   if (!membership) return policy.key === "home" ? "no" : "no";
   const paths: Record<string, string> = {
-    discordbot: "/app/beheer/discordbot", home: "/app", inbox: "/app/inbox", tickets: "/app/tickets", tasks: "/app/taken", projects: "/app/projecten", events: "/app/events",
+    rewards: "/app/bucks", discordbot: "/app/beheer/discordbot", home: "/app", inbox: "/app/inbox", tickets: "/app/tickets", tasks: "/app/taken", projects: "/app/projecten", events: "/app/events",
     campaigns: "/app/campagnes", social: "/app/social", community: "/app/community", sponsors: "/app/sponsors",
     communication: "/app/communicatie", content: "/app/content", shop: "/app/shop", newsletters: "/app/nieuwsbrieven",
     ai: "/app/ai-hub", meetings: "/app/vergaderingen", administration: "/app/administratie", finance: "/app/financien",
@@ -123,6 +124,7 @@ function canView(policy: AreaPolicy, membership: MembershipAccess | null): Acces
 }
 
 function canCreate(policy: AreaPolicy, membership: MembershipAccess | null): AccessDecision {
+  if (policy.key === "rewards") return membership ? hasPermission(membership, "manageRewards") ? "yes" : "own" : "no";
   if (policy.key === "tickets") return "no"; // Intake belongs to the limited bot API.
   if (!membership) return "no";
   if (policy.key === "finance" && hasPermission(membership, "submitExpenses")) return policy.manageCapability && hasPermission(membership, policy.manageCapability) ? "yes" : "own";
@@ -132,6 +134,7 @@ function canCreate(policy: AreaPolicy, membership: MembershipAccess | null): Acc
 }
 
 function canMutate(policy: AreaPolicy, membership: MembershipAccess | null, archiveOrDelete = false): AccessDecision {
+  if (policy.key === "rewards") return archiveOrDelete || !membership ? "no" : hasPermission(membership, "manageRewards") ? "yes" : "own";
   if (policy.key === "tickets" && archiveOrDelete) return "no";
   if (!membership) return "no";
   if (policy.key === "tasks") return membership.role === "admin" ? "yes" : policy.activeMemberEdit ?? "own";
@@ -154,6 +157,7 @@ function canExport(policy: AreaPolicy, membership: MembershipAccess | null): Acc
 }
 
 function canApprove(policy: AreaPolicy, membership: MembershipAccess | null): AccessDecision {
+  if (policy.key === "rewards") return membership && hasPermission(membership, "manageRewards") ? "yes" : "no";
   if (!membership || !policy.approvalEntity) return "no";
   return canReviewApproval(membership, policy.approvalEntity) ? "yes" : "no";
 }

@@ -1,0 +1,12 @@
+create role anon; create role authenticated; create role service_role bypassrls;
+create schema auth; create schema private;
+grant usage on schema auth,private to authenticated,service_role;
+create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+create table auth.users(id uuid primary key,banned_until timestamptz);
+create table auth.identities(user_id uuid,provider text,provider_id text,identity_data jsonb);
+create table organizations(id uuid primary key);
+create table profiles(id uuid primary key,discord_user_id text,display_name text);
+create table organization_access_roles(id uuid primary key,organization_id uuid,capabilities text[],deleted_at timestamptz);
+create table organization_members(organization_id uuid,user_id uuid,status text,role text,access_role_id uuid);
+create table discord_bot_servers(organization_id uuid,guild_id text,name text);
+insert into discord_bot_servers values('10000000-0000-4000-8000-000000000001','1067893182387474432','TESTFIXTURE server');

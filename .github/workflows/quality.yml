@@ -120,6 +120,15 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: fixture-only
 
+      - name: Gelijktijdige Bucks-aanvragen, voorraad en saldo controleren
+        run: node tests/rewards-concurrency.mjs
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGDATABASE: besc_concurrency_fixture
+          PGUSER: postgres
+          PGPASSWORD: fixture-only
+
       - name: DEV-tokenopslag bewaken
         run: python3 tests/test_besc_dev_agent_token.py
 
@@ -140,6 +149,9 @@ jobs:
 
       - name: Bot-API-routes en upstreamannulering controleren
         run: node scripts/check-bot-api-local.mjs
+
+      - name: Bucks-API-routes met fictieve lokale upstream controleren
+        run: node scripts/check-rewards-api-local.mjs
 
       - name: Ticket-API-routes en responsebodyannulering controleren
         run: node scripts/check-ticket-api-local.mjs

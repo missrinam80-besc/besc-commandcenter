@@ -36,6 +36,7 @@ const capabilityLabels: Record<Capability, string> = {
   manageInbox: "Inbox beheren",
   manageDiscordBot: "Discordbot beheren",
   manageTickets: "Discordtickets behandelen",
+  manageRewards: "BESC Bucks en XP beheren",
   manageProjects: "Projecten beheren",
   manageContent: "Content beheren",
   manageEvents: "Events beheren",

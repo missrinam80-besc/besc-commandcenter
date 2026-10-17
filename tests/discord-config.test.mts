@@ -169,7 +169,7 @@ test('Actual SQL: isolated concepts, runtime gates, publication, immutable snaps
  assert.deepEqual(outgoing,[{content:transcript[0].content,parent_channel_id:parent,guild_id:guild,client_id:'fixture-client'}]);
  // Reattaching identical data cannot enqueue another transcript, nor can a later type edit rewrite it.
  await db.query('update support_tickets set intake_answers=intake_answers where id=$1',[first.ticketId]);
- assert.equal((await db.query("select count(*)::int n from support_ticket_messages where content like 'Jouw ingevulde antwoorden%'")).rows[0].n,1);
+ assert.equal((await db.query<{n:number}>("select count(*)::int n from support_ticket_messages where content like 'Jouw ingevulde antwoorden%'")).rows[0].n,1);
 
  await staff(server,'type_save',{id:type,version:3,draft:{...draft,name:'Nieuwe naam'}});await db.exec('reset role');assert.deepEqual((await db.query<{intake_snapshot:unknown}>('select intake_snapshot from support_tickets')).rows[0]?.intake_snapshot,ticket.intake_snapshot);
  assert.deepEqual((await db.query<{content:string}>("select content from support_ticket_messages where content like 'Jouw ingevulde antwoorden%'")).rows,transcript);
