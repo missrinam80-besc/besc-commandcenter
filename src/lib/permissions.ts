@@ -16,6 +16,7 @@ export const capabilities = [
   "manageInbox",
   "manageTickets",
   "manageDiscordBot",
+  "manageRewards",
   "manageProjects",
   "manageContent",
   "manageEvents",
@@ -67,6 +68,7 @@ export function hasPermission(membership: MembershipAccess, capability: Capabili
     case "manageInbox":
     case "manageTickets":
     case "manageDiscordBot":
+    case "manageRewards":
     case "manageKpis":
     case "manageAiTemplates":
       return isManager(membership);

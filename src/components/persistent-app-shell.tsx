@@ -45,6 +45,7 @@ const navigationGroups: NavigationGroup[] = [
       { label: "Kost indienen", href: "/app/financien?nieuw=kost", icon: CircleDollarSign },
       { label: "Goedkeuringen", href: "/app/goedkeuringen", icon: CheckCircle2, roles: ["admin", "board", "member"], counter: "approvals" },
       { label: "Discordtickets", href: "/app/tickets", icon: Mail, tickets: true, counter: "tickets" },
+      { label: "BESC Bucks en XP", href: "/app/bucks", icon: CircleDollarSign },
     ],
   },
   {
