@@ -1,5 +1,7 @@
 # Ticketing V1 — definitief CC-endpointcontract voor de botchat
 
+> V1-protocolbasis. Voor de huidige schema-2-uitbreiding en uitgevoerde DEV-acceptatie zie [Discordtickets](../Discordtickets-en-botbeheer.md) en [huidige DEV-status](../Huidige-DEV-status.md). Voorbereidingsuitspraken hieronder over niet-uitgevoerde migratie, scheduler of botbouw zijn historische oplevercontext.
+
 Contractversie: `besc-ticketing-v1`. Basis: main `0c3cbbbdd648d9c3067efca16aad70251216f0b9`.
 Deze implementatie is een reviewwijziging, geen actieve DEV-ticketmodule. Bestaande botleesroutes blijven compatibel.
 Bijbehorende machineleesbare voorbeelden: `docs/contracts/ticketing-v1.fixtures.json`.

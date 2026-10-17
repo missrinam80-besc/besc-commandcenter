@@ -1,6 +1,8 @@
 # Eventtijdslots en boekingen V1
 
-Status: implementatie voor review; nog geen live mail-, Discord- of DEV-acceptatie.
+> Status 17 oktober 2026: gemerged, DEV-migratie/deploy en mail-/DM-/gesloten-DM-terugval voor aanvraag, goedkeuring en annulering bevestigd. Beide DM-opt-ins na de proef uit. Zie [status en grenzen](../wiki/Huidige-DEV-status.md).
+
+Technisch contract van de bestaande implementatie; de volledige foutinjectie- en beveiligingsacceptatie is niet live afgerond.
 
 ## Functionele afspraken
 

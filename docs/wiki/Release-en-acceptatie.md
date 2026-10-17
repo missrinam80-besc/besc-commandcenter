@@ -32,3 +32,7 @@ Nieuwe betaalde diensten of agentruns vragen een afzonderlijk besluit. De PDF-pr
 - [Eventrechten: DEV-uitrol en acceptatie](historie/EVENT_RECHTEN_DEV_ACCEPTATIE.md)
 - [V1 cleanup- en structuuraudit](historie/V1_CLEANUP_AUDIT.md)
 - [Roadmapstatus BESC Command Center](historie/ROADMAP_COMPLETION_STATUS.md)
+
+## Stand van 17 oktober 2026
+
+De [huidige DEV-status](Huidige-DEV-status.md) en het [ticketverslag](../acceptatie/TICKETING-V2-DEV-20261016.txt) bevatten de bevestigde live resultaten en open proeven. De slotproef is afgesloten met beide opt-ins uit. Historische release-instructies hierboven zijn geen opdracht om reeds uitgevoerde migraties opnieuw toe te passen. Een geslaagd lokaal contract of CI is geen live bewijs; overgeslagen, alleen lokaal geteste en bevestigde DEV-proeven blijven onderscheiden.

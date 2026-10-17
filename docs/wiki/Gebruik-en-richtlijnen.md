@@ -18,3 +18,12 @@ Werkwijze en inhoudelijke richtlijnen voor projecten, events, content, nieuwsbri
 ## Toegang
 
 - [Rollenbeheer, bestuursfuncties en profielen](Rollen-en-profielen.md)
+
+## Aanvullende actuele handleidingen
+
+- [Huidige DEV-status en acceptatiegrenzen](Huidige-DEV-status.md)
+- [Eventfiche, activiteiten, agenda en boekingen](Eventfiche.md)
+- [Materialen, dupliceren en reserveringen](Materialen-en-bulkacties.md)
+- [Documentenregister](Documentenregister.md)
+- [Inbox en kosten indienen](Inbox-en-kosten.md)
+- [Discordtickets en botbeheer](Discordtickets-en-botbeheer.md)

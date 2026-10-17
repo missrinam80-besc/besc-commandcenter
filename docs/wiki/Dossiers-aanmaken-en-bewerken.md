@@ -8,7 +8,7 @@
 
 **Bewerken** opent alle bewerkbare gegevens rechtstreeks op de dossierpagina. Wisselen tussen tabbladen bewaart de invoer. Bestaande onderdelen zijn inklapbaar; nieuwe onderdelen staan open. Eén knop **Alles opslaan** bewaart het hoofddossier én alle gewijzigde onderdelen samen.
 
-Deze werkwijze geldt voor taken, projecten, events, campagnes, sponsors, communitycontacten, social posts, content, vergaderingen, inbox, kennisartikelen, budgetten, kosten, inkomsten, producten, lanceringen, materialen, nieuwsbrieven, VZW-leden, mandaten, deadlines en administratieve documenten.
+Deze werkwijze geldt voor taken, projecten, events, campagnes, sponsors, communitycontacten, social posts, content, vergaderingen, kennisartikelen, budgetten, financiële beheerfiches, producten, lanceringen, materialen, nieuwsbrieven, VZW-leden, mandaten, deadlines en administratieve documenten. Uitzonderingen: inboxitems hebben een eenvoudig formulier zonder dossiertabs; **Kost indienen** is een ingebed formulier dat eerst naar de inbox gaat. Zie [inbox en kosten](Inbox-en-kosten.md). Materialen hebben de aangepaste tabs Algemeen, Planning & opvolging en Documenten.
 
 ## Tekst opmaken
 
