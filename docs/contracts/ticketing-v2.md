@@ -1,6 +1,8 @@
 # BESC ticketing schema 2 — definitief CC-contract v1
 
-Status: lokale CC-implementatie, draft PR; geen migratie, deployment, keywijziging of Discordeffect uitgevoerd. De botruntime wordt afzonderlijk tegen dit contract gebouwd. Canonieke voorbeelden: `ticketing-v2.fixtures.json` in dezelfde map. Alle voorbeeldinhoud is TESTFIXTURE — NIET PUBLICEREN.
+> Status bijgewerkt 17 oktober 2026: gemerged en op DEV gebruikt; de normale flow is beperkt live geaccepteerd. De oorspronkelijke statuszin hieronder is vervangen door deze verwijzing: [actuele DEV-status](../wiki/Huidige-DEV-status.md). Contractvelden en fixtures blijven de technische bron.
+
+Contract van de geïmplementeerde CC- en afzonderlijke botruntime. Beheer van credentials en deployment blijft een afzonderlijke operationele stap. Canonieke voorbeelden: `ticketing-v2.fixtures.json` in dezelfde map. Alle voorbeeldinhoud is TESTFIXTURE — NIET PUBLICEREN.
 
 ## Gecorrigeerde scope
 

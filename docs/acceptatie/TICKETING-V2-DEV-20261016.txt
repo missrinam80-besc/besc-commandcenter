@@ -52,3 +52,5 @@ Overige grenzen
 
 Volgende fase
 Discord-DM’s voor tijdslotboekingen blijven een afzonderlijke acceptatiestap. Laatst bevestigde configuratie: BESC_SLOT_WORKER_ENABLED=false op botserver en BESC_SLOT_DISCORD_NOTIFICATIONS_ENABLED=false op CC. Deze waarden zijn bij het opstellen van dit verslag niet opnieuw op de servers uitgelezen. Geen activering, nieuw paneel of testbericht als gevolg van dit verslag.
+
+Aanvulling 17 oktober 2026: de afzonderlijke slottest is daarna beperkt live uitgevoerd en afgesloten. Zie ../wiki/Huidige-DEV-status.md voor resultaten, eindconfiguratie en resterende grenzen. De bovenstaande volgende-faseparagraaf bewaart de stand op 16 oktober.

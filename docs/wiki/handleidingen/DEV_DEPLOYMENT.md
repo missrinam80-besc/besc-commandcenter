@@ -26,3 +26,11 @@ De bestaande `.env.production` staat afgeschermd buiten Git en wordt door de web
 De social planner staat los van de image-uitrol. Zie [systemd-planning](SOCIAL_SYNC_VPS.md) voor de service, timer en controles zonder synchronisatie.
 
 Gebruik de [releasecontrole](../Release-en-acceptatie.md) voor verdere acceptatie. GitHub bewaart code en migraties; gegevens en uploads hebben een afzonderlijke back-up nodig.
+
+## Serverdoelen en configuratie zonder code-uitrol
+
+Deze handleiding geldt uitsluitend voor **CC-server BESCSRVDEV**, `/opt/besc-dev/command-center`. De bot op **BESCSRVDEV-02 / 104.248.194.147**, `/opt/besc-discordbot`, heeft een eigen repo, Compose-project, credentials en image. Niet dezelfde opdrachten op beide servers uitvoeren.
+
+Voor een alleen-configuratiewijziging: bestaande instellingen veilig uitlezen, beveiligde backup maken en uitsluitend de goedgekeurde variabele of het ene clientrecord wijzigen. Hermaak alleen web met dezelfde image, zonder pull; controleer healthy, image-ID, exacte overige instellingen en behoud van Caddy. Gebruik daarvoor geen volledige code-deploy. Zie [gedateerde eindstand](../Huidige-DEV-status.md).
+
+De slotmailtimer `besc-event-slot-mails.timer` staat los van de sociale timer en van de bot-slotworker. Behoud beide planningen en geheimen bij updates. Wijzig geen timer als onderdeel van een willekeurige webconfiguratieherlaadactie.

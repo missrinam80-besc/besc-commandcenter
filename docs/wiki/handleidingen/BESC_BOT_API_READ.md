@@ -1,5 +1,7 @@
 # BESC bot-API: lokale proef v0.1
 
+> Dit document beschrijft de oorspronkelijke leesproef. De uitspraak dat alle schrijfmethoden uitstaan geldt alleen voor die scope, niet voor de huidige ticket- en slot-API. Zie [Discordbeheer](../Discordtickets-en-botbeheer.md) en [huidige DEV-status](../Huidige-DEV-status.md).
+
 Deze beperkte lees-API is voorbereid en gereviewd op broncommit `e18456fb9490da090ea3a2e74b27ca9600c04234`. De code is geen bewijs van een live Discord- of Cloud-koppeling. Er is geen databasewijziging nodig voor deze leesproef.
 
 ## Waarom binnen Next.js
@@ -60,7 +62,7 @@ Bij API-fouten bevat `error` een code en requestId; dezelfde requestId staat in 
 
 De limiet is in geheugen en wordt gereset bij een herstart. Multi-replica-uitrol vereist eerst een gedeelde limiter. Intrekken of roteren gebeurt door de afzonderlijke clientconfiguratie te wijzigen en de bestaande webcontainer opnieuw te laten inlezen; deze proef heeft geen beheer-UI voor keys. Rotation/expiry/revocation zijn lokaal getest, maar operationele containerrotatie nog niet.
 
-Alle API-schrijfmethoden zijn uitgeschakeld. De botdeduplicatie geldt alleen per proces gedurende vijftien minuten en voorkomt dubbele leesantwoorden. Dat is geen duurzame bescherming voor ticket- of Bucks-mutaties. Die toekomstige resources mogen pas aan na een database-transactie met unieke idempotency key, opgeslagen requesthash, actor/organisatiebinding en atomische resultaatopslag (zie de roadmap in de overdracht).
+Binnen deze oorspronkelijke leesproef waren alle API-schrijfmethoden uitgeschakeld; de huidige ticket- en slotroutes hebben afzonderlijke beperkte schrijfscopes. De botdeduplicatie geldt alleen per proces gedurende vijftien minuten en voorkomt dubbele leesantwoorden. Dat is geen duurzame bescherming voor ticket- of Bucks-mutaties. Die toekomstige resources mogen pas aan na een database-transactie met unieke idempotency key, opgeslagen requesthash, actor/organisatiebinding en atomische resultaatopslag (zie de roadmap in de overdracht).
 
 ## Lokaal controleren en reviewen
 
