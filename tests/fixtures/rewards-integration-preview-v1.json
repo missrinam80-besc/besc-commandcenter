@@ -1,0 +1,13 @@
+{
+  "notice": "TESTFIXTURE — NIET PUBLICEREN. Synthetic preview only; no provider proof or award.",
+  "cheer": {
+    "schemaVersion": 1,
+    "simulation": true,
+    "kind": "twitch.cheer",
+    "event_id": "30000000-0000-4000-8000-000000000001",
+    "broadcaster_id": "123456789",
+    "twitch_user_id": "987654321",
+    "occurred_at": "2026-10-18T20:00:00.000Z",
+    "facts": { "bits": 100, "is_anonymous": false }
+  }
+}

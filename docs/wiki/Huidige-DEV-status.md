@@ -4,6 +4,12 @@
 
 Dit is een gedateerde momentopname, geen automatische uitlezing van de servers. Bronnen zijn de code op CC-main `6db618aac85a5577c71e7b34f96bc023db9ae879`, bot-main `9050b2966c569ba19e5862eefe48da0ff01f4d0f`, controles via CC-webbeheer en de door de gebruiker aangeleverde serveruitvoer en Discordresultaten. Latere configuratiewijzigingen vragen een nieuwe controle.
 
+## Aanvulling 18 oktober: persoonlijke Twitchkoppeling
+
+CC PR #108 is gemerged en de gebruiker heeft de DEV-deploy en gezonde webservice bevestigd. De persoonlijke Twitchkoppeling staat nu aan (`BESC_TWITCH_IDENTITY_LINKING_ENABLED=true`). Koppelen, ontkoppelen/herkoppelen en annuleren/weigeren zijn door de gebruiker bevestigd, met behoud van Discordkoppeling en Bucks-saldo. Automatisch verdienen en de Discord-slotkeuze blijven uit; saldo-overname is niet uitgevoerd. In deze ronde zijn geen botinstellingen gewijzigd. Zie het [acceptatieverslag](../acceptatie/PERSOONLIJKE-TWITCHKOPPELING-20261018.md).
+
+De onderstaande bot-, clientrechten- en imagemomentopname blijft die van 17 oktober; deze aanvulling is geen nieuwe controle daarvan.
+
 ## Bevestigde omgeving
 
 | Onderdeel | Laatst bevestigd |

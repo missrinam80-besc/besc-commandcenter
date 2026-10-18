@@ -1,6 +1,6 @@
 # Persoonlijke accountkoppelingen
 
-Status 18 oktober 2026: persoonlijke Twitchkoppeling lokaal gebouwd, standaard uit. Geen Cloud-providerconfiguratie, migratie, deploy of echte Twitch-OAuth-proef uitgevoerd in dit werkpakket. De bestaande Discordkoppeling blijft werken zoals voorheen.
+Status 18 oktober 2026: persoonlijke Twitchkoppeling via PR #108 op DEV uitgerold en ingeschakeld. De gebruiker heeft koppelen, ontkoppelen/herkoppelen en annuleren/weigeren bevestigd; Discordkoppeling en Bucks-saldo bleven behouden. De voorbeeldconfiguratie blijft standaard uit. Automatisch verdienen en saldo-overname zijn niet geactiveerd. Zie het [acceptatieverslag met resterende live controles](../acceptatie/PERSOONLIJKE-TWITCHKOPPELING-20261018.md).
 
 ## Gebruiker
 
@@ -22,9 +22,9 @@ De bestaande algemene login-callback is aanvullend beperkt tot interne retourbes
 
 De laatste twee zijn geen bewijs van de persoonlijke Twitchidentiteit van leden. Deze release wijzigt hun credentials, scopes, commando's en configuratie niet. De Discordbot blijft uitsluitend zijn bestaande beperkte CC-API gebruiken.
 
-## Later: afzonderlijk DEV-acceptatievenster
+## DEV-controleprocedure
 
-Dit is een voorbereid controleplan, geen opdracht om nu instellingen te wijzigen.
+Onderstaande procedure blijft beschikbaar voor herhaling en de resterende foutscenario’s. Configuratie, uitrol en normale gebruikersflow zijn op 18 oktober uitgevoerd; niet elke controle hieronder is live bewezen. Dit is geen opdracht om instellingen opnieuw te wijzigen.
 
 1. Review en merge van de code afzonderlijk goedkeuren; nog geen productieactivering.
 2. **Supabase DEV-dashboard:** lees eerst de bestaande Auth-providerconfiguratie. Configureer zo nodig de Twitch-provider met een gecontroleerde OAuth-app en behoud de bestaande Discord-provider. Handmatige identity linking moet beschikbaar zijn. Gebruik de door Supabase getoonde provider-callback-URL in de Twitch-app; dat is niet de CC-callback hieronder. Providersecrets blijven uitsluitend in de daarvoor bedoelde beveiligde configuratie.
