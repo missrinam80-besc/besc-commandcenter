@@ -1,20 +1,24 @@
 import Link from "next/link";
 import Image from "next/image";
+import "./twitch-identity.css";
 import {
   Bell, CheckCircle2, ExternalLink, KeyRound, Link2, Mail, MapPin,
   Monitor, Moon, ShieldCheck, Sun, Unlink, UserRound,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { requireActiveMembership } from "@/lib/auth-context";
-import { discordIdentityDetails, findIdentity } from "@/lib/profile-identities";
+import { discordIdentityDetails, findIdentity, twitchIdentityDetails } from "@/lib/profile-identities";
+import { personalTwitchLinkEnabled } from "@/lib/personal-twitch-link";
 import { financeRoleLabels, organizationRoleLabels, type FinanceRole, type OrganizationRole } from "@/lib/permissions";
 import {
   linkDiscordIdentity,
+  linkTwitchIdentity,
   removeProfileAvatar,
   requestAccountPasswordLink,
   saveProfile,
   saveThemePreference,
   unlinkDiscordIdentity,
+  unlinkTwitchIdentity,
   updateAccountEmail,
   updateAccountPassword,
   uploadProfileAvatar,
@@ -46,6 +50,8 @@ const successMessages: Record<string, string> = {
   discord: "Je Discord-account is gekoppeld.",
   "discord-ontkoppeld": "Je Discord-account is ontkoppeld.",
   "discord-profiel": "Je Discord-naam en profielfoto zijn overgenomen.",
+  twitch: "Je Twitch-account is gekoppeld aan je bestaande BESC-account.",
+  "twitch-ontkoppeld": "Je Twitch-account is ontkoppeld. Je BESC-account en saldo blijven behouden.",
   avatar: "Je profielfoto is aangepast.",
   thema: "Je weergavevoorkeur is opgeslagen.",
   "avatar-verwijderd": "Je profielfoto is verwijderd.",
@@ -74,6 +80,13 @@ const errorMessages: Record<string, string> = {
   "identiteiten-ophalen": "Je gekoppelde inlogmethoden konden niet worden opgehaald.",
   "laatste-inlogmethode": "Je laatste inlogmethode kan niet worden verwijderd. Voeg eerst e-mail/wachtwoord toe.",
   "discord-profiel": "De Discord-profielgegevens konden niet worden overgenomen.",
+  "twitch-uitgeschakeld": "Persoonlijke Twitchkoppeling is nog niet beschikbaar.",
+  "twitch-configuratie": "Twitch koppelen is nog niet geconfigureerd. Neem contact op met een beheerder.",
+  "twitch-link": "Twitch koppelen is niet afgerond. Start opnieuw vanuit Mijn account. Is Twitch al aan een ander BESC-account gekoppeld, laat die koppeling dan eerst controleren.",
+  "twitch-al-gekoppeld": "Er is al een Twitch-account gekoppeld. Ontkoppel dat eerst als je wilt wisselen.",
+  "twitch-geannuleerd": "Twitch koppelen is geannuleerd of geweigerd. Je bestaande BESC-account blijft behouden.",
+  "twitch-niet-gekoppeld": "Er is geen gekoppeld Twitch-account gevonden.",
+  "twitch-ontkoppelen": "Twitch kon niet worden ontkoppeld. Je bestaande koppeling is niet als verwijderd bevestigd.",
   thema: "Je weergavevoorkeur kon niet worden opgeslagen.",
 };
 
@@ -110,6 +123,9 @@ export default async function AccountPage({
   const identities = identitiesResult.data?.identities ?? user.identities ?? [];
   const discordIdentity = findIdentity(identities, "discord");
   const discord = discordIdentityDetails(discordIdentity);
+  const twitchIdentity = identitiesResult.error ? null : findIdentity(identitiesResult.data?.identities, "twitch");
+  const twitch = twitchIdentityDetails(twitchIdentity);
+  const twitchLinkEnabled = personalTwitchLinkEnabled();
   const hasEmailIdentity = Boolean(findIdentity(identities, "email"));
   const role = (memberData?.role ?? membership.role) as OrganizationRole;
   const financeRole = (memberData?.finance_role ?? membership.finance_role) as FinanceRole;
@@ -212,12 +228,33 @@ export default async function AccountPage({
               )}
             </section>
 
+            <section className="form-card identity-card twitch-identity">
+              <div className="identity-heading"><div className="identity-logo">T</div><div><span>GEKOPPELD ACCOUNT</span><h2>Twitch</h2></div></div>
+              {identitiesResult.error ? <p>Je Twitchkoppeling kon niet worden gecontroleerd. Vernieuw de pagina om het opnieuw te proberen.</p> : twitch ? (
+                <>
+                  <div className="identity-status connected"><CheckCircle2 size={16}/><div><strong>{twitch.username || "Twitch-account"}</strong><span>Gekoppeld aan dit BESC-account.</span></div></div>
+                  <p>Twitch-ID: {twitch.userId}. Deze koppeling wijzigt je saldo niet en activeert geen verdienregels.</p>
+                  <div className="identity-actions"><form action={unlinkTwitchIdentity}><button className="danger-outline"><Unlink size={15}/>Ontkoppelen</button></form></div>
+                </>
+              ) : twitchIdentity ? (
+                <>
+                  <p>Er is een Twitchkoppeling gevonden, maar de account-ID kon niet worden bevestigd. Deze koppeling kan niet worden gebruikt voor beloningen.</p>
+                  <div className="identity-actions"><form action={unlinkTwitchIdentity}><button className="danger-outline"><Unlink size={15}/>Ontkoppelen</button></form></div>
+                </>
+              ) : twitchLinkEnabled ? (
+                <>
+                  <p>Koppel je persoonlijke Twitch-account aan je bestaande BESC-account. Je kiest en bevestigt het account bij Twitch. Dit activeert geen verdienregels.</p>
+                  <div className="identity-actions"><form action={linkTwitchIdentity}><button><Link2 size={16}/>Twitch koppelen</button></form></div>
+                </>
+              ) : <p>Persoonlijke Twitchkoppeling is nog niet beschikbaar.</p>}
+            </section>
+
             <section className="form-card account-summary-card">
               <h2>Accountoverzicht</h2>
               <dl>
                 <div><dt>E-mail</dt><dd>{user.email || "Niet ingesteld"}</dd></div>
                 <div><dt>E-mail bevestigd</dt><dd>{user.email_confirmed_at ? "Ja" : "Nog niet"}</dd></div>
-                <div><dt>Inlogmethoden</dt><dd>{[hasEmailIdentity && "E-mail", discord && "Discord"].filter(Boolean).join(", ") || "Onbekend"}</dd></div>
+                <div><dt>Inlogmethoden</dt><dd>{[hasEmailIdentity && "E-mail", discord && "Discord", twitch && "Twitch"].filter(Boolean).join(", ") || "Onbekend"}</dd></div>
                 <div><dt>Lid sinds</dt><dd>{memberData?.joined_at ? new Intl.DateTimeFormat("nl-BE", { dateStyle: "long" }).format(new Date(memberData.joined_at)) : "Onbekend"}</dd></div>
               </dl>
             </section>

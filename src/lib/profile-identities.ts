@@ -23,3 +23,16 @@ export function discordIdentityDetails(identity: UserIdentity | null) {
     avatarUrl: textValue(data, ["avatar_url", "picture"]),
   };
 }
+
+/** Only use identities returned by Auth.getUser/getUserIdentities, never user_metadata. */
+export function twitchIdentityDetails(identity: UserIdentity | null) {
+  if (!identity || identity.provider !== "twitch") return null;
+  const data = (identity.identity_data ?? {}) as IdentityData;
+  const ids = [data.sub, data.provider_id].filter((value) => value !== undefined && value !== null);
+  if (!ids.length || ids.some((value) => typeof value !== "string" || !/^[1-9]\d{0,19}$/.test(value))) return null;
+  if (new Set(ids).size !== 1) return null;
+  return {
+    userId: ids[0] as string,
+    username: textValue(data, ["preferred_username", "user_name", "name"]),
+  };
+}

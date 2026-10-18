@@ -38,3 +38,4 @@ De historische pagina bundelt oudere uitrolnotities en momentopnamen. Lees hun d
 - [Inbox en kosten indienen](Inbox-en-kosten.md)
 - [Discordtickets en botbeheer](Discordtickets-en-botbeheer.md)
 - [BESC Bucks en XP in ontwikkeling](BESC-Bucks-en-XP.md)
+- [Persoonlijke Twitch- en Discordkoppelingen](Persoonlijke-accountkoppelingen.md)

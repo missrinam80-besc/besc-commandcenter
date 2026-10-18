@@ -9,6 +9,7 @@ De [documentatiewiki](docs/wiki/README.md) is de bron voor de werkwijze en het b
 - [Dossiers aanmaken en bewerken](docs/wiki/Dossiers-aanmaken-en-bewerken.md)
 - [Rollen en profielen](docs/wiki/Rollen-en-profielen.md)
 - [Integraties](docs/wiki/Integraties.md)
+- [Persoonlijke Twitch- en Discordkoppelingen](docs/wiki/Persoonlijke-accountkoppelingen.md)
 - [Ontwikkeling en beheer](docs/wiki/Ontwikkeling-en-beheer.md)
 - [Release en acceptatie](docs/wiki/Release-en-acceptatie.md)
 
