@@ -31,6 +31,8 @@ Een actuele Auth-identity betekent dat die koppeling nu in Supabase bestaat; het
 - Callbackantwoorden zijn `303` naar een vaste interne pagina, met `Cache-Control: no-store` en `Referrer-Policy: no-referrer`; ontbrekende/ongeldige siteconfiguratie geeft `503`. Er worden geen providerfouten, codes of tokens gereflecteerd of gelogd.
 - Een providerweigering resulteert in een generieke melding. Native Supabase kan identiteit-linking al vóór de app-callback uitvoeren. Callbackfalen draait dat niet terug; de actuele Auth-state blijft de waarheid. Geen succes alleen op basis van URL-parameters.
 
+De bestaande algemene `/auth/callback` gebruikt nu dezelfde-origin-validatie voor zijn interne `next`-bestemming. Protocolrelatieve adressen, backslashes en externe adressen na URL-normalisatie vallen terug op de bestaande interne standaard. Bestaande Discord-, wachtwoordherstel- en e-mailbestemmingen blijven toegestaan; hun identiteit-/profielwerking wordt niet aangepast.
+
 ## Ontkoppelen
 
 De eigen ingelogde actieve gebruiker haalt de actuele identities op; uitsluitend de gevonden Twitchidentity wordt aan `auth.unlinkIdentity` doorgegeven. Minstens één andere Auth-identiteit moet overblijven en Supabase moet de operatie accepteren. Er is geen clientveld voor een andere gebruiker of provider. Fouten worden niet als succes gepresenteerd. Dit muteert geen profiel, rol, organisatie, Discordkoppeling, beloning, ledger of oude importclaim. Verwijderen is ook toegestaan als het starten van nieuwe koppelingen uitstaat.

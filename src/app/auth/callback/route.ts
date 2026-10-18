@@ -3,6 +3,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { discordIdentityDetails, findIdentity } from "@/lib/profile-identities";
 import { createClient } from "@/lib/supabase/server";
 import { resolveAuthenticatedHome } from "@/lib/auth-destination";
+import { internalAuthDestination } from "@/lib/auth-redirect";
 
 const emailOtpTypes = new Set<EmailOtpType>([
   "signup",
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
     : type === "email_change"
       ? "/app/account?succes=email-bevestigd"
       : "/app";
-  const next = requestedNext?.startsWith("/") ? requestedNext : fallbackNext;
+  const next = internalAuthDestination(requestedNext, fallbackNext);
 
   if (code || (tokenHash && type)) {
     const supabase = await createClient();

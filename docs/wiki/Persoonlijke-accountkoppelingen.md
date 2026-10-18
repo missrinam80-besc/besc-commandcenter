@@ -10,6 +10,8 @@ Een bestaande koppeling toont de door Auth bevestigde Twitch-ID en weergavenaam.
 
 De koppeling geeft op zichzelf geen extra organisatie-, ticket-, event- of financiële rechten. Een niet-actief lid krijgt geen accountbeheer. Er staat geen nieuwe Twitch-login- of registratieknop op de publieke loginpagina.
 
+De bestaande algemene login-callback is aanvullend beperkt tot interne retourbestemmingen. De Discordkoppeling, wachtwoordherstel en e-mailbevestiging behouden hun bestaande interne pagina's; externe `next`-adressen worden geweigerd.
+
 ## Drie verschillende Twitchverbindingen
 
 | Verbinding | Functie | Wie beheert de credentials? |
