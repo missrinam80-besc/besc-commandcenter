@@ -8,11 +8,18 @@ import { basename, dirname, join, resolve } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { handleRewardsIntakeRequest, parseRewardsIntakeRegistry } from "../src/lib/rewards-intake.ts";
 import { hashRewardsPreviewKey } from "../src/lib/rewards-integration-preview.ts";
+import { rewardsIntakeConcurrencyFixture } from "./helpers/rewards-intake-concurrency-fixture.mjs";
 
 const org = "10000000-0000-4000-8000-000000000001", foreign = "10000000-0000-4000-8000-000000000002";
 const user = "20000000-0000-4000-8000-000000000003", other = "20000000-0000-4000-8000-000000000004";
 const broadcaster = "123456789", twitch = "987654321", discord = "111111111111111113";
 type Receipt = { error?: string; receiptId: string; eventKey: string; decision: string; reason: string; persisted: boolean; awarded: boolean; accountCheckPassed: boolean; replay: boolean; providerProofVerified: boolean };
+test("intake fixture: actual CI database setup executes with intact PostgreSQL dollar quotes", async () => {
+  const db = new PGlite(); try {
+    await db.exec(rewardsIntakeConcurrencyFixture());
+    assert.equal((await db.query<{ n: number }>("select count(*)::int n from pg_proc where proname='rewards_intake'")).rows[0].n, 1);
+  } finally { await db.close(); }
+});
 async function setup(directory?: string) {
   const db = new PGlite(directory);
   for (const file of ["./helpers/rewards-fixture.sql", "./helpers/rewards-intake-fixture.sql", "../supabase/migrations/20261017162100_bucks_xp_v1.sql", "../supabase/migrations/20261018213441_rewards_intake_receipts.sql"]) {

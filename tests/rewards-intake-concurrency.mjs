@@ -1,6 +1,6 @@
 // Dedicated CI PostgreSQL only. Never accepts a Cloud URL or existing business DB.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { rewardsIntakeConcurrencyFixture } from "./helpers/rewards-intake-concurrency-fixture.mjs";
 import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
 import { setTimeout as pause } from "node:timers/promises";
@@ -27,14 +27,7 @@ function processSql(query, interactive = false) {
 async function sql(query) { const result = await processSql(query).done; assert.equal(result.code, 0, result.err); return result.out.trim(); }
 const name = `besc_intake_fixture_${Date.now()}`;
 await sql(`create database ${name}`); database = name;
-let fixture = readFileSync(new URL("./helpers/rewards-fixture.sql", import.meta.url), "utf8");
-fixture = fixture.replace("create role anon; create role authenticated; create role service_role bypassrls;", `do $$begin
- if not exists(select 1 from pg_roles where rolname='anon') then create role anon;end if;
- if not exists(select 1 from pg_roles where rolname='authenticated') then create role authenticated;end if;
- if not exists(select 1 from pg_roles where rolname='service_role') then create role service_role bypassrls;end if;
-end$$;`);
-for (const file of ["./helpers/rewards-intake-fixture.sql", "../supabase/migrations/20261017162100_bucks_xp_v1.sql", "../supabase/migrations/20261018213441_rewards_intake_receipts.sql"]) fixture += readFileSync(new URL(file, import.meta.url), "utf8");
-await sql(fixture);
+await sql(rewardsIntakeConcurrencyFixture());
 const org = "10000000-0000-4000-8000-000000000001", uid = "20000000-0000-4000-8000-000000000003", broadcaster = "123456789", twitch = "987654321";
 await sql(`insert into organizations values('${org}');insert into auth.users(id) values('${uid}');
  insert into profiles values('${uid}','111111111111111113','TESTFIXTURE');

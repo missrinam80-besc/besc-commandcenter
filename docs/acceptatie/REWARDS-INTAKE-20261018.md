@@ -4,7 +4,7 @@
 
 ## Lokaal bevestigd
 
-- Volledige testsuite: **954 geslaagd**, geen mislukt of overgeslagen. Nieuwe intakecontroles omvatten 11 API-tests en 8 PGlite-database-/integratietests, boven op de eerdere 20 previewtests.
+- Volledige testsuite: **954 geslaagd** vóór de aanvullende fixture-regressieproef, geen mislukt of overgeslagen. De intakecontroles omvatten 11 API-tests en inmiddels 9 PGlite-database-/integratietests, boven op de eerdere 20 previewtests. De uiteindelijke GitHub-run controleert alle 955 tests samen.
 - De werkelijke nieuwe SQL-functie draait tegen een geïsoleerd Auth-/lidmaatschaps-/rewards-schema. Eerste ontvangst, identieke replay, inhoudsconflict, bron-/organisatiegrenzen en misvormde data zijn gecontroleerd.
 - Eerste accountbinding en uitkomst blijven behouden; actuele ontkoppeling, ban, softdelete, verkeerde rol/organisatie en inactief lidmaatschap blokkeren de huidige controle. Tegenstrijdige providerdata wordt geweigerd. Een andere nieuwe eigenaar of een later gekoppeld account kan oude afwijzingen niet omzetten.
 - Een opgeslagen receipt blijft na sluiten en opnieuw openen van de bestandgebaseerde testdatabase bestaan. Rollback van een nieuwe ontvangst laat een veilige herhaling toe. Een ouder geworden reeds opgeslagen claim blijft herhaalbaar; een nieuwe verlopen claim wordt geweigerd.
