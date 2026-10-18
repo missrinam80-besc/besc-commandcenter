@@ -40,3 +40,4 @@ De historische pagina bundelt oudere uitrolnotities en momentopnamen. Lees hun d
 - [BESC Bucks en XP in ontwikkeling](BESC-Bucks-en-XP.md)
 - [Persoonlijke Twitch- en Discordkoppelingen](Persoonlijke-accountkoppelingen.md)
 - [Centrale verdien-API: synthetische controlemodus](../contracts/rewards-integration-preview-v1.md)
+- [Centrale verdien-API: duurzame ontvangst en actuele accountcontrole](../contracts/rewards-intake-v1.md)

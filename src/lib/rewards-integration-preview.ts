@@ -53,10 +53,14 @@ export const rewardsPreviewEventSchema = z.discriminatedUnion("kind", [
   }).strict() }).strict(),
 ]);
 
-class PreviewFailure extends Error {
+export class PreviewFailure extends Error {
   status: number; code: string;
   constructor(status: number, code: string) { super(code); this.status = status; this.code = code; }
 }
+
+// Shared transport primitives only; importing these cannot enable earning.
+export { sourceSchema as rewardsIntegrationSourceSchema, PreviewFailure as RewardsIntegrationFailure,
+  readRewardsPreviewBody as readRewardsIntegrationBody, RewardsPreviewLimiter as RewardsIntegrationLimiter };
 
 export async function readRewardsPreviewBody(request: Request, timeoutMs = 3000): Promise<unknown> {
   if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get("content-type") ?? "")) throw new PreviewFailure(415, "json_required");

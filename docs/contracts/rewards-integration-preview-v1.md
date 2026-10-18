@@ -21,7 +21,7 @@ Nieuwe namespace: `/api/v1/integrations/rewards/preview`.
 
 De route heeft **geen opslag-, Auth- of ledgerafhankelijkheid**. Een 200 zegt alleen dat de synthetische envelop aan dit contract voldoet. Het antwoord is steeds `mode: "preview"`, `earningEnabled: false`, `persisted: false`, `awarded: false`. Validatie voegt `status: "validated_only"`, `identityChecked: false` en `proofVerified: false` toe.
 
-Er zijn hier geen `/activities`- of `/receipts`-routes. Niets wordt in een wachtrij opgeslagen, gereconcilieerd of na herstart hersteld. Herhaalde validatie is toegestaan en verdient nooit punten. Een toekomstig opslag-/boekingsendpoint moet een eigen expliciet contract hebben en deze simulaties weigeren.
+Er zijn binnen de preview geen `/activities`- of `/receipts`-routes. Niets wordt hier in een wachtrij opgeslagen, gereconcilieerd of na herstart hersteld. Herhaalde validatie is toegestaan en verdient nooit punten. De inmiddels afzonderlijk voorbereide [duurzame intake](rewards-intake-v1.md) heeft haar eigen flag, credentials en contract, weigert deze simulaties en kent evenmin punten toe.
 
 ## Afzonderlijke serverconfiguratie
 
@@ -100,8 +100,8 @@ Foutvorm: `{"error":{"code":"...","requestId":"..."}}`; geen payload, token, has
 ## Volgende bouwstappen vóór punten verdienen
 
 1. Bronadapter en numerieke ID van Belgianstreamerscommunity vaststellen; providerbewijs en beperkte bronautorisatie testen. Geen gebruikersnaam als autorisatiebinding.
-2. Actuele provideridentiteit naar bestaande BESC-rekening oplossen en actieve lid-/Discordkoppelingseis opnieuw controleren; geen username-/e-mailmatch of onbegrensde Auth-userlijst opvragen per event.
-3. Duurzaam CC-ontvangstregister en atomische boekingskern: semantische deduplicatie, conflictsignalering, regelrevisie, quota, onzeker resultaat en herstel. Bridge-journal, hosting, credentials en retentie afzonderlijk uitwerken.
+2. Actuele provideridentiteit en lid-/Discordkoppeling worden in de aparte intake gecontroleerd; geen username-/e-mailmatch of onbegrensde Auth-userlijst. Live migratie-/Auth-acceptatie hiervan staat nog open.
+3. Het aparte CC-ontvangstregister bewaart nu vaste uitkomsten en detecteert dubbele/gewijzigde providerberichten. De atomische boekingskern, financiële semantiek, regelrevisie en quota zijn nog te bouwen. Bridge-journal, hosting, credentials en retentie afzonderlijk uitwerken.
 4. XP, tarieven, herhaling, caps en providersemantiek laten vaststellen. Website/social meten alleen aantoonbare acties. Geen fictief lees- of raidbewijs.
 5. Geïsoleerde database-/concurrencytests en aparte DEV-acceptatie vóór bronactivering. Streamer.bot, website en Discord houden afzonderlijke credentials en deployments.
 6. StreamElements-overname pas samen met de goedgekeurde Streamer.bot-omschakeling: staging, bronclaims, cutoff en somcontrole, behoud van bestaande CC-boekingen/reserveringen. Nu geen export/import of automatische backup.
