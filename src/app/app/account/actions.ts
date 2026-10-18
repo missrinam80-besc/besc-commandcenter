@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { discordIdentityDetails, findIdentity } from "@/lib/profile-identities";
+import { personalTwitchLinkEnabled, personalTwitchOrigin, removePersonalTwitchLink, twitchCallbackPath } from "@/lib/personal-twitch-link";
 
 async function getSiteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
@@ -210,6 +211,35 @@ export async function linkDiscordIdentity() {
   });
   if (error || !data.url) redirect("/app/account?fout=discord-link");
   redirect(data.url);
+}
+
+export async function linkTwitchIdentity() {
+  const { supabase } = await requireActiveMembership();
+  if (!personalTwitchLinkEnabled()) redirect("/app/account?fout=twitch-uitgeschakeld");
+  const origin = personalTwitchOrigin(process.env.NEXT_PUBLIC_SITE_URL);
+  if (!origin) redirect("/app/account?fout=twitch-configuratie");
+  const identities = await supabase.auth.getUserIdentities();
+  if (identities.error) redirect("/app/account?fout=identiteiten-ophalen");
+  if (findIdentity(identities.data.identities, "twitch")) redirect("/app/account?fout=twitch-al-gekoppeld");
+  const { data, error } = await supabase.auth.linkIdentity({
+    provider: "twitch",
+    options: { redirectTo: `${origin}${twitchCallbackPath}`, skipBrowserRedirect: true },
+  });
+  if (error || !data.url) redirect("/app/account?fout=twitch-link");
+  redirect(data.url);
+}
+
+export async function unlinkTwitchIdentity() {
+  const { supabase } = await requireActiveMembership();
+  const destination = await removePersonalTwitchLink({
+    async getIdentities() {
+      const { data, error } = await supabase.auth.getUserIdentities();
+      return { identities: data?.identities ?? [], error };
+    },
+    async unlink(identity) { return supabase.auth.unlinkIdentity(identity); },
+  });
+  revalidatePath("/app/account");
+  redirect(destination);
 }
 
 export async function unlinkDiscordIdentity() {
