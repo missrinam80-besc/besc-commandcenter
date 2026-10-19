@@ -7,7 +7,7 @@ const now = Date.parse("2026-10-18T20:00:00.000Z");
 const token = "bri_fixture-intake." + "a".repeat(43);
 const source = { id: "fixture-twitch", organizationId: "10000000-0000-4000-8000-000000000001", platform: "twitch", broadcasterId: "123456789", kinds: ["twitch.follow", "twitch.cheer"], revoked: false };
 const client = { id: "fixture-intake", sourceId: source.id, keyHash: hashRewardsPreviewKey(token), expiresAt: "2099-01-01T00:00:00.000Z", revoked: false, scopes: ["rewards:intake:write", "rewards:receipts:read"] };
-const event = { schemaVersion: 1, simulation: false, kind: "twitch.cheer", event_id: "30000000-0000-4000-8000-000000000001", broadcaster_id: source.broadcasterId, twitch_user_id: "987654321", occurred_at: "2026-10-18T20:00:00.000Z", facts: { bits: 100, is_anonymous: false } };
+const event = { schemaVersion: 2, simulation: false, kind: "twitch.cheer", event_id: "30000000-0000-4000-8000-000000000001", broadcaster_id: source.broadcasterId, twitch_user_id: "987654321", occurred_at: "2026-10-18T20:00:00.000Z", facts: { bits: 100, is_anonymous: false } };
 const receipt = { schemaVersion: 1, mode: "intake_only", receiptId: "40000000-0000-4000-8000-000000000001", eventKey: "a".repeat(64), receivedAt: "2026-10-18T20:00:00.123456+00:00", decision: "held", reason: "earning_disabled", persisted: true, awarded: false, earningEnabled: false, identityChecked: true, accountCheckPassed: true, providerProofVerified: false, replay: false };
 function registry(sources = [source], clients = [client]) { return parseRewardsIntakeRegistry(JSON.stringify({ sources, clients })); }
 function fixture(patch: Partial<Parameters<typeof handleRewardsIntakeRequest>[1]> = {}) {
@@ -116,4 +116,24 @@ test("intake API: shared bounded body reader and own per-client limiter protect 
   for (let i = 0; i < 60; i++) assert.equal((await handleRewardsIntakeRequest(request(), limited.deps)).status, 200);
   const r = await handleRewardsIntakeRequest(request(`receipts/${receipt.eventKey}`), limited.deps);
   assert.equal(r.status, 429); assert.equal(r.headers.get("retry-after"), "60"); assert.equal(limited.calls.length, 60);
+});
+
+test("intake API: V2 preserves exact provider ID; bounded ASCII only; V1 UUID compatibility", async () => {
+  for(const event_id of ["Opaque+Message/ID=", "ABCDEFAB-1234-4000-8000-ABCDEFABCDEF", "x".repeat(128)]) {
+    const f=fixture(); const data={...event,event_id};
+    assert.equal((await handleRewardsIntakeRequest(request("activities",data),f.deps)).status,200);
+    assert.deepEqual(f.calls[0][2],data);
+  }
+  for(const event_id of ["","x".repeat(129),"a b","a\n","a\r","a\t","a\u0000","é","a\u007f"]) {
+    const f=fixture();
+    assert.equal((await handleRewardsIntakeRequest(request("activities",{...event,event_id}),f.deps)).status,400);
+    assert.equal(f.calls.length,0);
+  }
+  const f=fixture();
+  const legacy={...event,schemaVersion:1,event_id:"ABCDEFAB-1234-4000-8000-ABCDEFABCDEF"};
+  assert.equal((await handleRewardsIntakeRequest(request("activities",legacy),f.deps)).status,200);
+  assert.equal((f.calls[0][2] as {event_id:string}).event_id,legacy.event_id.toLowerCase());
+  for(const patch of [{schemaVersion:3},{schemaVersion:1,event_id:"opaque-ID"}]) {
+    assert.equal((await handleRewardsIntakeRequest(request("activities",{...event,...patch}),fixture().deps)).status,400);
+  }
 });
