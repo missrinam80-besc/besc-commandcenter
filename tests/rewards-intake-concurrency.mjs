@@ -37,7 +37,7 @@ await sql(`insert into organizations values('${org}');insert into auth.users(id)
  insert into reward_ledger(organization_id,user_id,actor_id,kind,xp_delta,bucks_delta,reserved_delta,reason)
  values('${org}','${uid}','${uid}','manual',70,30,0,'TESTFIXTURE bestaand'),
  ('${org}','${uid}','${uid}','reserve',0,0,10,'TESTFIXTURE reservering');`);
-const event = () => ({ schemaVersion: 1, simulation: false, kind: "twitch.cheer", event_id: randomUUID(), broadcaster_id: broadcaster, twitch_user_id: twitch, occurred_at: new Date().toISOString(), facts: { bits: 100, is_anonymous: false } });
+const event = () => ({ schemaVersion: 2, simulation: false, kind: "twitch.cheer", event_id: randomUUID(), broadcaster_id: broadcaster, twitch_user_id: twitch, occurred_at: new Date().toISOString(), facts: { bits: 100, is_anonymous: false } });
 const receive = data => `select rewards_intake('${org}','${broadcaster}','receive','${JSON.stringify(data)}',null);`;
 async function overlap(first, second, phase, rollback = false, duringWait = async () => {}) {
   const prefix = "set statement_timeout='15s';set lock_timeout='10s';";
@@ -58,7 +58,7 @@ async function overlap(first, second, phase, rollback = false, duringWait = asyn
     const result = await contender.done; assert.equal(result.code, 0, result.err); return result.out;
   } finally { holder.child.stdin.end(); contender?.child.stdin.end(); }
 }
-const duplicate = event();
+const duplicate = { ...event(), event_id: "Opaque-Provider/Message+ID=" };
 const replay = await overlap("set role service_role;begin;" + receive(duplicate), receive(duplicate), "replay");
 assert.match(replay, /"replay": true/); assert.equal(await sql("select count(*) from private.reward_intake_receipts"), "1");
 console.info("PASS: simultaneous identical event persisted once");

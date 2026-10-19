@@ -32,7 +32,8 @@ export function parseRewardsIntakeRegistry(raw?: string): RewardsIntakeRegistry 
 }
 
 const fields = {
-  schemaVersion: z.literal(1), simulation: z.literal(false), event_id: z.uuid(),
+  schemaVersion: z.union([z.literal(1), z.literal(2)]), simulation: z.literal(false),
+  event_id: z.string().min(1).max(128).refine(value => !/[^\x21-\x7e]/.test(value)),
   broadcaster_id: z.string().regex(/^[1-9]\d{0,19}$/),
   twitch_user_id: z.string().regex(/^[1-9]\d{0,19}$/), occurred_at: z.iso.datetime({ precision: 3 }),
 };
@@ -41,7 +42,7 @@ export const rewardsIntakeEventSchema = z.discriminatedUnion("kind", [
   z.object({ ...fields, kind: z.literal("twitch.cheer"), facts: z.object({
     bits: z.number().int().min(1).max(1_000_000), is_anonymous: z.literal(false),
   }).strict() }).strict(),
-]);
+]).refine(event => event.schemaVersion === 2 || z.uuid().safeParse(event.event_id).success);
 // Fail closed on drift/unknown database responses; never spread a privileged RPC payload.
 const receiptSchema = z.object({
   schemaVersion: z.literal(1), mode: z.literal("intake_only"), receiptId: z.uuid(),
@@ -86,7 +87,7 @@ export async function handleRewardsIntakeRequest(request: Request, deps: {
       if (!event.success) throw new Failure(400, "invalid_fields");
       if (event.data.broadcaster_id !== source.broadcasterId) throw new Failure(403, "source_not_allowed");
       if (!source.kinds.includes(event.data.kind)) throw new Failure(403, "kind_not_allowed");
-      data = { ...event.data, event_id: event.data.event_id.toLowerCase() };
+      data = { ...event.data, event_id: event.data.schemaVersion === 1 ? event.data.event_id.toLowerCase() : event.data.event_id };
       // Freshness is a database decision AFTER checking durable replay state.
     }
     const raw = await deps.operation(source, op, data, path[2] ?? null);

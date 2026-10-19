@@ -11,7 +11,7 @@ const org = "10000000-0000-4000-8000-000000000001", broadcaster = "123456789";
 const token = `bri_fixture-http.${randomBytes(32).toString("base64url")}`;
 const registry = { sources: [{ id: "fixture-source", organizationId: org, platform: "twitch", broadcasterId: broadcaster, kinds: ["twitch.cheer"], revoked: false }],
   clients: [{ id: "fixture-http", sourceId: "fixture-source", keyHash: createHash("sha256").update(token).digest("hex"), scopes: ["rewards:intake:write", "rewards:receipts:read"], expiresAt: "2099-01-01T00:00:00.000Z", revoked: false }] };
-const event = { schemaVersion: 1, simulation: false, kind: "twitch.cheer", event_id: "30000000-0000-4000-8000-000000000001", broadcaster_id: broadcaster, twitch_user_id: "987654321", occurred_at: new Date().toISOString(), facts: { bits: 100, is_anonymous: false } };
+const event = { schemaVersion: 2, simulation: false, kind: "twitch.cheer", event_id: "30000000-0000-4000-8000-000000000001", broadcaster_id: broadcaster, twitch_user_id: "987654321", occurred_at: new Date().toISOString(), facts: { bits: 100, is_anonymous: false } };
 const receipt = { schemaVersion: 1, mode: "intake_only", receiptId: "40000000-0000-4000-8000-000000000001", eventKey: "a".repeat(64), receivedAt: new Date().toISOString(), decision: "held", reason: "earning_disabled", persisted: true, awarded: false, earningEnabled: false, identityChecked: true, accountCheckPassed: true, providerProofVerified: false, replay: false };
 let mode = "ok", calls = 0, received = false, closed = false;
 const upstream = createServer(async (req, res) => {

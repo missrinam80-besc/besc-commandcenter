@@ -59,7 +59,7 @@ Uitsluitend synthetische `twitch.follow` en niet-anonieme `twitch.cheer`. Gebrui
 }
 ```
 
-Alle IDs en tijdstippen hierboven zijn TESTFIXTURE. `event_id` is in dit eerste adaptercontract een provider-bericht-UUID, geen vrij opnieuw gegenereerde retry-ID. Een latere Streamer.bot-adapter moet aantonen dat hij zo'n stabiele oorspronkelijke ID kan leveren. Die adapter is nu niet gebouwd. Numerieke Twitch-ID's zijn strings van 1–20 cijfers, zonder nul of voorloopnul. Usernames worden niet gebruikt voor identificatie.
+Alle IDs en tijdstippen hierboven zijn TESTFIXTURE. `event_id` is in dit eerste adaptercontract een synthetische UUID, geen vrij opnieuw gegenereerde retry-ID. Deze preview behoudt zijn eigen V1-fixturecontract. De duurzame intake krijgt V2 voor echte opaque provider-ID’s; kopieer de UUID-aanname van deze fixture niet naar een live bronadapter. Een latere Streamer.bot-adapter moet aantonen dat hij zo'n stabiele oorspronkelijke ID kan leveren. Die adapter is nu niet gebouwd. Numerieke Twitch-ID's zijn strings van 1–20 cijfers, zonder nul of voorloopnul. Usernames worden niet gebruikt voor identificatie.
 
 `follow` heeft exact lege `facts: {}`. `cheer` heeft exact `bits` (geheel 1–1.000.000) en `is_anonymous: false`. Dit plafond is een technische invoergrens, geen vastgesteld tarief of providermaximum. Geen berichten, namen, bedragen, XP, Bucks, regelversie, interne user-ID, organisatie of bronkeuze uit de body. Onbekende of ontbrekende velden worden geweigerd. Geen vrijgeefveld kan de controlemodus verlaten.
 

@@ -20,9 +20,10 @@ test("intake fixture: actual CI database setup executes with intact PostgreSQL d
     assert.equal((await db.query<{ n: number }>("select count(*)::int n from pg_proc where proname='rewards_intake'")).rows[0].n, 1);
   } finally { await db.close(); }
 });
-async function setup(directory?: string) {
+async function setup(directory?: string, legacy = false) {
   const db = new PGlite(directory);
-  for (const file of ["./helpers/rewards-fixture.sql", "./helpers/rewards-intake-fixture.sql", "../supabase/migrations/20261017162100_bucks_xp_v1.sql", "../supabase/migrations/20261018213441_rewards_intake_receipts.sql"]) {
+  for (const file of ["./helpers/rewards-fixture.sql", "./helpers/rewards-intake-fixture.sql", "../supabase/migrations/20261017162100_bucks_xp_v1.sql", "../supabase/migrations/20261018213441_rewards_intake_receipts.sql", "../supabase/migrations/20261019221404_rewards_intake_opaque_message_ids.sql"]) {
+    if (legacy && file.includes("opaque_message_ids")) continue;
     await db.exec(readFileSync(new URL(file, import.meta.url), "utf8"));
   }
   await db.query("insert into organizations values ($1),($2)", [org, foreign]);
@@ -33,7 +34,7 @@ async function setup(directory?: string) {
   await db.query("insert into reward_accounts values($1,$2,70,30,10)", [org, user]);
   await db.query(`insert into reward_ledger(organization_id,user_id,actor_id,kind,xp_delta,bucks_delta,reserved_delta,reason)
     values($1,$2,$2,'manual',70,30,0,'TESTFIXTURE bestaande toekenning'),($1,$2,$2,'reserve',0,0,10,'TESTFIXTURE bestaande reservering')`, [org, user]);
-  const event = (patch: Record<string, unknown> = {}) => ({ schemaVersion: 1, simulation: false, kind: "twitch.cheer", event_id: randomUUID(), broadcaster_id: broadcaster, twitch_user_id: twitch, occurred_at: new Date().toISOString(), facts: { bits: 100, is_anonymous: false }, ...patch });
+  const event = (patch: Record<string, unknown> = {}) => ({ schemaVersion: 2, simulation: false, kind: "twitch.cheer", event_id: randomUUID(), broadcaster_id: broadcaster, twitch_user_id: twitch, occurred_at: new Date().toISOString(), facts: { bits: 100, is_anonymous: false }, ...patch });
   const admin = async (sql: string, args: unknown[] = []) => { await db.exec("reset role"); return db.query<Record<string, unknown>>(sql, args); };
   const call = async (op: string, data: Record<string, unknown> = {}, key: string | null = null, o = org, b = broadcaster) => {
     await db.exec("reset role;set role service_role");
@@ -209,4 +210,59 @@ test("intake DB: strict SQL validation, browser isolation and minimal service-on
     assert.equal((await t.admin("select count(*)::int n from pg_policies where schemaname='private' and tablename='reward_intake_receipts'")).rows[0].n, 0);
     await t.unchanged();
   } finally { await t.db.close(); }
+});
+
+const opaqueMigration = () => readFileSync(new URL("../supabase/migrations/20261019221404_rewards_intake_opaque_message_ids.sql", import.meta.url), "utf8");
+test("intake DB: real V1 row survives migration byte-for-byte; V2 and V1 replay it without granting", async () => {
+  const t = await setup(undefined, true); try {
+    const oldEvent = t.event({ schemaVersion: 1, event_id: "ABCDEFAB-1234-4000-8000-ABCDEFABCDEF" });
+    const original = await t.call("receive", oldEvent);
+    const before = (await t.admin("select row_to_json(r)::text snapshot from private.reward_intake_receipts r")).rows;
+    await t.db.exec("reset role");
+    await t.db.exec(opaqueMigration());
+    const after = (await t.admin("select row_to_json(r)::text snapshot from private.reward_intake_receipts r")).rows;
+    assert.deepEqual(after,before);
+    for(const schemaVersion of [1,2]) {
+      const replay = await t.call("receive", {...oldEvent,schemaVersion});
+      assert.equal(replay.receiptId,original.receiptId); assert.equal(replay.eventKey,original.eventKey);
+      assert.equal(replay.replay,true); assert.equal(replay.awarded,false);
+      assert.equal((await t.call("receive", {...oldEvent,schemaVersion,facts:{bits:101,is_anonymous:false}})).error,"idempotency_conflict");
+    }
+    assert.equal((await t.call("receipt",{},original.eventKey)).receiptId,original.receiptId);
+    assert.equal((await t.call("receive",t.event({schemaVersion:1}))).error,"invalid_fields");
+    assert.deepEqual((await t.admin("select row_to_json(r)::text snapshot from private.reward_intake_receipts r")).rows,before);
+    await t.unchanged();
+  } finally { await t.db.close(); }
+});
+test("intake DB: opaque IDs are exact, scoped, replayable, and immutable across actor/kind changes", async () => {
+  const t=await setup(); try {
+    const e=t.event({event_id:"Opaque/Provider+ID=With'Quote"});
+    const first=await t.call("receive",e);
+    assert.equal(first.persisted,true);
+    assert.equal((await t.call("receive",e)).receiptId,first.receiptId);
+    assert.equal((await t.call("receive",{...e,twitch_user_id:"999"})).error,"idempotency_conflict");
+    assert.equal((await t.call("receive",{...e,kind:"twitch.follow",facts:{}})).error,"idempotency_conflict");
+    const lower=await t.call("receive",{...e,event_id:e.event_id.toLowerCase()});
+    assert.notEqual(lower.eventKey,first.eventKey);
+    const foreign=await t.call("receive",e,null,org,"999");
+    assert.equal(foreign.error,"invalid_fields");
+    const stored=(await t.admin("select event_data->>'event_id' id from private.reward_intake_receipts where event_key=$1",[first.eventKey])).rows[0].id;
+    assert.equal(stored,e.event_id);
+    for (const bad of ["", "x".repeat(129),"contains space","a\n","a\r","a\t","é","a\u007f"]) {
+      assert.equal((await t.call("receive",t.event({event_id:bad}))).error,"invalid_fields");
+    }
+    assert.equal((await t.call("receive",t.event({event_id:"x".repeat(128)}))).persisted,true);
+    await t.unchanged();
+  } finally { await t.db.close(); }
+});
+test("intake DB: new V2 UUID-shaped IDs preserve case; V1 cannot create an alias", async () => {
+  const t=await setup();try {
+    const e=t.event({event_id:"ABCDEFAB-1234-4000-8000-ABCDEFABCDEF"});
+    const first=await t.call("receive",e);
+    assert.equal((await t.call("receive",{...e,schemaVersion:1})).error,"invalid_fields");
+    const second=await t.call("receive",{...e,event_id:e.event_id.toLowerCase()});
+    assert.notEqual(first.eventKey,second.eventKey);
+    assert.equal((await t.admin("select count(*)::int n from private.reward_intake_receipts")).rows[0].n,2);
+    await t.unchanged();
+  } finally {await t.db.close();}
 });

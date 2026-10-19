@@ -1,6 +1,6 @@
 # Centrale verdien-API — duurzame ontvangst V1
 
-18 oktober 2026. Voorbereid in draft-PR #109, geen Cloud-migratie of activering uitgevoerd. Dit register neemt beperkte bronclaims duurzaam in ontvangst en controleert de actuele accountbinding. Het bevat geen puntenverwerker.
+20 oktober 2026. Basis uit PR #109 gemerged en op DEV gemigreerd/uitgerold; de gebruiker bevestigde gezonde deploy, aanwezige routes en blokkering van uitgeschakelde intake. De wijziging voor opaque bericht-ID's hieronder is lokaal voorbereid; nog niet op DEV gemigreerd of gedeployd. Dit register neemt beperkte bronclaims duurzaam in ontvangst en controleert de actuele accountbinding. Het bevat geen puntenverwerker.
 
 ## Scheiding van ontvangst, bewijs en beloning
 
@@ -38,7 +38,7 @@ Intrekken/verlopen van een client of intrekken van de bron blokkeert ook reads e
 
 De envelop heeft dezelfde begrensde follow-/cheervelden als de preview, met uitsluitend **`simulation: false`**. Geen vrije bedragen, interne user-ID, organisatie, regeltarief of clientgekozen idempotencysleutel.
 
-- `schemaVersion: 1`; `event_id` is een stabiele oorspronkelijke provider-bericht-UUID, geen nieuwe UUID per retry.
+- `schemaVersion: 2`; `event_id` is de stabiele oorspronkelijke providerbericht-ID: 1–128 zichtbare ASCII-tekens (0x21–0x7e). Behoud exact dezelfde bytes en hoofdletters, zonder trim, lowercasing, UUID-conversie of nieuwe ID per retry. Dit is een lokale contractgrens, geen door Twitch gegarandeerd maximum. Niet-representeerbare IDs blokkeren expliciet; niet hashen/remappen om de grens te omzeilen. Versie 1 blijft uitsluitend voor herhaling van al bestaande UUID-receipts.
 - `broadcaster_id` moet overeenkomen met de serverconfiguratie; `twitch_user_id` is een numerieke onveranderlijke ID-string. Geen username-/e-mailmatch.
 - `kind` is `twitch.follow` met lege `facts`, of `twitch.cheer` met geheel `bits` 1–1.000.000 en `is_anonymous: false`.
 - `occurred_at` is strikte UTC met milliseconden. Een nieuwe claim mag bij databaseverwerking maximaal 120 seconden oud of 5 seconden toekomstig zijn. Dit is een conservatieve technische intakegrens; een ander herstelvenster vraagt later een expliciet contract.
@@ -65,13 +65,21 @@ Bij iedere receipt-read en identieke retry wordt de actuele accountcontrole opni
 
 Private tabel `private.reward_intake_receipts`, geen lees-/schrijfrechten voor browserrollen of directe tablerechten voor service_role. Alleen de smalle RPC kan in de tabel schrijven. RLS staat aan zonder publieke policies. De public RPC is security invoker en uitsluitend uitvoerbaar door service_role; private helpers met lege search_path lezen gericht Auth-data onder ownerrechten. De service-rolecontrole, execute-grants en schema-afscherming houden deze machinefunctie buiten browsergebruik. De beheercredential blijft uitsluitend op CC.
 
-Eén providerbericht heeft één ontvangstbewijs binnen organisatie/broadcaster. De unieke sleutel is SHA256 over PostgreSQLs canonieke JSONB-tekst van:
+Eén providerbericht heeft één ontvangstbewijs binnen organisatie/broadcaster. De unieke V2-sleutel is SHA256 over PostgreSQLs canonieke JSONB-tekst van:
 
 ```text
-[1,"intake","twitch",organisatie-UUID,broadcaster-ID,lowercase-providerbericht-UUID]
+[2,"intake","twitch",organisatie-UUID,broadcaster-ID,exacte-providerbericht-ID]
 ```
 
-Actor, activiteitsoort, source-record-ID, API-client en regelrevisie zitten niet in deze sleutel. Een ander account of andere eventsoort aan hetzelfde providerbericht meegeven levert daardoor geen tweede receipt op. De inhoudshash is SHA256 van de volledige gevalideerde JSONB-envelope met lowercase `event_id`. JSON-veldvolgorde heeft geen effect. Dit hashformaat is bewust anders dan de synthetische preview; clients hoeven de sleutel niet zelf te berekenen en krijgen hem terug in de receipt.
+V2 inhoudshash: SHA256 van de volledige gevalideerde JSONB-envelope, met versie 2 en exacte event_id. Veldvolgorde verandert de hash niet. Actor/soort/client/regelversie zijn geen sleutelonderdelen; gewijzigde inhoud bij dezelfde sleutel conflicteert. Receipt-antwoorden houden hun eigen `schemaVersion: 1`; die versie is niet de invoerenvelopversie. Receipt-leesroutes en bestaande keys veranderen niet.
+
+### Overgang van UUID-V1 naar opaque-V2
+
+De nieuwe migratie vervangt uitsluitend de private operationele functie, zonder receipt- of saldorijen te herschrijven. Bestaande V1 keys/contenthashes/uitkomsten blijven letterlijk behouden. V1 canoniseerde UUIDs naar lowercase. Vanaf deze migratie accepteert V1 alleen bestaande herhalingen; een nog onbekend V1-bericht krijgt 400 invalid_fields zonder nieuwe receipt. Dat voorkomt dat oude en nieuwe schrijvers twee aliasregistraties maken.
+
+Als een V2 UUID-vormige ID nog geen V2-receipt heeft, kijkt de functie gericht naar de oude V1-key (lowercase UUID). Bij aanwezigheid vergelijkt zij de oorspronkelijke V1-envelopecanonisatie: versie 1 en lowercase UUID. Gelijke inhoud geeft dezelfde historische receipt-ID/key/tijd/uitkomst; gewijzigde feiten geven 409. Geen backfill of heruitbetaling. Historisch afgewezen receipts blijven afgewezen.
+
+Als geen legacyreceipt bestaat, bewaart V2 ook UUID-vormige IDs exact en hoofdlettergevoelig. De UUID-vorm bewijst namelijk geen case-insensitive providersemantiek. Een V1-client kan daar later geen alias voor aanmaken. Verschillende V2-IDs blijven verschillende transportberichten; financiële eenmaligheid blijft een apart vraagstuk.
 
 Een transactionele advisory lock plus unieke databaseconstraint serialiseert dezelfde brongebeurtenis, ook tussen processen/roterende clients. Identieke inhoud geeft dezelfde receipt-ID/tijd/uitkomst terug met `replay: true`. Gewijzigde feiten, actor, soort of tijd geven 409 `idempotency_conflict`; het oorspronkelijke record blijft intact. Rollback laat geen half receipt achter. Er is geen API die historische receipts reset of verwijdert.
 
@@ -89,9 +97,15 @@ Fouten: 400 ongeldige velden/body/query; 401 ongeldige client; 403 bron/scope/so
 
 ## Grenzen vóór ingebruikname
 
-- Geen Cloud-migratie, broncredential, scope, Streamer.bot-wijziging, botdeploy, automatische backup of saldo-overname uitgevoerd. Intake en automatisch verdienen blijven uit.
+- De basismigratie en webdeploy uit PR #109 zijn op DEV afgerond. De nieuwe opaque-ID-migratie is nog niet op Cloud uitgevoerd. Geen broncredential, scope, Streamer.bot-wijziging, botdeploy, automatische backup of saldo-overname in deze vervolgwijziging. Intake en automatisch verdienen blijven uit.
 - Nog vast te stellen vóór echte broninname: numerieke broadcaster-ID, adapterbewijs, bronautorisatie, hosting/journal, volume-/retentiebeleid en operationeel herstel. Geen automatische receiptpurge: verwijderen zou de deduplicatie-/afwijzingshistorie verliezen. Bewaartermijn moet afzonderlijk worden besloten vóór werkelijke persoonsgegevens worden verzameld.
 - Een processor met financiële boekingen, bronregels/revisies, tarieven, XP, levels, quota, semantische deduplicatie en atomische financiële autorisatie ontbreekt nog. Het ontvangstregister kan deze controles niet vervangen.
 - Website, Discord, Streamer.bot en centrale service blijven aparte deployment-/credentialgrenzen rond hetzelfde CC-saldo. Saldo-overname blijft gekoppeld aan de latere StreamElements/Streamer.bot-omschakeling.
 
 Verificatie en beperkingen: [lokaal acceptatieverslag](../acceptatie/REWARDS-INTAKE-20261018.md). Geraadpleegd: [Supabase identities](https://supabase.com/docs/guides/auth/identities), [databasefuncties](https://supabase.com/docs/guides/database/functions) en het [Auth-user-model](https://github.com/supabase/auth/blob/master/internal/models/user.go) voor de native ban-/verwijdervelden. De changelog is gecontroleerd; er zijn geen dependencies aangepast.
+
+## Opaque-ID-uitrolvolgorde
+
+Na review en afzonderlijke goedkeuring: nieuwe migratie eerst op Supabase DEV, dan CC-webimage. De migratie maakt V1 replay-only; een oude webimage kan dus geen nieuwe claims meer opnemen, maar oude receipts blijven leesbaar/herhaalbaar. Intake blijft tijdens de overgang uit. Rollback naar de oude functie na V2-ontvangsten is niet veilig: die begrijpt V2-keys/IDs niet en kan nieuwe V1-aliasen toelaten. Niet blind terugzetten; houd intake uit en beoordeel herstel afzonderlijk. Geen automatisch downscrip of receiptverwijdering.
+
+Referentie voor het providerformaat: [Twitch EventSub WebSocket reference](https://dev.twitch.tv/docs/eventsub/websocket-reference/), geraadpleegd 20 oktober 2026: message_id is een string, herlevering behoudt die ID. De bronadapter blijft verantwoordelijk voor geverifieerde herkomst; dit verruimde formaat bewijst op zichzelf geen Twitchgebeurtenis.
