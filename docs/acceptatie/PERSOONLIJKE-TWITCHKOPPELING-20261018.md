@@ -1,8 +1,8 @@
-# Persoonlijke Twitchkoppeling - lokale verificatie
+# Persoonlijke Twitchkoppeling - verificatie en DEV-acceptatie
 
 Datum: 18 oktober 2026. Branch `codex/personal-twitch-identity`, basis CC-main `aac0b85b55a986b67cc5331a8d836e76670b81b8`.
 
-## Resultaat
+## Lokale verificatie
 
 - `pnpm test`: **915 geslaagd**, geen mislukt of overgeslagen; hiervan 31 nieuwe gedragstests voor Twitchidentiteit/callback/ontkoppelen en twee voor de algemene auth-retourbestemming. De bestaande Discord-, tickets-, events-, slot- en rewards-tests blijven slagen.
 - Gerichte account/Twitch-tests plus auth-redirecttests: 43 geslaagd.
@@ -21,8 +21,24 @@ De 31 nieuwe tests voeren de callback- en unlinkbeslissingen uit met expliciete 
 
 De twee aanvullende redirecttests controleren de bestaande algemene auth-callbackbestemmingen: interne Discord-, herstel- en e-mailpaden blijven behouden; externe, protocolrelatieve, backslash- en control-character-varianten worden geweigerd na URL-normalisatie.
 
-## Open live acceptatie
+## GitHub en DEV-uitrol
 
-Nog niet uitgevoerd: Supabase Twitch-providerconfiguratie, echte OAuth-consent/PKCE, providerconflict tussen twee BESC-accounts, gewijzigde sessie met echte provider, laatste-identiteitbescherming door Cloud Auth, ontkoppelen/herkoppelen en visuele controle in lichte/donkere modus. Zie het afzonderlijke [DEV-controleplan](../wiki/Persoonlijke-accountkoppelingen.md).
+PR [#108](https://github.com/missrinam80-besc/besc-commandcenter/pull/108) is na expliciete goedkeuring en groene controles gemerged als `6756a80315fd4c54e1c6f47996e35a39edf60436`. De GitHub-controles omvatten de 915 tests, database/API-concurrencycontroles en de Linux/Turbopack-build. De DEV-imagebouw is geslaagd.
 
-Er zijn geen Cloud-migraties, live accountkoppelingen, flags, clientscopes, saldi, StreamElements-instellingen, Streamer.bot-acties of botserverinstellingen gewijzigd. De featureflag is standaard false. Geen merge of deploy uitgevoerd.
+De gebruiker heeft de nieuwe CC-image op BESCSRVDEV uitgerold en een gezonde webservice en aanwezige Twitchroute bevestigd. Daarna heeft de gebruiker de afzonderlijke Twitch OAuth-app en Supabase DEV-provider opgeslagen, met behoud van de bestaande Discord-provider en redirects. De exacte CC-return-URL is toegevoegd. Er was geen SQL-migratie nodig.
+
+De afzonderlijke activering bevestigde `BESC_TWITCH_IDENTITY_LINKING_ENABLED=true`, dezelfde webimage, ongewijzigde Caddy, botclients en overige instellingen, en een gezonde webservice. Handmatige configuratieback-up: `.env.production.backup-twitch-link-20261018T203621817756Z`. Het voorbeeldbestand blijft standaard `false`.
+
+## Door gebruiker bevestigde DEV-proeven
+
+- Persoonlijk Twitchaccount koppelen vanuit Mijn account: werkt. De bestaande Discordkoppeling bleef werken en het Bucks-saldo bleef gelijk.
+- Twitch ontkoppelen en opnieuw koppelen: door de gebruiker bevestigd als volledig werkend na de instructie om ook sessie, Discord en saldo te controleren.
+- Twitchtoestemming annuleren/weigeren: door de gebruiker bevestigd als werkend na de instructie om terugkeer zonder nieuwe koppeling en behoud van BESC-sessie, Discord en saldo te controleren.
+
+Dit is acceptatie van de normale persoonlijke gebruikersflow op DEV, gebaseerd op de terugmeldingen van de gebruiker; geen onafhankelijke herhaling van iedere UI-stap.
+
+## Resterende live controles en grenzen
+
+Nog niet afzonderlijk live bewezen: een Twitchaccount dat al bij een ander BESC-account hoort, een verlopen of gewisselde echte sessie, bescherming van de laatste inlogidentiteit door Cloud Auth en expliciete visuele controle in lichte en donkere modus. De geslaagde OAuth-flow bewijst geen afzonderlijke adversariële state/PKCE-test. Zie het [DEV-controleplan](../wiki/Persoonlijke-accountkoppelingen.md).
+
+Deze ronde wijzigde geen botserver, clientscopes, Bucks-saldi, StreamElements-instellingen of Streamer.bot-acties. Automatisch verdienen en de Discord-slotkeuze blijven uit. Saldo-overname is niet uitgevoerd. De persoonlijke Twitchkoppeling staat op DEV aan; een productieactivering is niet uitgevoerd. Een gekoppelde Auth-identiteit bewijst op zichzelf geen doorlopende providerautorisatie voor toekomstige verdienregels.
