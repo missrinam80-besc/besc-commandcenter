@@ -16,6 +16,11 @@ async function purpose(){const p=await f.call('consent.purpose',{purpose_code:'p
 async function consent(){const p=await purpose();return(await f.call('consent.give',{purpose_id:p,scope:{fields:['display_name']},accepted:true})).id;}
 const payload=()=>({title:'TESTFIXTURE — NIET PUBLICEREN',summary:'Uitsluitend synthetische proef',slug:'testfixture-niet-publiceren',locale:'nl-BE',body:{format:'sanitized_html',value:'<p>Uitsluitend test.</p>'},media:[]});
 
+test('C05/C06: doelintrekking beëindigt ook een tweede verklaring voor dezelfde tekstversie',async()=>{
+ const p=await purpose();const a=await f.call('consent.give',{purpose_id:p,scope:{fields:['display_name']},accepted:true}),b=await f.call('consent.give',{purpose_id:p,scope:{fields:['display_name']},accepted:true});await f.call('consent.withdraw',{id:a.id});
+ assert.equal((await f.db.query<{ok:boolean}>(`select private.f1_consent_valid(${q(f.ids.org)},${q(b.id)}) ok`)).rows[0].ok,false);
+});
+
 test('U03/U05/U06: nieuwe conceptversie laat goedgekeurd snapshot staan; ingetrokken mediarechten blokkeren gebruik',async()=>{
  const mediaPayload={...payload(),media:[{url:'https://example.invalid/public/photo.png',alt:'TESTFIXTURE afbeelding',credit:'TESTFIXTURE'}]};
  const first=await publication({payload:mediaPayload,media_rights_document_id:f.ids.policyDoc});await f.call('publication.submit',{id:first.id,expected_hash:first.expected_hash});await f.actor(f.ids.reviewer);await f.call('publication.review',{id:first.id,expected_hash:first.expected_hash,decision:'approved_for_publication',reason:'TESTFIXTURE rechten beoordeeld',rights_confirmed:true});

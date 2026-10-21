@@ -63,8 +63,9 @@ declare answer uuid;p public.processing_purposes;c public.consent_records;person
  elsif op='consent.withdraw' then
   select * into c from public.consent_records where organization_id=o and id=(d->>'id')::uuid and account_user_id=auth.uid();
   if not found then raise exception 'f1_not_available' using errcode='42501';end if;
-  insert into public.consent_withdrawals(organization_id,consent_id,withdrawn_by,reason) values(o,c.id,auth.uid(),left(d->>'reason',2000)) on conflict(consent_id) do nothing returning id into answer;
-  if answer is null then select id into answer from public.consent_withdrawals where consent_id=c.id;end if;
+  -- A second acceptance of the same purpose must not survive goal withdrawal.
+  insert into public.consent_withdrawals(organization_id,consent_id,withdrawn_by,reason) select o,x.id,auth.uid(),left(d->>'reason',2000) from public.consent_records x where x.organization_id=o and x.person_id=c.person_id and x.account_user_id=auth.uid() and x.purpose_id=c.purpose_id on conflict(consent_id) do nothing;
+  select id into answer from public.consent_withdrawals where consent_id=c.id;
  else raise exception 'f1_unknown_operation';end if;
  if answer is null then raise exception 'f1_not_available';end if;return jsonb_build_object('id',answer);
 end$$;
