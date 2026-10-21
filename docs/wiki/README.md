@@ -18,6 +18,7 @@ Deze wiki bundelt de handleidingen uit de repository in een klikbaar overzicht. 
 - [Data-import en templates](Data-import.md)
 - [Release en acceptatie](Release-en-acceptatie.md)
 - [Ecosysteembasis en uitvoering](Ecosysteem-basis-en-uitvoering.md)
+- [Volledig F0-voorbereidingspakket](../f0/README.md)
 - [Historische notities](Historische-notities.md)
 
 ## Huidige omgeving

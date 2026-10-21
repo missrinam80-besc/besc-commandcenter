@@ -4,6 +4,8 @@
 
 Werkpakket F0.1, gestart op 21 oktober 2026 vanuit het masterplan van 20 oktober. Doel: bestaande bouwstenen, rechten en migratieverschillen controleerbaar maken en de eerste afgebakende correctie opleveren. Dit is een voorbereidings- en codepakket; het herstelt nog geen Cloud-migratiehistorie en verleent geen formele bevoegdheden.
 
+De verdiepte beoordeling is nu opgenomen in het [volledige F0-pakket](../f0/README.md). Alle 118 migraties zijn native op PostgreSQL 17.6 uitgevoerd en de beschreven schema-effecten komen overeen met Cloud. Er zijn 33 voorwaardelijke historiekandidaten en één inhoudelijke uitzondering: de vijf kennisbank-startartikelen ontbreken. De voorzitter is bevestigd voor bewijscontrole en formele goedkeuring; er zijn geen accounts of rechten toegewezen.
+
 ## Bronregister
 
 | Onderdeel | Vastgesteld | Bewijs en grens |
@@ -95,13 +97,13 @@ Te bevestigen vóór uitvoering: formele bevoegdheden en reviewers; regels voor 
 | Resultaat | Status in F0.1 |
 | --- | --- |
 | Actuele bronversies en metadata-inventaris | Gecontroleerd op 21 oktober; lokale JSON-bewijzen buiten Git. |
-| Verschillenlijst migratiehistorie | 34 verschillen geïdentificeerd; volledige effectbeoordeling en historieherstel nog open. |
-| Rechtenmatrix en minimale domeincontracten | Uitgewerkt als voorstel, geen nieuwe rechten toegekend. |
+| Verschillenlijst migratiehistorie | Verdiept: 33 voorwaardelijke historiekandidaten en één inhoudelijke uitzondering. Historieherstel nog niet uitgevoerd. |
+| Rechtenmatrix en minimale domeincontracten | Uitgewerkt; voorzitter als controleur/beslisser bevestigd. Overige keuzes herkenbaar als voorstel; geen nieuwe rechten toegekend. |
 | Eerste codecorrectie | Geïmplementeerd; 970 tests, lint, TypeScript en lokale productiebuild geslaagd. Zie het [acceptatieverslag](../acceptatie/ECOSYSTEEM-BASIS-F01-20261021.md). |
 | Governancebewijs en partnerrollen | Impact en acceptatiecriteria uitgewerkt; implementatie volgt afzonderlijk. |
 | Cloud- of serverwijzigingen | Niet uitgevoerd. |
 
-F0.1 maakt de volgende wijzigingen beoordeelbaar. De bredere F0-poort blijft open totdat de schema-effecten zijn beoordeeld en de rechten-/beleidskeuzes voor de eerste governance- en publicatieketen zijn bevestigd. Geen planning, budget of productiestatus is hiermee automatisch vastgesteld.
+De voorbereiding van F0 is uitgewerkt in het gekoppelde volledige pakket. Vaststelling, de inhoudelijke seed-afhandeling, live historieherstel en DEV-schermacceptatie blijven afzonderlijke stappen. Geen planning, budget of productiestatus is hiermee automatisch vastgesteld.
 
 ## DEV-acceptatie van de eerste correctie
 

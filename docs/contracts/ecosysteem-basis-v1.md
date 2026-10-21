@@ -2,6 +2,8 @@
 
 Werkvoorstel van 21 oktober 2026. Dit beschrijft de volgende bouwstappen; het introduceert nog geen tabellen, API-routes, scopes of live bevoegdheden. De correctie voor campagnemetingen is afzonderlijk geïmplementeerd. Zie [werkpakket F0.1](../wiki/Ecosysteem-basis-en-uitvoering.md).
 
+Aanvulling na de volledige F0-toetsing: de voorzitter van het bestuur is door Linda bevestigd voor bewijscontrole en formele goedkeuring van bestuursbesluiten en verplichtingen. De [besluitkaart](../f0/Besluiten-en-bevoegdheden.md) bewaart die afspraak; het [impactontwerp](../f0/Datamodel-en-api-impact.md) benoemt de nog ontbrekende geverifieerde koppeling tussen verenigingslid en account. De overige voorstellen worden niet als verleende live bevoegdheden aangemerkt.
+
 ## Bestaande gegevens hergebruiken
 
 | Behoefte | Bestaande bron | Minimale uitbreiding en beperking |

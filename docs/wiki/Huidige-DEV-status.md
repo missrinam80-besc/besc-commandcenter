@@ -10,6 +10,8 @@ De opaque-ID-vervolgmigratie uit PR #110 is op 20 oktober op Cloud DEV uitgevoer
 
 De meetweergavecorrectie uit F0.1 is een nieuwe codewijziging en nog niet op DEV geaccepteerd. De onderstaande momentopname van 17 oktober en de aanvulling van 18 oktober behouden hun historische context.
 
+De [volledige F0-voorbereiding](../f0/README.md) bevat inmiddels een geslaagde native replay van 118 migraties en een overeenkomende vergelijking van de beschreven Cloud-schema-effecten. Bij de read-only gegevenscontrole ontbreken vijf kennisbank-startartikelen; deze seed wordt apart behandeld. Er is nog geen live historieherstel, bevoegdheidstoekenning of artikelinvoer uitgevoerd.
+
 Dit is een gedateerde momentopname, geen automatische uitlezing van de servers. Bronnen zijn de code op CC-main `6db618aac85a5577c71e7b34f96bc023db9ae879`, bot-main `9050b2966c569ba19e5862eefe48da0ff01f4d0f`, controles via CC-webbeheer en de door de gebruiker aangeleverde serveruitvoer en Discordresultaten. Latere configuratiewijzigingen vragen een nieuwe controle.
 
 ## Aanvulling 18 oktober: persoonlijke Twitchkoppeling
