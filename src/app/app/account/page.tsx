@@ -144,7 +144,7 @@ export default async function AccountPage({
         <span className="account-security-badge"><ShieldCheck size={16}/>Beveiligde accountomgeving</span>
       </header>
       <div className="module-body account-module">
-        <p className="lead">Beheer je persoonlijke profiel, inloggegevens, voorkeuren en gekoppelde accounts.</p>
+        <p className="lead">Beheer je persoonlijke profiel, inloggegevens, voorkeuren en gekoppelde accounts.</p><p><Link href="/app/account/toestemming">Mijn verklaringen en toestemming beheren</Link> · <Link href="/app/administratie/werkstromen">Mijn toegewezen werkstromen</Link></p>
         {query.succes && <div className="success">{successMessages[query.succes] || "De wijziging is opgeslagen."}</div>}
         {query.fout && <div className="error-note">{errorMessages[query.fout] || "De wijziging is mislukt."}</div>}
 

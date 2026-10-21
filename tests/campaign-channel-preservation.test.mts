@@ -1,3 +1,4 @@
+import * as f1Workflows from "../src/lib/f1-workflows.ts";
 import * as contactTabHelpers from "../src/lib/contact-dossier-tabs.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -10,7 +11,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { operationalModules } from "../src/app/app/operations/config.ts";
 import { campaignTemplates } from "../src/lib/campaign-templates.ts";
 
-const require = ((native) => (name: string) => name === "@/lib/contact-dossier-tabs" ? contactTabHelpers : native(name))(createRequire(import.meta.url));
+const require = ((native) => (name: string) => name === "@/lib/f1-workflows" ? f1Workflows : name === "@/lib/contact-dossier-tabs" ? contactTabHelpers : native(name))(createRequire(import.meta.url));
 const id = "11111111-1111-4111-8111-111111111111";
 function load(path: string, overrides: Record<string, unknown>) {
   const compiled = { exports: {} as Record<string, unknown> };

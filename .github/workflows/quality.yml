@@ -10,6 +10,45 @@ permissions:
   contents: read
 
 jobs:
+  f1-native-acceptance:
+    name: F1 rechten en concurrency PostgreSQL 17
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres-f1:
+        image: postgres:17.6
+        env:
+          POSTGRES_DB: besc_f1_fixture
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: fixture-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d besc_f1_fixture"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: F1-migraties en daadwerkelijke rolweigeringen
+        run: node --test tests/f1-database.test.mts
+        env:
+          F1_NATIVE_TEST: '1'
+          PGHOST: 127.0.0.1
+          PGDATABASE: besc_f1_fixture
+          PGUSER: postgres
+          PGPASSWORD: fixture-only
+      - name: F1-intrekkingen en gelijktijdige beslissingen
+        run: node tests/f1-concurrency.mjs
+        env:
+          PGHOST: 127.0.0.1
+          PGDATABASE: besc_f1_fixture
+          PGUSER: postgres
+          PGPASSWORD: fixture-only
   foundation-schema-replay:
     name: Volledige schemaopbouw PostgreSQL 17
     runs-on: ubuntu-latest

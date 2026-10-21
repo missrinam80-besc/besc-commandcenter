@@ -6694,6 +6694,14 @@
         "reference": null
       },
       {
+        "name": "unknown_deadline_reason",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "options": [],
+        "reference": null
+      },
+      {
         "name": "status",
         "type": "text",
         "required": false,

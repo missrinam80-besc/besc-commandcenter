@@ -145,6 +145,7 @@ export async function saveComplianceDeadline(formData: FormData) {
         "other",
       ]),
       due_date: z.string().optional(),
+      unknown_deadline_reason: z.string().trim().max(2000).optional(),
       recurrence: z.enum(["once", "monthly", "quarterly", "yearly"]),
       status: z.enum(["open", "planned", "completed", "cancelled", "not_applicable"]),
       responsible_id: optionalUuid,
