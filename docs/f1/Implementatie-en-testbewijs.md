@@ -58,4 +58,7 @@ CC blijft op BESCSRVDEV in '/opt/besc-dev/command-center'. Botserver BESCSRVDEV-
 
 ## Oplevercontrole
 
-Laatste lokale en CI-uitkomsten worden hier na afronding van de controles vastgelegd.
+- Volledige lokale opleversuite: **1.019 geslaagd, 0 mislukt, 0 overgeslagen**. Daarbinnen 42 gerichte F1-proeven: 35 echte databaseproeven en zeven interface-/contract-/manifestproeven.
+- Lint, typecontrole en productiebuild slagen. Beide editorcataloguscontroles controleren 22 dossiermodellen; 132 lokale documentatielinks zijn teruggevonden. Alle 118 historische migratiebestanden zijn ongewijzigd ten opzichte van de F0-baseline.
+- Native PostgreSQL 17.6 wordt in drie controlejobs bij [PR #112](https://github.com/missrinam80-besc/besc-commandcenter/pull/112/checks) bevestigd: F1-operaties plus vier echte concurrencyproeven, volledige schemaopbouw en de bestaande integratie-/rechten-/buildsuite. Het native log en de schema-artifact vermelden de werkelijk geteste commit; beoordeel altijd de headrevisie. De laatste codecorrectie laat partnerrollen de Belgische kalenderdag volgen, ook bij een andere sessietijdzone.
+- De [acceptatiematrix](acceptatiegevallen.json) bewaart de afzonderlijke nog uit te voeren DEV-proeven. Er is geen Cloud-migratie, serverdeploy, echte bootstrap, doelactivering of menselijke DEV-acceptatie uitgevoerd.

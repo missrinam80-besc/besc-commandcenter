@@ -11,7 +11,7 @@ create index f1_partner_role_proof on public.partner_roles(proof_document_id);
 create index f1_partner_role_actor on public.partner_roles(created_by);
 alter table public.record_relationships add column contribution_role text check(contribution_role in('sponsor','esports','community','event','education','social_impact'));
 alter table public.record_relationships add column role_provenance text not null default 'legacy_classification' check(role_provenance in('legacy_classification','explicit_review'));
-create function private.f1_partner_guard() returns trigger language plpgsql security definer set search_path='' as $$declare relevant boolean;chosen text;selected_partner uuid;begin
+create function private.f1_partner_guard() returns trigger language plpgsql security definer set search_path='' set timezone='Europe/Brussels' as $$declare relevant boolean;chosen text;selected_partner uuid;begin
  -- The contribution setting is untrusted input, never an authorization token.
  -- The invoker editor keeps its original RLS and child-table grants throughout.
  chosen:=nullif(current_setting('besc.f1_partner_contribution',true),'');
@@ -31,7 +31,7 @@ end$$;
 revoke all on function private.f1_partner_guard() from public,anon,authenticated,service_role;
 create trigger f1_campaign_partner before insert or update on public.campaigns for each row execute function private.f1_partner_guard();
 create trigger f1_relationship_partner before insert or update on public.record_relationships for each row execute function private.f1_partner_guard();
-create function private.f1_partner(o uuid,op text,d jsonb) returns jsonb language plpgsql security definer set search_path='' as $$declare answer uuid;p uuid;contribution text;source_t text;source_i uuid;v jsonb;begin
+create function private.f1_partner(o uuid,op text,d jsonb) returns jsonb language plpgsql security definer set search_path='' set timezone='Europe/Brussels' as $$declare answer uuid;p uuid;contribution text;source_t text;source_i uuid;v jsonb;begin
  if not private.f1_role(o,'partner_editor') then raise exception 'f1_partner_access_required' using errcode='42501';end if;
  if op='partner.revoke' then update public.partner_roles set revoked_at=clock_timestamp() where organization_id=o and id=(d->>'id')::uuid and revoked_at is null returning id into answer;
  else
