@@ -1,0 +1,388 @@
+{
+  "format": "besc-f0-migration-review-v1",
+  "prepared_at": "2026-10-21",
+  "execution_authorized": false,
+  "source_main": "279c607691883acd5f4ec8c6b12c7ce62e3b3920",
+  "native_source_commit": "9ece166e3a5f686f0ef70a3acd63a4d7cfde1514",
+  "cloud_checked_at_utc": "2026-10-21T05:52:40.430338+00:00",
+  "history_registered_count": 84,
+  "source_migration_count": 118,
+  "schema_effects": {
+    "tables": {
+      "reference": 118,
+      "actual": 118,
+      "matched": 118
+    },
+    "constraints": {
+      "reference": 850,
+      "actual": 850,
+      "matched": 850
+    },
+    "indexes": {
+      "reference": 418,
+      "actual": 418,
+      "matched": 418
+    },
+    "triggers": {
+      "reference": 107,
+      "actual": 107,
+      "matched": 107
+    },
+    "policies": {
+      "reference": 298,
+      "actual": 298,
+      "matched": 298
+    },
+    "enums": {
+      "reference": 7,
+      "actual": 7,
+      "matched": 7
+    },
+    "functions": {
+      "reference": 143,
+      "actual": 143,
+      "matched": 143
+    },
+    "views": {
+      "reference": 1,
+      "actual": 1,
+      "matched": 1
+    },
+    "sequences": {
+      "reference": 2,
+      "actual": 2,
+      "matched": 2
+    },
+    "schema_usage": {
+      "reference": 2,
+      "actual": 2,
+      "matched": 2
+    }
+  },
+  "formatting_only_functions": [
+    {
+      "id": "private|can_manage_discord_bot|p_org uuid",
+      "reference_md5": "43461fd35fed6b62425e2464d1ead949",
+      "actual_md5": "09dd3d08f3593db220bb0121a25d22a8",
+      "review": "lexical_match_preserving_quoted_values"
+    },
+    {
+      "id": "private|discord_answers|t jsonb, a jsonb",
+      "reference_md5": "9daceed2649ffbc88b526deea0b66f84",
+      "actual_md5": "ef78943725906495cfd155070038f3ff",
+      "review": "lexical_match_preserving_quoted_values"
+    },
+    {
+      "id": "private|discord_embed_valid|e jsonb",
+      "reference_md5": "eea474771a59dfe7c0341621a909b8e0",
+      "actual_md5": "6640560081fa56e20a50a44142c4bdf3",
+      "review": "lexical_match_preserving_quoted_values"
+    },
+    {
+      "id": "private|discord_type_valid|t jsonb",
+      "reference_md5": "ee17df8d7c2b0587a3548c7eb88efdaf",
+      "actual_md5": "c6c794a95435e1e2c151c61802459f26",
+      "review": "lexical_match_preserving_quoted_values"
+    },
+    {
+      "id": "private|guard_community_document|",
+      "reference_md5": "8c10e7f3fb843a2d4c35230089ba5755",
+      "actual_md5": "c89455a507d0e521602ef17d3383f36e",
+      "review": "lexical_match_preserving_quoted_values"
+    },
+    {
+      "id": "public|discord_bot_operation|p_org uuid, p_client text, p_guild text, p_op text, p_data jsonb",
+      "reference_md5": "7a35c1562cc6e690f517a50faa8783a6",
+      "actual_md5": "0953efbc9f4139758a6d1ff033157fc8",
+      "review": "lexical_match_preserving_quoted_values"
+    },
+    {
+      "id": "public|guard_event_activity|",
+      "reference_md5": "0dae1950e222666d0c43da787ae0b435",
+      "actual_md5": "fd988f84d43807b36649026c0839030b",
+      "review": "lexical_match_preserving_quoted_values"
+    },
+    {
+      "id": "public|guard_event_material|",
+      "reference_md5": "33b5756fdc06b25fb48772d913b10bc6",
+      "actual_md5": "3420226a1884cc23549f09cd5b3dcf02",
+      "review": "lexical_match_preserving_quoted_values"
+    },
+    {
+      "id": "public|guard_event_schedule|",
+      "reference_md5": "8012c51b8059435e78a6e560e9e21e36",
+      "actual_md5": "c86389fa7da35a3fd748699365eda521",
+      "review": "lexical_match_preserving_quoted_values"
+    },
+    {
+      "id": "public|save_dossier_bundle|p_organization_id uuid, p_bundle jsonb",
+      "reference_md5": "b84f1d0085b72a95a523650f0e49e3fb",
+      "actual_md5": "5a7662c84c4f3256bc112d8352b9a890",
+      "review": "lexical_match_preserving_quoted_values"
+    },
+    {
+      "id": "public|ticket_bot_operation|p_org uuid, p_client text, p_guild text, p_op text, p_data jsonb",
+      "reference_md5": "c0a3318aee135ea500cd50cc58e57c4f",
+      "actual_md5": "dc5a95b8758d7988b320008f2ee48e4b",
+      "review": "lexical_match_preserving_quoted_values"
+    }
+  ],
+  "scope": "Schema structure, effective privileges for anon/authenticated/service_role and selected function lexical review. Not historical execution proof, business-data equality, platform-service acceptance or write authorization.",
+  "data_state": {
+    "format": "besc-foundation-data-state-v1",
+    "read_only": "on",
+    "checked_at_utc": "2026-10-21T05:42:28.75551+00:00",
+    "interpretation": "Current-state checks only. Missing guideline titles or contact candidates may be deliberate changes; they do not authorize a backfill or prove historical execution.",
+    "valid_root_links": 1,
+    "legacy_streamer_roles": 0,
+    "guideline_titles_missing": 5,
+    "guideline_titles_expected": 5,
+    "expense_proof_bucket_private": true,
+    "finance_sources_not_restricted": 0,
+    "ticket_server_bindings_missing": 0,
+    "configuration_revisions_missing": 0,
+    "root_links_without_registry_source": 0,
+    "eligible_accounts_without_active_contact": 0,
+    "eligible_accounts_with_deliberately_deleted_contact": 0
+  },
+  "rows": [
+    {
+      "version": "20260927100000",
+      "file": "20260927100000_allow_project_campaign_email_communications.sql",
+      "sha256_lf": "b924dfa3c5c4537cb74944fbba1aa33a372072a447438c30a67acc8d778b4cee",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261001100000",
+      "file": "20261001100000_add_email_communication_soft_delete.sql",
+      "sha256_lf": "2698e75a4441651a9fc4e19a85e22058b32159656765c17f62494430a4fa2b60",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261001110000",
+      "file": "20261001110000_seed_operational_guidelines.sql",
+      "sha256_lf": "1c97499bb5bcd37c7c1b4605ddf261f12541d66879ef5a2bfc04eaf0c2802af7",
+      "classification": "content_exception_do_not_mark_applied",
+      "review": "Vijf verwachte kennisbanktitels ontbreken. Geen registratieherstel; inhoudskeuze en afhandeling afzonderlijk besluiten."
+    },
+    {
+      "version": "20261002171936",
+      "file": "20261002171936_social_mcp_oauth.sql",
+      "sha256_lf": "7080579c5e4e5648e1ceddacd5eb76c69972021e1ce401ed77a2da3c2149102b",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261003100000",
+      "file": "20261003100000_add_streamteam_person_role.sql",
+      "sha256_lf": "c1b17d07d3cd2013fca2d92081484f1348b750550b4800ad7b65dc9163c7155b",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige rollenconstraint equivalent; nul oude streamerrollen."
+    },
+    {
+      "version": "20261007193759",
+      "file": "20261007193759_event_materials.sql",
+      "sha256_lf": "f92ff4bb7e7167177d11a5763d4f856c886b051a80047d400e7b8335a0e3748c",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261007205415",
+      "file": "20261007205415_event_schedule.sql",
+      "sha256_lf": "35eeea8de89f38f36dcdc6a36611aadd73faed6dfe448ae06167f951619c3c06",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261008051115",
+      "file": "20261008051115_event_giveaways.sql",
+      "sha256_lf": "fc7e0b36409ee56707c3a65ca3aa70fe8e03a724d3745babf7afe4cb1bb83bee",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261008052243",
+      "file": "20261008052243_event_registrations.sql",
+      "sha256_lf": "a961979ff1bb81d6ce3c912ca7f3d2fb22a33d83b642615086158d9a44ea6aca",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261008065014",
+      "file": "20261008065014_account_community_contacts.sql",
+      "sha256_lf": "f95e59e7edaf8b34acbb7fa756289fac85e4ed0f9933e17c7a37077a6a72c6b2",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Accountcontact-functies/triggers equivalent; nul ontbrekende actieve accountcontacten in de gecontroleerde doelgroep."
+    },
+    {
+      "version": "20261008070508",
+      "file": "20261008070508_contact_account_intake.sql",
+      "sha256_lf": "babe18d646fe265e17b339d5d49879b343ad136d37c48bca24e2559e9bb5b193",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261008074044",
+      "file": "20261008074044_community_contact_documents.sql",
+      "sha256_lf": "7a04258ff48685aafdcebf460a10e01455459870cab8d79b1c32dddc06a5bb42",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261008094405",
+      "file": "20261008094405_unified_dossier_editor.sql",
+      "sha256_lf": "402f99fbab42547f8c8a6277a80c600224392de05dc04ea7097d15f22695409d",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261009074806",
+      "file": "20261009074806_managed_dossier_choices.sql",
+      "sha256_lf": "08297fb63308eb0ce3e828570c69ca797007689c5bc4f4f520c8a77b5fb14a69",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Definitieve keuze-catalogus, veldconstraints, validators, triggers en kolomrechten vergeleken. Bestaande beheerlabels worden niet overschreven."
+    },
+    {
+      "version": "20261009095014",
+      "file": "20261009095014_managed_agenda_types.sql",
+      "sha256_lf": "4aa11adb78b0d0436e81bf4667894bb8ebec5a1f15f99cf10506a5616e01079b",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Agenda-catalogus, constraintvervanging, validator en index equivalent. Beheerdata blijft behouden."
+    },
+    {
+      "version": "20261009100412",
+      "file": "20261009100412_bulk_asset_actions.sql",
+      "sha256_lf": "629ad601161ca4743a90463e58585aad6c77887633881714065eecf72957d2e5",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261011130951",
+      "file": "20261011130951_ticketing_v1.sql",
+      "sha256_lf": "90904d9e82b1b9fdcafc33dde8e254ab4e82465b2fbd9afc2aa51bfc6b8ee3b9",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261012125349",
+      "file": "20261012125349_asset_fiche_followup.sql",
+      "sha256_lf": "b2ee10a6845880b375942bd653cbaf67ecef88017f94111f2263faf76d9e4562",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Acquisitie-/reparatieguards, documentlinks en labelcatalogus equivalent; bestaande waarden en labels niet opnieuw seeden."
+    },
+    {
+      "version": "20261012125447",
+      "file": "20261012125447_asset_editor_catalog.sql",
+      "sha256_lf": "5093d3239ae387f5d96c89da32055095ecb87df5e988e6ae15ecbed4de80fd71",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261012125922",
+      "file": "20261012125922_central_document_registry.sql",
+      "sha256_lf": "9ebd4190196c4556cc2a80b3f8644762f489fbc9c8f2da7faada5fec96df7989",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Register en registratietriggers equivalent; nul ontbrekende actuele bronverwijzingen en nul onbeschermde financiële bronnen in de controle."
+    },
+    {
+      "version": "20261012125923",
+      "file": "20261012125923_asset_reservations.sql",
+      "sha256_lf": "ecd77d871a0628c32335143cdd1cf6ab927c3b569649b0eb18413932e0f06b08",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261012130608",
+      "file": "20261012130608_duplicate_materials.sql",
+      "sha256_lf": "634e717e937eeb8811ee06c1574ee5c91b9b16fa5806d7b6d76e518195c0f151",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261012185859",
+      "file": "20261012185859_discord_ticketing_v2.sql",
+      "sha256_lf": "15833a4f75838b65b66a96c6a7d663dc73781efece11100c504b59a72c648a82",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Ticketingstructuur en definitieve functies equivalent; nul ontbrekende actuele ticketserverbindingen."
+    },
+    {
+      "version": "20261012195715",
+      "file": "20261012195715_event_activities_agenda.sql",
+      "sha256_lf": "f0cd543b25260054521e3455dc16b43124174a53e3346af1d7300c572f683264",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Activiteitenstructuur en definitieve agenda-/keuzecatalogus equivalent; beheerlabels blijven behouden."
+    },
+    {
+      "version": "20261012195737",
+      "file": "20261012195737_event_editor_catalog.sql",
+      "sha256_lf": "32a644d1983a1511532b09b96666b871570f0dfe16166d71307c27499923eb33",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261014120609",
+      "file": "20261014120609_expense_inbox_intake.sql",
+      "sha256_lf": "4023771bebeecd837261d6d7c4c547e261c6f9cc8eb3bf0ca30751c6cdc4f82e",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Intakestructuur en relevante Storage-policies equivalent; private expense-proofs-bucket met verwachte limiet aanwezig."
+    },
+    {
+      "version": "20261014213254",
+      "file": "20261014213254_event_slot_bookings.sql",
+      "sha256_lf": "bc54dc14b55e0a01a73942a89c70842761979bd886c507134cc1c08e6a3f1f32",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261015115523",
+      "file": "20261015115523_discord_configuration_revision.sql",
+      "sha256_lf": "b6e4a0e18c4a42b5ca723c86dabfff7b799f4dc9b31b9ef0a01061db16da771b",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Revisie-default, NOT NULL en triggers equivalent; nul lege configuratierevisies."
+    },
+    {
+      "version": "20261016062843",
+      "file": "20261016062843_discord_channel_check_contract.sql",
+      "sha256_lf": "35e9b271fe80ecc0e0ff4b39c227fb8de33ac65852ff5af2e7c491ef6c66d8dd",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261016083106",
+      "file": "20261016083106_discord_ticket_intake_schema_access.sql",
+      "sha256_lf": "4eaa1dcfb8f16220c756065841e9242462b38ae31f5ea970bf629e1e7cac1cf0",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "USAGE op private voor service_role aanwezig; schema- en objectrechten afzonderlijk vergeleken."
+    },
+    {
+      "version": "20261016102010",
+      "file": "20261016102010_discord_ticket_intake_transcript.sql",
+      "sha256_lf": "db9c193c47ff9e118f17f1c059ed1cf009a9435f7ae1aed32bf3dc30e8146bdb",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261017162100",
+      "file": "20261017162100_bucks_xp_v1.sql",
+      "sha256_lf": "8507fcfd05dfcbe1be4d25aedbf0ca7d5a9e88be5bbdfa8f126b5931e910af4f",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261018213441",
+      "file": "20261018213441_rewards_intake_receipts.sql",
+      "sha256_lf": "90b58fbc6394471e8f7f773be48991d7e4d04c6c1a782863700f9ff0b66b2c77",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Huidige schema-effecten vergeleken in de volledige eindtoestand; latere vervangingen meegenomen. Geen oude SQL herhalen."
+    },
+    {
+      "version": "20261019221404",
+      "file": "20261019221404_rewards_intake_opaque_message_ids.sql",
+      "sha256_lf": "7fe3de9329af2c8ee7e83893d6f67c010a53184ab04ec16390077a76a414bd8e",
+      "classification": "conditional_history_candidate_requires_fresh_preflight",
+      "review": "Nieuwste private intakefunctie exact gelijk na CRLF-normalisatie; browserrollen uitgesloten."
+    }
+  ]
+}

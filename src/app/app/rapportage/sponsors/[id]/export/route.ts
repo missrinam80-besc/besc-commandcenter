@@ -1,3 +1,4 @@
+import { campaignMetricExportValue } from "@/lib/campaign-metrics";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { managementPeriod, type ReportPeriod, kpiTargetLabel, targetDirectionLabels, measuredValue } from "@/lib/management-report";
 import { isActiveSponsor } from "@/lib/reporting-scope";
@@ -22,7 +23,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const campaignRows = (campaigns.data ?? []).filter((item) => (!item.start_date || item.start_date < end) && (!item.end_date || item.end_date >= start));
   const campaignIds = new Set(campaignRows.map((item) => item.id));
   const metricRows = (kpis.data ?? []).filter((item) => item.partner_id === id || (item.campaign_id && campaignIds.has(item.campaign_id)));
-  const rows: unknown[][] = [["Sponsorrapport", partner.data.name], ["Periode", range.label], [], ["Campagnes"], ["Naam", "Status", "Start", "Einde", "Waarde", "Impressies", "Kliks"], ...campaignRows.map((item) => [item.title, item.status, item.start_date, item.end_date, item.value, item.impressions, item.clicks]), [], ["KPI's"], ["Naam", "Metric", "Waarde", "Doel", "Meetstatus", "Doelrichting", "Beoordeling", "Eenheid", "Bron", "Methode", "Definitie"], ...metricRows.map((item) => [item.name, item.metric, measuredValue(item) ?? "Ontbrekende meting", item.target, item.measurement_status, targetDirectionLabels[item.target_direction] ?? targetDirectionLabels.unknown, kpiTargetLabel(item), item.unit, item.source, item.collection_method, item.metric_definition])];
+  const rows: unknown[][] = [["Sponsorrapport", partner.data.name], ["Periode", range.label], [], ["Campagnes"], ["Naam", "Status", "Start", "Einde", "Waarde", "Impressies", "Kliks"], ...campaignRows.map((item) => [item.title, item.status, item.start_date, item.end_date, item.value, campaignMetricExportValue(item.impressions), campaignMetricExportValue(item.clicks)]), [], ["KPI's"], ["Naam", "Metric", "Waarde", "Doel", "Meetstatus", "Doelrichting", "Beoordeling", "Eenheid", "Bron", "Methode", "Definitie"], ...metricRows.map((item) => [item.name, item.metric, measuredValue(item) ?? "Ontbrekende meting", item.target, item.measurement_status, targetDirectionLabels[item.target_direction] ?? targetDirectionLabels.unknown, kpiTargetLabel(item), item.unit, item.source, item.collection_method, item.metric_definition])];
   const body = `\uFEFF${rows.map((row) => row.map(cell).join(";")).join("\r\n")}`;
   return new Response(body, { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="sponsorrapport-${partner.data.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-${start}.csv"` } });
 }

@@ -10,6 +10,41 @@ permissions:
   contents: read
 
 jobs:
+  foundation-schema-replay:
+    name: Volledige schemaopbouw PostgreSQL 17
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres-foundation:
+        image: postgres:17.6
+        env:
+          POSTGRES_DB: besc_foundation_fixture
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: fixture-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d besc_foundation_fixture"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Alle historische migraties ongewijzigd uitvoeren
+        run: node tests/foundation-native-replay.mjs
+        env:
+          PGHOST: 127.0.0.1
+          PGDATABASE: besc_foundation_fixture
+          PGUSER: postgres
+          PGPASSWORD: fixture-only
+      - name: Alleen synthetisch schemabewijs bewaren
+        uses: actions/upload-artifact@v4
+        with:
+          name: foundation-native-effects
+          path: foundation-native-effects.json
+          retention-days: 7
+
   permissions-lint-build:
     name: Rechten, lint en build
     runs-on: ubuntu-latest

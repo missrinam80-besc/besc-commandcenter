@@ -1,3 +1,4 @@
+import { campaignMetricLabel } from "@/lib/campaign-metrics";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { signOut } from "@/app/auth/actions";
@@ -41,7 +42,7 @@ export default async function PortalPage({ searchParams }: { searchParams: Promi
       {sponsor && <>
         <div className="portal-intro"><span>SPONSOR</span><h1>{sponsor.partner.name}</h1><p>Je ziet uitsluitend de campagnes, deliverables en resultaten die aan jouw sponsordossier gekoppeld zijn.</p></div>
         <div className="portal-stats"><article><span>Campagnes</span><strong>{sponsor.campaigns.length}</strong></article><article><span>Deliverables</span><strong>{sponsor.deliverables.filter((item) => ["completed", "approved"].includes(item.status)).length}/{sponsor.deliverables.length}</strong></article><article><span>KPI-metingen</span><strong>{sponsor.kpis.length}</strong></article></div>
-        <section className="portal-panel"><h2>Campagnes</h2>{sponsor.campaigns.map((item) => <article key={item.id}><div><strong>{item.title}</strong><span>{item.start_date ?? "—"} — {item.end_date ?? "—"}</span></div><b>{item.status}</b><span>{number(Number(item.impressions ?? 0))} impressies · {number(Number(item.clicks ?? 0))} klikken</span></article>)}</section>
+        <section className="portal-panel"><h2>Campagnes</h2>{sponsor.campaigns.map((item) => <article key={item.id}><div><strong>{item.title}</strong><span>{item.start_date ?? "—"} — {item.end_date ?? "—"}</span></div><b>{item.status}</b><span>{campaignMetricLabel(item.impressions)} impressies · {campaignMetricLabel(item.clicks)} klikken</span></article>)}</section>
         <section className="portal-panel"><h2>Deliverables</h2>{sponsor.deliverables.map((item) => <article key={item.id}><strong>{item.title}</strong><b>{item.status}</b><span>{item.due_date ?? "Geen deadline"}</span></article>)}</section>
         <section className="portal-panel"><h2>Resultaten</h2>{sponsor.kpis.map((item) => <article key={item.id}><div><strong>{item.metric}</strong><span>{item.source} · {item.collection_method === "api" ? "API" : item.collection_method === "imported" ? "Import" : "Handmatig"}</span></div><b>{number(Number(item.value))} {item.unit}</b><span>Doel {item.target == null ? "—" : number(Number(item.target))}</span></article>)}</section>
       </>}
