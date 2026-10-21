@@ -17,6 +17,7 @@ Deze wiki bundelt de handleidingen uit de repository in een klikbaar overzicht. 
 - [Ontwikkeling en beheer](Ontwikkeling-en-beheer.md)
 - [Data-import en templates](Data-import.md)
 - [Release en acceptatie](Release-en-acceptatie.md)
+- [Ecosysteembasis en uitvoering](Ecosysteem-basis-en-uitvoering.md)
 - [Historische notities](Historische-notities.md)
 
 ## Huidige omgeving

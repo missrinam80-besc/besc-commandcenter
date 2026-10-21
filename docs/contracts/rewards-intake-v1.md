@@ -1,6 +1,6 @@
 # Centrale verdien-API — duurzame ontvangst V1
 
-20 oktober 2026. Basis uit PR #109 gemerged en op DEV gemigreerd/uitgerold; de gebruiker bevestigde gezonde deploy, aanwezige routes en blokkering van uitgeschakelde intake. De wijziging voor opaque bericht-ID's hieronder is lokaal voorbereid; nog niet op DEV gemigreerd of gedeployd. Dit register neemt beperkte bronclaims duurzaam in ontvangst en controleert de actuele accountbinding. Het bevat geen puntenverwerker.
+Bijgewerkt 21 oktober 2026. Basis uit PR #109 en de opaque-ID-vervolgwijziging uit PR #110 zijn op DEV gemigreerd. De gebruiker bevestigde de gezonde webdeploy en blokkering van uitgeschakelde intake. De private functiebody is op 21 oktober opnieuw read-only vergeleken met de Git-migratie; gelijk. Dit register neemt beperkte bronclaims duurzaam in ontvangst en controleert de actuele accountbinding. Het bevat geen puntenverwerker. Zie de [gedateerde baseline en historieverschillen](../wiki/Ecosysteem-basis-en-uitvoering.md).
 
 ## Scheiding van ontvangst, bewijs en beloning
 
@@ -97,7 +97,7 @@ Fouten: 400 ongeldige velden/body/query; 401 ongeldige client; 403 bron/scope/so
 
 ## Grenzen vóór ingebruikname
 
-- De basismigratie en webdeploy uit PR #109 zijn op DEV afgerond. De nieuwe opaque-ID-migratie is nog niet op Cloud uitgevoerd. Geen broncredential, scope, Streamer.bot-wijziging, botdeploy, automatische backup of saldo-overname in deze vervolgwijziging. Intake en automatisch verdienen blijven uit.
+- Basis en opaque-ID-vervolgmigratie zijn op Cloud DEV uitgevoerd; de gebruiker bevestigde de webdeploy. Er is geen broncredential, scope, Streamer.bot-wijziging, botdeploy, automatische backup of saldo-overname toegevoegd. Intake en automatisch verdienen stonden bij de laatste bevestigde servercontrole uit; de schema-audit leest geen runtimeflags uit.
 - Nog vast te stellen vóór echte broninname: numerieke broadcaster-ID, adapterbewijs, bronautorisatie, hosting/journal, volume-/retentiebeleid en operationeel herstel. Geen automatische receiptpurge: verwijderen zou de deduplicatie-/afwijzingshistorie verliezen. Bewaartermijn moet afzonderlijk worden besloten vóór werkelijke persoonsgegevens worden verzameld.
 - Een processor met financiële boekingen, bronregels/revisies, tarieven, XP, levels, quota, semantische deduplicatie en atomische financiële autorisatie ontbreekt nog. Het ontvangstregister kan deze controles niet vervangen.
 - Website, Discord, Streamer.bot en centrale service blijven aparte deployment-/credentialgrenzen rond hetzelfde CC-saldo. Saldo-overname blijft gekoppeld aan de latere StreamElements/Streamer.bot-omschakeling.
@@ -106,6 +106,6 @@ Verificatie en beperkingen: [lokaal acceptatieverslag](../acceptatie/REWARDS-INT
 
 ## Opaque-ID-uitrolvolgorde
 
-Na review en afzonderlijke goedkeuring: nieuwe migratie eerst op Supabase DEV, dan CC-webimage. De migratie maakt V1 replay-only; een oude webimage kan dus geen nieuwe claims meer opnemen, maar oude receipts blijven leesbaar/herhaalbaar. Intake blijft tijdens de overgang uit. Rollback naar de oude functie na V2-ontvangsten is niet veilig: die begrijpt V2-keys/IDs niet en kan nieuwe V1-aliasen toelaten. Niet blind terugzetten; houd intake uit en beoordeel herstel afzonderlijk. Geen automatisch downscrip of receiptverwijdering.
+De geaccepteerde volgorde voor deze wijziging was: nieuwe migratie op Supabase DEV, daarna CC-webimage. Deze overgang is uitgevoerd; niet opnieuw toepassen op basis van een ontbrekende historieregel. De migratie maakt V1 replay-only; een oude webimage kan dus geen nieuwe claims meer opnemen, maar oude receipts blijven leesbaar/herhaalbaar. Rollback naar de oude functie na V2-ontvangsten is niet veilig: die begrijpt V2-keys/IDs niet en kan nieuwe V1-aliasen toelaten. Niet blind terugzetten; houd intake uit en beoordeel herstel afzonderlijk. Geen automatisch downscrip of receiptverwijdering.
 
 Referentie voor het providerformaat: [Twitch EventSub WebSocket reference](https://dev.twitch.tv/docs/eventsub/websocket-reference/), geraadpleegd 20 oktober 2026: message_id is een string, herlevering behoudt die ID. De bronadapter blijft verantwoordelijk voor geverifieerde herkomst; dit verruimde formaat bewijst op zichzelf geen Twitchgebeurtenis.

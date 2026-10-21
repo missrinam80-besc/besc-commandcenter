@@ -4,6 +4,12 @@
 
 De acceptatieomgeving is Cloud DEV. Gebruik onderstaande werkwijze voor nieuwe wijzigingen; oudere vinkjes of momentopnamen bewijzen geen actuele acceptatie.
 
+## Voorcontrole migratiehistorie
+
+De [baseline van 21 oktober](Ecosysteem-basis-en-uitvoering.md) toont verschil tussen aanwezige Cloud-objecten en het migratieregister. Een ontbrekende registratie is geen opdracht om het bestand opnieuw uit te voeren. Controleer vóór een migratierelease de bedoelde objecten, latere vervangingen en uitvoeringsbewijzen. Geen automatische bulk replay of historieherstel op basis van alleen versienummers. Historische migratie-instructies hieronder gelden uitsluitend wanneer de betreffende wijziging aantoonbaar nog moet worden toegepast.
+
+Leg per release apart vast: broncommit, checks, migratiestatus, image/deploy, runtimeflags en DEV-acceptatie. Voor F0.1 is geen database-migratie nodig; de eerstvolgende DEV-proef betreft alleen de gewijzigde meetweergave en CSV's. De governance- en publicatiecontracten zijn nog werkvoorstellen.
+
 ## Actuele releasewerkwijze
 
 1. Controleer de wijziging lokaal: tests, lint, gegenereerde editorbronnen en productiebuild.

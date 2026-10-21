@@ -2,6 +2,14 @@
 
 [← Wiki](README.md)
 
+## Actualisatie 21 oktober: bronregister en rewards-intake
+
+Het [bronregister van de ecosysteembasis](Ecosysteem-basis-en-uitvoering.md) bevat de op 21 oktober gecontroleerde codeversies en Cloud-schema-metadata. CC-main is `279c607691883acd5f4ec8c6b12c7ce62e3b3920`; bot-main is `bbaba45b1c36831de49fbd8d456588422d7450c5`. Dit zijn bronversies, geen zelfstandig uitgelezen serverimages.
+
+De opaque-ID-vervolgmigratie uit PR #110 is op 20 oktober op Cloud DEV uitgevoerd en gecontroleerd; de gebruiker bevestigde vervolgens gezonde webdeploy, behoud van Twitchkoppeling en uitgeschakelde activiteit/preview/intake. De op 21 oktober read-only gecontroleerde private functiebody komt exact met de migratie overeen. Er zijn geen punten uitgegeven door deze intakevoorbereiding. Het CLI-migratieregister loopt achter; voer ontbrekende registraties niet blind als migraties opnieuw uit.
+
+De meetweergavecorrectie uit F0.1 is een nieuwe codewijziging en nog niet op DEV geaccepteerd. De onderstaande momentopname van 17 oktober en de aanvulling van 18 oktober behouden hun historische context.
+
 Dit is een gedateerde momentopname, geen automatische uitlezing van de servers. Bronnen zijn de code op CC-main `6db618aac85a5577c71e7b34f96bc023db9ae879`, bot-main `9050b2966c569ba19e5862eefe48da0ff01f4d0f`, controles via CC-webbeheer en de door de gebruiker aangeleverde serveruitvoer en Discordresultaten. Latere configuratiewijzigingen vragen een nieuwe controle.
 
 ## Aanvulling 18 oktober: persoonlijke Twitchkoppeling
