@@ -28,7 +28,7 @@ De volledige lokale regressiesuite, lint, typecontrole en productiebuild worden 
 2. 'tests/f1-concurrency.mjs': vier proeven met afzonderlijke echte verbindingen, aantoonbare lockbarrière en begrensde timeout: identiteitsintrekking, bronwijziging, toestemmingintrekking en hetzelfde verzoek tegelijk.
 3. 'tests/f1-interface.test.mts': echte serveracties en servercomponenten, actorvelden, terugkeerroute, lege intrekkingsreden, bron-eventtijden, veilige tekst, schermrechten en contractfixtures.
 4. Bestaande campagne-/kanaal-/schrijfbevestigingstests en de volledige overige suite bewaken naburige functionaliteit. 'tests/foundation-native-replay.mjs' controleert de ongewijzigde F0-baseline en de complete opbouw.
-5. Synthetische browserproef: servercomponent met echte gecompileerde appstyles, lichte/donkere modus, uitklappen en zichtbare Tab-focus. Dit bewijst geen Cloud-login, apparaatdekking of menselijke DEV-acceptatie.
+5. Synthetische browserproef: servercomponent met echte gecompileerde appstyles, lichte/donkere modus, uitklappen en zichtbare Tab-focus; basistekst en navigatie ook op een binnenbreedte van 390 pixels. Dit bewijst geen Cloud-login, apparaatdekking of menselijke DEV-acceptatie.
 
 De machineleesbare [acceptatiematrix](acceptatiegevallen.json) onderscheidt fixturebewijs, gedeeltelijke dekking en nog uit te voeren DEV-controles. De oorspronkelijke 62 scenario's zijn geen teller van 62 live geslaagde proeven. Auth/Storage/Vault-servicegedrag, echte externe bewijstoegang, de volledige privé-export-/notificatieketen en alle praktische rolwissels blijven een aparte DEV-proef.
 
@@ -36,7 +36,7 @@ De machineleesbare [acceptatiematrix](acceptatiegevallen.json) onderscheidt fixt
 
 Er zijn zes nieuwe CLI-gegenereerde migraties: M01 identiteit/taakrollen, M02 governance/bewijs, M03 doelen/toestemming, M04 partnerrollen, M05 publicatierevisies/mediarechten, M06 actuele dossiereditor. Tien nieuwe publieke tabellen hebben RLS en geen directe cliëntmutaties. Twee private operatietabellen hebben geen cliëntgrants. Mutaties loggen atomair in het bestaande 'public.audit_log'; geen bewijsinhoud in technische audit.
 
-De native volledige fixture bevat **124 migraties en 130 tabellen**: 118 historische migraties inclusief de oude seed, zes nieuwe migraties, 128 publieke RLS-tabellen en twee private tabellen. De Cloud-DEV-baseline blijft **117 geregistreerde migraties zonder die seed**. Na later geautoriseerde uitvoering van uitsluitend de zes F1-bestanden verwacht het manifest 123 registraties. Dit pakket past die historie niet aan.
+De native volledige fixture bevat **124 migraties en 130 tabellen**: 118 historische migraties inclusief de oude seed, zes nieuwe migraties, 123 publieke RLS-tabellen, vijf bestaande private RLS-tabellen en twee nieuwe private operatietabellen. De Cloud-DEV-baseline blijft **117 geregistreerde migraties zonder die seed**. Na later geautoriseerde uitvoering van uitsluitend de zes F1-bestanden verwacht het manifest 123 registraties. Dit pakket past die historie niet aan.
 
 De globale F1-transactiesluis wordt vóór betrokken rijlocks genomen; ze serialiseert deze lage-volume werkstromen om stale bevoegdheid, intrekking en omgekeerde lockvolgorde te voorkomen. Dit is een bewuste eerste implementatie. Bij groei eerst wachttijd meten; fijnmaziger locks vragen dezelfde native raceproeven. De sluis levert geen extra gebruikersrecht.
 
