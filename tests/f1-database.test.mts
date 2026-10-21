@@ -17,7 +17,7 @@ async function consent(){const p=await purpose();return(await f.call('consent.gi
 const payload=()=>({title:'TESTFIXTURE — NIET PUBLICEREN',summary:'Uitsluitend synthetische proef',slug:'testfixture-niet-publiceren',locale:'nl-BE',body:{format:'sanitized_html',value:'<p>Uitsluitend test.</p>'},media:[]});
 
 test('P02: rolgeldigheid gebruikt de Belgische kalenderdag ongeacht sessietijdzone',async()=>{
- await f.db.exec("set local timezone='Pacific/Kiritimati'");const r=await f.call('partner.role',{partner_id:f.ids.partner,role:'esports'});const row=(await f.db.query<{ok:boolean}>(`select valid_from=(clock_timestamp() at time zone 'Europe/Brussels')::date ok from public.partner_roles where id=${q(r.id)}`)).rows[0];assert.equal(row.ok,true);await f.call('partner.relate',{partner_id:f.ids.partner,source_type:'event',source_id:f.ids.event,contribution_role:'esports'});
+ await f.db.exec("set local timezone='Pacific/Kiritimati'");assert.equal((await f.db.query<{ok:boolean}>(`select private.f1_chair(${q(f.ids.org)}) ok`)).rows[0].ok,true);const r=await f.call('partner.role',{partner_id:f.ids.partner,role:'esports'});const row=(await f.db.query<{ok:boolean}>(`select valid_from=(clock_timestamp() at time zone 'Europe/Brussels')::date ok from public.partner_roles where id=${q(r.id)}`)).rows[0];assert.equal(row.ok,true);await f.call('partner.relate',{partner_id:f.ids.partner,source_type:'event',source_id:f.ids.event,contribution_role:'esports'});
 });
 
 test('E04: bestaande servermutatie behoudt de transactiesluis zonder formele F1-bevoegdheid',async()=>{
