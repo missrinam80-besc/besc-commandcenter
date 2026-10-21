@@ -3,6 +3,11 @@
 create role anon;
 create role authenticated;
 create role service_role bypassrls;
+-- Public-schema platform defaults observed read-only on BESC DEV, 21 October 2026.
+-- Fixture only: these statements must never be used as a Cloud repair script.
+alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
 create schema auth;
 create schema storage;
 create schema vault;

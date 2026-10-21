@@ -16,7 +16,7 @@ for (const name of (await readdir(path.join(root, "supabase/migrations"))).sort(
   const sql = bytes.toString("utf8");
   // Search hints only. This is not a SQL parser or a proof of applied effects.
   const hints = [...sql.matchAll(/\b(?:create\s+(?:or\s+replace\s+)?(?:table|function|view)|alter\s+table)\s+(?:if\s+not\s+exists\s+)?((?:public|private)\.[a-z_][a-z_0-9]*)/gi)].map((item) => item[1]);
-  migrations.push({ version: match[1], name: match[2], file: name, sha256: createHash("sha256").update(bytes).digest("hex"), object_search_hints: [...new Set(hints)].sort() });
+  migrations.push({ version: match[1], name: match[2], file: name, sha256: createHash("sha256").update(bytes).digest("hex"), sha256_lf: createHash("sha256").update(sql.replaceAll("\r\n", "\n")).digest("hex"), object_search_hints: [...new Set(hints)].sort() });
 }
 const baseline = {
   format: "besc-foundation-baseline-v1", checked_at_utc: new Date().toISOString(),

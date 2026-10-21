@@ -31,6 +31,8 @@ try {
   report.catalog = results.flatMap((result) => result.rows).find((row) => row.foundation_cloud_audit)?.foundation_cloud_audit;
   const effects = await db.exec(await readFile(path.join(root, "ops/foundation-effects-catalog.sql"), "utf8"));
   report.effects = effects.flatMap((result) => result.rows).find((row) => row.foundation_effects_catalog)?.foundation_effects_catalog;
+  const dataState = await db.exec(await readFile(path.join(root, "ops/foundation-data-state.sql"), "utf8"));
+  report.data_state = dataState.flatMap((result) => result.rows).find((row) => row.foundation_data_state)?.foundation_data_state;
   console.log(`Volledige lokale replay: ${report.applied.length} migraties.`);
 } catch {
   console.error(JSON.stringify({ applied: report.applied.length, failure: report.failure }));
