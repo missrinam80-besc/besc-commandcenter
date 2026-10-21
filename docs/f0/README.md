@@ -1,5 +1,7 @@
 # F0 basis vastleggen
 
+**Vervolgstatus 21 oktober 2026:** de technische F0-uitvoering op DEV is inmiddels geaccepteerd. De 33 registraties zijn hersteld, webrelease en meetweergave bevestigd. De kennisbank-seed blijft uitgezonderd; de vijf concepten zijn niet live ingevoerd. Zie [uitvoering en bewijsgrenzen](../acceptatie/F0-UITVOERING-DEV-20261021.md) en de [F1-voorbereiding](../f1/README.md). Onderstaande tekst bewaart het oorspronkelijke voorbereidingspakket; `execution_authorized: false` in de oorspronkelijke beoordeling is een historische voorbereidingsstatus, niet de status van de latere opdracht/uitvoering.
+
 Voorbereidingspakket van 21 oktober 2026 voor het volledige BESC-ecosysteem. **F0 staat inhoudelijk klaar voor gezamenlijke vaststelling en gecontroleerde uitvoering.** Dit is geen verklaring dat de voorgestelde live correcties, publicaties of formele bevoegdheidstoekenningen al zijn uitgevoerd.
 
 ## Wat klaarstaat

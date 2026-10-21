@@ -84,7 +84,7 @@ export const dossierEditorCatalog:Record<string,EditorConfig>={
   newsletter:config("newsletters","Nieuwsbrief","/app/nieuwsbrieven","manageContent","title subject body_text mailing_list_id email_template_id",commonTabs),
   member:config("association_members","VZW-lid","/app/administratie","manageOrganization","full_name email membership_type status joined_on left_on member_number voting_right address notes",commonTabs),
   mandate:config("governance_mandates","Bestuursmandaat","/app/administratie","manageOrganization","member_id role role_label start_date end_date status appointment_document_url notes",commonTabs),
-  deadline:config("compliance_deadlines","Administratieve deadline","/app/administratie","manageOrganization","title category due_date status recurrence responsible_id document_id notes",commonTabs),
+  deadline:config("compliance_deadlines","Administratieve deadline","/app/administratie","manageOrganization","title category due_date unknown_deadline_reason status recurrence responsible_id document_id notes",commonTabs),
   administration:config("administrative_documents","Administratief document","/app/administratie","manageOrganization","title document_type status document_date valid_from valid_until drive_url reference_number confidential notes",commonTabs),
 };
 

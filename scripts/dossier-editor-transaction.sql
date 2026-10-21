@@ -12,6 +12,9 @@ declare
  m public.organization_members%rowtype; caps text[]; seen text[]:='{}'; count_rows bigint;
  is_root boolean; is_new boolean; deleting boolean; changes jsonb; parent_value text;
 begin
+ -- All F1 checks happen before row locks. A chosen role remains untrusted data.
+ perform private.f1_lock();
+ perform set_config('besc.f1_partner_contribution',coalesce(p_bundle->>'partner_contribution',''),true);
  if auth.uid() is null then raise exception 'dossier_no_access' using errcode='42501'; end if;
  select * into m from public.organization_members where organization_id=p_organization_id and user_id=auth.uid() and status='active';
  if not found then raise exception 'dossier_no_access' using errcode='42501'; end if;

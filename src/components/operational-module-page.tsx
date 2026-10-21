@@ -1,5 +1,6 @@
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
+import { partnerRoleLabels } from "@/lib/f1-workflows";
 import { CalendarDays, List, Search, X } from "lucide-react";
 import { operationalModules, type OperationalModule, } from "@/app/app/operations/config";
 import { AppShell } from "@/components/app-shell";
@@ -69,6 +70,8 @@ export async function OperationalModulePage({
   const { supabase, membership, user } = await requireActiveMembership();
   const canManage = hasPermission(membership, "manageOrganization");
   const org = membership.organization_id;
+  const partnerRole=module==='sponsors'&&Object.hasOwn(partnerRoleLabels,params.rol??'')?params.rol!:'';
+  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Brussels',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   const columns = module === "social" ? "*,social_post_variants(id,platform)" : "*";
   const orderColumn =
     sort === "title"
@@ -80,13 +83,14 @@ export async function OperationalModulePage({
 
   let query = supabase
     .from(config.table)
-    .select(columns, { count: "exact" })
+    .select(partnerRole?columns+',partner_roles!inner(role,valid_from,valid_until,revoked_at,organization_id)':columns, { count: "exact" })
     .eq("organization_id", org)
     .is("deleted_at", null)
     .order(orderColumn, { ascending, nullsFirst: false });
   if (search) query = query.ilike(config.titleColumn, `%${search}%`);
   if (status) query = query.eq("status", status);
   if (type) query = query.eq(config.typeColumn, type);
+  if(partnerRole)query=query.eq('partner_roles.organization_id',org).eq('partner_roles.role',partnerRole).is('partner_roles.revoked_at',null).lte('partner_roles.valid_from',today).or(`valid_until.is.null,valid_until.gte.${today}`,{referencedTable:'partner_roles'});
   if (mine) query = query.eq("owner_id", user.id);
   if (openOnly) {
     query = query.not(
@@ -172,6 +176,7 @@ export async function OperationalModulePage({
 
         <div className="view-toolbar">
           <form className="history-filters extended-filters" method="get">
+            {module==='sponsors'&&<label>Bevestigde rol<select name="rol" defaultValue={partnerRole}><option value="">Alle rollen en historische classificaties</option>{Object.entries(partnerRoleLabels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>}
             {calendar && <input type="hidden" name="weergave" value="kalender" />}
             {openOnly && <input type="hidden" name="weergave" value="open" />}
             <label className="search">

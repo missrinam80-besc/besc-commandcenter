@@ -2,6 +2,10 @@
 
 [← Wiki-startpagina](README.md)
 
+**Actuele vervolgstatus, 21 oktober 2026:** technische F0-uitvoering op DEV geaccepteerd. Main is `594392cef96c2e9eb86ac93ea5b476f15038757e`; 33 registraties zijn hersteld (117 totaal), de oude 84 behouden en gecontroleerd schema gelijk. Exacte webimage, instellingen en rapport-/CSV-proef zijn door Linda bevestigd. Eén oude seed blijft uitgesloten; vijf artikelen blijven voorbereide concepten. [Uitvoeringsbewijs](../acceptatie/F0-UITVOERING-DEV-20261021.md). [F1](../f1/Implementatie-en-testbewijs.md) bevat nu de zes gebouwde werkpakketten met geïsoleerd testbewijs; nog geen Cloud-migratie, deploy of live acceptatie.
+
+Onderstaande inventaris en verschillenlijst bewaren de oorspronkelijke F0.1-momentopname vóór uitvoering. Aantallen 84/34 en ‘nog niet uitgevoerd’ daarin zijn geen actuele F1-migratiebaseline; gebruik het bovenstaande uitvoeringsbewijs.
+
 Werkpakket F0.1, gestart op 21 oktober 2026 vanuit het masterplan van 20 oktober. Doel: bestaande bouwstenen, rechten en migratieverschillen controleerbaar maken en de eerste afgebakende correctie opleveren. Dit is een voorbereidings- en codepakket; het herstelt nog geen Cloud-migratiehistorie en verleent geen formele bevoegdheden.
 
 De verdiepte beoordeling is nu opgenomen in het [volledige F0-pakket](../f0/README.md). Alle 118 migraties zijn native op PostgreSQL 17.6 uitgevoerd en de beschreven schema-effecten komen overeen met Cloud. Er zijn 33 voorwaardelijke historiekandidaten en één inhoudelijke uitzondering: de vijf kennisbank-startartikelen ontbreken. De voorzitter is bevestigd voor bewijscontrole en formele goedkeuring; er zijn geen accounts of rechten toegewezen.

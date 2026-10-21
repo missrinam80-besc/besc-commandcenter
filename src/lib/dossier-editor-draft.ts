@@ -9,7 +9,7 @@ export type EditorRecord=Record<string,unknown>;
 export type DraftRow={localId:string;id:string;values:EditorRecord;base:EditorRecord|null;deleted:boolean};
 export type DossierDraft={kind:string;id:string;values:EditorRecord;base:EditorRecord|null;parts:Record<string,DraftRow[]>};
 export type EditorChange={id:string;new:boolean;values:EditorRecord;base:EditorRecord|null;delete?:boolean;collection?:string};
-export type EditorBundle={kind:string;root:EditorChange;parts:EditorChange[]};
+export type EditorBundle={kind:string;root:EditorChange;parts:EditorChange[];partner_contribution?:string};
 export function editorFields(kind:string,table:string):FieldSchema[]{
   return (schemas as unknown as Record<string,Record<string,FieldSchema[]>>)[kind]?.[table]??[];
 }

@@ -38,7 +38,7 @@ export default async function PortalPage({ searchParams }: { searchParams: Promi
   return <main className="portal-page">
     <header className="portal-header"><Image src="/besc-logo.png" width={170} height={56} alt="BESC"/><div><span>EXTERN PORTAAL</span><strong>{sponsor?.partner.name ?? streamer?.person.display_name}</strong></div><form action={signOut}><button>Uitloggen</button></form></header>
     <nav className="portal-access-tabs">{access.map((item) => <a className={item.id === selected.id ? "active" : ""} href={`?toegang=${item.id}`} key={item.id}>{item.access_type === "sponsor" ? item.partners?.name : item.community_people?.display_name}</a>)}</nav>
-    <section className="portal-content">
+    <section className="portal-content"><p><a href="/portal/toestemming">Mijn verklaringen en toestemming beheren</a></p>
       {sponsor && <>
         <div className="portal-intro"><span>SPONSOR</span><h1>{sponsor.partner.name}</h1><p>Je ziet uitsluitend de campagnes, deliverables en resultaten die aan jouw sponsordossier gekoppeld zijn.</p></div>
         <div className="portal-stats"><article><span>Campagnes</span><strong>{sponsor.campaigns.length}</strong></article><article><span>Deliverables</span><strong>{sponsor.deliverables.filter((item) => ["completed", "approved"].includes(item.status)).length}/{sponsor.deliverables.length}</strong></article><article><span>KPI-metingen</span><strong>{sponsor.kpis.length}</strong></article></div>

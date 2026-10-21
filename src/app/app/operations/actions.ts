@@ -1,4 +1,6 @@
 "use server";
+import { randomUUID } from "node:crypto";
+import { partnerRoleLabels } from "@/lib/f1-workflows";
 import { appendContactTab } from "@/lib/contact-dossier-tabs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -44,7 +46,10 @@ export async function createOperationalRecord(formData:FormData){
   if(selectedModule==="community"){await saveCommunityBundle(supabase,membership.organization_id,values,formData,`/app/community?nieuw=1&fout=rollen`);revalidatePath("/app/community");redirect("/app/community?succes=aangemaakt");}
   if(selectedModule==="campagnes"){
     const campaign=Object.fromEntries(Object.entries(values).filter(([key])=>!["organization_id","owner_id","created_by"].includes(key)));
-    const{data,error}=await supabase.rpc("create_campaign_bundle",{p_organization_id:membership.organization_id,p_values:campaign,p_deliverables:template?[...template.deliverables]:[]});
+    const contribution=String(formData.get("contribution_role")??"");
+    if(parsed.data.partner_id&&!Object.hasOwn(partnerRoleLabels,contribution))redirect("/app/campagnes?nieuw=1&fout=partnerrol");
+    const result=parsed.data.partner_id?await supabase.rpc("f1_workflow",{p_organization_id:membership.organization_id,p_operation:"partner.campaign",p_data:{values:campaign,deliverables:template?[...template.deliverables]:[],contribution_role:contribution},p_request_id:randomUUID()}):await supabase.rpc("create_campaign_bundle",{p_organization_id:membership.organization_id,p_values:campaign,p_deliverables:template?[...template.deliverables]:[]});
+    const error=result.error;const data=parsed.data.partner_id?result.data?.id:result.data;
     if(error||!z.string().uuid().safeParse(data).success)redirect("/app/campagnes?nieuw=1&fout=opslaan");
   }else{
     const{error}=await supabase.from(config.table).insert(values).select("id").single();

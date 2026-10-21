@@ -14,15 +14,21 @@ sql(readFileSync(new URL("./helpers/foundation-platform-fixture.sql", import.met
 const names = readdirSync(new URL("../supabase/migrations/", import.meta.url)).filter((name) => /^\d+_.+\.sql$/.test(name)).sort();
 const migrations = names.map((file) => ({ file, version: file.split("_")[0], sha256_lf: createHash("sha256").update(readFileSync(new URL(`../supabase/migrations/${file}`, import.meta.url), "utf8").replaceAll("\r\n", "\n")).digest("hex") }));
 for (const name of names) {
+  if (name.endsWith('_f1_identity_authority.sql')) {
+    const base = JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql', import.meta.url), 'utf8')));
+    assert.equal(base.tables.length, 118, 'Unchanged historical schema before F1');
+    assert.equal(base.functions.length, 143, 'Unchanged historical functions before F1');
+  }
   try { sql(readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8")); }
   catch (error) { throw new Error(`Native replay failed at ${name}: ${error.stderr?.toString() ?? error.message}`); }
   if (name.startsWith("20260712190000_")) sql("insert into auth.users(id,email) values('00000000-0000-4000-8000-000000000001','fixture@example.invalid');update public.organization_members set role='admin',status='active';");
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length, 118);
-assert.equal(effects.functions.length, 143);
-assert.ok(effects.tables.every((table) => table.rls));
+assert.equal(effects.tables.length, 130); // Ten RLS workflow tables and two private operation tables.
+assert.ok(effects.functions.length > 143);
+assert.ok(effects.tables.every((table) => table.rls || (table.schema === 'private' && ['f1_context','f1_receipts'].includes(table.name))));
+assert.ok(effects.tables.filter(table=>table.schema==='private'&&['f1_context','f1_receipts'].includes(table.name)).every(table=>Object.values(table.grants).every(grants=>Object.values(grants).every(value=>value===false))), 'F1 private operation tables have no client grants; existing private service grants remain unchanged');
 const dataState = JSON.parse(sql(readFileSync(new URL("../ops/foundation-data-state.sql", import.meta.url), "utf8")));
 assert.equal(dataState.guideline_titles_missing, 0);
 assert.equal(dataState.eligible_accounts_without_active_contact, 0);
