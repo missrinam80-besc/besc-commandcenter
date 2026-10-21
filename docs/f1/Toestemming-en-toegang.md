@@ -1,5 +1,8 @@
 # F1 toestemming en toegang
 
+Actuele bouwstatus en afwijkingen ten opzichte van het voorbereide contract: [implementatie en testbewijs](Implementatie-en-testbewijs.md). Dit document bewaart ook voorstellen en de afzonderlijke voorwaarden voor DEV/F2.
+
+
 [F1-overzicht](README.md). Rechten hieronder zijn ontwerpregels voor nieuwe F1-objecten. Ze worden niet stilzwijgend als nieuwe bestaande organisatieprofielen toegekend.
 
 ## 1 Doelen en verklaringen

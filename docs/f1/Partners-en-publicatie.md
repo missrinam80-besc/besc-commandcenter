@@ -1,5 +1,8 @@
 # F1 partnerrollen en publicatiecontract
 
+Actuele bouwstatus en afwijkingen ten opzichte van het voorbereide contract: [implementatie en testbewijs](Implementatie-en-testbewijs.md). Dit document bewaart ook voorstellen en de afzonderlijke voorwaarden voor DEV/F2.
+
+
 [F1-overzicht](README.md). Voorstellen voor interne F1-functionaliteit en de latere F2-consument. Er is geen nieuw publiek endpoint, nieuw domein of actieve websiteclient aangemaakt.
 
 ## 1 Partnerorganisaties en bijdragen

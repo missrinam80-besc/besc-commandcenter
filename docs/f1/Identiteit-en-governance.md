@@ -1,5 +1,8 @@
 # F1 identiteit en governance
 
+Actuele bouwstatus en afwijkingen ten opzichte van het voorbereide contract: [implementatie en testbewijs](Implementatie-en-testbewijs.md). Dit document bewaart ook voorstellen en de afzonderlijke voorwaarden voor DEV/F2.
+
+
 [F1-overzicht](README.md). Ontwerp voor F1.1/F1.2; geen nieuw object of recht is met dit document ingevoerd.
 
 ## 1 Bestaande binding is nog geen formele verificatie

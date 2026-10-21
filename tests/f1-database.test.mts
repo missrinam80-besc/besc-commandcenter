@@ -16,6 +16,45 @@ async function purpose(){const p=await f.call('consent.purpose',{purpose_code:'p
 async function consent(){const p=await purpose();return(await f.call('consent.give',{purpose_id:p,scope:{fields:['display_name']},accepted:true})).id;}
 const payload=()=>({title:'TESTFIXTURE — NIET PUBLICEREN',summary:'Uitsluitend synthetische proef',slug:'testfixture-niet-publiceren',locale:'nl-BE',body:{format:'sanitized_html',value:'<p>Uitsluitend test.</p>'},media:[]});
 
+test('U03/U05/U06: nieuwe conceptversie laat goedgekeurd snapshot staan; ingetrokken mediarechten blokkeren gebruik',async()=>{
+ const mediaPayload={...payload(),media:[{url:'https://example.invalid/public/photo.png',alt:'TESTFIXTURE afbeelding',credit:'TESTFIXTURE'}]};
+ const first=await publication({payload:mediaPayload,media_rights_document_id:f.ids.policyDoc});await f.call('publication.submit',{id:first.id,expected_hash:first.expected_hash});await f.actor(f.ids.reviewer);await f.call('publication.review',{id:first.id,expected_hash:first.expected_hash,decision:'approved_for_publication',reason:'TESTFIXTURE rechten beoordeeld',rights_confirmed:true});
+ await f.actor(f.ids.chair);await publication({payload:{...payload(),title:'TESTFIXTURE nieuw concept'}});let row=(await f.db.query<{x:{valid:boolean}}>(`select public.f1_publication_preview(${q(f.ids.org)},${q(first.id)}) x`)).rows[0];assert.equal(row.x.valid,true);
+ await f.call('publication.revoke_media',{document_id:f.ids.policyDoc,reason:'TESTFIXTURE rechten ingetrokken'});row=(await f.db.query<{x:{valid:boolean}}>(`select public.f1_publication_preview(${q(f.ids.org)},${q(first.id)}) x`)).rows[0];assert.equal(row.x.valid,false);
+ await fails('publication.draft',{source_type:'news',source_id:f.ids.content,expected_revision:1,payload:mediaPayload,media_rights_document_id:f.ids.policyDoc});await f.call('publication.withdraw',{id:first.id,expected_hash:first.expected_hash});
+});
+
+test('P04/P05/R01: echte dossiereditor bewaart expliciete bijdrage en behoudt RLS op kinderen',async()=>{
+ await f.call('partner.role',{partner_id:f.ids.partner,role:'esports'});
+ const bundle={kind:'campaign',partner_contribution:'esports',root:{id:randomUUID(),new:true,values:{title:'TESTFIXTURE editorcampagne',partner_id:f.ids.partner,campaign_type:'social',status:'idea'}},parts:[] as unknown[]};
+ await f.db.query(`select public.save_dossier_bundle(${q(f.ids.org)},${j(bundle)})`);
+ const rel=(await f.db.query<{relationship_type:string;contribution_role:string}>(`select relationship_type,contribution_role from public.record_relationships where source_id=${q(bundle.root.id)} and target_id=${q(f.ids.partner)}`)).rows[0];assert.equal(rel.relationship_type,'esports');assert.equal(rel.contribution_role,'esports');
+ await f.actor(f.ids.admin);await sqlFails(`select public.save_dossier_bundle(${q(f.ids.org)},${j({...bundle,root:{...bundle.root,id:randomUUID()}})})`,/f1_choose_partner_contribution/);
+ await f.actor(f.ids.chair);await evidence();const restricted={...bundle,root:{...bundle.root,id:randomUUID()},parts:[{collection:'record_links',id:randomUUID(),new:true,values:{document_id:f.ids.ruleDoc,label:'TESTFIXTURE bewijs',url:'https://example.invalid/ruleDoc'}}]};
+ await f.call('identity.assign',{user_id:f.ids.admin,role:'partner_editor'});await f.actor(f.ids.admin);await sqlFails(`select public.save_dossier_bundle(${q(f.ids.org)},${j(restricted)})`,/unavailable|reference|access/);
+ assert.equal((await f.db.query<{n:number}>(`select count(*)::int n from public.campaigns where id=${q(restricted.root.id)}`)).rows[0].n,0);
+});
+
+test('G10: vergaderbesluit bewaart bestuur, grond, bewijs en opvolgtaak als exact dossier',async()=>{
+ const rule=await evidence(),execution=await evidence('meeting_decision',f.ids.executionDoc);const s={source_type:'meeting',source_id:f.ids.meeting,expected_revision:1};
+ const r=await f.call('governance.review',{...s,dimension:'rule',outcome:'verified',evidence_id:rule,reason:'TESTFIXTURE statutaire grond',conflict_declared:false});
+ const a=await f.call('governance.review',{...s,dimension:'applicability',outcome:'applicable',reason:'TESTFIXTURE bevoegd orgaan',conflict_declared:false});
+ const e=await f.call('governance.review',{...s,dimension:'execution',outcome:'demonstrated',evidence_id:execution,reason:'TESTFIXTURE vastgelegd besluit',conflict_declared:false});
+ await f.owner();const task=randomUUID();await f.db.exec(`insert into public.tasks(id,organization_id,title,created_by) values(${q(task)},${q(f.ids.org)},'TESTFIXTURE opvolging',${q(f.ids.chair)})`);await f.actor(f.ids.chair);
+ const d=await f.call('governance.decide',{...s,rule_review_id:r.id,applicability_review_id:a.id,execution_review_id:e.id,body:'TESTFIXTURE expliciet besluit',authority_basis:'TESTFIXTURE benoeming en statuten',governing_body:'TESTFIXTURE bestuursorgaan',task_id:task,conflict_declared:false});
+ const row=(await f.db.query<{decision_type:string;task_id:string;source_snapshot:{title:string}}>(`select decision_type,task_id,source_snapshot from public.governance_decisions where id=${q(d.id)}`)).rows[0];assert.equal(row.decision_type,'meeting_decision');assert.equal(row.task_id,task);assert.equal(row.source_snapshot.title,'TESTFIXTURE Vergadering');
+});
+
+test('I08/I09/R01: gewijzigd mandaat kan geen eerder geverifieerde identiteit promoveren; client kan geen bootstrap uitvoeren',async()=>{
+ await f.owner();await f.db.exec(`update public.governance_mandates set appointment_document_url='https://example.invalid/new-appointment' where member_id=${q(f.ids.association)}`);await f.actor(f.ids.chair);await fails('identity.assign',{user_id:f.ids.admin,role:'partner_editor'});
+ for(const role of ['anon','service_role']){await f.owner();await f.db.exec(`set role ${role}`);await sqlFails(`select public.f1_workflow(${q(f.ids.org)},'identity.assign','{}',${q(randomUUID())})`);}
+});
+
+test('I07/C03: alleen portaltoegang geeft eigen verklaring maar geen interne bevoegdheid',async()=>{
+ const p=await purpose();await f.owner();await f.db.exec(`update public.organization_members set status='pending' where organization_id=${q(f.ids.org)} and user_id=${q(f.ids.member)};insert into public.portal_access(organization_id,user_id,access_type,community_person_id,created_by) values(${q(f.ids.org)},${q(f.ids.member)},'streamer',${q(f.ids.otherPerson)},${q(f.ids.admin)})`);
+ await f.actor(f.ids.member);const own=await f.call('consent.give',{purpose_id:p,scope:{fields:['display_name']},accepted:true});assert.ok(own.id);await fails('identity.assign',{user_id:f.ids.member,role:'partner_editor'});await fails('governance.review',{...source(),dimension:'applicability',outcome:'applicable',reason:'TESTFIXTURE',conflict_declared:false});
+});
+
 test('I06/I07: toekomstig of dubbel voorzitterschap en ingetrokken lidmaatschap blokkeren beslissingen',async()=>{
  await f.owner();await f.db.exec(`update public.governance_mandates set start_date=current_date+1 where member_id=${q(f.ids.association)}`);await f.actor(f.ids.chair);await fails('identity.assign',{user_id:f.ids.admin,role:'partner_editor'});
  await f.owner();await f.db.exec(`update public.governance_mandates set start_date=current_date-1 where member_id=${q(f.ids.association)};insert into public.governance_mandates(organization_id,member_id,role,start_date,created_by) values(${q(f.ids.org)},${q(f.ids.association)},'chair',current_date-1,${q(f.ids.chair)})`);await f.actor(f.ids.chair);await fails('identity.assign',{user_id:f.ids.admin,role:'partner_editor'});

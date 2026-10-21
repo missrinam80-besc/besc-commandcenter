@@ -2,7 +2,7 @@
   "format": "besc-f1-acceptance-plan-v1",
   "prepared_at": "2026-10-21",
   "source_commit": "594392cef96c2e9eb86ac93ea5b476f15038757e",
-  "implementation_status": "not_implemented",
+  "implementation_status": "built_isolated_acceptance",
   "cloud_changes": false,
   "total": 62,
   "cases": [
@@ -11,496 +11,935 @@
       "work_package": "F1.1",
       "scenario": "Geverifieerde actieve voorzitter",
       "expected": "Alleen de exact geverifieerde actuele account-/persoons-/lid-/mandaatketen krijgt toestemming.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "I02",
       "work_package": "F1.1",
       "scenario": "Admin zonder formele binding",
       "expected": "Algemeen adminbeheer en custom capabilities leveren geen formele beslisbevoegdheid.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "I03",
       "work_package": "F1.1",
       "scenario": "Andere organisatie koppelen",
       "expected": "Organisatievreemde lid-, persoon-, account- of bewijsreferentie wordt zonder deelwrite geweigerd.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "I04",
       "work_package": "F1.1",
       "scenario": "Dubbele actuele persoonsbinding",
       "expected": "Unieke huidige koppeling wordt afgedwongen, ook bij twee gelijktijdige verzoeken.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "I05",
       "work_package": "F1.1",
       "scenario": "Persoonsaccount gewijzigd of ontkoppeld",
       "expected": "Oude verificatie wordt niet overgeërfd; nieuwe formele handeling wordt geweigerd.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "I06",
       "work_package": "F1.1",
       "scenario": "Mandaat verlopen, toekomstig, beëindigd of ambigu",
       "expected": "Geen first-row-fallback; exacte datum- en statuscontrole weigert ongeldige of tegenstrijdige mandaten.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "I07",
       "work_package": "F1.1",
       "scenario": "Alleen portaaltoegang of niet-actief intern lid",
       "expected": "Geen voorzittersbevoegdheid uit alleen portal, pending status of ingetrokken lidmaatschap.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "I08",
       "work_package": "F1.1",
       "scenario": "Automatische contactmatching",
       "expected": "Bestaande contactonderhoudsroute blijft werken maar creëert geen formele verificatie.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "I09",
       "work_package": "F1.1",
       "scenario": "Bootstrap en persoonlijk belang",
       "expected": "Algemene admin-/editorroute kan geen geldige verificatie activeren; onopgelost persoonlijk belang blokkeert beslissen.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "G01",
       "work_package": "F1.2",
       "scenario": "Oud completed dossier",
       "expected": "Blijft administratief afgerond; krijgt geen automatische positieve juridische of uitvoeringsbeoordeling.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "G02",
       "work_package": "F1.2",
       "scenario": "Drie onafhankelijke beoordelingen",
       "expected": "Regel, toepasselijkheid en uitvoering kunnen onafhankelijk onzeker of onbewezen zijn.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "G03",
       "work_package": "F1.2",
       "scenario": "Bewijs ontbreekt of verkeerde organisatie",
       "expected": "Geen bewezen uitvoering en geen gedeeltelijke status- of audit-succeswrite.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "G04",
       "work_package": "F1.2",
       "scenario": "Vervangen of ingetrokken bewijs",
       "expected": "Historische beslissing blijft zichtbaar; actuele projectie wordt herbeoordeling vereist.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "G05",
       "work_package": "F1.2",
       "scenario": "Verouderde dossier- of bewijsrevisie",
       "expected": "Beslissing geeft revisieconflict; nieuwe payload wordt niet onder oud akkoord verwerkt.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "G06",
       "work_package": "F1.2",
       "scenario": "Review en beslissing door voorzitter",
       "expected": "Twee afzonderlijke handelingen verwijzen naar precies de beoordeelde revisie en actor.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "G07",
       "work_package": "F1.2",
       "scenario": "Onbekende termijn",
       "expected": "Datum mag ontbreken met verplichte reden; geen fictieve due_date of berekende wettelijke claim.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "G08",
       "work_package": "F1.2",
       "scenario": "Niet van toepassing en terugkerende verplichting",
       "expected": "Niet van toepassing vraagt onderbouwing; volgende periode erft geen bewezen uitvoering.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "G09",
       "work_package": "F1.2",
       "scenario": "Veranderlijke Drive-link zonder vastlegging",
       "expected": "Bronbereikbaarheid of hash alleen bewijst geen concrete beoordeelde inhoud of uitvoering.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "G10",
       "work_package": "F1.2",
       "scenario": "Identificeerbaar vergaderbesluit",
       "expected": "Besluit verwijst naar bronvergadering/versie, bevoegdheidsgrond en taak; oude vrije tekst wordt niet automatisch formeel.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "G11",
       "work_package": "F1.2",
       "scenario": "Audit faalt tijdens formele afronding",
       "expected": "Volledige transactie wordt teruggedraaid; geen positieve uitvoeringsprojectie zonder audit.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "G12",
       "work_package": "F1.2",
       "scenario": "Archiveren/verwijderen van gerefereerde bron",
       "expected": "Bewijs-, mandaat- en beslisreferenties blijven behouden; cascade kan de historie niet stilzwijgend wissen.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "C01",
       "work_package": "F1.3",
       "scenario": "Doel en tekstversie",
       "expected": "Verklaring verwijst naar de exacte vastgestelde doeltekst en concrete gegevensscope.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "C02",
       "work_package": "F1.3",
       "scenario": "Identiteit is geen toestemming",
       "expected": "OAuth, contactmatching, lidmaatschap of post-URL creëren geen algemene toestemmingsverklaring.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "C03",
       "work_package": "F1.3",
       "scenario": "Eigen verklaring versus andere persoon",
       "expected": "Eigen route kan geen verklaring voor vrij gekozen ander persoon-ID of andere organisatie vastleggen.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "C04",
       "work_package": "F1.3",
       "scenario": "Extern geregistreerde verklaring",
       "expected": "Bron, scope, tijdstip en registrerende actor zijn aantoonbaar; geen gesimuleerde eigen accountactie.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "C05",
       "work_package": "F1.3",
       "scenario": "Intrekken van één doel",
       "expected": "Toekomstig afhankelijk gebruik wordt atomair geblokkeerd; andere doelen blijven behouden.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "C06",
       "work_package": "F1.3",
       "scenario": "Herhaalde intrekking",
       "expected": "Zelfde verzoek heeft dezelfde uitkomst; andere payload onder hetzelfde ID is conflict.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "C07",
       "work_package": "F1.3",
       "scenario": "Intrekking tegenover queued gebruik",
       "expected": "Oud positief controleresultaat laat queued/publicatieactie geen actuele intrekking passeren.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts",
+          "tests/f1-concurrency.mjs"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "C08",
       "work_package": "F1.3",
       "scenario": "Nieuwe tekst, bredere scope of verlopen doel",
       "expected": "Nieuwe verklaring vereist; oude toestemming wordt niet stilzwijgend uitgebreid of vernieuwd.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "C09",
       "work_package": "F1.3",
       "scenario": "Onbesliste grondslag, retentie of doelgroep",
       "expected": "Doel blijft concept; geen nieuwe echte verwerking of automatische verwijdering wordt geactiveerd.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "D01",
       "work_package": "F1.3",
       "scenario": "Registermetadata voor onbevoegde gebruiker",
       "expected": "Labels en URLs van vertrouwelijk bewijs ontbreken ook in zoek-, keuze- en relatieprojecties.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "D02",
       "work_package": "F1.3",
       "scenario": "Financieel én bestuurlijk beperkte bron",
       "expected": "Governancemandaat heft financiële rechten niet op; passende gecombineerde toegang vereist.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "D03",
       "work_package": "F1.3",
       "scenario": "Brede bestaande policy naast nieuwe policy",
       "expected": "Effectieve directe API-/tabelinzage blijft beperkt; permissieve OR-omweg wordt afgewezen.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "D04",
       "work_package": "F1.3",
       "scenario": "Exports, notificaties en private media",
       "expected": "Geen verborgen broninhoud, persoonlijke data of langlevende privélink voor onbevoegde ontvanger.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "D05",
       "work_package": "F1.3",
       "scenario": "Tweede brede documentrelatie",
       "expected": "Een hergebruikte bron of verwijderde gevoelige relatie maakt vertrouwelijke registratie niet automatisch publiek.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "P01",
       "work_package": "F1.4",
       "scenario": "Esportsorganisatie met eventbijdrage",
       "expected": "Geen automatische sponsorrelatie of sponsorwaarde bij campagneaanmaak.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "P02",
       "work_package": "F1.4",
       "scenario": "Meervoudige partnerrol",
       "expected": "Partner behoudt beide expliciete rollen met geldigheid/provenance zonder duplicaatorganisatie.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "P03",
       "work_package": "F1.4",
       "scenario": "Historische sponsor en classificatie",
       "expected": "Bestaande partner_type en sponsorrelatie blijven behouden en herkenbaar als legacy.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "P04",
       "work_package": "F1.4",
       "scenario": "Campagne zonder expliciete bijdrage",
       "expected": "Nieuwe partnerkoppeling wordt atomair geweigerd; geen campagne/deliverable-restant.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "P05",
       "work_package": "F1.4",
       "scenario": "Oude client en generieke editor",
       "expected": "Geen ongevraagde sponsorinsert via oude RPC, directe relatie of dossierbundle.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "P06",
       "work_package": "F1.4",
       "scenario": "Organisatievreemde partner en gelijktijdige verwijdering",
       "expected": "Relatie wordt niet met vreemde of inmiddels verwijderde bron opgeslagen.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "P07",
       "work_package": "F1.4",
       "scenario": "Portal en rapportregressie",
       "expected": "Nieuwe rol verleent geen portaalrecht; historische sponsorselectie en F0-meetweergave blijven correct.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "U01",
       "work_package": "F1.5",
       "scenario": "Allowlist event en nieuws",
       "expected": "Alleen expliciet gekozen publieke velden worden in interne publicatiepayload opgenomen.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "U02",
       "work_package": "F1.5",
       "scenario": "Onbekend veld, script of gevaarlijke URL",
       "expected": "Inhoud wordt veilig geweigerd/gereinigd volgens contract; geen privéveld of actieve HTML in preview.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "U03",
       "work_package": "F1.5",
       "scenario": "Goedkeuring revisie 1 tegenover concept 2",
       "expected": "Revisie 2 erft geen goedkeuring; revisie 1 blijft onveranderlijk.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "U04",
       "work_package": "F1.5",
       "scenario": "Andere organisatie of ongeldige publicatieactor",
       "expected": "Geen inzage/goedkeuring op basis van algemeen admin- of voorzitterslabel alleen.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "U05",
       "work_package": "F1.5",
       "scenario": "Ingetrokken benodigde toestemming of mediarecht",
       "expected": "Revisie kan niet als actueel publicatiegereed worden gebruikt.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "U06",
       "work_package": "F1.5",
       "scenario": "Interne intrekking en replay",
       "expected": "Oud verzoek kan ingetrokken revisie niet opnieuw activeren; audit blijft behouden.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "U07",
       "work_package": "F1.5",
       "scenario": "Generieke contentgoedkeuring",
       "expected": "Algemeen approved-label geeft geen goedkeuring voor willekeurige payload/hash.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "U08",
       "work_package": "F1.5",
       "scenario": "F2-leescontract en negatieve contractfixtures",
       "expected": "Lijst/detail bevatten geen interne IDs of private bronnen; onbekend/ingetrokken resultaat onthult geen dossier.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "U09",
       "work_package": "F1.5",
       "scenario": "Publicatieperiode, taal, slug en revisiehash",
       "expected": "Conflicten en tijdgrenzen zijn gedefinieerd; canonieke payload blijft versiegebonden.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "U10",
       "work_package": "F1.5",
       "scenario": "F1-preview en F2-cachepoort",
       "expected": "Preview blijft intern; 60-secondencontract is toekomstige meetplicht, geen geclaimde publieke F1-acceptatie.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "R01",
       "work_package": "F1.6",
       "scenario": "Alle app- en databaseomwegen",
       "expected": "Serveraction, directe RPC, tabelwrite en save_dossier_bundle respecteren dezelfde beschermde voorwaarden.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "R02",
       "work_package": "F1.6",
       "scenario": "Mandaatintrekking tegenover beslissing",
       "expected": "Twee echte verbindingen bewijzen hercontrole/serialisatie; geen besluit na eerder gecommitteerde intrekking.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts",
+          "tests/f1-concurrency.mjs"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "R03",
       "work_package": "F1.6",
       "scenario": "Bronvervanging of doelintrekking tegenover gebruik",
       "expected": "Actuele versie/geldigheid wordt onder passende locks gecontroleerd; geen stale positieve write.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts",
+          "tests/f1-concurrency.mjs"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "R04",
       "work_package": "F1.6",
       "scenario": "Idempotentie, conflict en foutafhandeling",
       "expected": "Identieke request-ID herhaalt uitkomst; gewijzigde payload/conflict/timeout geeft geen dubbel of gedeeltelijk effect.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts",
+          "tests/f1-concurrency.mjs"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "E01",
       "work_package": "F1.6",
       "scenario": "Migratiemanifest en oude seed",
       "expected": "Alleen exact goedgekeurde nieuwe versies worden toegepast/geregistreerd; 20261001110000 blijft uitgesloten.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "E02",
       "work_package": "F1.6",
       "scenario": "Nieuwe en bestaande databasefixture",
       "expected": "Native PostgreSQL 17-opbouw en upgrade vanaf F0-equivalente baseline slagen met minimale grants/RLS.",
-      "status": "planned",
-      "evidence": null
+      "status": "fixture_tested_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "E03",
       "work_package": "F1.6",
       "scenario": "Back-up en geteste terugval",
       "expected": "Handmatige back-up/registerexport aanwezig; vorige image kan nieuwe rechten niet omzeilen; geen historie verwijderen.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "E04",
       "work_package": "F1.6",
       "scenario": "Bestaande integraties en flags",
       "expected": "Tickets, accountkoppelingen, Bucks en finance/e-mailgoedkeuringen behouden; earning/preview/intake/slotkeuze blijven uit.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "E05",
       "work_package": "F1.6",
       "scenario": "Gebruikersschermen",
       "expected": "Toetsenbord, foutfocus, smal scherm en light/dark werken; geen technische of privévelden in gewone flows.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     },
     {
       "id": "E06",
       "work_package": "F1.6",
       "scenario": "Bewijs en menselijke DEV-acceptatie",
       "expected": "Versie, migratie, tests, deploy en praktische acceptatie apart vastgelegd; geplande/fixturetests niet als live geslaagd getoond.",
-      "status": "planned",
-      "evidence": null
+      "status": "partial_fixture_or_dev_pending",
+      "evidence": {
+        "report": "Implementatie-en-testbewijs.md",
+        "automated": [
+          "tests/f1-database.test.mts",
+          "tests/f1-interface.test.mts"
+        ],
+        "live_accepted": false
+      }
     }
-  ]
+  ],
+  "evidence_report": "Implementatie-en-testbewijs.md"
 }

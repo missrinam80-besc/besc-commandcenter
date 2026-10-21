@@ -1,4 +1,5 @@
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
+import { F1PartnerRoles } from "@/components/f1-partner-roles";
 import { ContactDossierPanels } from "@/components/contact-dossier-panels";
 import { DossierTabContent } from "@/components/dossier-tab-content";
 import { contactTabs, resolveContactTab } from "@/lib/contact-dossier-tabs";
@@ -161,6 +162,7 @@ export async function OperationalRecordDetail({
       </header>
       {isTabbedDossier && <nav className="event-dossier-tabs" aria-label="Onderdelen van de fiche">{contactTabs(module).map(t=><Link key={t.id} href={`?tab=${t.id}`} scroll={false} aria-current={activeTab===t.id?"page":undefined}>{t.label}</Link>)}</nav>}
       <DossierTabContent tab={activeTab}><div className={`project-detail-body ${isTabbedDossier ? "contact-dossier" : ""}`}>
+        {module==='sponsors'&&activeTab==='algemeen'&&<F1PartnerRoles partnerId={id}/>}
         {query.fout && <div className="error-note">De wijziging kon niet worden opgeslagen ({query.fout}).</div>}
         {query.succes && <div className="success">De wijziging is opgeslagen.</div>}
         {(

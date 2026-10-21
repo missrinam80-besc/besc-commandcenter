@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import {partnerRoleLabels} from "@/lib/f1-workflows";
 import {assetHasPurchaseFields,assetAcquisitions,assetStorageValues,materialPeriod,materialBlocked,type AssetCalendar,type AssetFollowup} from "@/lib/asset-followup";
 import {assetStatuses} from "@/lib/asset-bulk";
 import {AssetPlanning} from "./asset-planning";
@@ -53,6 +54,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
   const [draft,setDraft]=useState<DossierDraft>(()=>{const created=createDossierDraft(kind,id,record,parts);if(!record)created.values={...created.values,...initialValues};return created;});
   const [tab,setTab]=useState(tabs.find(item=>item.id===initialTab)?.id??tabs[0].id),[saving,setSaving]=useState(false),[message,setMessage]=useState("");
   const [issues,setIssues]=useState<EditorIssue[]>([]);
+  const [partnerContribution,setPartnerContribution]=useState('');
   const dirty=editorHasChanges(draft);
   const folderUnlinkPending=!hasDossierDriveFolder(draft)&&(Boolean(draft.base?.drive_url)||(draft.parts.google_resource_links??[]).some(row=>row.deleted&&row.base?.resource_type==="folder"));
   const [touched,setTouched]=useState(false);
@@ -118,6 +120,8 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
     const choiceValues=Object.fromEntries(Object.entries(options).filter(([key])=>key.startsWith("choices:")).map(([key,rows])=>[key.slice(8),rows.map(row=>row.id)]));
     for(const def of [cfg,...cfg.collections])for(const field of editorFields(kind,def.table))if(managedChoice(def.table,field.name))choiceValues[choiceKey(def.table,field.name)]??=[];
     const bundle=buildEditorBundle(draft),problems=validateEditorIssues(bundle,cfg,choiceValues);
+    if(partnerContribution)bundle.partner_contribution=partnerContribution;
+    if(kind==='campaign'&&draft.values.partner_id&&(bundle.root.new||bundle.root.values.partner_id)&&!partnerContribution){setMessage('Kies de expliciete bijdrage van de partner en bevestig vooraf de actuele rol bij Gedeelde werkstromen.');return;}
     setIssues(problems);
     if(problems.length){setMessage("Controleer de onderstaande velden. Er is niets opgeslagen.");return;}
     setSaving(true);setMessage("");
@@ -130,6 +134,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
     finally{setSaving(false);}
   }
   return <form className="dossier-editor" onSubmit={save} noValidate>
+    {kind==='campaign'&&Boolean(draft.values.partner_id)&&<label>Expliciete partnerbijdrage<select value={partnerContribution} onChange={e=>setPartnerContribution(e.target.value)}><option value="">Kies bij nieuwe of gewijzigde partner</option>{Object.entries(partnerRoleLabels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select><small>Deze keuze vraagt een bevestigde partnerrol en een toegewezen partnerwerkstroom. De bestaande hoofdclassificatie blijft behouden.</small></label>}
     <div className="dossier-editor-heading"><h2>{mode==="create"?`Nieuw: ${cfg.label}`:`${cfg.label} bewerken`}</h2><span>{dirty?"Niet opgeslagen":"Geen wijzigingen"}</span></div>
     {tabs.length>1&&<div className="event-dossier-tabs dossier-editor-tabs" role="tablist" aria-label="Dossieronderdelen">{tabs.map(item=><button type="button" role="tab" id={`editor-tab-${item.id}`} aria-controls={`editor-panel-${item.id}`} aria-selected={tab===item.id} tabIndex={tab===item.id?0:-1} key={item.id} onClick={()=>setTab(item.id)} onKeyDown={e=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(e.key))return;e.preventDefault();const index=tabs.findIndex(t=>t.id===tab);const next=e.key==="Home"?0:e.key==="End"?tabs.length-1:(index+(e.key==="ArrowRight"?1:-1)+tabs.length)%tabs.length;setTab(tabs[next].id);document.getElementById(`editor-tab-${tabs[next].id}`)?.focus();}}>{item.label}</button>)}</div>}
     {message&&<div id="dossier-save-feedback" className="error-note" role="alert"><p>{message}</p>{issues.length>0&&<ul>{issues.map((issue,index)=><li key={index}>{issue.tab?<button type="button" className="dossier-error-link" onClick={()=>{setTab(issue.tab!);setTimeout(()=>{const field=issue.field&&document.getElementById(`${issue.field}-${issue.rowId??id}`);(field||document.getElementById(`editor-panel-${issue.tab}`))?.focus();},0);}}>{editorIssueText(issue)}</button>:editorIssueText(issue)}</li>)}</ul>}</div>}

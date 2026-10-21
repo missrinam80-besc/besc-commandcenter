@@ -1,5 +1,8 @@
 # F1 acceptatie en DEV-draaiboek
 
+Actuele bouwstatus en afwijkingen ten opzichte van het voorbereide contract: [implementatie en testbewijs](Implementatie-en-testbewijs.md). Dit document bewaart ook voorstellen en de afzonderlijke voorwaarden voor DEV/F2.
+
+
 [F1-overzicht](README.md). Dit is de testvoorraad vóór implementatie. Alle [62 proefgevallen](acceptatiegevallen.json) hebben status **planned**; geen ervan wordt als geslaagde F1-test voorgesteld.
 
 ## 1 Benodigde fixtures en bewijs

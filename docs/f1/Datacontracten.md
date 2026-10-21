@@ -1,5 +1,8 @@
 # F1 datacontracten voor de implementatie
 
+Actuele bouwstatus en afwijkingen ten opzichte van het voorbereide contract: [implementatie en testbewijs](Implementatie-en-testbewijs.md). Dit document bewaart ook voorstellen en de afzonderlijke voorwaarden voor DEV/F2.
+
+
 [F1-overzicht](README.md). Logisch veld-/constraintcontract, **geen huidige schemaweergave of uitvoerbare migratie**. Definitieve SQL wordt per eenheid gegenereerd, gereviewd en tegen de actuele Cloud-catalogus getoetst. Bestaande bronvelden blijven behouden.
 
 ## Gemeenschappelijk

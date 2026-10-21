@@ -25,9 +25,10 @@ for (const name of names) {
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length, 128);
+assert.equal(effects.tables.length, 130); // Ten RLS workflow tables and two private operation tables.
 assert.ok(effects.functions.length > 143);
-assert.ok(effects.tables.every((table) => table.rls));
+assert.ok(effects.tables.every((table) => table.rls || (table.schema === 'private' && ['f1_context','f1_receipts'].includes(table.name))));
+assert.ok(effects.tables.filter(table=>table.schema==='private').every(table=>Object.values(table.grants).every(grants=>Object.values(grants).every(value=>value===false))), 'Private operation tables have no client grants');
 const dataState = JSON.parse(sql(readFileSync(new URL("../ops/foundation-data-state.sql", import.meta.url), "utf8")));
 assert.equal(dataState.guideline_titles_missing, 0);
 assert.equal(dataState.eligible_accounts_without_active_contact, 0);

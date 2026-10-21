@@ -1,5 +1,8 @@
 # F1 code-impact en bronnen
 
+Actuele bouwstatus en afwijkingen ten opzichte van het voorbereide contract: [implementatie en testbewijs](Implementatie-en-testbewijs.md). Dit document bewaart ook voorstellen en de afzonderlijke voorwaarden voor DEV/F2.
+
+
 [F1-overzicht](README.md). Codebasis: main `594392cef96c2e9eb86ac93ea5b476f15038757e`, gecontroleerd op 21 oktober 2026. Onderstaande bestanden zijn rechtstreeks gelezen of gericht doorzocht. Historische migraties beschrijven oorspronkelijke wijzigingen; de volledige huidige schema-effectvergelijking en F0-postflight staan afzonderlijk in het uitvoeringsbewijs. Dit is geen nieuwe live schema-audit van alle andere ecosysteemonderdelen.
 
 ## 1 Bestaande aangrijpingspunten

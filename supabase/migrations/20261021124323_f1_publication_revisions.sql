@@ -1,4 +1,12 @@
 begin;
+alter table public.document_registry add column media_rights_revoked_at timestamptz;
+alter table public.document_registry add column media_rights_revoked_by uuid references public.profiles(id);
+alter table public.document_registry add column media_rights_revocation_reason text;
+create function private.f1_media_rights_guard() returns trigger language plpgsql security definer set search_path='' as $$begin
+ if row(new.media_rights_revoked_at,new.media_rights_revoked_by,new.media_rights_revocation_reason) is distinct from row(old.media_rights_revoked_at,old.media_rights_revoked_by,old.media_rights_revocation_reason) and(old.media_rights_revoked_at is not null or not private.f1_writing(new.organization_id)) then raise exception 'f1_media_rights_protected' using errcode='42501';end if;return new;
+end$$;
+revoke all on function private.f1_media_rights_guard() from public,anon,authenticated,service_role;
+create trigger f1_media_rights_revision before update on public.document_registry for each row execute function private.f1_media_rights_guard();
 alter table public.events add column f1_revision bigint not null default 1;
 alter table public.content_items add column f1_revision bigint not null default 1;
 create trigger f1_event_revision before insert or update on public.events for each row execute function private.f1_revision_guard();
@@ -23,14 +31,16 @@ create function private.f1_publication_source(o uuid,t text,i uuid) returns bigi
 end$$;
 create function private.f1_public_payload(p jsonb,t text) returns jsonb language plpgsql immutable set search_path='' as $$declare a text[];m jsonb;h text;begin
  a:=array['title','summary','body','slug','locale','media'];if t='event' then a:=a||array['starts_at','ends_at','timezone','location_label','registration_url'];end if;
+ if jsonb_typeof(p->'title') is distinct from 'string' or jsonb_typeof(p->'slug') is distinct from 'string' or jsonb_typeof(p->'locale') is distinct from 'string' or(p?'summary' and jsonb_typeof(p->'summary') is distinct from 'string') then raise exception 'f1_public_payload_invalid' using errcode='22023';end if;
  if jsonb_typeof(p) is distinct from 'object' or exists(select 1 from jsonb_object_keys(p) k where not k=any(a)) or length(btrim(coalesce(p->>'title','')))<2 or length(p->>'title')>240 or length(coalesce(p->>'summary',''))>2000 or coalesce(p->>'slug','')!~ '^[a-z0-9]+(-[a-z0-9]+)*$' or length(p->>'slug')>160 or coalesce(p->>'locale','') not in('nl-BE','fr-BE','en') then raise exception 'f1_public_payload_invalid' using errcode='22023';end if;
  if p->'body'->>'format' is distinct from 'sanitized_html' or jsonb_typeof(p->'body')<>'object' or exists(select 1 from jsonb_object_keys(p->'body') k where k not in('format','value')) then raise exception 'f1_public_body_invalid';end if;
- h:=p->'body'->>'value';if h is null or length(h)>32000 or regexp_replace(h,'</?(p|strong|em|ul|ol|li|br)\s*/?>','','gi') ~ '[<>]' then raise exception 'f1_public_html_unsafe';end if;
+ h:=p->'body'->>'value';if jsonb_typeof(p->'body'->'value') is distinct from 'string' or h is null or length(h)>32000 or regexp_replace(h,'</?(p|strong|em|ul|ol|li|br)\s*/?>','','gi') ~ '[<>]' then raise exception 'f1_public_html_unsafe';end if;
  if jsonb_typeof(p->'media') is distinct from 'array' or jsonb_array_length(p->'media')>10 then raise exception 'f1_public_media_invalid';end if;
  for m in select value from jsonb_array_elements(p->'media') loop
   if jsonb_typeof(m)<>'object' or exists(select 1 from jsonb_object_keys(m) k where k not in('url','alt','credit')) or coalesce(m->>'url','')!~ '^https://[^[:space:]?#]+$' or lower(m->>'url') ~ '(localhost|127[.]|/sign/|/private/)' or length(btrim(coalesce(m->>'alt','')))<2 or length(m->>'alt')>500 or length(coalesce(m->>'credit',''))>500 then raise exception 'f1_public_media_unsafe';end if;
  end loop;
  if t='event' then
+  if jsonb_typeof(p->'starts_at') is distinct from 'string' or jsonb_typeof(p->'ends_at') is distinct from 'string' or(p?'location_label' and jsonb_typeof(p->'location_label') is distinct from 'string') or(p?'registration_url' and jsonb_typeof(p->'registration_url') is distinct from 'string') then raise exception 'f1_public_payload_invalid';end if;
   if nullif(p->>'starts_at','')::timestamptz is null or nullif(p->>'ends_at','')::timestamptz is null or(p->>'ends_at')::timestamptz<=(p->>'starts_at')::timestamptz or p->>'timezone' is distinct from 'Europe/Brussels' then raise exception 'f1_event_time_required';end if;
   if nullif(p->>'registration_url','') is not null and (p->>'registration_url'!~ '^https://[^[:space:]]+$' or lower(p->>'registration_url') ~ '(localhost|127[.]|javascript:|/sign/|/private/)') then raise exception 'f1_public_url_unsafe';end if;
  end if;
@@ -40,10 +50,14 @@ create function private.f1_publication_valid(o uuid,i uuid) returns boolean lang
  select * into x from public.publication_revisions where organization_id=o and id=i and status='approved_for_publication';if not found then return false;end if;
  if x.consent_id is not null and not private.f1_consent_valid(o,x.consent_id) then return false;end if;
  begin perform private.f1_publication_source(o,x.source_type,x.source_id);exception when others then return false;end;
- if x.media_rights_document_id is not null and not exists(select 1 from public.document_registry where id=x.media_rights_document_id and organization_id=o) then return false;end if;return true;
+ if x.media_rights_document_id is not null and not exists(select 1 from public.document_registry where id=x.media_rights_document_id and organization_id=o and media_rights_revoked_at is null) then return false;end if;return true;
 end$$;
 create function private.f1_publication(o uuid,op text,d jsonb) returns jsonb language plpgsql security definer set search_path='' as $$declare answer uuid;rev bigint;n integer;payload jsonb;x public.publication_revisions;src jsonb;begin
- if op='publication.draft' then
+ if op='publication.revoke_media' then
+  if not(private.f1_role(o,'publication_editor') or private.f1_role(o,'publication_reviewer')) or not private.f1_document_visible(o,(d->>'document_id')::uuid) then raise exception 'f1_not_authorized' using errcode='42501';end if;
+  if length(btrim(coalesce(d->>'reason','')))<2 then raise exception 'f1_reason_required';end if;
+  update public.document_registry set media_rights_revoked_at=clock_timestamp(),media_rights_revoked_by=auth.uid(),media_rights_revocation_reason=left(d->>'reason',2000) where organization_id=o and id=(d->>'document_id')::uuid and media_rights_revoked_at is null returning id into answer;
+ elsif op='publication.draft' then
   if not private.f1_role(o,'publication_editor') then raise exception 'f1_publication_editor_required' using errcode='42501';end if;
   rev:=private.f1_publication_source(o,d->>'source_type',(d->>'source_id')::uuid);
   if rev is distinct from(d->>'expected_revision')::bigint then raise exception 'f1_revision_conflict' using errcode='40001';end if;
@@ -56,6 +70,7 @@ create function private.f1_publication(o uuid,op text,d jsonb) returns jsonb lan
   if nullif(d->>'consent_id','') is not null and not private.f1_consent_valid(o,(d->>'consent_id')::uuid) then raise exception 'f1_consent_unavailable';end if;
   if nullif(d->>'consent_id','') is not null and not exists(select 1 from public.consent_records c join public.processing_purposes p on p.id=c.purpose_id and p.organization_id=c.organization_id where c.id=(d->>'consent_id')::uuid and c.organization_id=o and p.purpose_code='public_profile') then raise exception 'f1_public_consent_purpose_required';end if;
   if jsonb_array_length(payload->'media')>0 and(nullif(d->>'media_rights_document_id','') is null or not private.f1_document_visible(o,(d->>'media_rights_document_id')::uuid)) then raise exception 'f1_media_rights_required';end if;
+  if nullif(d->>'media_rights_document_id','') is not null and not exists(select 1 from public.document_registry where organization_id=o and id=(d->>'media_rights_document_id')::uuid and media_rights_revoked_at is null) then raise exception 'f1_media_rights_required';end if;
   select coalesce(max(revision),0)+1 into n from public.publication_revisions where organization_id=o and source_type=d->>'source_type' and source_id=(d->>'source_id')::uuid;
   insert into public.publication_revisions(organization_id,source_type,source_id,source_revision,revision,payload,payload_sha256,consent_id,media_rights_document_id,created_by) values(o,d->>'source_type',(d->>'source_id')::uuid,rev,n,payload,encode(sha256(convert_to(payload::text,'UTF8')),'hex'),nullif(d->>'consent_id','')::uuid,nullif(d->>'media_rights_document_id','')::uuid,auth.uid()) returning id into answer;
  elsif op in('publication.submit','publication.review','publication.withdraw') then
@@ -68,13 +83,14 @@ create function private.f1_publication(o uuid,op text,d jsonb) returns jsonb lan
    if not private.f1_role(o,'publication_reviewer') or x.status<>'in_review' or d->>'rights_confirmed' is distinct from 'true' then raise exception 'f1_publication_review_not_allowed' using errcode='42501';end if;
    rev:=private.f1_publication_source(o,x.source_type,x.source_id);if rev<>x.source_revision then raise exception 'f1_revision_conflict' using errcode='40001';end if;
    if x.consent_id is not null and not private.f1_consent_valid(o,x.consent_id) then raise exception 'f1_consent_unavailable';end if;
+   if x.media_rights_document_id is not null and(not private.f1_document_visible(o,x.media_rights_document_id) or not exists(select 1 from public.document_registry where id=x.media_rights_document_id and organization_id=o and media_rights_revoked_at is null)) then raise exception 'f1_media_rights_required';end if;
    if d->>'decision' not in('approved_for_publication','changes_requested') or length(btrim(coalesce(d->>'reason','')))<2 then raise exception 'f1_review_required';end if;
    update public.publication_revisions set status=d->>'decision',reviewed_by=auth.uid(),reviewed_at=clock_timestamp(),review_note=d->>'reason' where id=x.id;
   else
    if not(private.f1_role(o,'publication_editor') or private.f1_role(o,'publication_reviewer')) then raise exception 'f1_not_authorized' using errcode='42501';end if;
    update public.publication_revisions set status='withdrawn',withdrawn_at=coalesce(withdrawn_at,clock_timestamp()) where id=x.id;
   end if;answer:=x.id;
- else raise exception 'f1_unknown_operation';end if;return jsonb_build_object('id',answer);
+ else raise exception 'f1_unknown_operation';end if;if answer is null then raise exception 'f1_not_available';end if;return jsonb_build_object('id',answer);
 end$$;
 revoke all on function private.f1_publication_source(uuid,text,uuid),private.f1_public_payload(jsonb,text),private.f1_publication_valid(uuid,uuid),private.f1_publication(uuid,text,jsonb) from public,anon,authenticated,service_role;
 alter table public.publication_revisions enable row level security;
@@ -107,6 +123,7 @@ create function private.f1_validate(op text,d jsonb) returns void language plpgs
  when 'partner.campaign' then 'values deliverables contribution_role'
  when 'publication.draft' then 'source_type source_id expected_revision payload consent_id media_rights_document_id'
  when 'publication.submit' then 'id expected_hash' when 'publication.withdraw' then 'id expected_hash'
+ when 'publication.revoke_media' then 'document_id reason'
  when 'publication.review' then 'id expected_hash decision reason rights_confirmed' else null end;
  if allowed is null or exists(select 1 from jsonb_object_keys(d) k where not k=any(string_to_array(allowed,' '))) then raise exception 'f1_invalid_fields' using errcode='22023';end if;
 end$$;

@@ -1,0 +1,9 @@
+{
+ "schema_version":"besc-publication-v1",
+ "public_endpoint_enabled":false,
+ "fixtures":[
+  {"type":"news","payload":{"title":"TESTFIXTURE — NIET PUBLICEREN","summary":"Uitsluitend interne contractproef","slug":"testfixture-nieuws","locale":"nl-BE","body":{"format":"sanitized_html","value":"<p>Uitsluitend contracttest.</p>"},"media":[]}},
+  {"type":"event","payload":{"title":"TESTFIXTURE — NIET PUBLICEREN","summary":"Geen werkelijk event","slug":"testfixture-event","locale":"nl-BE","body":{"format":"sanitized_html","value":"<p>Uitsluitend contracttest.</p>"},"media":[],"starts_at":"2030-01-01T12:00:00Z","ends_at":"2030-01-01T13:00:00Z","timezone":"Europe/Brussels","location_label":"TESTFIXTURE","registration_url":"https://example.invalid/inschrijven"}}
+ ],
+ "f2_pending":["public_id and publication pointer","public list/detail authorization","cursor pagination","publication window","cache and revocation SLA","partner projection"]
+}

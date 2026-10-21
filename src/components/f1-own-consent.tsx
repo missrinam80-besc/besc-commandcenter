@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { F1Feedback } from '@/components/f1-feedback';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { F1Form } from '@/components/f1-form';
@@ -15,7 +16,7 @@ export async function F1OwnConsent({query,returnTo}:{query:Record<string,string|
  if(error)return <p className="permission-note">Doelgerichte toestemmingen zijn in deze omgeving nog niet beschikbaar.</p>;
  const state=data as {purposes:Purpose[];records:Declaration[]};
  return <div className="f1-workspace"><nav aria-label="Organisatie">{orgs.length>1&&orgs.map((id,index)=><Link key={id} href={`${returnTo}?organisatie=${id}`}>Organisatie {index+1}</Link>)}</nav>
- {query.succes&&<p className="success" role="status">Je verklaring is bijgewerkt.</p>}{(query.fout||query.melding)&&<p className="error-note" role="alert">{query.melding??'Controleer de velden en bevestig de gekozen verklaring.'}</p>}
+ {query.succes&&<F1Feedback message="Je verklaring is bijgewerkt."/>}{(query.fout||query.melding)&&<F1Feedback error message={query.melding??'Controleer de velden en bevestig de gekozen verklaring.'}/>}
  <p>Je beslist per doel. Intrekken stopt toekomstig gebruik waarvoor deze verklaring nodig is. Historische administratie wordt volgens de vastgestelde bewaarbehandeling behandeld.</p>
  <section><h2>Beschikbare doelteksten</h2>{!state.purposes.length&&<p>Er zijn nog geen vastgestelde doelen waarvoor je een verklaring kunt afleggen.</p>}{state.purposes.map(p=><article key={p.id}><h3>{p.title}</h3><p>Tekstversie {p.text_version}</p><p style={{whiteSpace:'pre-wrap'}}>{p.body}</p><p>Gegevens: {scopeText(p.allowed_scope)}</p><p>Bewaarbehandeling: {p.retention_policy}</p><F1Form title="Voor dit doel een verklaring afleggen" operation="consent.give" organization={org} returnTo={returnTo} hidden={{data_purpose_id:p.id,data_scope:JSON.stringify(p.allowed_scope)}} fields={[{name:'data_accepted',label:'Ik heb deze specifieke tekst en gegevensscope gelezen en stem ermee in',type:'checkbox',required:true}]} button="Verklaring vastleggen"/></article>)}</section>
  <section><h2>Mijn verklaringen</h2>{!state.records.length&&<p>Je hebt nog geen doelverklaringen vastgelegd.</p>}{state.records.map(r=><article key={r.id}><h3>{r.purpose_title}</h3><p>Tekstversie {r.text_version} · {r.method==='self'?'Zelf vastgelegd':'Met extern bewijs geregistreerd'} · {r.valid?'Actueel geldig':'Niet meer geldig'}</p><details><summary>Vastgelegde tekst en scope</summary><p style={{whiteSpace:'pre-wrap'}}>{r.purpose_body}</p><p>{scopeText(r.scope)}</p></details>{r.valid&&<F1Form title="Deze verklaring intrekken" operation="consent.withdraw" organization={org} returnTo={returnTo} hidden={{data_id:r.id}} fields={[{name:'data_reason',label:'Reden (optioneel)',required:false}]} button="Intrekken"/>}</article>)}</section></div>;

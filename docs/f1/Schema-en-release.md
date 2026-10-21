@@ -1,5 +1,8 @@
 # F1 schema, migraties en release
 
+Actuele bouwstatus en afwijkingen ten opzichte van het voorbereide contract: [implementatie en testbewijs](Implementatie-en-testbewijs.md). Dit document bewaart ook voorstellen en de afzonderlijke voorwaarden voor DEV/F2.
+
+
 [F1-overzicht](README.md). Hieronder staan ontwerpeenheden, geen uitvoerbare SQL of vooraf aangemaakte migratieversies. Er is in deze voorbereiding geen database gewijzigd.
 
 ## 1 Model- en migratie-eenheden

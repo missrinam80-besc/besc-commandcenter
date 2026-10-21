@@ -1,5 +1,8 @@
 # F1 werkpakketten
 
+Actuele bouwstatus en afwijkingen ten opzichte van het voorbereide contract: [implementatie en testbewijs](Implementatie-en-testbewijs.md). Dit document bewaart ook voorstellen en de afzonderlijke voorwaarden voor DEV/F2.
+
+
 [F1-overzicht](README.md). Alle nieuwe object-/operatienamen hieronder zijn ontwerpvoorstellen. Definitieve migratiebestandsnamen ontstaan bij implementatie via `supabase migration new`, niet uit fictieve datums in dit plan.
 
 ## F1.1 Gecontroleerde identiteit en bevoegdheid

@@ -20,7 +20,7 @@ Deze wiki bundelt de handleidingen uit de repository in een klikbaar overzicht. 
 - [Ecosysteembasis en uitvoering](Ecosysteem-basis-en-uitvoering.md)
 - [Volledig F0-voorbereidingspakket](../f0/README.md)
 - [F0-uitvoering en DEV-acceptatie](../acceptatie/F0-UITVOERING-DEV-20261021.md)
-- [F1: gedeelde werkstromen voorbereiden](../f1/README.md)
+- [F1: gebouwde gedeelde werkstromen](../f1/README.md)
 - [Historische notities](Historische-notities.md)
 
 ## Huidige omgeving

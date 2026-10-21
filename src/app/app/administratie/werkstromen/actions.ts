@@ -1,5 +1,4 @@
 'use server';
-import { randomUUID } from 'node:crypto';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
@@ -26,6 +25,11 @@ export async function runF1Workflow(form:FormData){
  const member=String(form.get('member_ref')??'').split(':');if(member.length===2){data.member_id=member[0];data.expected_revision=Number(member[1]);}
  const person=String(form.get('person_ref')??'').split(':');if(person.length===2){data.person_id=person[0];data.account_user_id=person[1];}
  if(op==='consent.purpose')data.allowed_scope={fields:String(form.get('scope_fields')??'').split(',').map(x=>x.trim()).filter(Boolean)};
+ if(op==='consent.record_external'){
+  if(form.get('external_confirmation')!=='on')redirect(returnTo+'?fout=velden');
+  const {data:purpose}=await supabase.from('processing_purposes').select('allowed_scope').eq('organization_id',org).eq('id',String(data.purpose_id)).eq('status','active').maybeSingle();
+  if(!purpose)redirect(returnTo+'?fout=velden');data.scope=purpose.allowed_scope;
+ }
  if(op==='publication.draft'){
   const payload:Record<string,unknown>={title:String(form.get('public_title')??'').trim(),summary:String(form.get('public_summary')??'').trim(),slug:String(form.get('public_slug')??'').trim(),locale:String(form.get('public_locale')??'nl-BE'),body:{format:'sanitized_html',value:f1BodyFromText(String(form.get('public_body')??''))},media:[]};
   const mediaUrl=String(form.get('public_media_url')??'').trim();if(mediaUrl)payload.media=[{url:mediaUrl,alt:String(form.get('public_media_alt')??'').trim(),credit:String(form.get('public_media_credit')??'').trim()}];
@@ -43,5 +47,3 @@ export async function runF1Workflow(form:FormData){
  for(const page of ['/app/administratie','/app/administratie/werkstromen','/app/account/toestemming','/portal/toestemming','/app/sponsors','/app/campagnes'])revalidatePath(page,'layout');
  redirect(returnTo+'?succes=opgeslagen&organisatie='+org);
 }
-// New form instances receive an idempotency ID on the server, never a user actor.
-export async function newF1Request(){return randomUUID();}

@@ -2,11 +2,11 @@
 
 [← Wiki](README.md)
 
-## F0-uitvoering en F1-voorbereiding — 21 oktober 2026
+## F0-uitvoering en F1-bouwpakket — 21 oktober 2026
 
 Technische F0-uitvoering door Linda geaccepteerd: exacte F0-webimage, gezonde webservice, instellingen en rapport-/CSV-proef akkoord. Historieherstel bracht 117 registraties, met behoud van de oude 84 en gelijk gecontroleerd schema. Seed `20261001110000` blijft uitgezonderd; vijf kennisbankconcepten zijn alleen voorbereid. Geen automatische back-up of productieomschakeling. Zie [uitvoering](../acceptatie/F0-UITVOERING-DEV-20261021.md).
 
-[F1 is voorbereid](../f1/README.md) als bouw-/rechten-/migratie-/acceptatieplan; nieuwe functies en eigen publieke website zijn nog niet gebouwd of live gezet. Eerdere modulecontroles hieronder behouden hun eigen datum en bewijsgrens.
+[De zes F1-werkpakketten zijn gebouwd en geïsoleerd getest](../f1/Implementatie-en-testbewijs.md). De Cloud-migratie, deploy en menselijke DEV-acceptatie zijn nog niet uitgevoerd. De eigen publieke website volgt in F2. Eerdere modulecontroles hieronder behouden hun eigen datum en bewijsgrens.
 
 ## Actualisatie 21 oktober: bronregister en rewards-intake
 

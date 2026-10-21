@@ -76,7 +76,7 @@ alter table public.consent_withdrawals enable row level security;
 revoke all on public.processing_purposes,public.consent_records,public.consent_withdrawals from public,anon,authenticated,service_role;
 -- Purpose policy/evidence fields are never returned by the self-service function.
 grant select on public.processing_purposes,public.consent_records,public.consent_withdrawals to authenticated;
-create policy f1_purposes_managed on public.processing_purposes for select to authenticated using(private.f1_role(organization_id,'consent_registrar'));
+create policy f1_purposes_managed on public.processing_purposes for select to authenticated using(private.f1_role(organization_id,'consent_registrar') or private.f1_chair(organization_id));
 create policy f1_consent_own_or_managed on public.consent_records for select to authenticated using(private.f1_account(organization_id) and(account_user_id=auth.uid() or private.f1_role(organization_id,'consent_registrar')));
 create policy f1_withdraw_own_or_managed on public.consent_withdrawals for select to authenticated using(private.f1_account(organization_id) and(withdrawn_by=auth.uid() or private.f1_role(organization_id,'consent_registrar')));
 create function public.f1_own_consent(p_organization_id uuid) returns jsonb language plpgsql stable security definer set search_path='' as $$begin

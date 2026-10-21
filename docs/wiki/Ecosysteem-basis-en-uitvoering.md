@@ -2,7 +2,7 @@
 
 [← Wiki-startpagina](README.md)
 
-**Actuele vervolgstatus, 21 oktober 2026:** technische F0-uitvoering op DEV geaccepteerd. Main is `594392cef96c2e9eb86ac93ea5b476f15038757e`; 33 registraties zijn hersteld (117 totaal), de oude 84 behouden en gecontroleerd schema gelijk. Exacte webimage, instellingen en rapport-/CSV-proef zijn door Linda bevestigd. Eén oude seed blijft uitgesloten; vijf artikelen blijven voorbereide concepten. [Uitvoeringsbewijs](../acceptatie/F0-UITVOERING-DEV-20261021.md). [F1](../f1/README.md) is voorbereiding, nog geen nieuwe live functionaliteit.
+**Actuele vervolgstatus, 21 oktober 2026:** technische F0-uitvoering op DEV geaccepteerd. Main is `594392cef96c2e9eb86ac93ea5b476f15038757e`; 33 registraties zijn hersteld (117 totaal), de oude 84 behouden en gecontroleerd schema gelijk. Exacte webimage, instellingen en rapport-/CSV-proef zijn door Linda bevestigd. Eén oude seed blijft uitgesloten; vijf artikelen blijven voorbereide concepten. [Uitvoeringsbewijs](../acceptatie/F0-UITVOERING-DEV-20261021.md). [F1](../f1/Implementatie-en-testbewijs.md) bevat nu de zes gebouwde werkpakketten met geïsoleerd testbewijs; nog geen Cloud-migratie, deploy of live acceptatie.
 
 Onderstaande inventaris en verschillenlijst bewaren de oorspronkelijke F0.1-momentopname vóór uitvoering. Aantallen 84/34 en ‘nog niet uitgevoerd’ daarin zijn geen actuele F1-migratiebaseline; gebruik het bovenstaande uitvoeringsbewijs.
 

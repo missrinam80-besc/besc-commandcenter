@@ -1,5 +1,8 @@
 # F1 beslispunten en risico's
 
+Actuele bouwstatus en afwijkingen ten opzichte van het voorbereide contract: [implementatie en testbewijs](Implementatie-en-testbewijs.md). Dit document bewaart ook voorstellen en de afzonderlijke voorwaarden voor DEV/F2.
+
+
 [F1-overzicht](README.md). Linda's opdracht betreft volledige voorbereiding. Onderstaande voorstellen zijn concreet genoeg om per werkpakket te beoordelen; ze zijn niet stilzwijgend formeel vastgesteld of live toegepast.
 
 ## 1 Bevestigd

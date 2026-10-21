@@ -1,0 +1,48 @@
+{
+  "format": "besc-f1-release-manifest-v1",
+  "prepared_at": "2026-10-21",
+  "repository": "missrinam80-besc/besc-commandcenter",
+  "baseline_commit": "594392cef96c2e9eb86ac93ea5b476f15038757e",
+  "target": "Cloud Supabase DEV - CC only",
+  "execution_authorized": false,
+  "excluded_history": [
+    "20261001110000_seed_operational_guidelines.sql"
+  ],
+  "historical_files_unchanged": 118,
+  "cloud_history_before": 117,
+  "cloud_history_after_if_authorized": 123,
+  "fixture_replay_count": 124,
+  "hash_encoding": "SHA256 of UTF-8 SQL with LF newlines",
+  "migrations": [
+    {
+      "file": "20261021124313_f1_identity_authority.sql",
+      "version": "20261021124313",
+      "sha256_lf": "c089876d4bfc45d00f8c5be49f985f95e7cda9f7bff9164f8fa7a955f5cf3d79"
+    },
+    {
+      "file": "20261021124316_f1_governance_evidence.sql",
+      "version": "20261021124316",
+      "sha256_lf": "e337d31fc1a59f252b4d8adccef8de9046f451684e742f26eaf2b776331c5acf"
+    },
+    {
+      "file": "20261021124318_f1_purpose_consent.sql",
+      "version": "20261021124318",
+      "sha256_lf": "23bd741121564d4a7ac7dac447f3f85c854c6a41bd5b25e9cb9a00ccf4618d5f"
+    },
+    {
+      "file": "20261021124321_f1_partner_roles.sql",
+      "version": "20261021124321",
+      "sha256_lf": "2c2f93377c123dc59609485210633d6292947af0c36f8f6712efd855c175fc9f"
+    },
+    {
+      "file": "20261021124323_f1_publication_revisions.sql",
+      "version": "20261021124323",
+      "sha256_lf": "b6171f8a2975637cb5c0101a16b407b541c79765e66e8dd08054319bf5cac925"
+    },
+    {
+      "file": "20261021131239_f1_editor_catalog.sql",
+      "version": "20261021131239",
+      "sha256_lf": "a1ae4433dbf911f1b1cab420b502fb3bef51ec8fe1f24f1052eef7b0dae2fda3"
+    }
+  ]
+}
