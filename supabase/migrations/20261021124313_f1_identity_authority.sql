@@ -38,7 +38,9 @@ revoke all on private.f1_context,private.f1_receipts from public,anon,authentica
 create function private.f1_lock() returns void language sql volatile set search_path='' as $$select pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('besc:f1:workflows:v1',0))$$;
 create function private.f1_gate() returns trigger language plpgsql security invoker set search_path='' as $$begin perform private.f1_lock();return null;end$$;
 revoke all on function private.f1_lock(),private.f1_gate() from public,anon;
-grant execute on function private.f1_lock(),private.f1_gate() to authenticated;
+-- The gate only serializes: existing server writes retain this helper without
+-- gaining access to any F1 workflow, receipt, verification or decision.
+grant execute on function private.f1_lock(),private.f1_gate() to authenticated,service_role;
 do $$declare t text;begin foreach t in array array['association_members','community_people','governance_mandates','organization_members','portal_access','compliance_deadlines','meetings','administrative_documents','document_registry','document_registry_sources','record_links','google_resource_links','asset_document_links','approval_requests','record_relationships','partners','campaigns','content_items','events'] loop execute format('create trigger f1_statement_gate before insert or update or delete on public.%I for each statement execute function private.f1_gate()',t);end loop;end$$;
 
 create function private.f1_human(o uuid) returns boolean language sql stable security definer set search_path='' as $$
