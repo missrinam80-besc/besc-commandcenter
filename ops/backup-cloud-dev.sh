@@ -24,6 +24,9 @@ project_ref='sjvzrsmrtcxxtmaxigtn'
 pg_host='aws-0-eu-central-1.pooler.supabase.com'
 pg_user="postgres.$project_ref"
 pg_image='postgres:17'
+ca_file="$app_dir/ops/supabase-ca-2021.crt"
+[[ -f "$ca_file" && ! -L "$ca_file" ]] || { echo 'Gecontroleerd Supabase CA-bestand ontbreekt.' >&2; exit 1; }
+[[ "$(sha256sum "$ca_file" | cut -d ' ' -f 1)" == '700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7' ]] || { echo 'Supabase CA-controle wijkt af.' >&2; exit 1; }
 backup_root='/var/backups/besc-command-center/dev'
 [[ ! -L "$backup_root" ]] || { echo 'Backupmap mag geen symlink zijn.' >&2; exit 1; }
 install -d -m 700 -- "$backup_root"
@@ -47,9 +50,10 @@ chmod 600 "$password_file"
 pg_run() {
   docker run --rm --network host \
     --mount "type=bind,src=$password_file,dst=/run/besc.pgpass,readonly" \
+    --mount "type=bind,src=$ca_file,dst=/run/supabase-ca.crt,readonly" \
     --mount "type=bind,src=$backup_dir,dst=/backup" \
     -e PGHOST="$pg_host" -e PGPORT=5432 -e PGDATABASE=postgres -e PGUSER="$pg_user" \
-    -e PGPASSFILE=/run/besc.pgpass -e PGSSLMODE=require -e PGCONNECT_TIMEOUT=15 \
+    -e PGPASSFILE=/run/besc.pgpass -e PGSSLMODE=verify-full -e PGSSLROOTCERT=/run/supabase-ca.crt -e PGCONNECT_TIMEOUT=15 \
     -e 'PGOPTIONS=-c default_transaction_read_only=on' "$pg_image" "$@"
 }
 

@@ -42,5 +42,5 @@ export async function f1Database(){
  for(const role of ['consent_registrar','partner_editor','publication_editor'])await call('identity.assign',{user_id:ids.chair,role});
  await call('identity.assign',{user_id:ids.reviewer,role:'publication_reviewer'});await call('identity.assign',{user_id:ids.member,role:'governance_editor'});
  await owner();
- return {db,ids,actor,owner,call,migrationCount:files.length};
+ return {db,ids,actor,owner,call,migrationCount:files.length,f1MigrationCount:files.filter(file=>file.split('_')[0]<='20261021131239').length};
 }

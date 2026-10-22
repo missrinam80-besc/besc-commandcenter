@@ -2,3 +2,4 @@ ops/*.sh text eol=lf
 ops/*.cjs text eol=lf
 ops/*.service text eol=lf
 ops/*.timer text eol=lf
+ops/supabase-ca-2021.crt -text

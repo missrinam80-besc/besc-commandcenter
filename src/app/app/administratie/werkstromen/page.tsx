@@ -50,7 +50,7 @@ export default async function Page({searchParams}:{searchParams:Promise<Record<s
  const previewMap=new Map(previewStates);
  const stateMap=new Map(states);const stateLabels:Record<string,string>={not_demonstrated:'Uitvoering niet aangetoond',demonstrated:'Uitvoering aangetoond',not_applicable:'Niet van toepassing — beoordeeld',reassessment_required:'Herbeoordeling vereist'};
  return <AppShell active="VZW-administratie"><header className="topbar module-top"><div><p>BESTUUR & GEDEELDE WERKSTROMEN</p><h1>Bewijs, rollen en publicatie</h1></div></header><div className="module-body f1-workspace">
-  <nav aria-label="Werkstromen"><Link href="/app/administratie">Administratie</Link><Link href="/app/account/toestemming">Mijn toestemmingen</Link><Link href="#governance">Bewijs en besluiten</Link><Link href="#partners">Partnerrollen</Link><Link href="#publicatie">Publieke concepten</Link></nav>
+  <nav aria-label="Werkstromen"><Link href="/app/administratie">Administratie</Link><Link href="/app/account/toestemming">Mijn toestemmingen</Link><Link href="#governance">Bewijs en besluiten</Link><Link href="#partners">Partnerrollen</Link><Link href="#publicatie">Publieke concepten</Link><Link href="/app/administratie/website">Websitepublicatie</Link></nav>
   {query.succes&&<F1Feedback message="De handeling is opgeslagen. Hieronder staan de actuele gegevens."/>}
   {(query.fout||query.melding)&&<F1Feedback error message={query.fout==='eventtijd'?'Vul eerst begin- en eindtijd in de oorspronkelijke eventfiche in.':query.melding??'Controleer de ingevulde velden. Er is niets opgeslagen.'}/>}
   {results.some(r=>r.error)&&<p className="permission-note" role="alert">Niet alle keuzelijsten konden worden geladen. Vernieuw de pagina voordat je een dossier beoordeelt.</p>}
