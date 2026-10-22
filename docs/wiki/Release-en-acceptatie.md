@@ -1,5 +1,7 @@
 # Release en acceptatie
 
+Actuele F1-uitvoering: [Cloud DEV-release, schermproeven en afsluitvoorwaarden van 22 oktober 2026](../acceptatie/F1-DEV-20261022.md). De eerdere F1-voorbereiding is niet de actuele uitvoeringsstatus.
+
 [← Wiki-startpagina](README.md)
 
 De acceptatieomgeving is Cloud DEV. Gebruik onderstaande werkwijze voor nieuwe wijzigingen; oudere vinkjes of momentopnamen bewijzen geen actuele acceptatie.

@@ -1,6 +1,6 @@
 # F1 — gedeelde werkstromen
 
-Gebouwd op 21 oktober 2026 op expliciete opdracht: **alle zes werkpakketten bouwen en testen**. Het pakket bevat databasebeveiliging, schermen, integraties met de bestaande dossiereditor en geïsoleerde acceptatieproeven. Zie [implementatie en testbewijs](Implementatie-en-testbewijs.md) voor de werkelijke uitkomst en grenzen. Cloud-migratie, merge, deploy en menselijke DEV-acceptatie zijn nog afzonderlijke stappen. Er is niemand een echt mandaat of recht toegekend.
+Gebouwd op 21 oktober 2026 op expliciete opdracht: **alle zes werkpakketten bouwen en testen**. Het pakket bevat databasebeveiliging, schermen, integraties met de bestaande dossiereditor en geïsoleerde acceptatieproeven. Op 22 oktober zijn de zes migraties op Cloud DEV uitgevoerd, PR #112 gemerged, de exacte webimage bevestigd en de aangewezen voorzittersbinding uitgevoerd. Gerichte schermacceptatie is uitgevoerd. Zie [DEV-uitvoering en afsluitvoorwaarden](../acceptatie/F1-DEV-20261022.md) voor de actuele stand en [implementatie en testbewijs](Implementatie-en-testbewijs.md) voor het eerdere bouwbewijs.
 
 ## Doel en vertrekpunt
 
@@ -43,4 +43,4 @@ F1 bereidt die interfaces voor en bouwt de interne voorwaarden. F1 accepteert ge
 
 **Voorbereid** betekent: gedrag, betrokken code, model, rechten, omwegen, migratieaanpak, testgevallen, terugval en menselijke beslispunten zijn beschreven. Dit pakket voldoet daaraan; open beleidskeuzes zijn herkenbaar als voorstel en blokkeren alleen hun afhankelijke live stap.
 
-**F1 gebouwd** vereist geïmplementeerde wijzigingen plus groene geïsoleerde tests/CI. **F1 gemigreerd/deployed** vereist afzonderlijk uitvoeringsbewijs per omgeving. **F1 op DEV geaccepteerd** vereist de proeven en menselijke bevestiging uit het draaiboek. De gebouwde laag is opgenomen in het implementatieverslag; de gemigreerde/deployed en op DEV geaccepteerde statussen worden niet toegekend.
+**F1 gebouwd** vereist geïmplementeerde wijzigingen plus groene geïsoleerde tests/CI. **F1 gemigreerd/deployed** is voor Cloud DEV aangetoond in het uitvoeringsverslag. **F1 op DEV geaccepteerd** vereist de proeven en menselijke bevestiging uit het draaiboek, met expliciet benoemde beperkingen. Het actuele verslag onderscheidt bewezen schermproeven van uitsluitend geïsoleerde dekking en resterende afsluitvoorwaarden.

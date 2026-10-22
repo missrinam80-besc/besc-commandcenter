@@ -1,5 +1,7 @@
 # F1 — gebouwd pakket en testbewijs
 
+**Actuele uitvoeringsstand:** dit document bewaart het bouwbewijs van 21 oktober. Merge, Cloud DEV-migraties, webdeploy, voorzittersbinding en gerichte schermproeven zijn daarna uitgevoerd; zie [DEV-uitvoering van 22 oktober](../acceptatie/F1-DEV-20261022.md). Uitspraken hieronder dat die stappen nog niet uitgevoerd zijn, beschrijven de toestand bij oplevering van het oorspronkelijke pakket.
+
 Stand: 21 oktober 2026. Opdracht: **alle zes werkpakketten bouwen en testen**. Gebouwd op de bestaande werkbranch en aangeboden in [concept-PR #112](https://github.com/missrinam80-besc/besc-commandcenter/pull/112). Cloud-migratie, merge, deploy, echte mandaten en menselijke DEV-acceptatie zijn afzonderlijke uitvoeringsstappen. Dit verslag verleent geen rechten of beleidsgoedkeuring.
 
 ## Geleverde onderdelen

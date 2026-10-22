@@ -42,11 +42,12 @@ export function parseF1Operation(operation:string,data:unknown){
 }
 export function f1Feedback(error: {code?:string;message?:string}|null|undefined){
  const message=error?.message??'';
+ if(/conflict_requires/.test(message))return 'Een aangegeven persoonlijk belang vraagt eerst een expliciete bestuursbeslissing.';
+ if(/f1_official_rule_required/.test(message))return 'Voor deze regelbeoordeling is een gecontroleerde officiële regelbron vereist.';
  if(/revision|request_conflict/.test(message)||error?.code==='40001')return 'De gegevens zijn ondertussen gewijzigd. Vernieuw de pagina en beoordeel de actuele versie.';
  if(/chair|authorized|access_required|not_allowed|editor_required/.test(message)||error?.code==='42501')return 'Je hebt voor deze handeling geen actuele bevoegdheid.';
  if(/evidence|proof|reviews_required|execution_required/.test(message))return 'Het vereiste bewijs of de beoordeling ontbreekt of is niet meer geldig.';
  if(/purpose|consent|policy|scope/.test(message))return 'Het doel, de verklaring of het beleidsbesluit is niet beschikbaar of niet geldig.';
- if(/conflict_requires/.test(message))return 'Een aangegeven persoonlijk belang vraagt eerst een expliciete bestuursbeslissing.';
  if(/partner|contribution/.test(message))return 'Kies een actuele partnerrol en een expliciete bijdrage.';
  if(/unknown_deadline/.test(message))return 'Vermeld waarom de termijn nog onbekend is.';
  if(/public_|media_|source_event_time|event_source_time/.test(message))return 'Controleer de publieke inhoud, brongegevens, tijden en mediarechten.';
