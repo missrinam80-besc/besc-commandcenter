@@ -17,6 +17,7 @@ create table auth.users (
   email_confirmed_at timestamptz, banned_until timestamptz, deleted_at timestamptz
 );
 create table auth.identities (id uuid default gen_random_uuid(), user_id uuid references auth.users(id), provider text, provider_id text, identity_data jsonb);
+create table auth.sessions (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id));
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
 create function auth.role() returns text language sql stable as $$ select nullif(current_setting('request.jwt.claim.role',true),'') $$;
 create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;

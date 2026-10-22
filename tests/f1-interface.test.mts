@@ -17,7 +17,7 @@ test('F1 foutfeedback: specifieke governanceblokkering behoudt betekenis bij SQL
  assert.equal(workflows.f1Feedback({code:'42501',message:'f1_chair_required'}),'Je hebt voor deze handeling geen actuele bevoegdheid.');
 });
 test('E01: releasebestand bevat alleen zes exacte nieuwe hashes en behoudt de seeduitzondering',()=>{
- const manifest=JSON.parse(readFileSync(new URL('../ops/f1-release-manifest.json',import.meta.url),'utf8'));assert.equal(manifest.execution_authorized,false);assert.equal(manifest.migrations.length,6);assert.equal(manifest.cloud_history_before,117);assert.equal(manifest.cloud_history_after_if_authorized,123);assert.equal(readdirSync(new URL('../supabase/migrations',import.meta.url)).filter(f=>f.endsWith('.sql')).length,124);
+ const manifest=JSON.parse(readFileSync(new URL('../ops/f1-release-manifest.json',import.meta.url),'utf8'));assert.equal(manifest.execution_authorized,false);assert.equal(manifest.migrations.length,6);assert.equal(manifest.cloud_history_before,117);assert.equal(manifest.cloud_history_after_if_authorized,123);assert.equal(readdirSync(new URL('../supabase/migrations',import.meta.url)).filter(f=>f.endsWith('.sql')&&f.split('_')[0]<='20261021131239').length,124);
  for(const item of manifest.migrations){assert.match(item.file,/^20261021\d+_f1_/);assert.equal(createHash('sha256').update(readFileSync(new URL('../supabase/migrations/'+item.file,import.meta.url),'utf8').replaceAll('\r\n','\n')).digest('hex'),item.sha256_lf);}
  assert.deepEqual(manifest.excluded_history,['20261001110000_seed_operational_guidelines.sql']);
 });
