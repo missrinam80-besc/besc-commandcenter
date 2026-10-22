@@ -12,6 +12,8 @@ Next.js is bijgewerkt naar 16.4.2, React naar 19.3.1 en sharp naar 0.35.5 na con
 
 Het exacte SQL-bestand en de LF-hash staan in ops/f2-release-manifest.json. De cloudbasis heeft 123 historie-items, F2 voegt één toe: 124. De oude seed blijft uitgesloten. De migratie is uitsluitend geïsoleerd toegepast; Cloud DEV is nog niet gemigreerd. Eerst verse schemavergelijking, handmatige back-up, afgeschermde off-server kopie en herstelproef. Bij fout niet blind herhalen; huidige toestand alleenlezend beoordelen.
 
+De bestaande handmatige export is aangescherpt tot verify-full met het reeds gecontroleerde Supabase CA-certificaat en vaste checksum. Dit verifieert de serveridentiteit naast versleuteling; er is geen TLS-bypass of nieuwe automatische back-upplanning. Het publieke CA-bestand bevat geen credential.
+
 API en bediening staan standaard uit: BESC_PUBLICATION_STAGING_ENABLED moet expliciet true zijn. BESC_PUBLICATION_SITE_ID bindt de ene stagingregistratie; BESC_PUBLICATION_KEY_SHA256 bevat alleen de hash van een nieuwe afzonderlijke sitecredential. Geen botclient of bestaande credential hergebruiken. Website krijgt alleen BESC_PUBLICATION_KEY, BESC_AUTH_URL en de publishable Auth-key; geen database- of service_role-credential.
 
 De oude CC-image blijft compatibel met het additieve schema; terugval sluit eerst staging, herstelt gecontroleerde image/config en behoudt audit. Een echte serverrollback blijft apart te bewijzen. De vier bestaande uitgeschakelde flags blijven uit; Twitch-identiteitskoppeling blijft aan. Geen automatische back-ups of productieomschakeling.
