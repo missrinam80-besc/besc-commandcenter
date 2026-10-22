@@ -1039,7 +1039,19 @@
     "history_count": 123,
     "old_seed_excluded": true,
     "running_image_digest_user_verified": "sha256:1d0f13175dfebd7841357e94707d79d06f8372700b789056fd5a0edb9a9ec9fa",
-    "overall_acceptance": "functional_dev_checks_completed_closeout_patch_pending_review",
-    "meaning": "Live evidence is per case; isolated tests and partial screen checks do not imply every route was live accepted."
+    "overall_acceptance": "core_dev_accepted_with_explicit_open_acceptance_items",
+    "meaning": "Live evidence is per case; isolated tests and partial screen checks do not imply every route was live accepted.",
+    "scope_decision": {
+      "date": "2026-10-22",
+      "actor": "Linda",
+      "decision": "F1-kern accepteren; genoemde punten afzonderlijk open houden",
+      "open_acceptance_items": [
+        "Additional live role switches",
+        "Complete confidential export/notification chain",
+        "Restore previous server image"
+      ],
+      "unperformed_cases_are_not_implicitly_passed": true,
+      "publication_error_patch_not_yet_deployed": true
+    }
   }
 }
