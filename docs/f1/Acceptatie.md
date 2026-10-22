@@ -3,7 +3,7 @@
 Actuele bouwstatus en afwijkingen ten opzichte van het voorbereide contract: [implementatie en testbewijs](Implementatie-en-testbewijs.md). Dit document bewaart ook voorstellen en de afzonderlijke voorwaarden voor DEV/F2.
 
 
-[F1-overzicht](README.md). Dit is de testvoorraad vóór implementatie. Alle [62 proefgevallen](acceptatiegevallen.json) hebben status **planned**; geen ervan wordt als geslaagde F1-test voorgesteld.
+[F1-overzicht](README.md). Dit draaiboek bewaart de oorspronkelijke testvoorraad. De [62 proefgevallen](acceptatiegevallen.json) onderscheiden geïsoleerde dekking en live acceptatie; ze zijn niet allemaal live geslaagd. De actuele uitvoering en gerichte schermproeven staan in het [DEV-verslag van 22 oktober](../acceptatie/F1-DEV-20261022.md).
 
 ## 1 Benodigde fixtures en bewijs
 

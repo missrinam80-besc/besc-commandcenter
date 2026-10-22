@@ -3,7 +3,7 @@
   "prepared_at": "2026-10-21",
   "source_commit": "594392cef96c2e9eb86ac93ea5b476f15038757e",
   "implementation_status": "built_isolated_acceptance",
-  "cloud_changes": false,
+  "cloud_changes": true,
   "total": 62,
   "cases": [
     {
@@ -18,7 +18,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Chair activation and authorized screen confirmed; negative actors additionally isolated-tested."
+        }
       }
     },
     {
@@ -168,7 +173,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Synthetic protocol and execution sources verified; three separate reviews and explicit decision produced demonstrated status; execution evidence withdrawal produced reassessment required. Does not assert every scenario variant was live tested."
+        }
       }
     },
     {
@@ -198,7 +208,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Synthetic protocol and execution sources verified; three separate reviews and explicit decision produced demonstrated status; execution evidence withdrawal produced reassessment required. Does not assert every scenario variant was live tested."
+        }
       }
     },
     {
@@ -228,7 +243,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Synthetic protocol and execution sources verified; three separate reviews and explicit decision produced demonstrated status; execution evidence withdrawal produced reassessment required. Does not assert every scenario variant was live tested."
+        }
       }
     },
     {
@@ -236,14 +256,19 @@
       "work_package": "F1.2",
       "scenario": "Onbekende termijn",
       "expected": "Datum mag ontbreken met verplichte reden; geen fictieve due_date of berekende wettelijke claim.",
-      "status": "fixture_tested_dev_pending",
+      "status": "live_accepted",
       "evidence": {
         "report": "Implementatie-en-testbewijs.md",
         "automated": [
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": true,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Unknown date and explicit reason saved and shown."
+        }
       }
     },
     {
@@ -326,14 +351,19 @@
       "work_package": "F1.3",
       "scenario": "Doel en tekstversie",
       "expected": "Verklaring verwijst naar de exacte vastgestelde doeltekst en concrete gegevensscope.",
-      "status": "fixture_tested_dev_pending",
+      "status": "live_accepted",
       "evidence": {
         "report": "Implementatie-en-testbewijs.md",
         "automated": [
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": true,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Exact v1 text and test_label scope displayed in own recorded declaration."
+        }
       }
     },
     {
@@ -393,7 +423,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Own declaration changed to not valid after withdrawal; other-purpose/queued behavior remains isolated-tested."
+        }
       }
     },
     {
@@ -454,7 +489,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Purpose drafted, explicitly activated and withdrawn; no real platform collection."
+        }
       }
     },
     {
@@ -559,7 +599,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Community and education roles coexist; duplicate denied; roles separately ended."
+        }
       }
     },
     {
@@ -574,7 +619,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Existing partner classification preserved in manual user checklist."
+        }
       }
     },
     {
@@ -589,7 +639,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Sponsor contribution without sponsor role blocked; community contribution accepted."
+        }
       }
     },
     {
@@ -672,14 +727,19 @@
       "work_package": "F1.5",
       "scenario": "Goedkeuring revisie 1 tegenover concept 2",
       "expected": "Revisie 2 erft geen goedkeuring; revisie 1 blijft onveranderlijk.",
-      "status": "fixture_tested_dev_pending",
+      "status": "live_accepted",
       "evidence": {
         "report": "Implementatie-en-testbewijs.md",
         "automated": [
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": true,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Revision 1 approved; new revision 2 remains draft without inheriting approval; both subsequently withdrawn."
+        }
       }
     },
     {
@@ -724,7 +784,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Both test revisions visibly withdrawn; replay and data access additionally isolated-tested."
+        }
       }
     },
     {
@@ -862,7 +927,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Exact six registered; history 123, old117 preserved; seed excluded."
+        }
       }
     },
     {
@@ -892,7 +962,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Off-server backup and isolated Database/Storage/Vault restore checked; prior webimage rollback not executed."
+        }
       }
     },
     {
@@ -907,7 +982,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Runtime flags and exact running digest user-provided and matched; not a fresh live external integration retest."
+        }
       }
     },
     {
@@ -922,7 +1002,12 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Directed screens manually and browser-checked in dark mode; broad device/role matrix not all live tested."
+        }
       }
     },
     {
@@ -937,9 +1022,36 @@
           "tests/f1-database.test.mts",
           "tests/f1-interface.test.mts"
         ],
-        "live_accepted": false
+        "live_accepted": false,
+        "dev_observation": {
+          "date": "2026-10-22",
+          "report": "../acceptatie/F1-DEV-20261022.md",
+          "result": "Per-component results confirmed, final acceptance gate remains explicit."
+        }
       }
     }
   ],
-  "evidence_report": "Implementatie-en-testbewijs.md"
+  "evidence_report": "Implementatie-en-testbewijs.md",
+  "execution_updated_at": "2026-10-22",
+  "dev_execution": {
+    "report": "../acceptatie/F1-DEV-20261022.md",
+    "merged_commit": "67c2b40dee9559eb1564a170d77fbfb33cdf66f8",
+    "history_count": 123,
+    "old_seed_excluded": true,
+    "running_image_digest_user_verified": "sha256:1d0f13175dfebd7841357e94707d79d06f8372700b789056fd5a0edb9a9ec9fa",
+    "overall_acceptance": "core_dev_accepted_with_explicit_open_acceptance_items",
+    "meaning": "Live evidence is per case; isolated tests and partial screen checks do not imply every route was live accepted.",
+    "scope_decision": {
+      "date": "2026-10-22",
+      "actor": "Linda",
+      "decision": "F1-kern accepteren; genoemde punten afzonderlijk open houden",
+      "open_acceptance_items": [
+        "Additional live role switches",
+        "Complete confidential export/notification chain",
+        "Restore previous server image"
+      ],
+      "unperformed_cases_are_not_implicitly_passed": true,
+      "publication_error_patch_not_yet_deployed": true
+    }
+  }
 }
