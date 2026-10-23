@@ -6,7 +6,7 @@ Stand: 23 oktober 2026. Linda gaf opdracht F3 uit te voeren en koos daarna expli
 
 Het bestaande campagnedossier krijgt een optionele afgeschermde proefroute. Een geverifieerde voorzitter kan alleen een campagne met `TESTFIXTURE`-titel openen. Campagnegebonden, maximaal zeven dagen geldige taaktoewijzingen geven afzonderlijk voorbereidings-, review- en rapporttoegang. De voorzitter heeft zonder die taak geen automatische privémeetinzage. De serverflag `BESC_CAMPAIGNS_PILOT_ENABLED` staat standaard uit.
 
-Campagnetekst, toegestane velden en bewaarbehandeling krijgen een eigen onveranderlijke versie en verwijzen naar een bestaand document. Bestaande personen/accountbinding, voorzitterverificatie en documentrechten worden hergebruikt. De nieuwe campagneverklaring is een campagnegebonden envelop naast de organisatiebrede F1-doelen: een tekstwijziging in A wijzigt B niet. De F1-doelcode- en intrekkingssemantiek blijft intact.
+Campagnetekst, toegestane velden en bewaarbehandeling krijgen een eigen onveranderlijke versie en verwijzen naar een bestaand document. Bestaande personen/accountbinding, voorzitterverificatie en documentrechten worden hergebruikt. De bedoelde accountbinding wordt bij selectie vastgelegd. Ontkoppelen, herkoppelen of verwijderen van de persoon trekt bestaande deelname blijvend in; terugzetten van de oude binding heractiveert geen verklaring. De nieuwe campagneverklaring is een campagnegebonden envelop naast de organisatiebrede F1-doelen: een tekstwijziging in A wijzigt B niet. De F1-doelcode- en intrekkingssemantiek blijft intact.
 
 De creator bevestigt zelf de exacte campagnetekst. Een editor kan die persoonlijke bevestiging niet simuleren. Postlinks worden zonder netwerkverzoek naar canonieke YouTube-identiteit ontleed. Deze parserkeuze is een fictieve bouwkeuze, geen besluit dat een echt YouTube-account gekoppeld wordt. Dubbelen hebben één campagnelink; eigen inzendingen vragen een andere reviewer. Een nieuwe verklaring maakt een heraangeleverde bijdrage opnieuw kandidaat en invalideert eerdere meetrevisies.
 
@@ -24,7 +24,7 @@ De nieuwe rapportselectie weigert meer dan 500 bijdragen of 5.000 waarnemingen i
 
 ## Gecontroleerd bewijs
 
-- Volledige lokale suite: **1.095 geslaagd, 0 fouten** op de implementatie vóór de laatste uitsluitend Nederlandse weergavelabels. De gerichte F3-suite is uitgebreid tot 48 geslaagde gevallen; TypeScript en gerichte lintcontrole slagen. De exacte oplevercommit krijgt opnieuw CI.
+- Volledige lokale suite: **1.095 geslaagd, 0 fouten** op de implementatie vóór de laatste uitsluitend Nederlandse weergavelabels. De gerichte F3-suite is uitgebreid tot 49 geslaagde gevallen; TypeScript en gerichte lintcontrole slagen. De exacte oplevercommit krijgt opnieuw CI.
 - Native PostgreSQL 17: nieuwe F3-rechten, dubbelenrace en intrekking blokkeren oude verwerking; F1- en F2-rechten/races en volledige historische schemareplay geslaagd in GitHub-run `39933137905` op commit `a73fd78`. Een aanvullende sessie-intrekkingsrace is nadien toegevoegd en moet op de laatste commit groen zijn.
 - Productiebuild lokaal geslaagd; TypeScript en gerichte lintcontrole worden op de oplevercommit gecontroleerd.
 - Volledige fictieve keten in de databasefixture: creatorbevestiging, andere reviewer, nul en veertig in twee meetvensters, vastgelegde rapportrevisie en veilige CSV. Dit gebruikt een Auth-platformshape en bewijst geen live Supabase-aanmeldketen.

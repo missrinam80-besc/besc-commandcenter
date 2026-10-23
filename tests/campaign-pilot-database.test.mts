@@ -105,6 +105,13 @@ test('F3 database: role and person expiry plus other-tenant access fail closed',
   await f.owner(); await f.db.exec(`update private.campaign_participants set expires_at=clock_timestamp()-interval '1 minute' where id=${q(participant)}`);
   await actor(f.ids.chair); assert.equal((await state()).posts.length, 0);
 });
+test('F3 database: rebinding person identity never transfers or revives campaign consent', async () => {
+  await verifiedPost(); await f.owner();
+  await f.db.exec(`update public.community_people set account_user_id=null where id=${q(f.ids.otherPerson)}`);
+  await f.db.exec(`update public.community_people set account_user_id=${q(f.ids.member)} where id=${q(f.ids.otherPerson)}`);
+  await actor(f.ids.member); assert.equal((await state()).participants[0].valid, false); assert.equal((await state()).posts.length, 0);
+  await deny('participant.accept', { id: participant, accepted: true });
+});
 test('F3 synthetic chain: creator, independent review, two windows, frozen report and CSV', async () => {
   const day = new Date().toISOString().slice(0, 10);
   const at = (days: number) => new Date(Date.parse(day + 'T00:00:00Z') - days * 86400000).toISOString();

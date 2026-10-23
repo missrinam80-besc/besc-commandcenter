@@ -26,7 +26,7 @@ create table private.campaign_policies (
 create unique index f3_policy_current on private.campaign_policies(campaign_id) where withdrawn_at is null;
 create table private.campaign_participants (
  id uuid primary key default gen_random_uuid(), organization_id uuid not null, campaign_id uuid not null,
- person_id uuid not null references public.community_people(id), policy_id uuid not null,
+ person_id uuid not null references public.community_people(id), account_user_id uuid not null references public.profiles(id), policy_id uuid not null,
  accepted_at timestamptz, expires_at timestamptz not null, withdrawn_at timestamptz, created_by uuid not null references public.profiles(id),
  unique(campaign_id,person_id,policy_id), unique(organization_id,campaign_id,id),
  foreign key(organization_id,campaign_id,policy_id) references private.campaign_policies(organization_id,campaign_id,id)
@@ -64,7 +64,7 @@ create table private.campaign_receipts (
 );
 create table private.campaign_events (
  id uuid primary key default gen_random_uuid(),organization_id uuid not null,campaign_id uuid not null,
- actor uuid not null,operation text not null,entity_id uuid not null,created_at timestamptz not null default clock_timestamp()
+ actor uuid,operation text not null,entity_id uuid not null,created_at timestamptz not null default clock_timestamp()
 );
 create table private.campaign_report_revisions (
  id uuid primary key default gen_random_uuid(),organization_id uuid not null,campaign_id uuid not null,
@@ -76,6 +76,19 @@ do $$declare t text;begin foreach t in array array['campaign_pilots','campaign_a
  execute format('revoke all on private.%I from public,anon,authenticated,service_role',t);
 end loop;end$$;
 
+-- Identity changes revoke participation permanently, including delete/restore cycles.
+create function private.f3_person_binding_changed() returns trigger language plpgsql security definer set search_path='' as $$
+declare affected record;begin
+ if old.account_user_id is distinct from new.account_user_id or (new.deleted_at is not null and old.deleted_at is null) then
+  for affected in update private.campaign_participants set withdrawn_at=clock_timestamp() where organization_id=old.organization_id and person_id=old.id and withdrawn_at is null returning id,organization_id,campaign_id loop
+   insert into private.campaign_events(organization_id,campaign_id,actor,operation,entity_id) values(affected.organization_id,affected.campaign_id,auth.uid(),'participant.binding_invalidated',affected.id);
+  end loop;
+ end if;
+ return new;
+end$$;
+revoke all on function private.f3_person_binding_changed() from public,anon,authenticated,service_role;
+create trigger f3_person_binding after update of account_user_id,deleted_at on public.community_people for each row execute function private.f3_person_binding_changed();
+
 create function private.f3_active(o uuid,c uuid) returns boolean language sql stable security definer set search_path='' as $$
  select private.f2_account(o) and exists(select 1 from private.campaign_pilots p join public.campaigns x on x.id=p.campaign_id and x.organization_id=p.organization_id where p.organization_id=o and p.campaign_id=c and p.closed_at is null and x.deleted_at is null and x.title like 'TESTFIXTURE%')
 $$;
@@ -85,10 +98,10 @@ $$;
 create function private.f3_participant_valid(o uuid,c uuid,p uuid) returns boolean language sql stable security definer set search_path='' as $$
  select exists(select 1 from private.campaign_participants a join private.campaign_policies s on s.id=a.policy_id and s.campaign_id=a.campaign_id and s.organization_id=a.organization_id
  join public.community_people person on person.id=a.person_id and person.organization_id=a.organization_id
- where a.organization_id=o and a.campaign_id=c and a.id=p and a.accepted_at is not null and a.withdrawn_at is null and a.expires_at>clock_timestamp() and s.withdrawn_at is null and person.deleted_at is null and person.account_user_id is not null)
+ where a.organization_id=o and a.campaign_id=c and a.id=p and a.accepted_at is not null and a.withdrawn_at is null and a.expires_at>clock_timestamp() and s.withdrawn_at is null and person.deleted_at is null and person.account_user_id=a.account_user_id)
 $$;
 create function private.f3_own(o uuid,c uuid,p uuid) returns boolean language sql stable security definer set search_path='' as $$
- select exists(select 1 from private.campaign_participants a join public.community_people person on person.id=a.person_id and person.organization_id=a.organization_id where a.organization_id=o and a.campaign_id=c and a.id=p and person.account_user_id=auth.uid() and person.deleted_at is null)
+ select exists(select 1 from private.campaign_participants a join public.community_people person on person.id=a.person_id and person.organization_id=a.organization_id where a.organization_id=o and a.campaign_id=c and a.id=p and person.account_user_id=a.account_user_id and a.account_user_id=auth.uid() and person.deleted_at is null)
 $$;
 -- RPCs are privileged boundaries, not generic database access. All private helpers
 -- are non-callable by clients; actor, session, campaign and current purpose are checked.
@@ -152,7 +165,7 @@ begin
   insert into private.campaign_policies(organization_id,campaign_id,version,body,retention,fields,document_id,created_by) values(o,c,(d->>'version')::integer,d->>'body',d->>'retention',fields,(d->>'document_id')::uuid,auth.uid()) returning id into answer;
  elsif op='participant.select' then
   if not exists(select 1 from public.community_people where organization_id=o and id=(d->>'person_id')::uuid and deleted_at is null and account_user_id is not null) or not exists(select 1 from private.campaign_policies where organization_id=o and campaign_id=c and id=(d->>'policy_id')::uuid and withdrawn_at is null) or (d->>'expires_at')::timestamptz<=clock_timestamp() or (d->>'expires_at')::timestamptz>clock_timestamp()+interval '7 days' then raise exception 'f3_not_available';end if;
-  insert into private.campaign_participants(organization_id,campaign_id,person_id,policy_id,expires_at,created_by) values(o,c,(d->>'person_id')::uuid,(d->>'policy_id')::uuid,(d->>'expires_at')::timestamptz,auth.uid()) returning id into answer;
+  insert into private.campaign_participants(organization_id,campaign_id,person_id,account_user_id,policy_id,expires_at,created_by) values(o,c,(d->>'person_id')::uuid,(select account_user_id from public.community_people where organization_id=o and id=(d->>'person_id')::uuid),(d->>'policy_id')::uuid,(d->>'expires_at')::timestamptz,auth.uid()) returning id into answer;
  elsif op='participant.accept' then
   if d->>'accepted' is distinct from 'true' then raise exception 'f3_confirmation_required';end if;
   update private.campaign_participants a set accepted_at=coalesce(a.accepted_at,clock_timestamp()) where a.organization_id=o and a.campaign_id=c and a.id=(d->>'id')::uuid and a.withdrawn_at is null and a.expires_at>clock_timestamp() and exists(select 1 from private.campaign_policies where id=a.policy_id and withdrawn_at is null) returning id into answer;
