@@ -1,5 +1,7 @@
 # F3 — campagneproef: uitvoeringspakket
 
+Actuele uitvoering: [fictieve bouw en testbewijs](Implementatie-en-testbewijs.md) en [resultaat per geval](resultaatgevallen.json). Linda heeft de bouw toegestaan en gekozen eerst met fictieve gegevens te testen. De oorspronkelijke voorbereiding hieronder blijft als scopebasis herkenbaar; live F3 is nog niet afgesloten.
+
 Status: voorbereid ter goedkeuring op 23 oktober 2026. Geen F3-applicatiecode gebouwd, geen migratie uitgevoerd en geen live accounttoegang uitgebreid.
 
 F3 levert één interne BESC-campagneketen: campagnefiche → geselecteerde creator → aantoonbare deelname en doelbinding → handmatig ingediende postlink → verificatie → bronmetingen in twee vergelijkbare vensters → gecontroleerd intern rapport. De bestaande campagne- en socialmodules blijven de basis. De publieke website blijft gesloten; Metricool blijft beschikbaar als benchmark.

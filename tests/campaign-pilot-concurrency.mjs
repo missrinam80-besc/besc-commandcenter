@@ -32,5 +32,11 @@ try {
   const pending = call(b, 'measurement.record', { contribution_id: postId, expected_revision: 2, metric: 'views', definition: 'TESTFIXTURE v1', semantics: 'period', period_start: '2026-01-01T00:00:00Z', period_end: '2026-01-02T00:00:00Z', measured_at: '2026-01-02T00:00:00Z', value: 12, quality: 'known', source_kind: 'manual', source_reference: 'TESTFIXTURE', source_document_id: document, source_key: 'race-1' }).then(() => { finished = true; return false; }, () => { finished = true; return true; });
   await new Promise(resolve => setTimeout(resolve, 120)); assert.equal(finished, false);
   await a.query('commit'); assert.equal(await pending, true);
-  console.log(JSON.stringify({ native_f3_concurrency: true, duplicate_single_identity: true, withdrawal_blocks_stale_measurement: true, target: 'isolated localhost only' }));
+  await owner.query('update private.campaign_participants set withdrawn_at=null where id=$1', [participant.id]);
+  await owner.query('begin'); await owner.query('delete from auth.sessions where user_id=$1', [editor]);
+  finished = false;
+  const afterSessionRevocation = call(b, 'report.capture', {}).then(() => { finished = true; return false; }, () => { finished = true; return true; });
+  await new Promise(resolve => setTimeout(resolve, 120)); assert.equal(finished, false);
+  await owner.query('commit'); assert.equal(await afterSessionRevocation, true);
+  console.log(JSON.stringify({ native_f3_concurrency: true, duplicate_single_identity: true, withdrawal_blocks_stale_measurement: true, session_revocation_blocks_mutation: true, target: 'isolated localhost only' }));
 } finally { await Promise.allSettled([a.query('rollback'), b.query('rollback')]); await Promise.all([owner.end(), a.end(), b.end()]); }

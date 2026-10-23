@@ -2,6 +2,7 @@ import test, { before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { f1Database, q, j } from './helpers/f1-database.mts';
+import { pilotReport, pilotReportCsv, type PilotState } from '../src/lib/campaign-pilot.ts';
 let f: Awaited<ReturnType<typeof f1Database>>, campaign: string, second: string, participant: string, policy: string;
 const sessions = new Map<string, string>();
 async function actor(id: string) { await f.owner(); await f.actor(id); await f.db.exec(`select set_config('request.jwt.claims',${q(JSON.stringify({ sub: id, role: 'authenticated', session_id: sessions.get(id) }))},false)`); }
@@ -103,4 +104,19 @@ test('F3 database: role and person expiry plus other-tenant access fail closed',
   await actor(f.ids.other); await deny('access.assign', { user_id: f.ids.other, role: 'editor', valid_until: new Date(Date.now() + 86400000).toISOString() });
   await f.owner(); await f.db.exec(`update private.campaign_participants set expires_at=clock_timestamp()-interval '1 minute' where id=${q(participant)}`);
   await actor(f.ids.chair); assert.equal((await state()).posts.length, 0);
+});
+test('F3 synthetic chain: creator, independent review, two windows, frozen report and CSV', async () => {
+  const day = new Date().toISOString().slice(0, 10);
+  const at = (days: number) => new Date(Date.parse(day + 'T00:00:00Z') - days * 86400000).toISOString();
+  const firstStart = at(3), middle = at(2), secondEnd = at(1);
+  const id = await verifiedPost(); await actor(f.ids.chair);
+  for (const [key, start, end, value] of [['window1', firstStart, middle, 0], ['window2', middle, secondEnd, 40]] as const) {
+    await call('measurement.record', { contribution_id: id, expected_revision: 2, metric: 'views', definition: 'TESTFIXTURE v1', semantics: 'period', period_start: start, period_end: end, measured_at: end, value, quality: 'known', source_kind: 'manual', source_reference: 'TESTFIXTURE ' + key, source_document_id: f.ids.policyDoc, source_key: key });
+  }
+  const saved = await call('report.capture');
+  const frozen = (await f.db.query<{ v: PilotState & { as_of: string } }>(`select public.f3_report_revision(${q(f.ids.org)},${q(campaign)},${q(saved.id)}) v`)).rows[0].v;
+  const report = pilotReport(frozen, { metric: 'views', definition: 'TESTFIXTURE v1', semantics: 'period', first: { start: firstStart, end: middle }, second: { start: middle, end: secondEnd }, asOf: frozen.as_of, freshnessHours: 8760 });
+  assert.equal(report.first.value, 0); assert.equal(report.second.value, 40); assert.equal(report.comparison.delta, 40); assert.equal(report.comparison.percent, null);
+  assert(pilotReportCsv(report).includes('TESTFIXTURE window1'));
+  await f.owner(); assert.equal(Number((await f.db.query<{ n: string }>('select count(*) n from public.social_metric_snapshots')).rows[0].n), 0);
 });

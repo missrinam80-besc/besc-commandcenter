@@ -98,6 +98,9 @@ declare o uuid:=p_organization_id;c uuid:=p_campaign_id;op text:=p_operation;d j
  result jsonb;answer uuid;prior private.campaign_receipts;measurement private.campaign_measurements;post private.campaign_contributions;pol private.campaign_policies;fields text[];allowed text[];
 begin
  if current_setting('transaction_isolation')<>'read committed' then raise exception 'f3_isolation_required';end if;
+ -- Row locks serialize this mutation with revocation without modifying Auth tables or triggers.
+ perform 1 from auth.users where id=auth.uid() for share;
+ perform 1 from auth.sessions where user_id=auth.uid() and id::text=auth.jwt()->>'session_id' for share;
  perform private.f1_lock();
  if not private.f2_account(o) or p_request_id is null or c is null or jsonb_typeof(d)<>'object' or pg_column_size(d)>24000 then raise exception 'f3_not_available' using errcode='42501';end if;
  -- Explicit operation key lists also protect direct RPC callers.
@@ -221,9 +224,6 @@ declare snapshot jsonb;begin
  then raise exception 'f3_report_access_changed' using errcode='42501';end if;
  return snapshot;
 end$$;
--- Lock ordering includes session revocation, not just our workflow writers.
-create trigger f3_auth_users_gate before update or delete on auth.users for each statement execute function private.f1_gate();
-create trigger f3_auth_sessions_gate before update or delete on auth.sessions for each statement execute function private.f1_gate();
 revoke all on function private.f3_active(uuid,uuid),private.f3_role(uuid,uuid,text[]),private.f3_participant_valid(uuid,uuid,uuid),private.f3_own(uuid,uuid,uuid) from public,anon,authenticated,service_role;
 revoke all on function public.f3_workflow(uuid,uuid,text,jsonb,uuid),public.f3_campaign_state(uuid,uuid),public.f3_report_revision(uuid,uuid,uuid) from public,anon,authenticated,service_role;
 grant execute on function public.f3_workflow(uuid,uuid,text,jsonb,uuid),public.f3_campaign_state(uuid,uuid),public.f3_report_revision(uuid,uuid,uuid) to authenticated;

@@ -640,7 +640,7 @@
     {
       "file": "20261023091034_f3_campaign_pilot.sql",
       "version": "20261023091034",
-      "sha256_lf": "46d8eecb32272db89d7f9aa3d6d8470c4432ae56a999c21f6274833827a0e359"
+      "sha256_lf": "1793b9ec5b3493cc626bcbfba8eeaac3ab25108017db1a289e9de56831094d8a"
     }
   ],
   "required_before_cloud_apply": [

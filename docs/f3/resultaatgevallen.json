@@ -1,0 +1,763 @@
+{
+  "schema_version": "besc-f3-preparation-v1",
+  "status": "synthetic_build_tested_live_phase_open",
+  "application_tests_executed": true,
+  "live_changes": false,
+  "cases": [
+    {
+      "id": "B01",
+      "package": "F3.0",
+      "title": "Baseline",
+      "action": "Vergelijk main, live image, schema en historie.",
+      "expected": "Afwijkingen verklaard; seed uitgesloten.",
+      "required_evidence_layer": "readonly",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Cloud read-only: 124 registraties, F3 ontbreekt, staging gesloten; native volledige replay. Geen nieuwe serverimage-inspectie.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "B02",
+      "package": "F3.0",
+      "title": "Bronaccount",
+      "action": "Controleer eigenaar, brand, platform en scopes zonder tokens.",
+      "expected": "Alleen exact toegestane BESC-account.",
+      "required_evidence_layer": "live",
+      "status": "deferred_live_or_acceptance",
+      "actual_result": "Echte bronaccounts nog niet gekozen; gebruiker koos eerst fictieve gegevens.",
+      "evidence": []
+    },
+    {
+      "id": "B03",
+      "package": "F3.0",
+      "title": "Besluiten",
+      "action": "Controleer D01–D06 per afhankelijke stap.",
+      "expected": "Ontbrekend besluit blokkeert betreffende live stap.",
+      "required_evidence_layer": "review",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Gebruiker: voer F3 uit; daarna expliciet eerst volledig fictief bouwen en testen. Live keuzes blijven open.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "B04",
+      "package": "F3.0",
+      "title": "Herstel",
+      "action": "Controleer off-server backup en geïsoleerd herstel voor nieuwe impact.",
+      "expected": "Overdracht en herstel bewezen zonder geheimen.",
+      "required_evidence_layer": "native_live",
+      "status": "deferred_live_or_acceptance",
+      "actual_result": "Geen Cloudwijziging uitgevoerd; bestaande F2-back-up geldt als historische basis, geen nieuwe F3-herstelproef.",
+      "evidence": []
+    },
+    {
+      "id": "A01",
+      "package": "F3.1",
+      "title": "Actorgrens",
+      "action": "Test anoniem, member, beheerder zonder taakrol en toegewezen beheerder.",
+      "expected": "Alleen actuele toegewezen actor toegestaan.",
+      "required_evidence_layer": "native_live",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "A02",
+      "package": "F3.1",
+      "title": "Andere organisatie",
+      "action": "Wissel organisatie/campagne/persoon/account/document-ID in tabel, RPC en export.",
+      "expected": "Geen cross-tenant lezen, muteren of bestaanslek.",
+      "required_evidence_layer": "native_live",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Andere actor en campagnevreemde policy-ID geweigerd; volledige live tenant-/documentmatrix niet uitgevoerd.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "A03",
+      "package": "F3.1",
+      "title": "Eigen creator",
+      "action": "Creator probeert ander persoon of deelname te bevestigen.",
+      "expected": "Alleen eigen geverifieerde binding; eigen inzending mag.",
+      "required_evidence_layer": "native_live",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "A04",
+      "package": "F3.1",
+      "title": "Campagne A/B",
+      "action": "Geef A/B specifieke scope; trek A in en wijzig tekst A.",
+      "expected": "A stopt; B blijft geldig; geen brede heractivering.",
+      "required_evidence_layer": "native_live",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "A05",
+      "package": "F3.1",
+      "title": "Geen impliciete toestemming",
+      "action": "Gebruik alleen lidmaatschap, publieke URL, OAuth of uitnodiging.",
+      "expected": "Geen automatische deelname of private insights.",
+      "required_evidence_layer": "native",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Schema vraagt expliciete eigen acceptatie; geen echte OAuth- of uitnodigingsproef.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "A06",
+      "package": "F3.1",
+      "title": "Zelf en extern bewijs",
+      "action": "Leg zelf verklaring vast en registreer afzonderlijk extern bewijs.",
+      "expected": "Methode en actor zichtbaar; geen gesimuleerde zelfverklaring.",
+      "required_evidence_layer": "native_live",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Eigen verklaring via geïsoleerde Auth-shape bewezen; externe campaignverklaringsroute niet toegevoegd.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "A07",
+      "package": "F3.1",
+      "title": "Live intrekking",
+      "action": "Trek eigen deelnamescope tijdens open rapport/job in.",
+      "expected": "Nieuw afhankelijk gebruik blokkeert; historie begrensd.",
+      "required_evidence_layer": "native_live",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Native intrekking en afhankelijke reads getest; geen persoonlijke live creatorverklaring.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "A08",
+      "package": "F3.1",
+      "title": "Expiry en tekst",
+      "action": "Laat doel/record verlopen en verbreed doeltekst.",
+      "expected": "Geen nieuwe verwerking met oude scope of tekst.",
+      "required_evidence_layer": "native",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "A09",
+      "package": "F3.1",
+      "title": "Bypass",
+      "action": "Test tabel/RPC, editor, admin-export, portal en MCP.",
+      "expected": "Zelfde private grens; geen raw metadata/secretomweg.",
+      "required_evidence_layer": "native_live",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Private tabellen onthouden client/service_role-grants; oude exports ontvangen geen nieuwe rijen. Niet ieder oud UI/API-pad live aangeroepen.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "A10",
+      "package": "F3.1",
+      "title": "Rol en sessie",
+      "action": "Beëindig rol/sessie/accountbinding tijdens bewerking.",
+      "expected": "Mutatie, export en jobcommit hercontroleren toegang.",
+      "required_evidence_layer": "native_live",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Sessieverwijdering en rolverval geïsoleerd; native sessierace heeft eigen CI-bewijs nodig op laatste commit.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "A11",
+      "package": "F3.1",
+      "title": "Bewijsrechten",
+      "action": "Open titel/URL/zoekresultaat via algemeen gekoppeld dossier.",
+      "expected": "Geen indirect vertrouwelijk bewijslek.",
+      "required_evidence_layer": "native_live",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Bronrechten worden bij invoer/read/rapport opnieuw afgedwongen; indirecte documentketen niet volledig live getest.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "A12",
+      "package": "F3.1",
+      "title": "Rollback privacy",
+      "action": "Start oude CC-image met additief schema en private fixture.",
+      "expected": "Oude queries verruimen privéinzage niet.",
+      "required_evidence_layer": "native",
+      "status": "deferred_live_or_acceptance",
+      "actual_result": "Private data buiten oude public snapshots en grants; vorige serverimage niet werkelijk opnieuw gestart voor F3.",
+      "evidence": []
+    },
+    {
+      "id": "P01",
+      "package": "F3.2",
+      "title": "URL parser",
+      "action": "Test pilotroutes, HTTPS, credentialhost, lookalike, IP en unsupported host.",
+      "expected": "Alleen exact ondersteunde content-ID; veilige afwijzing.",
+      "required_evidence_layer": "unit",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "P02",
+      "package": "F3.2",
+      "title": "Tracking en ID",
+      "action": "Lever canonieke URL, trackingvariant en ondersteunde alias/shortlink aan.",
+      "expected": "Zelfde identiteit; noodzakelijke query-ID behouden.",
+      "required_evidence_layer": "unit_native",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "P03",
+      "package": "F3.2",
+      "title": "Dubbelenrace",
+      "action": "Dien dezelfde post parallel en met dezelfde request-ID in.",
+      "expected": "Eén koppeling/telling; geen dubbele audit; payloadconflict expliciet.",
+      "required_evidence_layer": "native",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "P04",
+      "package": "F3.2",
+      "title": "Twee campagnes",
+      "action": "Koppel post aan A/B en conflicterende creator.",
+      "expected": "Eén identiteit, aparte campagnelinks; creatorconflict in review.",
+      "required_evidence_layer": "native",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Zelfde natuurlijke platform/contentidentiteit en aparte campagnelinks; volledige creatorconflictmatrix niet live uitgevoerd.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "P05",
+      "package": "F3.2",
+      "title": "Versiereview",
+      "action": "Wijzig kandidaat na review en verifieer oude versie.",
+      "expected": "Oude review ongeldig; geen ongeautoriseerde eigen positieve review.",
+      "required_evidence_layer": "native_live",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "P06",
+      "package": "F3.2",
+      "title": "Private post",
+      "action": "Lever private, verwijderde, onbekende en timed-out post aan.",
+      "expected": "Verschillende status; timeout geen definitieve verwijdering.",
+      "required_evidence_layer": "unit_live",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Handmatige beschikbaarheidsstatus en rapportuitsluiting getest; geen echte private/verwijderde post opgehaald.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "P07",
+      "package": "F3.2",
+      "title": "SSRF",
+      "action": "Test localhost, metadata-IP, redirects en signed URL.",
+      "expected": "Geen arbitraire fetch of tokenlek.",
+      "required_evidence_layer": "unit_native",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "P08",
+      "package": "F3.2",
+      "title": "Bronbijlage",
+      "action": "Test filetype, omvang, formule-/HTML-/instructietekst en private toegang.",
+      "expected": "Veilige begrensde opslag/weergave; tekst blijft gegevens.",
+      "required_evidence_layer": "unit_native",
+      "status": "not_applicable_synthetic_stage",
+      "actual_result": "Geen nieuwe uploadfunctie; alleen bestaand document als bron. Nieuwe uploads/bestandsverwerking vallen buiten deze fictieve bouw.",
+      "evidence": []
+    },
+    {
+      "id": "M01",
+      "package": "F3.3",
+      "title": "Capability",
+      "action": "Verifieer officiële accountmetric met werkelijk toegestane scope.",
+      "expected": "Elke metric heeft bronrecht; unsupported expliciet.",
+      "required_evidence_layer": "live",
+      "status": "deferred_live_or_acceptance",
+      "actual_result": "Geen officiële platformtoegang gebruikt of geclaimd.",
+      "evidence": []
+    },
+    {
+      "id": "M02",
+      "package": "F3.3",
+      "title": "Bronlabel",
+      "action": "Vergelijk API, export en handmatig bewijs.",
+      "expected": "Herkomst en reviewstatus behouden; manual nooit official_api.",
+      "required_evidence_layer": "unit_native_live",
+      "status": "deferred_live_or_acceptance",
+      "actual_result": "Manual/export-labels gebouwd; official_api wordt geweigerd. Geen API/handmatige bronvergelijking.",
+      "evidence": []
+    },
+    {
+      "id": "M03",
+      "package": "F3.3",
+      "title": "Twee vensters",
+      "action": "Vergelijk twee vensters met officiële bron of gecontroleerde export.",
+      "expected": "Waarde, definitie, scope en periode herleidbaar; verschil verklaard.",
+      "required_evidence_layer": "live",
+      "status": "deferred_live_or_acceptance",
+      "actual_result": "Twee fictieve meetvensters door volledige native keten/rapport; vergelijking met echte officiële bron blijft open.",
+      "evidence": []
+    },
+    {
+      "id": "M04",
+      "package": "F3.3",
+      "title": "Semantiek",
+      "action": "Vergelijk lifetime snapshot, periodewaarde en overlappende perioden.",
+      "expected": "Geen ongeldige som of vergelijking.",
+      "required_evidence_layer": "unit",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "M05",
+      "package": "F3.3",
+      "title": "Klokwissel",
+      "action": "Test halfopen grenzen, UTC/Brussel, 23/25-uurdagen.",
+      "expected": "Exacte selectie; fetchdatum niet als metricperiode.",
+      "required_evidence_layer": "unit_native",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "M06",
+      "package": "F3.3",
+      "title": "Waarde nul",
+      "action": "Verwerk bekende nul, null en ontbrekend veld.",
+      "expected": "0 blijft 0; onbekend blijft onbekend.",
+      "required_evidence_layer": "unit_ui",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "M07",
+      "package": "F3.3",
+      "title": "Kwaliteit",
+      "action": "Verwerk partial/stale/conflicted en laatste geldige meting plus recente fout.",
+      "expected": "Waarde/kwaliteit apart; stale niet actueel presenteren.",
+      "required_evidence_layer": "unit_ui",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "M08",
+      "package": "F3.3",
+      "title": "Tellerdelta",
+      "action": "Test 100→140, reset 100→5 en andere definitie.",
+      "expected": "40 alleen bij gelijke semantiek; reset/verschil conflict.",
+      "required_evidence_layer": "unit",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "M09",
+      "package": "F3.3",
+      "title": "Metric-idempotentie",
+      "action": "Replay bronrun en parallelle snapshot met null-perioden.",
+      "expected": "Geen dubbeltelling; null-uniekheidslek voorkomen.",
+      "required_evidence_layer": "native",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "M10",
+      "package": "F3.3",
+      "title": "Quota en retry",
+      "action": "Test 429, timeout, retry/backoff en herstart met budgetgrens.",
+      "expected": "Begrensd; foutstatus zichtbaar; geen dubbele records.",
+      "required_evidence_layer": "unit_native",
+      "status": "not_applicable_synthetic_stage",
+      "actual_result": "Geen achtergrondconnector of platformaanroepen in deze fase; quotagebruik nul. Retry-/429-connectorproef niet uitgevoerd.",
+      "evidence": []
+    },
+    {
+      "id": "M11",
+      "package": "F3.3",
+      "title": "Tokenintrekking",
+      "action": "Laat token verlopen of trek scope in tijdens sync.",
+      "expected": "Geen ongeoorloofde commit; geen token in log/fout/rapport.",
+      "required_evidence_layer": "native_live",
+      "status": "deferred_live_or_acceptance",
+      "actual_result": "Sessierevocation getest; dit bewijst geen echt platformtokenverloop.",
+      "evidence": []
+    },
+    {
+      "id": "M12",
+      "package": "F3.3",
+      "title": "Private fence",
+      "action": "Lees private fixture als member en andere creator.",
+      "expected": "Geen toegang via snapshots, rapport of export.",
+      "required_evidence_layer": "native_live",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "R01",
+      "package": "F3.4",
+      "title": "Dekking",
+      "action": "Rapporteer 2 van 3 toepasselijke posts en aparte kandidaat/uitsluitlijst.",
+      "expected": "Noemer 3; gedeeltelijke som gelabeld.",
+      "required_evidence_layer": "unit_ui",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "R02",
+      "package": "F3.4",
+      "title": "Uniek bereik",
+      "action": "Voer bereik 100 en 80 voor posts/platforms aan.",
+      "expected": "Geen uniek campagnebereik 180 claimen.",
+      "required_evidence_layer": "unit_ui",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "R03",
+      "package": "F3.4",
+      "title": "Engagementnoemer",
+      "action": "Test bekende noemer, ontbrekende input en noemer0.",
+      "expected": "Definitie zichtbaar; onbekend/niet berekenbaar waar nodig.",
+      "required_evidence_layer": "unit_ui",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "R04",
+      "package": "F3.4",
+      "title": "Vergelijking",
+      "action": "Vergelijk bekend-bekend, onbekend-bekend en basis0-bekend.",
+      "expected": "Geen fictieve procenten of nul bij onbekende basis.",
+      "required_evidence_layer": "unit_ui",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "R05",
+      "package": "F3.4",
+      "title": "Reproduceerbaarheid",
+      "action": "Maak revisie met peildatum en wijzig latere snapshots.",
+      "expected": "Inputversies behouden; nieuwe revisie expliciet.",
+      "required_evidence_layer": "native_ui",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "R06",
+      "package": "F3.4",
+      "title": "HTML en CSV",
+      "action": "Vergelijk KPI/dekking/filters op zelfde revisie.",
+      "expected": "Identieke geautoriseerde waarden en broncontext.",
+      "required_evidence_layer": "native_ui",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "R07",
+      "package": "F3.4",
+      "title": "Veilige export",
+      "action": "Voer formules, quotes/newlines en gevoelige bronvelden aan.",
+      "expected": "CSV veilig; geen tokens/private broninhoud.",
+      "required_evidence_layer": "unit_native",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "R08",
+      "package": "F3.4",
+      "title": "Rapportintrekking",
+      "action": "Trek doel/rol in tijdens export of openen oud rapport.",
+      "expected": "Actuele read/commitgrens; downloadlimiet beschreven.",
+      "required_evidence_layer": "native_live",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "U01",
+      "package": "F3.5",
+      "title": "Dossierregressie",
+      "action": "Bewerk bestaande campagne, deliverable en partnerrol.",
+      "expected": "Bestaande betekenis/data behouden; geen automatische sponsor.",
+      "required_evidence_layer": "native_ui",
+      "status": "verified_isolated_scope",
+      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "U02",
+      "package": "F3.5",
+      "title": "Bediening",
+      "action": "Doorloop met toetsenbord op smal/breed scherm en beide thema’s.",
+      "expected": "Labels, focus, fouten en leesbaarheid bruikbaar.",
+      "required_evidence_layer": "browser",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "React/DOM labels en formuliergrenzen getest; lokale screenshot van echte component. Geen volledige ingelogde mobiele/light-dark-browserketen.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "U03",
+      "package": "F3.5",
+      "title": "Geheimen",
+      "action": "Inspecteer bundle/logs/exports/fouten met secretcanaries.",
+      "expected": "Geen credentials/private velden; context afgeschermd.",
+      "required_evidence_layer": "browser_native",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Geen echte secrets gebruikt; output whitelist/private grants. Volledige canary-bundle/logaudit nog niet bewezen.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "U04",
+      "package": "F3.5",
+      "title": "Schaal",
+      "action": "Test pagination, vervalste cursor, payloadlimiet en grote selectie.",
+      "expected": "Geen stille truncatie, cross-scope cursor of onbegrensde fetch.",
+      "required_evidence_layer": "unit_native",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "RPC-payloadgrens, begrensde rapportomvang en onbekende exportfilters geweigerd; brede payload-/volumematrix niet volledig beproefd.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "E01",
+      "package": "F3.6",
+      "title": "Migratie",
+      "action": "Rehearse migratie/replay en Cloud pre/postflight.",
+      "expected": "Oude historie/gegevens behouden; seed uitgesloten; commit bewezen.",
+      "required_evidence_layer": "native_live",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Manifest bindt één nieuwe migratie en 125 historische SQL-bestanden; native replay slaagt. Cloudmigratie niet uitgevoerd.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "E02",
+      "package": "F3.6",
+      "title": "Uitrol",
+      "action": "Deploy pinned CC-image met rollback en configuratievergelijking.",
+      "expected": "Gezond; website/bot/Caddy/flags en Twitch behouden.",
+      "required_evidence_layer": "live",
+      "status": "deferred_live_or_acceptance",
+      "actual_result": "Geen serverdeploy; runtimeflag blijft standaard uit.",
+      "evidence": []
+    },
+    {
+      "id": "E03",
+      "package": "F3.6",
+      "title": "Pilotketen",
+      "action": "Doorloop campagne/creator/post/bron/rapport met tweede actor.",
+      "expected": "Positieve/negatieve live resultaten en beperkingen vastgelegd.",
+      "required_evidence_layer": "live",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Geïsoleerde keten creator → review → twee bronvensters → bevroren rapport → CSV werkt; Auth blijft een platformshape, geen live loginbewijs.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "E04",
+      "package": "F3.6",
+      "title": "Terugval en opruiming",
+      "action": "Stop intake, proef imagecompatibiliteit, sluit tijdelijke rollen/testdata.",
+      "expected": "Private grens behouden; herkenbare historie en veilige eindtoestand.",
+      "required_evidence_layer": "native_live",
+      "status": "partial_isolated_or_baseline",
+      "actual_result": "Native pilotsluiting trekt rollen in en blokkeert oude rapporten; geen daadwerkelijke F3-serverrollback.",
+      "evidence": [
+        "tests/campaign-pilot.test.mts",
+        "tests/campaign-pilot-database.test.mts",
+        "tests/campaign-pilot-interface.test.mts"
+      ]
+    },
+    {
+      "id": "E05",
+      "package": "F3.6",
+      "title": "Eindbesluit",
+      "action": "Verantwoord ieder geval/variant; Linda beoordeelt bewijsgrens.",
+      "expected": "Geen planned als passed; expliciete afsluiting of open gate.",
+      "required_evidence_layer": "human",
+      "status": "deferred_live_or_acceptance",
+      "actual_result": "Formele F3-eindacceptatie niet gevraagd of gegeven; deze oplevering betreft fictieve bouw/testfase.",
+      "evidence": []
+    }
+  ],
+  "cloud_schema_changed": false,
+  "server_deployed": false,
+  "full_f3_accepted": false,
+  "evidence_limits": "Exacte testbestanden en laatste CI-commits staan in Implementatie-en-testbewijs.md. Bronaccount-/platform-/deployvarianten worden niet uit fictieve gegevens afgeleid."
+}
