@@ -69,7 +69,9 @@ export function eventTimingValues(input: EventTimingInput) {
   const endpoint = (prefix: "start" | "end") => {
     // Keep compatibility with callers that still submit the combined field.
     const legacy = input[`${prefix}_at`];
-    const local = formatDateTimeLocal(localDateTimeToIso(legacy));
+    const legacyInstant = localDateTimeToIso(legacy);
+    if (legacy && !legacyInstant) throw new Error("Deze tijd bestaat niet in Europe/Brussels");
+    const local = formatDateTimeLocal(legacyInstant);
     const date = input[`${prefix}_date`] ?? local.slice(0, 10);
     const time = input[`${prefix}_time`] ?? local.slice(11);
     if (date && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || new Date(`${date}T12:00:00Z`).toISOString().slice(0, 10) !== date)) throw new Error("Ongeldige datum");
@@ -104,7 +106,7 @@ export function localDateTimeToIso(value?: string | null, timeZone = "Europe/Bru
   }
   const [, year, month, day, hour, minute, second = "0"] = match;
   const wallTime = Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second));
-  const parts = new Intl.DateTimeFormat("en-CA", {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
     calendar: "iso8601",
     timeZone,
     year: "numeric",
@@ -114,10 +116,20 @@ export function localDateTimeToIso(value?: string | null, timeZone = "Europe/Bru
     minute: "2-digit",
     second: "2-digit",
     hourCycle: "h23",
-  }).formatToParts(new Date(wallTime));
-  const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, Number(part.value)]));
-  const represented = Date.UTC(values.year, values.month - 1, values.day, values.hour, values.minute, values.second);
-  return new Date(wallTime - (represented - wallTime)).toISOString();
+  });
+  const representedAt = (instant: number) => {
+    const values = Object.fromEntries(formatter.formatToParts(new Date(instant)).filter((part) => part.type !== "literal").map((part) => [part.type, Number(part.value)]));
+    return Date.UTC(values.year, values.month - 1, values.day, values.hour, values.minute, values.second);
+  };
+  // A UTC probe can fall on the other side of a clock change from the local
+  // time. Try both neighbouring offsets and accept only a real round trip.
+  // Probe the original offset first to retain the existing repeated-hour choice.
+  for (const delta of [0, -86400000, 86400000]) {
+    const probe = wallTime + delta;
+    const candidate = wallTime - (representedAt(probe) - probe);
+    if (representedAt(candidate) === wallTime) return new Date(candidate).toISOString();
+  }
+  return null;
 }
 
 export function formatCurrency(value?: number | string | null, fallback = "Niet bepaald") {
