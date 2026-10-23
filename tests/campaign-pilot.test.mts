@@ -42,6 +42,27 @@ test('F3 CSV has safe formula cells, explicit missing, source and both periods',
   const csv = pilotReportCsv(pilotReport(fixture(), selection)); assert(csv.includes("'=TESTFIXTURE")); assert(csv.includes('Onbekend')); assert(csv.includes(selection.second.end)); assert(csv.includes('manual'));
 });
 test('F3 input cannot label manual evidence as official API', () => assert.equal(parsePilotOperation('measurement.record', { source_kind: 'official_api' }).success, false));
+
+test('F3 policy accepts the documented text lengths above 500 and rejects their exact overflow', () => {
+  const policy = { version: 1, body: 'x'.repeat(10000), retention: 'x'.repeat(4000), fields: ['post_url', 'views'], document_id: '10000000-0000-4000-8000-000000000001' };
+  assert.equal(parsePilotOperation('policy.set', policy).success, true);
+  assert.equal(parsePilotOperation('policy.set', { ...policy, body: 'x'.repeat(10001) }).success, false);
+  assert.equal(parsePilotOperation('policy.set', { ...policy, retention: 'x'.repeat(4001) }).success, false);
+});
+
+test('F3 review reason uses its documented 2000-character limit', () => {
+  const review = { id: '10000000-0000-4000-8000-000000000001', expected_revision: 1, decision: 'verified', availability: 'available', reason: 'x'.repeat(2000) };
+  assert.equal(parsePilotOperation('post.review', review).success, true);
+  assert.equal(parsePilotOperation('post.review', { ...review, reason: 'x'.repeat(2001) }).success, false);
+});
+
+test('F3 text fix retains the shorter metric definition, source key and reference limits', () => {
+  const measurement = { contribution_id: '10000000-0000-4000-8000-000000000001', expected_revision: 1, metric: 'views', definition: 'x'.repeat(240), semantics: 'period', period_start: '2026-10-20T00:00:00Z', period_end: '2026-10-21T00:00:00Z', measured_at: '2026-10-21T00:00:00Z', value: 100, quality: 'known', source_kind: 'manual', source_reference: 'x'.repeat(500), source_document_id: '10000000-0000-4000-8000-000000000001', source_key: 'x'.repeat(180) };
+  assert.equal(parsePilotOperation('measurement.record', measurement).success, true);
+  for (const [field, length] of [['definition', 241], ['source_key', 181], ['source_reference', 501]] as const) {
+    assert.equal(parsePilotOperation('measurement.record', { ...measurement, [field]: 'x'.repeat(length) }).success, false);
+  }
+});
 test('F3 windows must be exact and non-overlapping', () => assert.throws(() => pilotWindowSummary(fixture(), { ...selection, second: selection.first }, selection.first), /invalid_selection/));
 test('F3 counts reject unsafe numbers and unsafe aggregate totals', () => {
   const s = fixture(); s.measurements[0].value = 1.5;
