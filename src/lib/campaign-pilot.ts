@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const uuid = z.string().uuid();
-const text = z.string().trim().min(2).max(500);
+const text = z.string().trim().min(2);
 const timestamp = z.string().datetime({ offset: true });
 export const pilotOperationSchemas = {
   'pilot.open': z.object({}).strict(),
@@ -15,7 +15,7 @@ export const pilotOperationSchemas = {
   'participant.withdraw': z.object({ id: uuid }).strict(),
   'post.submit': z.object({ participant_id: uuid, external_id: z.string().regex(/^[A-Za-z0-9_-]{11}$/) }).strict(),
   'post.review': z.object({ id: uuid, expected_revision: z.number().int().positive(), decision: z.enum(['verified', 'rejected']), availability: z.enum(['available', 'private', 'deleted', 'unavailable', 'unknown']), reason: text.max(2000) }).strict(),
-  'measurement.record': z.object({ contribution_id: uuid, expected_revision: z.number().int().positive(), metric: z.enum(['views', 'likes', 'comments', 'reach', 'impressions']), definition: text.max(240), semantics: z.enum(['period', 'cumulative']), period_start: timestamp, period_end: timestamp, measured_at: timestamp, value: z.number().int().finite().min(0).max(1e15 - 1).nullable(), quality: z.enum(['known', 'missing', 'partial', 'stale', 'conflicted']), source_kind: z.enum(['manual', 'export']), source_reference: text, source_document_id: uuid, source_key: text.max(180) }).strict()
+  'measurement.record': z.object({ contribution_id: uuid, expected_revision: z.number().int().positive(), metric: z.enum(['views', 'likes', 'comments', 'reach', 'impressions']), definition: text.max(240), semantics: z.enum(['period', 'cumulative']), period_start: timestamp, period_end: timestamp, measured_at: timestamp, value: z.number().int().finite().min(0).max(1e15 - 1).nullable(), quality: z.enum(['known', 'missing', 'partial', 'stale', 'conflicted']), source_kind: z.enum(['manual', 'export']), source_reference: text.max(500), source_document_id: uuid, source_key: text.max(180) }).strict()
     .refine(x => Date.parse(x.period_end) > Date.parse(x.period_start), 'Het einde moet na het begin liggen.')
     .refine(x => x.quality === 'missing' ? x.value === null : x.value !== null, 'Ontbrekend vraagt een lege waarde; gemeten nul blijft nul.'),
 };
