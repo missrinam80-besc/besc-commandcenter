@@ -43,3 +43,10 @@ test('F3 CSV has safe formula cells, explicit missing, source and both periods',
 });
 test('F3 input cannot label manual evidence as official API', () => assert.equal(parsePilotOperation('measurement.record', { source_kind: 'official_api' }).success, false));
 test('F3 windows must be exact and non-overlapping', () => assert.throws(() => pilotWindowSummary(fixture(), { ...selection, second: selection.first }, selection.first), /invalid_selection/));
+test('F3 counts reject unsafe numbers and unsafe aggregate totals', () => {
+  const s = fixture(); s.measurements[0].value = 1.5;
+  assert.equal(pilotWindowSummary(s, selection, selection.first).conflicted, 1);
+  for (const m of s.measurements) m.value = Number.MAX_SAFE_INTEGER;
+  const large = pilotWindowSummary(s, selection, selection.first);
+  assert.equal(large.value, null); assert.equal(large.complete, false);
+});

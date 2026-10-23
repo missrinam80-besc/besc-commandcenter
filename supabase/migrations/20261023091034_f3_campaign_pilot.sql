@@ -48,7 +48,7 @@ create table private.campaign_measurements (
  definition text not null check(length(definition) between 2 and 240), unit text not null check(unit='count'),
  semantics text not null check(semantics in('period','cumulative')), period_start timestamptz not null, period_end timestamptz not null,
  measured_at timestamptz not null, fetched_at timestamptz not null default clock_timestamp(),
- value numeric check(value>=0 and value<1e15), quality text not null check(quality in('known','missing','partial','stale','conflicted')),
+ value numeric check(value>=0 and value<1e15 and value=trunc(value)), quality text not null check(quality in('known','missing','partial','stale','conflicted')),
  source_kind text not null check(source_kind in('manual','export')), source_reference text not null check(length(source_reference) between 2 and 500),
  source_document_id uuid not null references public.document_registry(id), source_key text not null check(length(source_key) between 2 and 180), input jsonb not null,
  created_by uuid not null references public.profiles(id),

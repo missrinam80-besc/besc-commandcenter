@@ -545,13 +545,9 @@
       "action": "Test bekende noemer, ontbrekende input en noemer0.",
       "expected": "Definitie zichtbaar; onbekend/niet berekenbaar waar nodig.",
       "required_evidence_layer": "unit_ui",
-      "status": "verified_isolated_scope",
-      "actual_result": "Gerichte unit-/database-/DOM-proef voor de genoemde regel geslaagd; bewijs geldt voor geïsoleerde fictieve gegevens, niet voor live platformwerking.",
-      "evidence": [
-        "tests/campaign-pilot.test.mts",
-        "tests/campaign-pilot-database.test.mts",
-        "tests/campaign-pilot-interface.test.mts"
-      ]
+      "status": "deferred_live_or_acceptance",
+      "actual_result": "De MVP toont afzonderlijke tellingen en vergelijkingspercentages, nog geen engagementrate met aparte engagementsnoemer. Niet als geslaagde engagementrateproef aanmerken.",
+      "evidence": []
     },
     {
       "id": "R04",

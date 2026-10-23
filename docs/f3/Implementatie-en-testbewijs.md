@@ -12,7 +12,7 @@ De creator bevestigt zelf de exacte campagnetekst. Een editor kan die persoonlij
 
 Bronmetingen kunnen als handmatig testbewijs of gecontroleerde testexport worden geregistreerd. Zij vereisen geldig doel, toegestane metric, actuele bijdrageversie en leesbaar bronbewijs. Een herhaalde bronregistratie wordt niet dubbel opgeslagen; gewijzigde data met dezelfde broncode geeft conflict. `official_api` wordt in deze fictieve fase expliciet geweigerd.
 
-Het rapport vergelijkt twee exacte niet-overlappende meetvensters, toont bron, peildatum, definitie, kwaliteit, dekking en uitgesloten bijdragen, en gebruikt dezelfde invoer voor HTML en CSV. Ontbrekend blijft onbekend; een gemeten nul blijft nul. Bereik en cumulatieve tellers krijgen geen ongeldige campagneoptelsom. Onvolledige dekking levert geen misleidend vergelijkingspercentage op. Een bevroren rapportrevisie behoudt zijn invoer, maar wordt bij gewijzigde deelname, bijdrage of broninzage geblokkeerd. Gedownloade exports kunnen niet op afstand worden ingetrokken.
+Engagementrate met een afzonderlijke engagementsnoemer is nog niet toegevoegd; het betreffende geval R03 blijft expliciet open. Het rapport vergelijkt twee exacte niet-overlappende meetvensters, toont bron, peildatum, definitie, kwaliteit, dekking en uitgesloten bijdragen, en gebruikt dezelfde invoer voor HTML en CSV. Ontbrekend blijft onbekend; een gemeten nul blijft nul. Bereik en cumulatieve tellers krijgen geen ongeldige campagneoptelsom. Onvolledige dekking levert geen misleidend vergelijkingspercentage op. Een bevroren rapportrevisie behoudt zijn invoer, maar wordt bij gewijzigde deelname, bijdrage of broninzage geblokkeerd. Gedownloade exports kunnen niet op afstand worden ingetrokken.
 
 ## Gegevens- en compatibiliteitsgrens
 
@@ -24,7 +24,7 @@ De nieuwe rapportselectie weigert meer dan 500 bijdragen of 5.000 waarnemingen i
 
 ## Gecontroleerd bewijs
 
-- Volledige lokale suite: **1.095 geslaagd, 0 fouten** op de implementatie vóór de laatste uitsluitend Nederlandse weergavelabels. Gerichte F3-proeven en codekwaliteit worden ook op de oplevercommit herhaald.
+- Volledige lokale suite: **1.095 geslaagd, 0 fouten** op de implementatie vóór de laatste uitsluitend Nederlandse weergavelabels. De gerichte F3-suite is uitgebreid tot 48 geslaagde gevallen; TypeScript en gerichte lintcontrole slagen. De exacte oplevercommit krijgt opnieuw CI.
 - Native PostgreSQL 17: nieuwe F3-rechten, dubbelenrace en intrekking blokkeren oude verwerking; F1- en F2-rechten/races en volledige historische schemareplay geslaagd in GitHub-run `39933137905` op commit `a73fd78`. Een aanvullende sessie-intrekkingsrace is nadien toegevoegd en moet op de laatste commit groen zijn.
 - Productiebuild lokaal geslaagd; TypeScript en gerichte lintcontrole worden op de oplevercommit gecontroleerd.
 - Volledige fictieve keten in de databasefixture: creatorbevestiging, andere reviewer, nul en veertig in twee meetvensters, vastgelegde rapportrevisie en veilige CSV. Dit gebruikt een Auth-platformshape en bewijst geen live Supabase-aanmeldketen.
