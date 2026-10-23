@@ -41,6 +41,7 @@ function canViewFinancePath(pathname: string, searchParams: URLSearchParams, mem
 }
 
 export function canViewInternalPath(pathname: string, membership: MembershipAccess, searchParams = new URLSearchParams()) {
+  if (pathname === "/app/campagnes/bijdragen") return ["admin", "board", "member", "volunteer"].includes(membership.role);
   // These entry points enforce current campaign roles/own participation in their
   // RPCs. Do not require general campaign-management access before that check.
   if (/^\/app\/campagnes\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/proef(?:\/rapport(?:\/export)?)?$/.test(pathname)) {
