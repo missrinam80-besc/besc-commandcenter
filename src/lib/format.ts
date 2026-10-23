@@ -69,7 +69,9 @@ export function eventTimingValues(input: EventTimingInput) {
   const endpoint = (prefix: "start" | "end") => {
     // Keep compatibility with callers that still submit the combined field.
     const legacy = input[`${prefix}_at`];
-    const local = formatDateTimeLocal(localDateTimeToIso(legacy));
+    const legacyInstant = localDateTimeToIso(legacy);
+    if (legacy && !legacyInstant) throw new Error("Deze tijd bestaat niet in Europe/Brussels");
+    const local = formatDateTimeLocal(legacyInstant);
     const date = input[`${prefix}_date`] ?? local.slice(0, 10);
     const time = input[`${prefix}_time`] ?? local.slice(11);
     if (date && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || new Date(`${date}T12:00:00Z`).toISOString().slice(0, 10) !== date)) throw new Error("Ongeldige datum");

@@ -27,6 +27,7 @@ test("Both original occurrences of the repeated hour keep their instant and seco
 test("Spring gap is never silently shifted to a different clock time", () => {
   assert.equal(localDateTimeToIso("2026-03-29T02:30"), null);
   assert.throws(() => eventTimingValues({start_date:"2026-03-29", start_time:"02:30"}), /Deze tijd bestaat niet/);
+  assert.throws(() => eventTimingValues({start_at:"2026-03-29T02:30"}), /Deze tijd bestaat niet/);
 });
 
 test("Other time zones resolve their own transition offsets", () => {
