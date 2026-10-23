@@ -1,3 +1,5 @@
+> Vervolg: partner- en esportsvermeldingen zijn lokaal gebouwd. Zie [Implementatie partners](Implementatie-partners.md). Geen live migratie, publicatie of uitrol uitgevoerd.
+
 > Vervolg: de private samenwerkingsintake en eigen opvolging zijn lokaal gebouwd. Zie [Implementatie intake](Implementatie-intake.md). Overige F4-onderdelen blijven gepland; er is niets live geactiveerd.
 
 > Bouwupdate: de eerste creatorketen is nu lokaal gebouwd. Zie [Implementatie creator](Implementatie-creator.md). Onderstaande voorbereiding, contractvoorstellen en geplande acceptatiegevallen blijven de historische scope; zij bewijzen geen volledige F4-uitvoering.
