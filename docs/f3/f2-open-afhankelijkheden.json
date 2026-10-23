@@ -1,0 +1,201 @@
+{
+  "source": "missrinam80-besc/besc-website PR3",
+  "merge": "3c3a841a183c8f04f4e2394d41db1da5754ede01",
+  "core_accepted": true,
+  "partial_cases": [
+    {
+      "id": "B02",
+      "title": "Toegang",
+      "remaining_evidence": "one.com en handmatige serveruitvoering bewezen; agent heeft geen SSH."
+    },
+    {
+      "id": "B03",
+      "title": "Testgroep",
+      "remaining_evidence": "Vier exact aangewezen bestaande accounts begrensd toegelaten; oude/onbevestigde actorvarianten apart beoordelen."
+    },
+    {
+      "id": "B05",
+      "title": "Bronnen",
+      "remaining_evidence": "Alleen bestaande merkassets en eigen synthetische kleurvlakken gebruikt; geen algemene rechtenvrijgave van echte content."
+    },
+    {
+      "id": "A01",
+      "title": "Anoniem",
+      "remaining_evidence": "CI en live anonieme HTML/API/media blokkeren; niet elke RSC/OG/prefetch-variant apart live gemeten."
+    },
+    {
+      "id": "A02",
+      "title": "Niet toegelaten",
+      "remaining_evidence": "Niet-toegelaten actor in database- en browserfixtures geweigerd; geen live proef met nieuw derde account."
+    },
+    {
+      "id": "A03",
+      "title": "Verkeerde organisatie",
+      "remaining_evidence": "Geisoleerde andere-organisatie actor kan niet schrijven; volledige live cross-tenant matrix niet uitgevoerd."
+    },
+    {
+      "id": "A04",
+      "title": "JWT",
+      "remaining_evidence": "Geisoleerde serververificatie en verwijderde sessies getest; geen live vervalste JWT-proef."
+    },
+    {
+      "id": "A05",
+      "title": "Sleutel",
+      "remaining_evidence": "Verkeerde/ontbrekende sleutel geweigerd in API; live sleuteldraaiing niet getest."
+    },
+    {
+      "id": "A06",
+      "title": "Directe database",
+      "remaining_evidence": "Geisoleerde tabellen/Storage en RPC-beveiliging getest; private live Storage-route geblokkeerd; overige directe live RPC-actorvarianten niet uitgevoerd."
+    },
+    {
+      "id": "A08",
+      "title": "Cookies en redirect",
+      "remaining_evidence": "Exacte callback toegevoegd en host-only cookies gebruikt; volledige negatieve redirectmatrix nog niet aan uitgevoerde proeven gekoppeld."
+    },
+    {
+      "id": "A09",
+      "title": "Lezer is geen redacteur",
+      "remaining_evidence": "Gebruiker bevestigt belgianstreamers wordt bij directe CC-websitebeheerroute naar /app?fout=geen-toegang gestuurd; geen beheerpagina bereikbaar. Websitelezen en verdwijnen eerder door hetzelfde tweede account bevestigd. Afzonderlijke action-POSTweigeringen alleen in geisoleerde tests bewezen."
+    },
+    {
+      "id": "A10",
+      "title": "Adminomweg",
+      "remaining_evidence": "Geisoleerde adminomweg geweigerd; eigen live publicatiebediening verdween na roleinde. Geen live write-poging geclaimd."
+    },
+    {
+      "id": "P01",
+      "title": "Niet goedgekeurd",
+      "remaining_evidence": "Nieuwe draft kan in databasefixture niet worden vrijgegeven; live niet-goedgekeurde revisies bleven verborgen. Expliciete in_review release-poging nog niet afzonderlijk bewezen."
+    },
+    {
+      "id": "P06",
+      "title": "Race intrekking",
+      "remaining_evidence": "Native twee-verbindingenrace tegen vrijgave- en F1-revisie-intrekking bewezen; toestemming/media-races daarmee niet afzonderlijk bewezen."
+    },
+    {
+      "id": "P08",
+      "title": "Venster",
+      "remaining_evidence": "Live venstereinde binnen 60 seconden bevestigd; alle begin/exacte grensvarianten niet daarmee afgedekt."
+    },
+    {
+      "id": "P12",
+      "title": "Slug en ID",
+      "remaining_evidence": "Opaque projectie en type/locale/slug-inputvalidatie getest; complete duplicate-slug matrix niet aan uitgevoerd bewijs gekoppeld."
+    },
+    {
+      "id": "D02",
+      "title": "HTML",
+      "remaining_evidence": "Script/eventhandler/iframe/localhost-image getest; overige genoemde HTML-gevallen niet afzonderlijk geinventariseerd."
+    },
+    {
+      "id": "D03",
+      "title": "URL en SSRF",
+      "remaining_evidence": "Onveilige schema/localhost/IP/internal/private/token-URLs geweigerd; complete redirect/signed-URL-variantmatrix niet afzonderlijk bewezen."
+    },
+    {
+      "id": "D04",
+      "title": "Pagination",
+      "remaining_evidence": "Limits, vervalste cursor, type en locale getest; aparte andere-site-cursorvariant nog niet aan bewijs gekoppeld."
+    },
+    {
+      "id": "D05",
+      "title": "Taal en tijd",
+      "remaining_evidence": "Geldige klokwisseltijden na correctie live opgeslagen en onafhankelijk read-only bevestigd: 01:30 tot 03:30 Brussel heeft drie uur werkelijke duur. Locale- en RFC3339-negatieven blijven de eerder vermelde geisoleerde bewijslaag."
+    },
+    {
+      "id": "D06",
+      "title": "Niet beschikbaar",
+      "remaining_evidence": "Niet vrijgegeven, verlopen en ingetrokken inhoud veilig geblokkeerd; volledige oracle-matrix apart beoordelen."
+    },
+    {
+      "id": "D08",
+      "title": "Limieten",
+      "remaining_evidence": "Rate-limit en byte-integriteit getest; volledige grote-payload/uploadcapaciteitsproef niet daarmee bewezen."
+    },
+    {
+      "id": "W01",
+      "title": "Schermen",
+      "remaining_evidence": "Live home/lijsten/details/leeg/geblokkeerd gebruikt; browser-suite apart bewijsniveau."
+    },
+    {
+      "id": "W04",
+      "title": "Toetsenbord",
+      "remaining_evidence": "Native toetsenbordproef: skiplink, navigatievolgorde en thema via spatie werken. Volledige loginroute zonder muis nog niet bewezen."
+    },
+    {
+      "id": "W05",
+      "title": "Toegankelijkheid",
+      "remaining_evidence": "CI axe plus live tekstcontrastmetingen in beide modi: gemeten minima donker 6.36 en licht 6.95. Geen volledige WCAG-claim; zoom en reduced-motionreview nog open."
+    },
+    {
+      "id": "W06",
+      "title": "Secrets",
+      "remaining_evidence": "API-projectie/afgeleverde media veilig gecontroleerd; volledige browserbundle/sourcemap/loginspectie nog niet aan bewijs gekoppeld."
+    },
+    {
+      "id": "W07",
+      "title": "Registratielink",
+      "remaining_evidence": "Synthetisch event zonder registratie en onveilige URLs getest; echte veilige externe link niet doorlopen."
+    },
+    {
+      "id": "W08",
+      "title": "Bestaande koppelingen",
+      "remaining_evidence": "CC-login, runtime-instellingen en flags behouden. Geen nieuwe volledige Discord/Twitch/saldoproef uitgevoerd."
+    },
+    {
+      "id": "M01",
+      "title": "Private bytes",
+      "remaining_evidence": "Private bucket, ongepubliceerde media en directe publieke Storage-route blokkeren. Volledige guessed-ID matrix niet daarmee bewezen."
+    },
+    {
+      "id": "M02",
+      "title": "Uploadfixture",
+      "remaining_evidence": "Werkelijke synthetische upload en afgeleverde WebP/hash/metadata gecontroleerd; alle negatieve uploadvarianten apart koppelen."
+    },
+    {
+      "id": "M03",
+      "title": "Intrekken media",
+      "remaining_evidence": "Live mediarechten-intrekking bij twee lezers en afzonderlijke intrekking van nieuwe eventmedia bewezen; mediarecord blokkeerde API/detail/open view/media binnen 34 seconden. Langdurige stream niet uitgevoerd."
+    },
+    {
+      "id": "C01",
+      "title": "Headers",
+      "remaining_evidence": "Live no-store/noindex op anonieme edgeverzoeken; volledige HTML/API/media/metadata plus interne matrix niet afzonderlijk gemeten."
+    },
+    {
+      "id": "C02",
+      "title": "Conditioneel",
+      "remaining_evidence": "If-None-Match weigert stale inhoud in CI; If-Modified-Since en volledige live conditionele matrix nog open."
+    },
+    {
+      "id": "C03",
+      "title": "Routercache",
+      "remaining_evidence": "Na intrekking browser-terug naar lege eventlijst en vooruit naar onbeschikbaar detail bewezen. Specifieke geforceerde prefetchvariant niet uitgevoerd."
+    },
+    {
+      "id": "C05",
+      "title": "Achtergrond",
+      "remaining_evidence": "Tweede tester bevestigde verdwenen inhoud; geen apart gemeten offline/pageshow-protocol."
+    },
+    {
+      "id": "C06",
+      "title": "Storing",
+      "remaining_evidence": "Geisoleerde upstreamfout zonder stale inhoud bewezen; geen nieuwe live Auth/DB-storing geinjecteerd."
+    },
+    {
+      "id": "C07",
+      "title": "Alle routes",
+      "remaining_evidence": "Live lijst/detail/media gemeten; geen volledige sitemap/OG/conditionele-cachematrix hieruit afgeleid."
+    },
+    {
+      "id": "E03",
+      "title": "Tweede tester",
+      "remaining_evidence": "Gebruiker bevestigt belgianstreamers wordt bij directe CC-websitebeheerroute naar /app?fout=geen-toegang gestuurd; geen beheerpagina bereikbaar. Websitelezen en verdwijnen eerder door hetzelfde tweede account bevestigd. Afzonderlijke action-POSTweigeringen alleen in geisoleerde tests bewezen."
+    }
+  ],
+  "skipped_by_user": [
+    "P10"
+  ],
+  "f3_test_result_inferred": false
+}
