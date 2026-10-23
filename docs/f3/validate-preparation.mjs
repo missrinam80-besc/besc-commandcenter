@@ -1,9 +1,10 @@
 // Validates this preparation package, never application behavior or live access.
-const fs = require('node:fs');
-const path = require('node:path');
-const crypto = require('node:crypto');
-const assert = require('node:assert/strict');
-const base = __dirname;
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import crypto from 'node:crypto';
+import assert from 'node:assert/strict';
+const base = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(base, '../..');
 const read = (name) => JSON.parse(fs.readFileSync(path.join(base, name), 'utf8'));
 const register = read('acceptatiegevallen.json');

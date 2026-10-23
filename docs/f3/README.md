@@ -19,7 +19,7 @@ F2 is voor de bewezen DEV-kern door Linda aanvaard, vastgelegd in website-PR3, m
 9. [Bronmanifest](bronmanifest.json), [ongewijzigde F2-openpunten](f2-open-afhankelijkheden.json).
 10. [Risico's en stopvoorwaarden](Risicos.md).
 
-Pakketcontrole: `node docs/f3/validate-preparation.cjs`. Dit valideert 53 geplande gevallen in zeven pakketten, acht fictieve rekenvoorbeelden, bronhashes en lokale links. Het voert geen product- of platformproeven uit.
+Pakketcontrole: `node docs/f3/validate-preparation.mjs`. Dit valideert 53 geplande gevallen in zeven pakketten, acht fictieve rekenvoorbeelden, bronhashes en lokale links. Het voert geen product- of platformproeven uit.
 
 ## Wat gereed betekent
 
