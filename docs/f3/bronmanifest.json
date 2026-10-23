@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-23",
+  "cc_main": "f68a0e13bfc730d0e787bf4f0cfe56603c645254",
+  "website_f2_merge": "3c3a841a183c8f04f4e2394d41db1da5754ede01",
+  "evidence_level": "code_and_prior_scoped_dev_results",
+  "cloud_rechecked_this_phase": false,
+  "account_capabilities_rechecked_this_phase": false,
+  "masterplan_source": "BESC_Ecosysteem_Masterplan_v2_Governance_Social_Campaign_Intelligence.docx; eerder geëxtraheerde bron hoofdstuk19 en afgesproken ecosysteemfase F3",
+  "source_files": [
+    {
+      "path": "src/lib/campaign-metrics.ts",
+      "sha256": "bac1ca61bed02c6d979e3aacf49b8021e8a0dc575a218be9975580dd6e4c776b"
+    },
+    {
+      "path": "src/lib/dossier-editor-catalog.ts",
+      "sha256": "5acd298d3c85525cbf66143abbd0d82cf546fb80060d365111ae50e89e6a6500"
+    },
+    {
+      "path": "src/lib/social-connectors.ts",
+      "sha256": "42ceb0e436ef589c5af22e5f6270e46e9a8e9bd9c03879d2cce380119e33112d"
+    },
+    {
+      "path": "src/lib/social-sync-scheduler.ts",
+      "sha256": "0a4b1f5d86bb64fb514705a135442978bfe22320fb1e918d92c76742b1315bbf"
+    },
+    {
+      "path": "src/lib/social-metrics-export.ts",
+      "sha256": "478f92fdd7a74d7a447974ee3a20c3523731be69245096cbac1b09fe0a7b7721"
+    },
+    {
+      "path": "src/lib/social-metrics-export-query.ts",
+      "sha256": "15ae3ebd21b3b0d2b6d885d6495aee1ef5d6307f200032088d7babb2f06b2441"
+    },
+    {
+      "path": "src/app/api/v1/social/metrics/route.ts",
+      "sha256": "95a34d5e61572951debb0149e737f7ac3196bfe6a2c492ad250a587ef60f860a"
+    },
+    {
+      "path": "src/lib/f1-workflows.ts",
+      "sha256": "91bdff6553f8dfe77d554d05123e38c004dbd35488ecb4cada0c0393a9d022c7"
+    },
+    {
+      "path": "supabase/migrations/20260803150500_add_social_integration_core.sql",
+      "sha256": "52458bf96cc43d2ecf6d64e60b9f5c4af6d9b7639001474ffa46887f057bd2de"
+    },
+    {
+      "path": "supabase/migrations/20261021124318_f1_purpose_consent.sql",
+      "sha256": "53c1bbc747f471c4055916a628cadf5a8dabd105095b192df1942ad2a720734c"
+    },
+    {
+      "path": "supabase/migrations/20261006205557_atomic_campaign_and_relationships.sql",
+      "sha256": "09c7711133e70719c8004da68d0c7ee0a0983a2a2ee50dfc0acff6ed77339237"
+    }
+  ],
+  "official_sources": [
+    "https://supabase.com/changelog",
+    "https://supabase.com/docs/guides/database/postgres/row-level-security"
+  ],
+  "masterplan_extraction_sha256": "9633f180572e0d913a8cc55c9c41faf20a03a7fe4b35caf444a097f63ecbcf5b",
+  "phase_mapping": "Ecosysteemfasering F0–F6 uit de toetsing van 20 oktober; niet de afzonderlijke socialroadmap 0–8 uit hoofdstuk19.8.",
+  "source_hash_encoding": "UTF-8 bytes with CRLF normalized to LF; no other normalization"
+}

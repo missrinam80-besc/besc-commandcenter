@@ -1,0 +1,37 @@
+{
+  "source": "Authenticated Supabase DEV SQL Editor, begin read only; select; rollback",
+  "project_ref": "sjvzrsmrtcxxtmaxigtn",
+  "date": "2026-10-23",
+  "read_only": "on",
+  "history_count": 124,
+  "f3_already_present": false,
+  "staging_closed": true,
+  "social_tables": [
+    {
+      "name": "campaigns",
+      "rls": true
+    },
+    {
+      "name": "processing_purposes",
+      "rls": true
+    },
+    {
+      "name": "social_accounts",
+      "rls": true
+    },
+    {
+      "name": "social_metric_snapshots",
+      "rls": true
+    }
+  ],
+  "snapshot_select_policy": {
+    "name": "members read social metric snapshots",
+    "roles": [
+      "authenticated"
+    ],
+    "expression": "private.is_active_member(organization_id)"
+  },
+  "personal_rows_or_secrets_read": false,
+  "live_changes": false,
+  "account_capability_verified": false
+}

@@ -1,0 +1,91 @@
+{
+  "synthetic": true,
+  "label": "TESTFIXTURE — NIET PUBLICEREN",
+  "purpose": "specificatie; geen gemeten BESC-resultaten of producttest",
+  "fixtures": [
+    {
+      "id": "zero_missing",
+      "input": [
+        0,
+        null,
+        40
+      ],
+      "expected": {
+        "measured": 2,
+        "missing": 1,
+        "total": 3,
+        "measured_sum": 40,
+        "label": "gedeeltelijk"
+      }
+    },
+    {
+      "id": "all_missing",
+      "input": [
+        null,
+        null
+      ],
+      "expected": {
+        "measured": 0,
+        "missing": 2,
+        "total": 2,
+        "measured_sum": null
+      }
+    },
+    {
+      "id": "known_delta",
+      "before": 100,
+      "after": 140,
+      "same_definition": true,
+      "expected": {
+        "delta": 40
+      }
+    },
+    {
+      "id": "reset_delta",
+      "before": 100,
+      "after": 5,
+      "same_definition": true,
+      "expected": {
+        "delta": null,
+        "status": "conflicted"
+      }
+    },
+    {
+      "id": "zero_baseline",
+      "before": 0,
+      "after": 40,
+      "expected": {
+        "absolute_change": 40,
+        "percent_change": null
+      }
+    },
+    {
+      "id": "reach_no_unique",
+      "post_reach": [
+        100,
+        80
+      ],
+      "expected": {
+        "unique_campaign_reach": null,
+        "reason": "overlap_unknown"
+      }
+    },
+    {
+      "id": "zero_denominator",
+      "engagements": 3,
+      "denominator": 0,
+      "expected": {
+        "engagement_rate": null
+      }
+    },
+    {
+      "id": "dst_fall",
+      "start_utc": "2026-10-24T23:30:00Z",
+      "end_utc": "2026-10-25T02:30:00Z",
+      "expected": {
+        "elapsed_hours": 3,
+        "brussels_display": "01:30–03:30"
+      }
+    }
+  ]
+}
