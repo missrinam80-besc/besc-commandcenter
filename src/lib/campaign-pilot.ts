@@ -108,8 +108,8 @@ export function pilotReport(state: PilotState, selection: PilotSelection) {
   return { synthetic: true, selection, first, second, excluded: state.excluded_posts ?? 0, comparison: first.complete && second.complete ? comparePilotValues(first.value, second.value) : { delta: null, percent: null } };
 }
 export function pilotReportCsv(report: ReturnType<typeof pilotReport>) {
-  const lines: unknown[][] = [['TESTFIXTURE — NIET PUBLICEREN'], ['Venster', 'Begin', 'Einde', 'Metric', 'Definitie', 'Gemeten', 'Totaal', 'Ontbrekend', 'Verouderd', 'Conflict', 'Waarde'],
-    ...(['first', 'second'] as const).map(key => { const w = report[key], range = report.selection[key]; return [key, range.start, range.end, report.selection.metric, report.selection.definition, w.measured, w.total, w.missing, w.stale, w.conflicted, w.value]; }),
+  const lines: unknown[][] = [['TESTFIXTURE — NIET PUBLICEREN'], ['Peildatum', report.selection.asOf], ['Uitgesloten door deelname', report.excluded], ['Venster', 'Begin', 'Einde', 'Metric', 'Definitie', 'Semantiek', 'Gemeten', 'Totaal', 'Ontbrekend', 'Verouderd', 'Conflict', 'Gedeeltelijk', 'Waarde'],
+    ...(['first', 'second'] as const).map(key => { const w = report[key], range = report.selection[key]; return [key, range.start, range.end, report.selection.metric, report.selection.definition, report.selection.semantics, w.measured, w.total, w.missing, w.stale, w.conflicted, w.partial, w.value]; }),
     ['Venster', 'Post', 'Waarde', 'Kwaliteit', 'Bron', 'Bronreferentie', 'Meting-ID']];
   for (const key of ['first', 'second'] as const) for (const row of report[key].rows) lines.push([key, row.url, row.value, row.quality, row.source, row.reference, row.measurementId]);
   return '\uFEFF' + lines.map(row => row.map(pilotCsvCell).join(',')).join('\r\n');

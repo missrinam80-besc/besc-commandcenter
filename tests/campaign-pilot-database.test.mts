@@ -61,6 +61,8 @@ test('F3 database: measurements are scoped, immutable, manual and never legacy-e
   const id = await verifiedPost(); await actor(f.ids.chair);
   const data = { contribution_id: id, expected_revision: 2, metric: 'views', definition: 'TESTFIXTURE v1', semantics: 'period', period_start: '2026-01-01T00:00:00Z', period_end: '2026-01-02T00:00:00Z', measured_at: '2026-01-02T00:00:00Z', value: 0, quality: 'known', source_kind: 'manual', source_reference: 'TESTFIXTURE', source_document_id: f.ids.policyDoc, source_key: 'fixture-1' };
   const m = await call('measurement.record', data); assert(m.id); assert.equal((await state()).measurements.length, 1);
+  assert.equal((await call('measurement.record', data)).id, m.id);
+  await deny('measurement.record', { ...data, value: 99 });
   await deny('measurement.record', { ...data, source_key: 'fixture-2', metric: 'likes' }); await deny('measurement.record', { ...data, source_key: 'fixture-2', source_kind: 'official_api' });
   await actor(f.ids.member); assert.equal((await state()).measurements.length, 1);
   await call('participant.withdraw', { id: participant }); assert.equal((await state()).measurements.length, 0);
@@ -86,4 +88,19 @@ test('F3 database: closed pilot revokes roles and blocks older reports', async (
   await verifiedPost(); await actor(f.ids.chair); const report = await call('report.capture'); await call('pilot.close');
   await deny('post.submit', { participant_id: participant, external_id: '12345678901' });
   await f.db.exec('savepoint closed'); await assert.rejects(f.db.query(`select public.f3_report_revision(${q(f.ids.org)},${q(campaign)},${q(report.id)})`)); await f.db.exec('rollback to closed');
+});
+test('F3 database: reauthorizing a new text requeues the same post for independent review', async () => {
+  const id = await verifiedPost(); await actor(f.ids.chair);
+  const next = await call('policy.set', { version: 2, body: 'TESTFIXTURE — nieuwe doeltekst.', retention: 'TESTFIXTURE — bewaarbehandeling blijft testbewijs.', fields: ['post_url', 'views'], document_id: f.ids.policyDoc });
+  const person = await call('participant.select', { person_id: f.ids.otherPerson, policy_id: next.id, expires_at: new Date(Date.now() + 86400000).toISOString() });
+  await actor(f.ids.member); await call('participant.accept', { id: person.id, accepted: true });
+  assert.equal((await call('post.submit', { participant_id: person.id, external_id: 'abcdefghijk' })).id, id);
+  const post = (await state()).posts[0]; assert.equal(post.status, 'candidate'); assert.equal(post.revision, 3);
+});
+test('F3 database: role and person expiry plus other-tenant access fail closed', async () => {
+  await verifiedPost(); await f.owner(); await f.db.exec(`update private.campaign_access set valid_until=clock_timestamp()-interval '1 minute' where user_id=${q(f.ids.reviewer)}`);
+  await actor(f.ids.reviewer); await deny('post.review', {});
+  await actor(f.ids.other); await deny('access.assign', { user_id: f.ids.other, role: 'editor', valid_until: new Date(Date.now() + 86400000).toISOString() });
+  await f.owner(); await f.db.exec(`update private.campaign_participants set expires_at=clock_timestamp()-interval '1 minute' where id=${q(participant)}`);
+  await actor(f.ids.chair); assert.equal((await state()).posts.length, 0);
 });

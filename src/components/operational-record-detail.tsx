@@ -54,7 +54,7 @@ export async function OperationalRecordDetail({
   const config = operationalModules[module];
   const { supabase, membership } = await requireActiveMembership();
   const org = membership.organization_id;
-  const campaignPilotLink = module === 'campagnes' && process.env.BESC_CAMPAIGNS_PILOT_ENABLED === 'true'
+  const campaignPilotLink = module === 'campagnes' && typeof process !== 'undefined' && process.env.BESC_CAMPAIGNS_PILOT_ENABLED === 'true'
     ? <Link className="button secondary" href={`/app/campagnes/${id}/proef`}>Afgeschermde campagneproef</Link> : null;
   const requestedTab = module === "sponsors" || module === "community" ? resolveContactTab(module,query) : "";
 

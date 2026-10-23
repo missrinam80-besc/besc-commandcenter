@@ -50,7 +50,7 @@ create table private.campaign_measurements (
  measured_at timestamptz not null, fetched_at timestamptz not null default clock_timestamp(),
  value numeric check(value>=0 and value<1e15), quality text not null check(quality in('known','missing','partial','stale','conflicted')),
  source_kind text not null check(source_kind in('manual','export')), source_reference text not null check(length(source_reference) between 2 and 500),
- source_document_id uuid not null references public.document_registry(id), source_key text not null check(length(source_key) between 2 and 180),
+ source_document_id uuid not null references public.document_registry(id), source_key text not null check(length(source_key) between 2 and 180), input jsonb not null,
  created_by uuid not null references public.profiles(id),
  check(period_end>period_start),check((quality='missing' and value is null) or (quality<>'missing' and value is not null)),
  unique(campaign_id,source_key),
@@ -95,7 +95,7 @@ $$;
 create function public.f3_workflow(p_organization_id uuid,p_campaign_id uuid,p_operation text,p_data jsonb,p_request_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare o uuid:=p_organization_id;c uuid:=p_campaign_id;op text:=p_operation;d jsonb:=p_data;
- result jsonb;answer uuid;prior private.campaign_receipts;part private.campaign_participants;post private.campaign_contributions;pol private.campaign_policies;fields text[];allowed text[];
+ result jsonb;answer uuid;prior private.campaign_receipts;measurement private.campaign_measurements;post private.campaign_contributions;pol private.campaign_policies;fields text[];allowed text[];
 begin
  if current_setting('transaction_isolation')<>'read committed' then raise exception 'f3_isolation_required';end if;
  perform private.f1_lock();
@@ -158,8 +158,15 @@ begin
  elsif op='post.submit' then
   if not private.f3_participant_valid(o,c,(d->>'participant_id')::uuid) then raise exception 'f3_consent_required';end if;
   if exists(select 1 from private.campaign_contributions x where x.organization_id=o and x.platform='youtube' and x.external_id=d->>'external_id' and x.participant_id<>(d->>'participant_id')::uuid and (select person_id from private.campaign_participants where id=x.participant_id)<>(select person_id from private.campaign_participants where id=(d->>'participant_id')::uuid)) then raise exception 'f3_creator_conflict';end if;
-  insert into private.campaign_contributions(organization_id,campaign_id,participant_id,platform,external_id,submitted_by) values(o,c,(d->>'participant_id')::uuid,'youtube',d->>'external_id',auth.uid()) on conflict(campaign_id,platform,external_id) do nothing returning id into answer;
-  if answer is null then select id into answer from private.campaign_contributions where campaign_id=c and platform='youtube' and external_id=d->>'external_id';end if;
+  select * into post from private.campaign_contributions where campaign_id=c and platform='youtube' and external_id=d->>'external_id';
+  if post.id is not null then
+   answer:=post.id;
+   if post.participant_id<>(d->>'participant_id')::uuid then
+    update private.campaign_contributions set participant_id=(d->>'participant_id')::uuid,revision=revision+1,status='candidate',availability='unknown',reviewed_by=null,review_reason=null,checked_at=null,submitted_by=auth.uid(),submitted_at=clock_timestamp() where id=post.id;
+   end if;
+  else
+   insert into private.campaign_contributions(organization_id,campaign_id,participant_id,platform,external_id,submitted_by) values(o,c,(d->>'participant_id')::uuid,'youtube',d->>'external_id',auth.uid()) returning id into answer;
+  end if;
  elsif op='post.review' then
   select * into post from private.campaign_contributions where organization_id=o and campaign_id=c and id=(d->>'id')::uuid;
   if post.id is null or (d->>'expected_revision')::integer is distinct from post.revision then raise exception 'f3_revision_conflict' using errcode='40001';end if;
@@ -173,8 +180,15 @@ begin
   select s.* into pol from private.campaign_participants a join private.campaign_policies s on s.id=a.policy_id where a.id=post.participant_id;
   if not(d->>'metric'=any(pol.fields)) or not private.f1_document_visible(o,(d->>'source_document_id')::uuid) then raise exception 'f3_scope_or_evidence_required';end if;
   if (d->>'measured_at')::timestamptz>clock_timestamp() then raise exception 'f3_invalid_time';end if;
-  insert into private.campaign_measurements(organization_id,campaign_id,contribution_id,contribution_revision,metric,definition,unit,semantics,period_start,period_end,measured_at,value,quality,source_kind,source_reference,source_document_id,source_key,created_by)
-  values(o,c,post.id,post.revision,d->>'metric',d->>'definition','count',d->>'semantics',(d->>'period_start')::timestamptz,(d->>'period_end')::timestamptz,(d->>'measured_at')::timestamptz,(d->>'value')::numeric,d->>'quality',d->>'source_kind',d->>'source_reference',(d->>'source_document_id')::uuid,d->>'source_key',auth.uid()) returning id into answer;
+  select * into measurement from private.campaign_measurements where campaign_id=c and source_key=d->>'source_key';
+  if measurement.id is not null then
+   if measurement.input<>d then raise exception 'f3_source_conflict' using errcode='40001';end if;
+   result:=jsonb_build_object('id',measurement.id);
+   insert into private.campaign_receipts values(o,c,auth.uid(),p_request_id,op,d,result,clock_timestamp());
+   return result;
+  end if;
+  insert into private.campaign_measurements(organization_id,campaign_id,contribution_id,contribution_revision,metric,definition,unit,semantics,period_start,period_end,measured_at,value,quality,source_kind,source_reference,source_document_id,source_key,input,created_by)
+  values(o,c,post.id,post.revision,d->>'metric',d->>'definition','count',d->>'semantics',(d->>'period_start')::timestamptz,(d->>'period_end')::timestamptz,(d->>'measured_at')::timestamptz,(d->>'value')::numeric,d->>'quality',d->>'source_kind',d->>'source_reference',(d->>'source_document_id')::uuid,d->>'source_key',d,auth.uid()) returning id into answer;
  end if;
  if answer is null then raise exception 'f3_not_available';end if;
  result:=jsonb_build_object('id',answer);
@@ -188,13 +202,14 @@ declare o uuid:=p_organization_id;c uuid:=p_campaign_id;team boolean;begin
  if not private.f3_active(o,c) then raise exception 'f3_not_available' using errcode='42501';end if;
  team:=private.f3_role(o,c,array['editor','reviewer','reader']);
  if not team and not exists(select 1 from private.campaign_participants a where a.campaign_id=c and private.f3_own(o,c,a.id)) and not private.f1_chair(o) then raise exception 'f3_not_available' using errcode='42501';end if;
+ if (select count(*) from private.campaign_contributions where campaign_id=c)>500 or (select count(*) from private.campaign_measurements where campaign_id=c)>5000 then raise exception 'f3_selection_too_large';end if;
  return jsonb_build_object('synthetic',true,'as_of',clock_timestamp(),'campaign_id',c,'chair',private.f1_chair(o),'editor',private.f3_role(o,c,array['editor']),'reviewer',private.f3_role(o,c,array['reviewer']),'reader',team,
  'excluded_posts',(select count(*) from private.campaign_contributions x where x.campaign_id=c and not private.f3_participant_valid(o,c,x.participant_id) and (team or private.f3_own(o,c,x.participant_id))),
  'policies',(select coalesce(jsonb_agg(jsonb_build_object('id',id,'version',version,'body',body,'fields',fields,'retention',retention,'withdrawn_at',withdrawn_at)),'[]') from private.campaign_policies where campaign_id=c),
  'access',case when private.f1_chair(o) then (select coalesce(jsonb_agg(jsonb_build_object('id',id,'user_id',user_id,'role',role,'valid_until',valid_until,'revoked_at',revoked_at)),'[]') from private.campaign_access where campaign_id=c) else '[]'::jsonb end,
  'participants',(select coalesce(jsonb_agg(jsonb_build_object('id',a.id,'person_id',a.person_id,'policy_id',a.policy_id,'accepted_at',a.accepted_at,'withdrawn_at',a.withdrawn_at,'expires_at',a.expires_at,'valid',private.f3_participant_valid(o,c,a.id),'own',private.f3_own(o,c,a.id))),'[]') from private.campaign_participants a where a.campaign_id=c and (team or private.f3_own(o,c,a.id))),
  'posts',(select coalesce(jsonb_agg(jsonb_build_object('id',x.id,'participant_id',x.participant_id,'canonical_url',x.canonical_url,'external_id',x.external_id,'revision',x.revision,'status',x.status,'availability',x.availability,'checked_at',x.checked_at)),'[]') from private.campaign_contributions x where x.campaign_id=c and private.f3_participant_valid(o,c,x.participant_id) and (team or private.f3_own(o,c,x.participant_id))),
- 'measurements',(select coalesce(jsonb_agg(jsonb_build_object('id',m.id,'contribution_id',m.contribution_id,'revision',m.contribution_revision,'metric',m.metric,'definition',m.definition,'unit',m.unit,'semantics',m.semantics,'period_start',m.period_start,'period_end',m.period_end,'measured_at',m.measured_at,'fetched_at',m.fetched_at,'value',m.value,'quality',m.quality,'source_kind',m.source_kind,'source_reference',m.source_reference)),'[]') from private.campaign_measurements m join private.campaign_contributions x on x.id=m.contribution_id where m.campaign_id=c and x.status='verified' and x.revision=m.contribution_revision and private.f3_participant_valid(o,c,x.participant_id) and (team or private.f3_own(o,c,x.participant_id))));
+ 'measurements',(select coalesce(jsonb_agg(jsonb_build_object('id',m.id,'contribution_id',m.contribution_id,'revision',m.contribution_revision,'metric',m.metric,'definition',m.definition,'unit',m.unit,'semantics',m.semantics,'period_start',m.period_start,'period_end',m.period_end,'measured_at',m.measured_at,'fetched_at',m.fetched_at,'value',m.value,'quality',m.quality,'source_kind',m.source_kind,'source_reference',m.source_reference)),'[]') from private.campaign_measurements m join private.campaign_contributions x on x.id=m.contribution_id where m.campaign_id=c and private.f1_document_visible(o,m.source_document_id) and x.status='verified' and x.revision=m.contribution_revision and private.f3_participant_valid(o,c,x.participant_id) and (team or private.f3_own(o,c,x.participant_id))));
 end$$;
 create function public.f3_report_revision(p_organization_id uuid,p_campaign_id uuid,p_report_id uuid) returns jsonb language plpgsql stable security definer set search_path='' as $$
 declare snapshot jsonb;begin
@@ -202,6 +217,7 @@ declare snapshot jsonb;begin
  select r.snapshot into snapshot from private.campaign_report_revisions r where r.id=p_report_id and r.organization_id=p_organization_id and r.campaign_id=p_campaign_id;
  if snapshot is null or exists(select 1 from jsonb_array_elements(snapshot->'participants') a where (a->>'valid')::boolean and not private.f3_participant_valid(p_organization_id,p_campaign_id,(a->>'id')::uuid))
  or exists(select 1 from jsonb_array_elements(snapshot->'posts') x where not exists(select 1 from private.campaign_contributions p where p.id=(x->>'id')::uuid and p.revision=(x->>'revision')::integer and p.status=x->>'status' and p.availability=x->>'availability'))
+ or exists(select 1 from jsonb_array_elements(snapshot->'measurements') m join private.campaign_measurements source on source.id=(m->>'id')::uuid where not private.f1_document_visible(p_organization_id,source.source_document_id))
  then raise exception 'f3_report_access_changed' using errcode='42501';end if;
  return snapshot;
 end$$;

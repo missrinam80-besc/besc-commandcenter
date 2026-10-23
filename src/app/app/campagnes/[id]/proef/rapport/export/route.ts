@@ -13,7 +13,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!membership) return fail(403);
   const { id } = await params;
   const url = new URL(request.url);
-  if ([...url.searchParams.keys()].some(k => url.searchParams.getAll(k).length !== 1)) return fail(400);
+  const allowed = ['revisie', 'metric', 'definition', 'semantics', 'first_start', 'first_end', 'second_start', 'second_end', 'freshness'];
+  if ([...url.searchParams.keys()].some(k => !allowed.includes(k) || url.searchParams.getAll(k).length !== 1)) return fail(400);
   const query = Object.fromEntries(url.searchParams);
   const result = query.revisie ? await supabase.rpc('f3_report_revision', { p_organization_id: membership.organization_id, p_campaign_id: id, p_report_id: query.revisie }) : await supabase.rpc('f3_campaign_state', { p_organization_id: membership.organization_id, p_campaign_id: id });
   if (result.error || !result.data?.reader) return fail(403);
