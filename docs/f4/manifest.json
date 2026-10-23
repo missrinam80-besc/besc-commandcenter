@@ -1,0 +1,157 @@
+{
+  "format": "besc-f4-preparation-v1",
+  "prepared_on": "2026-10-23",
+  "status": "prepared_for_review_not_implemented",
+  "authorization": "F4 preparation authorized by user: start er maar aan",
+  "implementation_authorized_by_this_package": false,
+  "live_changes": false,
+  "application_tests_executed": false,
+  "baseline": {
+    "commandcenter_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e",
+    "website_commit": "3c3a841a183c8f04f4e2394d41db1da5754ede01",
+    "cloud_history_count": 126,
+    "cloud_count_evidence": "user output and f3-completion-history-result.json",
+    "cloud_rechecked_in_f4": false,
+    "excluded_seed": "20261001110000",
+    "cc_deployed_digest": "sha256:9f124aa91409226d7efb6c49feff88a878e7a912292c69a9841e6580ced8bd64",
+    "cc_deploy_evidence": "user output 20261023T144541Z-3OAshz",
+    "website_image_last_recorded": "sha256:8cfe9f9efb256524bfc804c3494927f0949f6b8f919c1ab529f427f93f469344",
+    "website_image_freshly_inspected": false
+  },
+  "repositories": {
+    "commandcenter": "missrinam80-besc/besc-commandcenter",
+    "website": "missrinam80-besc/besc-website"
+  },
+  "staging": {
+    "server": "BESCSRVDEV",
+    "website_host": "website-dev.belgianstreamerscommunity.be",
+    "cc_directory": "/opt/besc-dev/command-center",
+    "website_directory": "/opt/besc-dev/website",
+    "existing_public_site_replaced": false,
+    "current_staging_access_extended": false
+  },
+  "test_policy": {
+    "local_build": "type/lint/build plus narrowly necessary contracts/authorization/storage checks",
+    "extensive_acceptance": "before production, separately tracked",
+    "existing_ci_disabled": false
+  },
+  "packages": [
+    {
+      "id": "F4.0",
+      "title": "Basis en hergebruik",
+      "scope": "Baseline, inhoudsinventaris, bevoegdheden en bestaande portalen vergelijken. Geen oude toegang automatisch overnemen.",
+      "depends_on": [],
+      "deliverables": [
+        "bronregister",
+        "fit-gap",
+        "besluitenregister"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "F4.1",
+      "title": "Publicatie- en aanvraagcontracten",
+      "scope": "Afzonderlijke platformprojecties, veilige intake, eigen toegang en intrekking; F1/F2 nieuws/events compatibel houden.",
+      "depends_on": [
+        "F4.0"
+      ],
+      "deliverables": [
+        "CC-model/RPC/API",
+        "versiecontracten",
+        "beperkte negatieve contractchecks"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "F4.2",
+      "title": "Creator Network",
+      "scope": "Eigen profielvoorstel, platformlinks, veldgerichte opt-in, review, publicatierevisie, filters en intrekking.",
+      "depends_on": [
+        "F4.1"
+      ],
+      "deliverables": [
+        "CC-creatorwerkstroom",
+        "website /creators",
+        "eigen profielbeheer"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "F4.3",
+      "title": "Esports en partners",
+      "scope": "Eén partnerregister met meerdere bevestigde rollen; publieke profielen, esportsfilter en samenwerkingsaanvragen.",
+      "depends_on": [
+        "F4.1"
+      ],
+      "deliverables": [
+        "partnerpublicatie",
+        "website /samenwerkingen en /esports",
+        "private aanvragen"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "F4.4",
+      "title": "Vrijwilligers",
+      "scope": "Vacatures, beperkte aanvraag, eigen ontvangst/status en afgeschermde CC-opvolging zonder automatische aanstelling.",
+      "depends_on": [
+        "F4.1"
+      ],
+      "deliverables": [
+        "vacatures",
+        "aanvragenwerkvoorraad",
+        "status- en bewaarbehandeling"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "F4.5",
+      "title": "Mijn BESC",
+      "scope": "Eén eigen overzicht voor profiel, verklaringen en aanvragen; expliciet gedelegeerde partneracties. Bestaande portalen blijven compatibel.",
+      "depends_on": [
+        "F4.2",
+        "F4.3",
+        "F4.4"
+      ],
+      "deliverables": [
+        "website /mijn-besc",
+        "beperkte eigen API",
+        "CC-portaalkoppelingen"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "F4.6",
+      "title": "Inhoud en redirects",
+      "scope": "Bestaande inhoud als concepten voorbereiden, statische pagina’s en volledige URL-mapping; rechten en actualiteit zichtbaar houden.",
+      "depends_on": [
+        "F4.1"
+      ],
+      "deliverables": [
+        "98-regels migratievoorstel",
+        "redactionele concepten",
+        "redirectplan"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "F4.7",
+      "title": "Oplevering en latere acceptatie",
+      "scope": "Afzonderlijke releases, minimale bouwchecks en één gezamenlijke preproductieacceptatie voorbereiden.",
+      "depends_on": [
+        "F4.2",
+        "F4.3",
+        "F4.4",
+        "F4.5",
+        "F4.6"
+      ],
+      "deliverables": [
+        "twee PR-/releasestromen",
+        "migratiemanifest",
+        "terugvalplan",
+        "open bewijsregister"
+      ],
+      "status": "planned"
+    }
+  ]
+}

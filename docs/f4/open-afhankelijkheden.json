@@ -1,0 +1,553 @@
+{
+  "format": "besc-f4-open-dependencies-v1",
+  "evidence_policy": "Preserve original layers; no test result inferred from F4 preparation",
+  "f1_open_points": [
+    "extra live role switches",
+    "complete confidential export and notification chain",
+    "previous image restore proof where still applicable; F2 rollback does not close every F1 variant"
+  ],
+  "f2_partial_cases": [
+    {
+      "id": "B02",
+      "title": "Toegang",
+      "status": "partial",
+      "actual_result": "one.com en handmatige serveruitvoering bewezen; agent heeft geen SSH.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "B03",
+      "title": "Testgroep",
+      "status": "partial",
+      "actual_result": "Vier exact aangewezen bestaande accounts begrensd toegelaten; oude/onbevestigde actorvarianten apart beoordelen.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "B05",
+      "title": "Bronnen",
+      "status": "partial",
+      "actual_result": "Alleen bestaande merkassets en eigen synthetische kleurvlakken gebruikt; geen algemene rechtenvrijgave van echte content.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "A01",
+      "title": "Anoniem",
+      "status": "partial",
+      "actual_result": "CI en live anonieme HTML/API/media blokkeren; niet elke RSC/OG/prefetch-variant apart live gemeten.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "A02",
+      "title": "Niet toegelaten",
+      "status": "partial",
+      "actual_result": "Niet-toegelaten actor in database- en browserfixtures geweigerd; geen live proef met nieuw derde account.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "A03",
+      "title": "Verkeerde organisatie",
+      "status": "partial",
+      "actual_result": "Geisoleerde andere-organisatie actor kan niet schrijven; volledige live cross-tenant matrix niet uitgevoerd.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "A04",
+      "title": "JWT",
+      "status": "partial",
+      "actual_result": "Geisoleerde serververificatie en verwijderde sessies getest; geen live vervalste JWT-proef.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "A05",
+      "title": "Sleutel",
+      "status": "partial",
+      "actual_result": "Verkeerde/ontbrekende sleutel geweigerd in API; live sleuteldraaiing niet getest.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "A06",
+      "title": "Directe database",
+      "status": "partial",
+      "actual_result": "Geisoleerde tabellen/Storage en RPC-beveiliging getest; private live Storage-route geblokkeerd; overige directe live RPC-actorvarianten niet uitgevoerd.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "A08",
+      "title": "Cookies en redirect",
+      "status": "partial",
+      "actual_result": "Exacte callback toegevoegd en host-only cookies gebruikt; volledige negatieve redirectmatrix nog niet aan uitgevoerde proeven gekoppeld.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "A09",
+      "title": "Lezer is geen redacteur",
+      "status": "partial",
+      "actual_result": "Gebruiker bevestigt belgianstreamers wordt bij directe CC-websitebeheerroute naar /app?fout=geen-toegang gestuurd; geen beheerpagina bereikbaar. Websitelezen en verdwijnen eerder door hetzelfde tweede account bevestigd. Afzonderlijke action-POSTweigeringen alleen in geisoleerde tests bewezen.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "A10",
+      "title": "Adminomweg",
+      "status": "partial",
+      "actual_result": "Geisoleerde adminomweg geweigerd; eigen live publicatiebediening verdween na roleinde. Geen live write-poging geclaimd.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "P01",
+      "title": "Niet goedgekeurd",
+      "status": "partial",
+      "actual_result": "Nieuwe draft kan in databasefixture niet worden vrijgegeven; live niet-goedgekeurde revisies bleven verborgen. Expliciete in_review release-poging nog niet afzonderlijk bewezen.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "P06",
+      "title": "Race intrekking",
+      "status": "partial",
+      "actual_result": "Native twee-verbindingenrace tegen vrijgave- en F1-revisie-intrekking bewezen; toestemming/media-races daarmee niet afzonderlijk bewezen.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "P08",
+      "title": "Venster",
+      "status": "partial",
+      "actual_result": "Live venstereinde binnen 60 seconden bevestigd; alle begin/exacte grensvarianten niet daarmee afgedekt.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "P12",
+      "title": "Slug en ID",
+      "status": "partial",
+      "actual_result": "Opaque projectie en type/locale/slug-inputvalidatie getest; complete duplicate-slug matrix niet aan uitgevoerd bewijs gekoppeld.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "D02",
+      "title": "HTML",
+      "status": "partial",
+      "actual_result": "Script/eventhandler/iframe/localhost-image getest; overige genoemde HTML-gevallen niet afzonderlijk geinventariseerd.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "D03",
+      "title": "URL en SSRF",
+      "status": "partial",
+      "actual_result": "Onveilige schema/localhost/IP/internal/private/token-URLs geweigerd; complete redirect/signed-URL-variantmatrix niet afzonderlijk bewezen.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "D04",
+      "title": "Pagination",
+      "status": "partial",
+      "actual_result": "Limits, vervalste cursor, type en locale getest; aparte andere-site-cursorvariant nog niet aan bewijs gekoppeld.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "D05",
+      "title": "Taal en tijd",
+      "status": "partial",
+      "actual_result": "Geldige klokwisseltijden na correctie live opgeslagen en onafhankelijk read-only bevestigd: 01:30 tot 03:30 Brussel heeft drie uur werkelijke duur. Locale- en RFC3339-negatieven blijven de eerder vermelde geisoleerde bewijslaag.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "D06",
+      "title": "Niet beschikbaar",
+      "status": "partial",
+      "actual_result": "Niet vrijgegeven, verlopen en ingetrokken inhoud veilig geblokkeerd; volledige oracle-matrix apart beoordelen.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "D08",
+      "title": "Limieten",
+      "status": "partial",
+      "actual_result": "Rate-limit en byte-integriteit getest; volledige grote-payload/uploadcapaciteitsproef niet daarmee bewezen.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "W01",
+      "title": "Schermen",
+      "status": "partial",
+      "actual_result": "Live home/lijsten/details/leeg/geblokkeerd gebruikt; browser-suite apart bewijsniveau.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "W04",
+      "title": "Toetsenbord",
+      "status": "partial",
+      "actual_result": "Native toetsenbordproef: skiplink, navigatievolgorde en thema via spatie werken. Volledige loginroute zonder muis nog niet bewezen.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "W05",
+      "title": "Toegankelijkheid",
+      "status": "partial",
+      "actual_result": "CI axe plus live tekstcontrastmetingen in beide modi: gemeten minima donker 6.36 en licht 6.95. Geen volledige WCAG-claim; zoom en reduced-motionreview nog open.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "W06",
+      "title": "Secrets",
+      "status": "partial",
+      "actual_result": "API-projectie/afgeleverde media veilig gecontroleerd; volledige browserbundle/sourcemap/loginspectie nog niet aan bewijs gekoppeld.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "W07",
+      "title": "Registratielink",
+      "status": "partial",
+      "actual_result": "Synthetisch event zonder registratie en onveilige URLs getest; echte veilige externe link niet doorlopen.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "W08",
+      "title": "Bestaande koppelingen",
+      "status": "partial",
+      "actual_result": "CC-login, runtime-instellingen en flags behouden. Geen nieuwe volledige Discord/Twitch/saldoproef uitgevoerd.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "M01",
+      "title": "Private bytes",
+      "status": "partial",
+      "actual_result": "Private bucket, ongepubliceerde media en directe publieke Storage-route blokkeren. Volledige guessed-ID matrix niet daarmee bewezen.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "M02",
+      "title": "Uploadfixture",
+      "status": "partial",
+      "actual_result": "Werkelijke synthetische upload en afgeleverde WebP/hash/metadata gecontroleerd; alle negatieve uploadvarianten apart koppelen.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "M03",
+      "title": "Intrekken media",
+      "status": "partial",
+      "actual_result": "Live mediarechten-intrekking bij twee lezers en afzonderlijke intrekking van nieuwe eventmedia bewezen; mediarecord blokkeerde API/detail/open view/media binnen 34 seconden. Langdurige stream niet uitgevoerd.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "C01",
+      "title": "Headers",
+      "status": "partial",
+      "actual_result": "Live no-store/noindex op anonieme edgeverzoeken; volledige HTML/API/media/metadata plus interne matrix niet afzonderlijk gemeten.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "C02",
+      "title": "Conditioneel",
+      "status": "partial",
+      "actual_result": "If-None-Match weigert stale inhoud in CI; If-Modified-Since en volledige live conditionele matrix nog open.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "C03",
+      "title": "Routercache",
+      "status": "partial",
+      "actual_result": "Na intrekking browser-terug naar lege eventlijst en vooruit naar onbeschikbaar detail bewezen. Specifieke geforceerde prefetchvariant niet uitgevoerd.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "C05",
+      "title": "Achtergrond",
+      "status": "partial",
+      "actual_result": "Tweede tester bevestigde verdwenen inhoud; geen apart gemeten offline/pageshow-protocol.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "C06",
+      "title": "Storing",
+      "status": "partial",
+      "actual_result": "Geisoleerde upstreamfout zonder stale inhoud bewezen; geen nieuwe live Auth/DB-storing geinjecteerd.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "C07",
+      "title": "Alle routes",
+      "status": "partial",
+      "actual_result": "Live lijst/detail/media gemeten; geen volledige sitemap/OG/conditionele-cachematrix hieruit afgeleid.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    },
+    {
+      "id": "E03",
+      "title": "Tweede tester",
+      "status": "partial",
+      "actual_result": "Gebruiker bevestigt belgianstreamers wordt bij directe CC-websitebeheerroute naar /app?fout=geen-toegang gestuurd; geen beheerpagina bereikbaar. Websitelezen en verdwijnen eerder door hetzelfde tweede account bevestigd. Afzonderlijke action-POSTweigeringen alleen in geisoleerde tests bewezen.",
+      "source": "website docs/f2/acceptatiebewijs-20261023.json"
+    }
+  ],
+  "f2_skipped_by_user": [
+    "P10"
+  ],
+  "f2_full_acceptance": false,
+  "f3_extensive_acceptance_deferred_by_user": true,
+  "f3_original_cases": [
+    {
+      "id": "B01",
+      "title": "Baseline",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "B02",
+      "title": "Bronaccount",
+      "original_record_status": "deferred_live_or_acceptance"
+    },
+    {
+      "id": "B03",
+      "title": "Besluiten",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "B04",
+      "title": "Herstel",
+      "original_record_status": "deferred_live_or_acceptance"
+    },
+    {
+      "id": "A01",
+      "title": "Actorgrens",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "A02",
+      "title": "Andere organisatie",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "A03",
+      "title": "Eigen creator",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "A04",
+      "title": "Campagne A/B",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "A05",
+      "title": "Geen impliciete toestemming",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "A06",
+      "title": "Zelf en extern bewijs",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "A07",
+      "title": "Live intrekking",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "A08",
+      "title": "Expiry en tekst",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "A09",
+      "title": "Bypass",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "A10",
+      "title": "Rol en sessie",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "A11",
+      "title": "Bewijsrechten",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "A12",
+      "title": "Rollback privacy",
+      "original_record_status": "deferred_live_or_acceptance"
+    },
+    {
+      "id": "P01",
+      "title": "URL parser",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "P02",
+      "title": "Tracking en ID",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "P03",
+      "title": "Dubbelenrace",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "P04",
+      "title": "Twee campagnes",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "P05",
+      "title": "Versiereview",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "P06",
+      "title": "Private post",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "P07",
+      "title": "SSRF",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "P08",
+      "title": "Bronbijlage",
+      "original_record_status": "not_applicable_synthetic_stage"
+    },
+    {
+      "id": "M01",
+      "title": "Capability",
+      "original_record_status": "deferred_live_or_acceptance"
+    },
+    {
+      "id": "M02",
+      "title": "Bronlabel",
+      "original_record_status": "deferred_live_or_acceptance"
+    },
+    {
+      "id": "M03",
+      "title": "Twee vensters",
+      "original_record_status": "deferred_live_or_acceptance"
+    },
+    {
+      "id": "M04",
+      "title": "Semantiek",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "M05",
+      "title": "Klokwissel",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "M06",
+      "title": "Waarde nul",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "M07",
+      "title": "Kwaliteit",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "M08",
+      "title": "Tellerdelta",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "M09",
+      "title": "Metric-idempotentie",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "M10",
+      "title": "Quota en retry",
+      "original_record_status": "not_applicable_synthetic_stage"
+    },
+    {
+      "id": "M11",
+      "title": "Tokenintrekking",
+      "original_record_status": "deferred_live_or_acceptance"
+    },
+    {
+      "id": "M12",
+      "title": "Private fence",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "R01",
+      "title": "Dekking",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "R02",
+      "title": "Uniek bereik",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "R03",
+      "title": "Engagementnoemer",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "R04",
+      "title": "Vergelijking",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "R05",
+      "title": "Reproduceerbaarheid",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "R06",
+      "title": "HTML en CSV",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "R07",
+      "title": "Veilige export",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "R08",
+      "title": "Rapportintrekking",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "U01",
+      "title": "Dossierregressie",
+      "original_record_status": "verified_isolated_scope"
+    },
+    {
+      "id": "U02",
+      "title": "Bediening",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "U03",
+      "title": "Geheimen",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "U04",
+      "title": "Schaal",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "E01",
+      "title": "Migratie",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "E02",
+      "title": "Uitrol",
+      "original_record_status": "deferred_live_or_acceptance"
+    },
+    {
+      "id": "E03",
+      "title": "Pilotketen",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "E04",
+      "title": "Terugval en opruiming",
+      "original_record_status": "partial_isolated_or_baseline"
+    },
+    {
+      "id": "E05",
+      "title": "Eindbesluit",
+      "original_record_status": "deferred_live_or_acceptance"
+    }
+  ],
+  "f3_reference_note": "Original result file is a scoped historical record; later synthetic live execution and build completion are separately evidenced. No complete real-source acceptance inferred.",
+  "current_f3_flags": "pilot, real campaigns and Twitch collection off, confirmed by user deploy output",
+  "f4_application_tests_executed": false,
+  "preproduction_release_blocking": true
+}

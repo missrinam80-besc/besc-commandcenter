@@ -1,0 +1,195 @@
+{
+  "format": "besc-f4-sources-v1",
+  "inspected_on": "2026-10-23",
+  "live_database_read": false,
+  "current_public_site_browsed": false,
+  "code_sources": [
+    {
+      "repository": "commandcenter",
+      "path": "src/lib/f1-workflows.ts",
+      "sha256_lf": "91bdff6553f8dfe77d554d05123e38c004dbd35488ecb4cada0c0393a9d022c7",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "src/lib/f2-contract.ts",
+      "sha256_lf": "3b5894e46434e34418b08b530f46a8afcf4967d05742af6c4d53e917022f783b",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "src/lib/f2-api.ts",
+      "sha256_lf": "037501fe6a0bf53b7c0c0411e1cd17b654e9717875d1b61f0b89e16e1778674a",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "src/lib/community-people.ts",
+      "sha256_lf": "23e4cdf0bc601d8a13d861f25538366cdf18ff7416b53679ca38542ecf4bd0f9",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "src/lib/auth-destination.ts",
+      "sha256_lf": "aca7c56bd55c5a897042edca5d363fa790bbfdba2ad1501a246cf928f9f457c7",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "src/app/portal/page.tsx",
+      "sha256_lf": "5340cb87f60538c05bb529992ea374e5a15cb146e21ba6524cc192ddcf23dcbb",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "src/components/f1-own-consent.tsx",
+      "sha256_lf": "81f1da713e7fe856ee3c226c8e2d96ddecfeb31dafce59aac85d0afedcda0ccd",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "src/app/api/v1/publications/[...path]/route.ts",
+      "sha256_lf": "59989e6f947472cde12b303d6334d5cdb8b2e2e730af04e7efd57e97e754c8e8",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "supabase/migrations/20260803190000_add_external_portal_access.sql",
+      "sha256_lf": "ff4902b4be09212ca61be01c593976d8fe513c51d4f3e8d5b957b9dc96edaf44",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "supabase/migrations/20261008065014_account_community_contacts.sql",
+      "sha256_lf": "f95e59e7edaf8b34acbb7fa756289fac85e4ed0f9933e17c7a37077a6a72c6b2",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "supabase/migrations/20261021124318_f1_purpose_consent.sql",
+      "sha256_lf": "53c1bbc747f471c4055916a628cadf5a8dabd105095b192df1942ad2a720734c",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "supabase/migrations/20261021124321_f1_partner_roles.sql",
+      "sha256_lf": "5ea7a49eec401df5e9bf1fb15f2a2dd9e202b51058c19411c4f00991a55db28f",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "supabase/migrations/20261021124323_f1_publication_revisions.sql",
+      "sha256_lf": "b6171f8a2975637cb5c0101a16b407b541c79765e66e8dd08054319bf5cac925",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "supabase/migrations/20261022142548_f2_staging_publication.sql",
+      "sha256_lf": "0bda338f29fe0609e89cea473196f0b0807382d62f683a2e2e1d772806fa05af",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "docs/f3/Bouwafronding-Twitch.md",
+      "sha256_lf": "58cb62be0b6f9a4ea8f7609101b43f71dc2e9db79605fa623c378a424b2e5639",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "commandcenter",
+      "path": "docs/f3/resultaatgevallen.json",
+      "sha256_lf": "a432f64294609a50eddffc42794727233878ae424ab91b4e073d8defd7a0ff6b",
+      "baseline_commit": "b7ab31b63f0754fee3fb3c578d7488cb25f4dd6e"
+    },
+    {
+      "repository": "website",
+      "path": "src/lib/auth.ts",
+      "sha256_lf": "20bed03c08e46960f541cf5aa264474901b199306e65f92761195c22b245f894",
+      "baseline_commit": "3c3a841a183c8f04f4e2394d41db1da5754ede01"
+    },
+    {
+      "repository": "website",
+      "path": "src/lib/content.ts",
+      "sha256_lf": "a3d4df22a10e00d50c59c7bcafba37d8514f695815d919704c76853525492be5",
+      "baseline_commit": "3c3a841a183c8f04f4e2394d41db1da5754ede01"
+    },
+    {
+      "repository": "website",
+      "path": "src/lib/contract.ts",
+      "sha256_lf": "3b5894e46434e34418b08b530f46a8afcf4967d05742af6c4d53e917022f783b",
+      "baseline_commit": "3c3a841a183c8f04f4e2394d41db1da5754ede01"
+    },
+    {
+      "repository": "website",
+      "path": "src/components/shell.tsx",
+      "sha256_lf": "b2c24b93c61e6e36199d834f1e09b6bcd206cd84e76d66f5b27ec80b6afd0773",
+      "baseline_commit": "3c3a841a183c8f04f4e2394d41db1da5754ede01"
+    },
+    {
+      "repository": "website",
+      "path": "src/components/content-view.tsx",
+      "sha256_lf": "c375230de827a9f666986d31a8f1ec6e18d009e044ce50188655ea105bc9dfd0",
+      "baseline_commit": "3c3a841a183c8f04f4e2394d41db1da5754ede01"
+    },
+    {
+      "repository": "website",
+      "path": "src/app/style.css",
+      "sha256_lf": "915e969d9e3509b30e92b14c9766c67f8ef79acaa553e9fd152c63fa42ae68de",
+      "baseline_commit": "3c3a841a183c8f04f4e2394d41db1da5754ede01"
+    },
+    {
+      "repository": "website",
+      "path": "src/proxy.ts",
+      "sha256_lf": "495ebfc28f5f02e3e27ecabb62775558e577b119f2db55c49877f99c412e533f",
+      "baseline_commit": "3c3a841a183c8f04f4e2394d41db1da5754ede01"
+    },
+    {
+      "repository": "website",
+      "path": "docs/f2/Besluit-DEV-kern-20261023.json",
+      "sha256_lf": "281e9610fba03fa90db5e8fbdb76244ffa671f8f195d8a52efbdd936b4a87eb0",
+      "baseline_commit": "3c3a841a183c8f04f4e2394d41db1da5754ede01"
+    },
+    {
+      "repository": "website",
+      "path": "docs/f2/acceptatiebewijs-20261023.json",
+      "sha256_lf": "f26ca8d0985f6411a84f4c9645047f26e8ceaf8a5ff4bdd57398d16c234ccef6",
+      "baseline_commit": "3c3a841a183c8f04f4e2394d41db1da5754ede01"
+    },
+    {
+      "repository": "website",
+      "path": "docs/f2/eindcontrole-20261023.json",
+      "sha256_lf": "8170e1eaaed01df28955834a04d2eeced49e8867afc9d45c8e90d510a604b434",
+      "baseline_commit": "3c3a841a183c8f04f4e2394d41db1da5754ede01"
+    }
+  ],
+  "local_reference_sources": [
+    {
+      "path": "C:\\Users\\linda\\.codex\\.chatgpt-projects\\g-p-6a6ca58cef848191830b4ceb549273c7\\work\\masterplan-fitgap-20261020\\source-extracted.txt",
+      "sha256_lf": "ecfb13b4bfe5c0a2b42abad54fb250ce68e21b33714723b8a13b269a88e8439b",
+      "read_only": true,
+      "availability": "Original local reference; not required to exist on another reviewer machine"
+    },
+    {
+      "path": "C:\\Users\\linda\\.codex\\.chatgpt-projects\\g-p-6a6ca58cef848191830b4ceb549273c7\\work\\masterplan-fitgap-20261020\\BESC_Masterplan_Toetsing_en_Traject_20261020.md",
+      "sha256_lf": "1f70c4e04473c510193224d7681f68486444ab921a106708833b64fc87bf9665",
+      "read_only": true,
+      "availability": "Original local reference; not required to exist on another reviewer machine"
+    },
+    {
+      "path": "D:\\CODING\\besc-website\\website-inhoud-2026-10-03\\inhoud.json",
+      "sha256_lf": "31bfc69da44f09925d3d36e573d30fd0854085241ad10d9d6193e2e9e9668736",
+      "read_only": true,
+      "availability": "Original local reference; not required to exist on another reviewer machine"
+    },
+    {
+      "path": "D:\\CODING\\besc-website\\website-inhoud-2026-10-03\\inventaris.md",
+      "sha256_lf": "75f5bc977a12fb6f5c5b46320f66f0fe9c471ee06259189f0b1d24d665993af7",
+      "read_only": true,
+      "availability": "Original local reference; not required to exist on another reviewer machine"
+    }
+  ],
+  "source_limitations": [
+    "Historical site snapshot is 2026-10-03, not current content verification",
+    "Code/DTO presence is not evidence of operational account access",
+    "F3 live state is user-provided deployment and registration evidence; not freshly inspected in F4"
+  ]
+}
