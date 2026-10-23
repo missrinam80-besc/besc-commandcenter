@@ -41,6 +41,11 @@ function canViewFinancePath(pathname: string, searchParams: URLSearchParams, mem
 }
 
 export function canViewInternalPath(pathname: string, membership: MembershipAccess, searchParams = new URLSearchParams()) {
+  // These entry points enforce current campaign roles/own participation in their
+  // RPCs. Do not require general campaign-management access before that check.
+  if (/^\/app\/campagnes\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/proef(?:\/rapport(?:\/export)?)?$/.test(pathname)) {
+    return ["admin", "board", "member", "volunteer"].includes(membership.role);
+  }
   // The workbench checks its explicit workflow assignments in the database.
   if (pathname === "/app/administratie/werkstromen") return ["admin", "board", "member", "volunteer"].includes(membership.role);
   if (pathname === "/app/bucks" || pathname.startsWith("/app/bucks/")) return ["admin", "board", "member", "volunteer"].includes(membership.role);

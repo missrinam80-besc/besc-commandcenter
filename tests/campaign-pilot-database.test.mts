@@ -32,6 +32,21 @@ async function verifiedPost() {
   await actor(f.ids.reviewer); await call('post.review', { id: p.id, expected_revision: 1, decision: 'verified', availability: 'available', reason: 'TESTFIXTURE gecontroleerd' }); return p.id;
 }
 test('F3 database: own selection, participation and independent review', async () => { const id = await verifiedPost(); await actor(f.ids.chair); assert.equal((await state()).posts[0].id, id); assert.equal((await state()).posts[0].status, 'verified'); });
+
+test('F3 database: volunteer reviewer uses only current campaign access', async () => {
+  await f.owner();
+  await f.db.exec(`update public.organization_members set role='volunteer' where organization_id=${q(f.ids.org)} and user_id=${q(f.ids.reviewer)}`);
+  const id = await verifiedPost();
+  assert.equal((await state()).posts[0].id, id);
+  await f.owner();
+  await f.db.exec(`update private.campaign_access set revoked_at=clock_timestamp() where campaign_id=${q(campaign)} and user_id=${q(f.ids.reviewer)}`);
+  await actor(f.ids.reviewer);
+  await f.db.exec('savepoint revoked_read');
+  await assert.rejects(state(), /f3_not_available/);
+  await f.db.exec('rollback to revoked_read');
+  await deny('post.review', { id, expected_revision: 2, decision: 'verified', availability: 'available', reason: 'TESTFIXTURE' });
+  assert.equal((await state(second)).participants[0].valid, true);
+});
 test('F3 database: ordinary admin, unrelated member, anon and service role have no bypass', async () => {
   await actor(f.ids.admin); await deny('participant.select', { person_id: f.ids.person, policy_id: policy, expires_at: new Date(Date.now() + 86400000).toISOString() });
   for (const role of ['anon', 'authenticated', 'service_role']) { await f.owner(); await f.db.exec(`set role ${role};savepoint direct`); await assert.rejects(f.db.query('select * from private.campaign_measurements')); await f.db.exec('rollback to direct'); }
