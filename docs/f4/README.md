@@ -1,3 +1,5 @@
+> Vervolg: partnerdelegatie en eigen profielvoorstellen zijn lokaal gebouwd. Zie [Implementatie delegatie](Implementatie-delegatie.md). Geen live toegang, migratie of uitrol uitgevoerd.
+
 > Vervolg: vacatures en vacaturegebonden sollicitaties zijn lokaal gebouwd. Zie [Implementatie vacatures](Implementatie-vacatures.md). Geen live migratie, uitrol of activering uitgevoerd.
 
 > Vervolg: partner- en esportsvermeldingen zijn lokaal gebouwd. Zie [Implementatie partners](Implementatie-partners.md). Geen live migratie, publicatie of uitrol uitgevoerd.
