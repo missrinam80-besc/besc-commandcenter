@@ -1,3 +1,5 @@
+> Bouwupdate: de eerste creatorketen is nu lokaal gebouwd. Zie [Implementatie creator](Implementatie-creator.md). Onderstaande voorbereiding, contractvoorstellen en geplande acceptatiegevallen blijven de historische scope; zij bewijzen geen volledige F4-uitvoering.
+
 # F4 — publieke platformfuncties: volledig voorbereidingspakket
 
 23 oktober 2026. Opdracht: F4 voorbereiden na afronding van de F3-bouw en DEV-uitrol. Dit pakket beschrijft bouwklare werkpakketten voor creatorprofielen, esports/partners, vrijwilligers, Mijn BESC en inhoudsmigratie. Er is in F4 nog geen applicatiecode of migratie gemaakt en geen live wijziging uitgevoerd.

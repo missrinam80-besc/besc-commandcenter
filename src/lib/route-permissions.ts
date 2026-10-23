@@ -48,7 +48,7 @@ export function canViewInternalPath(pathname: string, membership: MembershipAcce
     return ["admin", "board", "member", "volunteer"].includes(membership.role);
   }
   // The workbench checks its explicit workflow assignments in the database.
-  if (pathname === "/app/administratie/werkstromen") return ["admin", "board", "member", "volunteer"].includes(membership.role);
+  if (pathname === "/app/administratie/werkstromen" || pathname === "/app/administratie/platform") return ["admin", "board", "member", "volunteer"].includes(membership.role);
   if (pathname === "/app/bucks" || pathname.startsWith("/app/bucks/")) return ["admin", "board", "member", "volunteer"].includes(membership.role);
   if (pathname === "/app/beheer/discordbot" || pathname.startsWith("/app/beheer/discordbot/")) return hasPermission(membership, "manageDiscordBot");
   if (pathname === "/app/tickets" || pathname.startsWith("/app/tickets/")) return hasPermission(membership, "manageTickets");

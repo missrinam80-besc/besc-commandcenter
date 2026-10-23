@@ -15,7 +15,14 @@ test('F3 release: exact additive migration, historical SQL unchanged and live ga
   assert.equal(completion.first_platform, 'twitch');
   assert.deepEqual(completion.excluded_history, manifest.excluded_history);
   assert.equal(completion.expected_history_if_same_baseline_and_applied, 126);
-  const files = [...completion.historical_migrations, ...completion.migrations];
+  const creator = JSON.parse(readFileSync(new URL('ops/f4-creator-release-manifest.json', root), 'utf8'));
+  assert.deepEqual(creator.historical_migrations, [...completion.historical_migrations, ...completion.migrations]);
+  assert.equal(creator.migrations.length, 1);
+  assert.equal(creator.live_cloud_apply_authorized, false);
+  assert.equal(creator.runtime_default, 'off');
+  assert.equal(creator.expected_history_if_same_baseline_and_applied, 127);
+  assert.deepEqual(creator.excluded_history, manifest.excluded_history);
+  const files = [...creator.historical_migrations, ...creator.migrations];
   assert.deepEqual(readdirSync(new URL('supabase/migrations/', root)).filter(f => f.endsWith('.sql')).sort(), files.map(f => f.file).sort());
   for (const f of files) assert.equal(createHash('sha256').update(readFileSync(new URL('supabase/migrations/' + f.file, root), 'utf8').replaceAll('\r\n', '\n')).digest('hex'), f.sha256_lf, f.file);
   assert.deepEqual(manifest.excluded_history, ['20261001110000_seed_operational_guidelines.sql']);

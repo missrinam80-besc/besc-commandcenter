@@ -20,7 +20,7 @@ export default async function Page({searchParams}:{searchParams:Promise<Record<s
  const reviewer=caps?.publication_reviewer===true,editor=caps?.publication_editor===true,chair=caps?.chair===true;
  const name=(id:unknown)=>{const m=rows(members).find(m=>m.user_id===id);const p=m?.profiles;return String((Array.isArray(p)?p[0]:p)?.display_name??'Bestaand account');};
  return <AppShell active="VZW-administratie"><header className="topbar module-top"><div><p>AFGESCHERMDE WEBSITE · DEV</p><h1>Websitepublicatie</h1></div></header><div className="module-body f1-workspace">
- <nav><Link href="/app/administratie/werkstromen#publicatie">Concepten en beoordeling</Link><a href="https://website-dev.belgianstreamerscommunity.be" target="_blank" rel="noopener noreferrer">Stagingwebsite</a></nav>
+ <nav>{process.env.BESC_CREATOR_PLATFORM_ENABLED==='true'&&<Link href="/app/administratie/platform">Creatorprofielen beheren</Link>}<Link href="/app/administratie/werkstromen#publicatie">Concepten en beoordeling</Link><a href="https://website-dev.belgianstreamerscommunity.be" target="_blank" rel="noopener noreferrer">Stagingwebsite</a></nav>
  <p>Alleen exact goedgekeurde versies worden hier bewust vrijgegeven. De bestaande publieke website blijft staan.</p>
  {query.succes&&<p role="status">De handeling is opgeslagen. Hieronder staan de actuele gegevens.</p>}{query.melding&&<p role="alert">{query.melding}</p>}
  {!enabled&&<p role="status">Websitebediening staat nog uit. Vrijgeven wordt pas mogelijk na de gecontroleerde DEV-inrichting.</p>}

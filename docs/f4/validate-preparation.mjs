@@ -1,5 +1,6 @@
 // Documentation/package checks only. No application operation or network call.
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -35,7 +36,7 @@ for(const f of fixtures.items){const v=schema.oneOf.find(s=>s.properties.type.co
 const intake=read('contracts/intake.schema.json');assert.equal(intake.oneOf.length,3);for(const v of intake.oneOf){assert.equal(v.additionalProperties,false);for(const k of contract.identity_fields_server_derived)assert(!Object.hasOwn(v.properties,k));}
 const api=read('contracts/api-operations.json');assert.equal(api.operations.length,19);assert.equal(api.status,'proposed_not_implemented');for(const op of api.operations){assert.equal(op.implemented,false);assert(op.path.startsWith('/api/v1/platform/'));assert(['GET','POST'].includes(op.method));}
 const sources=read('bronregister.json');let verified=0,externalAvailable=0;
-for(const s of sources.code_sources.filter(s=>s.repository==='commandcenter')){assert.equal(hash(path.join(repo,s.path)),s.sha256_lf,s.path);verified++;}
+for(const s of sources.code_sources.filter(s=>s.repository==='commandcenter')){assert.equal(createHash('sha256').update(execFileSync('git',['show',s.baseline_commit+':'+s.path],{cwd:repo,encoding:'utf8'}).replaceAll('\r\n','\n')).digest('hex'),s.sha256_lf,s.path);verified++;}
 for(const s of sources.local_reference_sources)if(fs.existsSync(s.path)){assert.equal(hash(s.path),s.sha256_lf);externalAvailable++;}
 let links=0;for(const f of fs.readdirSync(base).filter(n=>n.endsWith('.md'))){for(const match of fs.readFileSync(path.join(base,f),'utf8').matchAll(/\]\(([^)]+)\)/g)){if(/^https?:/.test(match[1]))continue;assert(fs.existsSync(path.resolve(base,match[1].split('#')[0])),f+': '+match[1]);links++;}}
 console.log(JSON.stringify({preparation_valid:true,packages:8,planned_cases:46,historical_urls:98,f2_partial_preserved:38,f3_case_ids_preserved:53,cc_source_hashes_verified:verified,external_references_available:externalAvailable,local_links_checked:links,application_tests_executed:false,live_changes:false}));
