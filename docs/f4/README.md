@@ -1,3 +1,5 @@
+> Vervolg: vacatures en vacaturegebonden sollicitaties zijn lokaal gebouwd. Zie [Implementatie vacatures](Implementatie-vacatures.md). Geen live migratie, uitrol of activering uitgevoerd.
+
 > Vervolg: partner- en esportsvermeldingen zijn lokaal gebouwd. Zie [Implementatie partners](Implementatie-partners.md). Geen live migratie, publicatie of uitrol uitgevoerd.
 
 > Vervolg: de private samenwerkingsintake en eigen opvolging zijn lokaal gebouwd. Zie [Implementatie intake](Implementatie-intake.md). Overige F4-onderdelen blijven gepland; er is niets live geactiveerd.
