@@ -8,13 +8,14 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { JSDOM } from 'jsdom';
 import * as pilot from '../src/lib/campaign-pilot.ts';
+import * as twitch from '../src/lib/campaign-twitch.ts';
 import { pilotSelectionFromQuery } from '../src/lib/campaign-pilot-selection.ts';
 import type { PilotState } from '../src/lib/campaign-pilot.ts';
 const native = createRequire(import.meta.url);
 function load(file: string, mocks: Record<string, unknown>) {
   const compiled = { exports: {} as Record<string, unknown> };
   const code = ts.transpileModule(readFileSync(new URL('../' + file, import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText;
-  runInNewContext(code, { module: compiled, exports: compiled.exports, FormData, URLSearchParams, process: { env: { BESC_CAMPAIGNS_PILOT_ENABLED: 'true' } }, require: (key: string) => key.endsWith('.css') ? {} : key in mocks ? mocks[key] : native(key) });
+  runInNewContext(code, { module: compiled, exports: compiled.exports, FormData, URLSearchParams, process: { env: { BESC_CAMPAIGNS_PILOT_ENABLED: 'true' } }, require: (key: string) => key.endsWith('.css') ? {} : key in mocks ? mocks[key] : key === '@/lib/auth-context' || key === '@/lib/supabase/admin' ? {} : key === '@/lib/campaign-twitch' ? twitch : native(key) });
   return compiled.exports;
 }
 const empty: PilotState = { synthetic: true, campaign_id: 'fixture', chair: false, editor: false, reviewer: false, reader: false, policies: [], participants: [], posts: [], measurements: [], access: [] };
@@ -43,9 +44,9 @@ test('F3 UI: date windows use Brussels conversion, finite freshness and no overl
 });
 test('F3 action: URL is parsed without fetch and invalid operator cannot reach RPC', async () => {
   const calls: unknown[] = [];
-  const compiled = load('src/app/app/campagnes/[id]/proef/actions.ts', { 'next/navigation': { redirect: (target: string) => { throw Error('REDIRECT:' + target); } }, 'next/cache': { revalidatePath: () => {} }, '@/lib/campaign-pilot': pilot, '@/lib/format': { localDateTimeToIso: (x: string) => x }, '@/lib/supabase/server': { createClient: async () => ({ auth: { getUser: async () => ({ data: { user: { id: 'actor' } } }) }, rpc: async (...args: unknown[]) => { calls.push(args); return { data: {}, error: null }; } }) } });
+  const compiled = load('src/app/app/campagnes/[id]/proef/actions.ts', { 'next/navigation': { redirect: (target: string) => { throw Error('REDIRECT:' + target); } }, 'next/cache': { revalidatePath: () => {} }, '@/lib/campaign-pilot': { ...pilot, campaignWorkflowEnabled: (synthetic?: boolean) => synthetic !== false }, '@/lib/format': { localDateTimeToIso: (x: string) => x }, '@/lib/supabase/server': { createClient: async () => ({ auth: { getUser: async () => ({ data: { user: { id: 'actor' } } }) }, rpc: async (...args: unknown[]) => { calls.push(args); return { data: { synthetic: true }, error: null }; } }) } });
   const action = compiled.runCampaignPilot as (data: FormData) => Promise<void>;
   const data = new FormData(); const id = '11111111-1111-4111-8111-111111111111'; for (const [k, v] of Object.entries({ campaign_id: id, organization_id: id, request_id: id, operation: 'post.submit', data_participant_id: id, post_url: 'https://127.0.0.1/secret' })) data.set(k, v);
   await assert.rejects(action(data), /fout=link/); assert.equal(calls.length, 0);
-  data.set('post_url', 'https://youtu.be/abcdefghijk'); await assert.rejects(action(data), /succes=opgeslagen/); assert.equal(calls.length, 1); assert.equal(JSON.stringify(calls).includes('external_id'), true);
+  data.set('post_url', 'https://youtu.be/abcdefghijk'); await assert.rejects(action(data), /succes=opgeslagen/); assert.equal(calls.length, 2); assert.equal(JSON.stringify(calls).includes('external_id'), true);
 });

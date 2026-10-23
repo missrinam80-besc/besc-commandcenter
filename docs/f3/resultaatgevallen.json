@@ -1,6 +1,6 @@
 {
   "schema_version": "besc-f3-preparation-v1",
-  "status": "synthetic_build_tested_live_phase_open",
+  "status": "build_completed_twitch_first_extensive_acceptance_deferred",
   "application_tests_executed": true,
   "live_changes": false,
   "cases": [
@@ -545,9 +545,12 @@
       "action": "Test bekende noemer, ontbrekende input en noemer0.",
       "expected": "Definitie zichtbaar; onbekend/niet berekenbaar waar nodig.",
       "required_evidence_layer": "unit_ui",
-      "status": "deferred_live_or_acceptance",
-      "actual_result": "De MVP toont afzonderlijke tellingen en vergelijkingspercentages, nog geen engagementrate met aparte engagementsnoemer. Niet als geslaagde engagementrateproef aanmerken.",
-      "evidence": []
+      "status": "verified_isolated_scope",
+      "actual_result": "Gebouwd: expliciete engagementteller en noemer, bron/definitie per input, nul/ontbrekend/partial niet berekenbaar; gerichte lokale rekencontrole. Uitgebreide browser- en live acceptatie voor productie.",
+      "evidence": [
+        "tests/campaign-completion.test.mts",
+        "Bouwafronding-Twitch.md"
+      ]
     },
     {
       "id": "R04",
@@ -755,5 +758,7 @@
   "cloud_schema_changed": false,
   "server_deployed": false,
   "full_f3_accepted": false,
-  "evidence_limits": "Exacte testbestanden en laatste CI-commits staan in Implementatie-en-testbewijs.md. Bronaccount-/platform-/deployvarianten worden niet uit fictieve gegevens afgeleid."
+  "evidence_limits": "Exacte testbestanden en laatste CI-commits staan in Implementatie-en-testbewijs.md. Bronaccount-/platform-/deployvarianten worden niet uit fictieve gegevens afgeleid.",
+  "construction_update": "Bouwafronding-Twitch.md",
+  "historical_results_note": "Overige gevallen behouden hun eerdere bewijslaag; geen nieuwe volledige live acceptatie afgeleid. Uitgebreide acceptatie op verzoek uitgesteld tot voor productie."
 }

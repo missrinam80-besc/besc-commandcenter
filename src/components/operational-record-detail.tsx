@@ -54,8 +54,8 @@ export async function OperationalRecordDetail({
   const config = operationalModules[module];
   const { supabase, membership } = await requireActiveMembership();
   const org = membership.organization_id;
-  const campaignPilotLink = module === 'campagnes' && typeof process !== 'undefined' && process.env.BESC_CAMPAIGNS_PILOT_ENABLED === 'true'
-    ? <Link className="button secondary" href={`/app/campagnes/${id}/proef`}>Afgeschermde campagneproef</Link> : null;
+  const campaignPilotLink = module === 'campagnes' && typeof process !== 'undefined' && (process.env.BESC_CAMPAIGNS_PILOT_ENABLED === 'true' || process.env.BESC_CAMPAIGNS_ENABLED === 'true')
+    ? <Link className="button secondary" href={`/app/campagnes/${id}/proef`}>Bijdragen en campagnemetingen</Link> : null;
   const requestedTab = module === "sponsors" || module === "community" ? resolveContactTab(module,query) : "";
 
   const [recordResult, projectsResult, partnersResult, contentResult, eventsResult, contactsResult, interactionsResult, deliverablesResult, onboardingResult, assignmentsResult, socialResult, partnerCampaignsResult, variantsResult, personRolesResult, accountOptionsResult, budgetResult, expenseResult, incomeResult, communityOptionsResult] = await Promise.all([

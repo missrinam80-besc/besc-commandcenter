@@ -1,5 +1,7 @@
 # F3 — fictieve bouw- en testfase
 
+Historisch bouwverslag van de eerste fictieve oplevering. De latere DEV-proef is uitgevoerd en gesloten. Uitspraken hieronder over ontbrekende bouw gelden uitsluitend voor die eerdere oplevering; zie de actuele [bouwafronding met Twitch](Bouwafronding-Twitch.md).
+
 Stand: 23 oktober 2026. Linda gaf opdracht F3 uit te voeren en koos daarna expliciet: **eerst volledig met fictieve gegevens bouwen en testen**. Dit verslag actualiseert de oorspronkelijke voorbereiding; het maakt geen live campagne of formele eindacceptatie van F3 aan.
 
 ## Gebouwde keten

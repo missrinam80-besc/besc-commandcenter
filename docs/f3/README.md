@@ -1,8 +1,8 @@
 # F3 — campagneproef: uitvoeringspakket
 
-Actuele uitvoering: [fictieve bouw en testbewijs](Implementatie-en-testbewijs.md) en [resultaat per geval](resultaatgevallen.json). Linda heeft de bouw toegestaan en gekozen eerst met fictieve gegevens te testen. De oorspronkelijke voorbereiding hieronder blijft als scopebasis herkenbaar; live F3 is nog niet afgesloten.
+Actuele bouwstand: [Bouwafronding met Twitch als eerste bron](Bouwafronding-Twitch.md). Op 23 oktober vroeg Linda de resterende functies te bouwen en uitgebreide acceptatie tot vóór productie uit te stellen. De fictieve DEV-proef is uitgevoerd en gesloten; de nieuwe bouw wordt afzonderlijk opgeleverd, zonder nieuwe live wijzigingen.
 
-Status: voorbereid ter goedkeuring op 23 oktober 2026. Geen F3-applicatiecode gebouwd, geen migratie uitgevoerd en geen live accounttoegang uitgebreid.
+Het oorspronkelijke [fictieve bouwverslag](Implementatie-en-testbewijs.md), de [resultaten per geval](resultaatgevallen.json) en de onderstaande voorbereidingsstukken blijven bewaard met hun eigen bewijsgrens. Voorbereidingsaannames gelden niet als de actuele uitvoeringsstatus.
 
 F3 levert één interne BESC-campagneketen: campagnefiche → geselecteerde creator → aantoonbare deelname en doelbinding → handmatig ingediende postlink → verificatie → bronmetingen in twee vergelijkbare vensters → gecontroleerd intern rapport. De bestaande campagne- en socialmodules blijven de basis. De publieke website blijft gesloten; Metricool blijft beschikbaar als benchmark.
 
@@ -25,6 +25,6 @@ Pakketcontrole: `node docs/f3/validate-preparation.mjs`. Dit valideert 53 geplan
 
 ## Wat gereed betekent
 
-Voorbereid betekent dat opdracht, impact, volgorde, gegevensgrenzen en toetsbare oplevercriteria beoordeelbaar zijn. Gebouwd, geïsoleerd getest, gemigreerd, gedeployed en live aanvaard krijgen later elk eigen bewijs. Geen gepland acceptatiegeval is nu als geslaagd aangemerkt.
+Gebouwd, gericht gecontroleerd, gemigreerd, uitgerold en live aanvaard zijn afzonderlijke statussen. De actuele bouwafronding maakt resterende uitgebreide acceptatie niet automatisch geslaagd. De oorspronkelijke geplande gevallen blijven ongewijzigd.
 
-Na inhoudelijk akkoord begint F3.0 met actuele, alleenlezende Cloud- en accountinventarisatie. De bouw kan vervolgens met fictieve gegevens starten. Echte deelnemers, platformaccounts en meetvensters worden pas gebruikt wanneer hun benoemde besluiten en toegang zijn bevestigd.
+Echte deelnemers, bronaccounts en meetvensters worden pas gebruikt wanneer de benoemde besluiten en toegang zijn vastgelegd. De nieuwe Twitch-ophaalactie staat standaard uit.

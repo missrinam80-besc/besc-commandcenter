@@ -33,9 +33,9 @@ for (const name of names) {
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length, 145); // 136 unchanged F2 tables plus nine private campaign tables.
+assert.equal(effects.tables.length, 147); // 136 unchanged F2 tables, nine campaign tables and two private source tables.
 assert.ok(effects.functions.length > 143);
-const privateOperations=['f1_context','f1_receipts','f2_receipts','campaign_pilots','campaign_access','campaign_policies','campaign_participants','campaign_contributions','campaign_measurements','campaign_receipts','campaign_events','campaign_report_revisions'];
+const privateOperations=['f1_context','f1_receipts','f2_receipts','campaign_pilots','campaign_access','campaign_policies','campaign_participants','campaign_contributions','campaign_measurements','campaign_receipts','campaign_events','campaign_report_revisions','campaign_sources','campaign_source_runs'];
 assert.ok(effects.tables.every((table) => table.rls || (table.schema === 'private' && privateOperations.includes(table.name))));
 assert.ok(effects.tables.filter(table=>table.schema==='private'&&privateOperations.includes(table.name)).every(table=>Object.values(table.grants).every(grants=>Object.values(grants).every(value=>value===false))), 'Private operation tables have no client grants; existing private service grants remain unchanged');
 const dataState = JSON.parse(sql(readFileSync(new URL("../ops/foundation-data-state.sql", import.meta.url), "utf8")));

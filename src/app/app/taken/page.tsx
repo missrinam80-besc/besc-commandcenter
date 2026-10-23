@@ -8,6 +8,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { formatDateTime } from "@/lib/format";
 import { updateTaskStatus } from "../actions";
+import { campaignWorkflowEnabled } from "@/lib/campaign-pilot";
 
 type TaskRow = {
   id: string;
@@ -167,6 +168,7 @@ export default async function TasksPage({
         showMine
         resultCount={tasks.length + completed.length}
       >
+        {campaignWorkflowEnabled() && <p><Link href="/app/campagnes/bijdragen">Mijn campagnebijdragen en beoordelingen</Link></p>}
         {params.fout && <div className="error-note">{params.fout === "dossier-niet-beschikbaar" ? "Het dossier is niet meer beschikbaar. De link werd niet gewijzigd." : params.fout === "dossier-controleren" ? "Het dossier kon niet worden gecontroleerd. De link werd niet gewijzigd. Probeer opnieuw." : "De taak kon niet worden opgeslagen."}</div>}
         {params.succes && <div className="success">{successMessages.get(params.succes) ?? "Wijziging opgeslagen."}</div>}
         {overdue && <div className="permission-note">Je ziet nu alleen taken waarvan de deadline verstreken is. <Link href="/app/taken?van_mij=1">Toon al mijn taken</Link></div>}
