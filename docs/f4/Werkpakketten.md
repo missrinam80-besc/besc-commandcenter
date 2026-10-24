@@ -1,3 +1,5 @@
+> Actuele afsluiting (24 oktober 2026): [F4-bouw en DEV-oplevering](Afronding-DEV-20261024.md). Websitevrijgave en volledige productieacceptatie blijven open. Onderstaande voorbereiding en tussenstanden zijn historische momentopnamen.
+
 # F4 — werkpakketten en bouwvolgorde
 
 ## F4.0 — Basis en hergebruik
