@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   f5-native-campaign-read:
-    name: F5 eigen campagnelezing PostgreSQL 17
+    name: F5 campagneketen en saldovergelijking PostgreSQL 17
     runs-on: ubuntu-latest
     timeout-minutes: 10
     services:

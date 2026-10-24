@@ -1,0 +1,9 @@
+.env
+*.private.env
+*.registry.json
+inbox/
+sent/
+failed/
+state/
+.binding.json
+.bridge.lock

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { f1Database, q } from './helpers/f1-database.mts';
+import {checkF5Extensions} from './helpers/f5-extensions.mts';
 
 test('F5 machine read: own accepted participation, exact projection, grants and current revocation',async()=>{
  const f=await f1Database();
@@ -60,5 +61,6 @@ test('F5 machine read: own accepted participation, exact projection, grants and 
   }
   await f.owner();await f.db.exec(`update auth.identities set identity_data='{"sub":"different"}' where user_id=${q(f.ids.member)} and provider='discord'`);
   await f.actor(f.ids.admin,'service_role');await assert.rejects(read(),/f5_account_unavailable/);
+  await checkF5Extensions(f);
  }finally{await f.db.close();}
 });

@@ -1,5 +1,7 @@
 # F5.1 — eigen campagnes via de Discordbot
 
+> Historische leesbasis. De actuele gezamenlijke F5-bouw, inclusief afzonderlijk optionele kandidaat-invoer, bronadapter, Twitch-suggesties en saldovergelijking, staat in [Volledige F5-bouw](Volledige-bouw-F5.md).
+
 24 oktober 2026. Gebouwd na het voorbereidingspakket in CC PR #122. Dit is code voor afzonderlijke review, geen Cloud-migratie, serverdeploy, scope-toekenning, activering of Discordregistratie.
 
 ## Resultaat
