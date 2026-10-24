@@ -10,7 +10,7 @@ F6 omvat productiegang, websiteomschakeling en eventuele Metricool- of StreamEle
 
 ## Eerste werkpakket: F5.0 — hergebruik en ontbrekende capabilities
 
-Status: voorbereid; de gerichte code-inventaris en bouw zijn nog niet uitgevoerd in dit werkpakket. Eerste resultaat is één onderbouwde lijst van wat al bestaat, wat werkelijk ontbreekt en welke beperkte bouwstap eerst nodig is.
+Actuele status op 24 oktober 2026: de gerichte code-inventaris is uitgevoerd en staat in [Hergebruikinventaris](Hergebruikinventaris.md), met versiegebonden bronnen en capabilities. Het [eerste bouwpakket F5.1](F5.1-Eigen-campagnes-via-bot.md) is voorbereid; de functionaliteit is nog niet gebouwd. Onderstaande beschrijving blijft de oorspronkelijke opdracht voor F5.0.
 
 | Werkstroom | Te controleren bestaande basis | Afbakening van de eerste uitwerking |
 | --- | --- | --- |

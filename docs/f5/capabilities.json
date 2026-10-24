@@ -1,0 +1,157 @@
+{
+  "format": "besc-f5-capability-inventory-v1",
+  "observed_on": "2026-10-24",
+  "f5_0_complete": true,
+  "f5_functionality_implemented": false,
+  "first_build_package": "F5.1",
+  "first_package_state": "prepared_not_implemented",
+  "live_changes": false,
+  "database_changes": false,
+  "new_roles_or_scopes_granted": false,
+  "provider_calls_performed": false,
+  "runtime_flags_changed": false,
+  "extensive_tests_executed": false,
+  "original_acceptance_boundaries_preserved": true,
+  "capabilities": [
+    {
+      "id": "S01",
+      "title": "Twitch operationele basis",
+      "coverage": "built",
+      "source_ids": [
+        "cc-twitch-auth",
+        "cc-twitch-sync"
+      ],
+      "reuse": "OAuth/tokenherstel, kanaal, live-status en planning hergebruiken",
+      "missing_or_next": "Geen herbouw; echte accountwerking en gewenste extra velden apart controleren",
+      "rights": "Bestaand organisatieaccount; geen nieuwe scopes door inventaris",
+      "reliability_boundary": "Code is geen bewijs van actueel provideraccount of werkende scheduler",
+      "cost_status": "Geen nieuwe dienst voorgesteld; actuele quota/belasting niet gemeten",
+      "minimum_build_check": "Bij uitbreiding alleen gewijzigde bronvorm en foutpaden gericht controleren",
+      "later_human_acceptance": "Echte geautoriseerde bron en tokenintrekking vóór productie",
+      "live_verified_in_this_inventory": false
+    },
+    {
+      "id": "S02",
+      "title": "F3 Twitch-campagnemetingen",
+      "coverage": "built",
+      "source_ids": [
+        "cc-campaign-twitch",
+        "cc-campaign-completion",
+        "cc-campaign-model"
+      ],
+      "reuse": "Bronbinding, huidige deelnemers-/credentialvoorwaarden, VOD/clip views en huidige kijkers",
+      "missing_or_next": "Geen impressies, uniek bereik of automatische discovery claimen; nieuwe capability alleen bij concrete behoefte",
+      "rights": "Bestaande campagne-/bronrollen en afzonderlijke flags; identiteit koppelen is onvoldoende",
+      "reliability_boundary": "Begrensde fetch en tokenvalidatie vóór/na zijn codebewijs, geen echte provideracceptatie",
+      "cost_status": "Geen nieuwe dienst; providerquota en echte volumes nog te toetsen",
+      "minimum_build_check": "Alleen bij codewijziging gerichte bron-/intrekkingscontrole",
+      "later_human_acceptance": "Echte bronnen, meetvensters, provideruitval en quota",
+      "live_verified_in_this_inventory": false
+    },
+    {
+      "id": "S03",
+      "title": "Overige socialcode en export",
+      "coverage": "partial",
+      "source_ids": [
+        "cc-social-platforms",
+        "cc-youtube-sync",
+        "cc-meta-sync",
+        "cc-threads-sync",
+        "cc-social-cron",
+        "cc-social-scheduler",
+        "cc-social-export"
+      ],
+      "reuse": "Bestaande providerimplementaties, scheduler en export behouden",
+      "missing_or_next": "Per rapportbehoefte vaststellen welk veld/product nog ontbreekt; niet alle platformen openen",
+      "rights": "Eigen providerrechten en productgoedkeuring; code-label ready_for_pilot is geen live toestemming",
+      "reliability_boundary": "Operationele snapshots niet zonder F3-voorwaarden aan campagne toewezen",
+      "cost_status": "Nog geen nieuw platformbudget; kosten/productvoorwaarden per gekozen uitbreiding te verifiëren",
+      "minimum_build_check": "Per gekozen uitbreiding beperkte parsing en rechtenchecks",
+      "later_human_acceptance": "Geselecteerde echte provider, rechten en kostenlimiet",
+      "live_verified_in_this_inventory": false
+    },
+    {
+      "id": "B01",
+      "title": "Eigen campagnes via Discordbot",
+      "coverage": "gap",
+      "source_ids": [
+        "cc-bot-auth",
+        "cc-bot-store",
+        "cc-bot-route",
+        "cc-my-campaigns",
+        "cc-campaign-completion",
+        "bot-commands",
+        "bot-transport",
+        "bot-handler",
+        "bot-registration"
+      ],
+      "reuse": "Bestaande botauth, guildbinding, actuele accountlookup en zakelijke F3-deelnamevoorwaarden",
+      "missing_or_next": "Eerste pakket F5.1: read-only eigen campagnecommando, beperkte API/machinelezing en nieuwe afzonderlijke scope",
+      "rights": "Alleen eigen geldige geaccepteerde deelname; beide nieuwe flags default uit, scope niet automatisch toevoegen",
+      "reliability_boundary": "Geen gebruiker impersoneren of browser-RPC aan service_role openzetten; intrekking en upstreamgrenzen meenemen",
+      "cost_status": "Geen extra providerverzoeken/abonnement voorgesteld; bestaande hostcapaciteit vóór deploy opnieuw controleren",
+      "minimum_build_check": "Eigen/ander account, intrekking, scopes, default uit, private output en SQL-grants",
+      "later_human_acceptance": "Tweede account, echte Discordregistratie en live intrekkingsketen",
+      "live_verified_in_this_inventory": false
+    },
+    {
+      "id": "T01",
+      "title": "Streamer.bot clip-/streamreferenties",
+      "coverage": "gap",
+      "source_ids": [
+        "cc-campaign-model",
+        "cc-intake-contract",
+        "bot-commands"
+      ],
+      "reuse": "Lokale kit en bestaande veilige Twitch-URLontleding; geen kitconfiguratie herpubliceren",
+      "missing_or_next": "Apart adaptercontract en payloadcontrole; ontbreken in gelezen repos is geen inventaris van alle lokale acties",
+      "rights": "Los broncredential en scope later besluiten; geen directe database of algemeen bottoken",
+      "reliability_boundary": "Provider-ID en referentieherkomst eerst bewijzen; eventenvelop/tijdstip alleen is onvoldoende financieel bewijs",
+      "cost_status": "Adapterruntime/hosting en operationeel beheer nog niet gekozen of begroot",
+      "minimum_build_check": "Synthetische payload, stabiele retries, uitval en verkeerde broadcaster vóór implementatievrijgave afbakenen",
+      "later_human_acceptance": "Werkelijke lokale gebeurtenis en reconnect zonder dubbelemelding",
+      "live_verified_in_this_inventory": false
+    },
+    {
+      "id": "R01",
+      "title": "Rewards intake en providerbewijs",
+      "coverage": "partial",
+      "source_ids": [
+        "cc-rewards-intake",
+        "cc-intake-contract"
+      ],
+      "reuse": "Duurzaam receipt, opaque provider-ID, bronbinding en puntenstop",
+      "missing_or_next": "Providerverificatie en zakelijke beloningssemantiek ontbreken; geen automatische uitbetaling van held",
+      "rights": "Afzonderlijke intakeclient/scopes; geen activatie of credential aanmaken",
+      "reliability_boundary": "Transportdeduplicatie is geen financiële eenmaligheid; accountbinding bewijst geen follow/cheer",
+      "cost_status": "Bronservice en providerautorisatie nog niet begroot",
+      "minimum_build_check": "Bij later bewijsadapterwerk originele ID, conflicten en intrekking gericht controleren",
+      "later_human_acceptance": "Echte bron, providerbewijs en expliciete beloningsacceptatie",
+      "live_verified_in_this_inventory": false
+    },
+    {
+      "id": "R02",
+      "title": "Bucks-beheer en saldo-overgang",
+      "coverage": "partial",
+      "source_ids": [
+        "cc-rewards-model",
+        "cc-rewards-actions",
+        "cc-bucks-contract",
+        "cc-bucks-bot-contract",
+        "cc-rewards-bot",
+        "bot-rewards-api",
+        "bot-rewards-runtime",
+        "bot-config",
+        "bot-main"
+      ],
+      "reuse": "CC ledger, grants/correcties, reserveringen en catalogus; bot optionele Bucks-module/worker",
+      "missing_or_next": "Alleen reconciliatievoorstel voorbereiden; externe import/overname afzonderlijk F6",
+      "rights": "Bestaand manageRewards; geen nieuwe beheerrollen of verdienactivering",
+      "reliability_boundary": "Bestaande saldi/historie/reserveringen behouden; tegenboekingen niet overschrijven",
+      "cost_status": "Externe exportvorm, volume en overgangskosten nog onbekend",
+      "minimum_build_check": "Bij latere voorbereiding sommen, cutoff en bestaande reserveringen met fictieve bestanden",
+      "later_human_acceptance": "Echte saldobron en gecontroleerde overgang alleen na afzonderlijk besluit",
+      "live_verified_in_this_inventory": false
+    }
+  ]
+}

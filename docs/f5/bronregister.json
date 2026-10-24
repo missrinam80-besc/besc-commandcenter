@@ -1,0 +1,291 @@
+{
+  "format": "besc-f5-source-register-v1",
+  "observed_on": "2026-10-24",
+  "baselines": {
+    "commandcenter": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+    "discordbot": "bbaba45b1c36831de49fbd8d456588422d7450c5"
+  },
+  "hash_normalization": "UTF-8 text; CRLF to LF; SHA256",
+  "sources": [
+    {
+      "id": "cc-twitch-auth",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/twitch-integration.ts",
+      "sha256_lf": "06ced1a1d1fd78016fb0fd973a3e7d7f5449452e6d1c69eb04413d03d5ce172c",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-twitch-sync",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/twitch-sync.ts",
+      "sha256_lf": "b2a122a4abcc3f2fd22e541196592211b5ecd3900672d2e09771799781a55f57",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-campaign-twitch",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/campaign-twitch.ts",
+      "sha256_lf": "7a506d873cb06e0eff148123757260809352e3d96b08551b7d3af35c94d8dee1",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-campaign-model",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/campaign-pilot.ts",
+      "sha256_lf": "372e5019badd887e44210eabeb1e1d590c1325fee265c97d241837e70cd308d5",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-campaign-completion",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "supabase/migrations/20261023134550_f3_campaign_twitch_completion.sql",
+      "sha256_lf": "9f003784fb319b1ac2909b2e05eef12ed6a36ad4267c9ec68daa1a1acf773a54",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-campaign-pilot",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "supabase/migrations/20261023091034_f3_campaign_pilot.sql",
+      "sha256_lf": "452b584ab983d31d8387003485a66fb77235ae6d728b2188535bd9440ca105a7",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-my-campaigns",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/app/app/campagnes/bijdragen/page.tsx",
+      "sha256_lf": "edb04af50e00a49dc01e7a6ed6d6a773c74b495f40d54bafb5a7d62195d7fa17",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-social-platforms",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/social-connectors.ts",
+      "sha256_lf": "42ceb0e436ef589c5af22e5f6270e46e9a8e9bd9c03879d2cce380119e33112d",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-youtube-sync",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/youtube-sync.ts",
+      "sha256_lf": "2c4161ec5ffdc515e771cadf41df11893cf2f956c5506458029c82be31f5cded",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-meta-sync",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/meta-sync.ts",
+      "sha256_lf": "1149e1418384d688b1582ca76f0bc2bf9fa973a53a24904100935dec20cdb26b",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-threads-sync",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/threads-sync.ts",
+      "sha256_lf": "171a90eb5614cfb1d3d58e11559c7596d1693e7cda1df5390bfb1ccc9cb2d528",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-social-scheduler",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/social-sync-scheduler.ts",
+      "sha256_lf": "0a4b1f5d86bb64fb514705a135442978bfe22320fb1e918d92c76742b1315bbf",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-social-cron",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/app/api/cron/social-sync/route.ts",
+      "sha256_lf": "a6756d6a91229146b03e29f4ffc120ca775282ea7835982d532018738364677d",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-social-export",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/social-metrics-export-query.ts",
+      "sha256_lf": "15ae3ebd21b3b0d2b6d885d6495aee1ef5d6307f200032088d7babb2f06b2441",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-bot-auth",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/bot-api.ts",
+      "sha256_lf": "1a71cbc5e941fbcf41deb68205a516625629c333d90084bb590452d3c989caeb",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-bot-store",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/bot-api-store.ts",
+      "sha256_lf": "dfa59c9ae5efa5f69fa58b3b2d45905ebfefb144aea1e1df7fc2ace72136d871",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-bot-route",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/app/api/v1/bot/[resource]/route.ts",
+      "sha256_lf": "63e563b334fd45b9b2fae90385246e531661f5393a3a6a8cd2fc2c799a70616c",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-rewards-model",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/rewards.ts",
+      "sha256_lf": "7d2805ec41745c8d640dfb298ae1ce80adac01705062a0cbb861c203633cd403",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-rewards-actions",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/app/app/bucks/actions.ts",
+      "sha256_lf": "6e126db5653d58e0e1c6b60bd8c43e47cc537d03e57d4d0d0ca055d4fdcd49e0",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-rewards-bot",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/rewards-bot-api.ts",
+      "sha256_lf": "aa9b1925f0b71cf0baa29d9e16e8716d4d84f669088376837e9db4b8c9385a36",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-rewards-intake",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "src/lib/rewards-intake.ts",
+      "sha256_lf": "f7412c1a5c0578062385c4dbeb11a6387cd1d130e76eab24c88b12d363fc109f",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-intake-contract",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "docs/contracts/rewards-intake-v1.md",
+      "sha256_lf": "3b66d7848d253b34a54e675c1dbf3bf8999a5ae717fc9b71a6a8be03512704f5",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-bucks-contract",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "docs/contracts/bucks-xp-v1.md",
+      "sha256_lf": "4a08d694f0ff5621776d59a140a9429f3d0448f394b0aad27357c04d9dce9701",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "cc-bucks-bot-contract",
+      "repository": "commandcenter",
+      "commit": "4a4a26e7cf311a936ddac0a55625b81cb1a34d3e",
+      "path": "docs/contracts/bucks-xp-api-v1.md",
+      "sha256_lf": "88241f323b1351452864fa1d415f30c385b78cd7786a8c6f43b05fbcf18eb8b6",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "bot-commands",
+      "repository": "discordbot",
+      "commit": "bbaba45b1c36831de49fbd8d456588422d7450c5",
+      "path": "src/commands.ts",
+      "sha256_lf": "3d3bf794e58a81159ca56d9ebe9c6cf312ec25a14e470179a62345d442e8b365",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "bot-config",
+      "repository": "discordbot",
+      "commit": "bbaba45b1c36831de49fbd8d456588422d7450c5",
+      "path": "src/config.ts",
+      "sha256_lf": "e6768626bd13c547f336cceeff5d1bd2eedcff29a785c39a2d85d40c9fe59f8d",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "bot-main",
+      "repository": "discordbot",
+      "commit": "bbaba45b1c36831de49fbd8d456588422d7450c5",
+      "path": "src/main.ts",
+      "sha256_lf": "92f0c594f4ae7c13d0a1e16e81ce5b1be73112561147654c8a907c7a58eafe91",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "bot-transport",
+      "repository": "discordbot",
+      "commit": "bbaba45b1c36831de49fbd8d456588422d7450c5",
+      "path": "src/api.ts",
+      "sha256_lf": "fbc20a32c6a376802d5223dc831c1c8035cc767187e27b51ab34e435e592ae69",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "bot-handler",
+      "repository": "discordbot",
+      "commit": "bbaba45b1c36831de49fbd8d456588422d7450c5",
+      "path": "src/handler.ts",
+      "sha256_lf": "01863eb4e822bf0eafb307856019f4fc7df4e23228993bf99a863f179bbb8212",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "bot-registration",
+      "repository": "discordbot",
+      "commit": "bbaba45b1c36831de49fbd8d456588422d7450c5",
+      "path": "src/register.ts",
+      "sha256_lf": "335c6e5495886e757b509afd2d16dadd16ed5f5d8fa298eff0fa1ee330670b42",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "bot-rewards-api",
+      "repository": "discordbot",
+      "commit": "bbaba45b1c36831de49fbd8d456588422d7450c5",
+      "path": "src/rewards-api.ts",
+      "sha256_lf": "d15d637404f48525c7fcf13ef17d525eb71bb878adc317df4a55adee59c84af6",
+      "evidence_layer": "source_code_or_repository_document"
+    },
+    {
+      "id": "bot-rewards-runtime",
+      "repository": "discordbot",
+      "commit": "bbaba45b1c36831de49fbd8d456588422d7450c5",
+      "path": "src/rewards-runtime.ts",
+      "sha256_lf": "038c91f01ee85b0239f44776e8fdb3cc9f3a63fb8217d886a9ac8a2f8fef201b",
+      "evidence_layer": "source_code_or_repository_document"
+    }
+  ],
+  "runtime_inspection_performed": false,
+  "secrets_or_private_kit_configuration_read": false,
+  "local_reference": {
+    "path": "D:/BESC/Streamkit/README.md",
+    "evidence_layer": "historical_local_document",
+    "limitations": "Older kit preparation; not current runtime or connector evidence"
+  },
+  "external_references": [
+    {
+      "url": "https://docs.streamer.bot/api/websocket/guide/events",
+      "read_on": "2026-10-24",
+      "purpose": "Event envelope; no universal provider-ID guaranteed by this generic schema"
+    },
+    {
+      "url": "https://dev.twitch.tv/docs/api/reference/",
+      "read_on": "2026-10-24",
+      "purpose": "Official API reference; source coverage claims primarily anchored to pinned adapter code"
+    },
+    {
+      "url": "https://supabase.com/changelog",
+      "read_on": "2026-10-24",
+      "purpose": "HTML changelog consulted; markdown endpoint unsupported by browser; no new feature implemented"
+    }
+  ]
+}
