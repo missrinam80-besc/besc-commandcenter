@@ -1,3 +1,5 @@
+> Vervolg: informatiepagina’s, bronbehandeling en tijdelijke stagingredirects zijn lokaal gebouwd. Zie [Implementatie inhoud](Implementatie-inhoud.md). De 98 URL’s en drie concepten blijven ongereviewd; niets is live geïmporteerd of gepubliceerd.
+
 > Vervolg: partnerdelegatie en eigen profielvoorstellen zijn lokaal gebouwd. Zie [Implementatie delegatie](Implementatie-delegatie.md). Geen live toegang, migratie of uitrol uitgevoerd.
 
 > Vervolg: vacatures en vacaturegebonden sollicitaties zijn lokaal gebouwd. Zie [Implementatie vacatures](Implementatie-vacatures.md). Geen live migratie, uitrol of activering uitgevoerd.

@@ -47,15 +47,19 @@ for (const name of names) {
     const beforeDelegation = JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql', import.meta.url), 'utf8')));
     assert.equal(beforeDelegation.tables.length,165,'Vacancy baseline preserved before delegation');
   }
+  if (name.endsWith('_f4_pages_content_redirects.sql')) {
+    const beforeContent = JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql', import.meta.url), 'utf8')));
+    assert.equal(beforeContent.tables.length,168,'Delegation baseline preserved before information pages');
+  }
   try { sql(readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8")); }
   catch (error) { throw new Error(`Native replay failed at ${name}: ${error.stderr?.toString() ?? error.message}`); }
   if (name.startsWith("20260712190000_")) sql("insert into auth.users(id,email) values('00000000-0000-4000-8000-000000000001','fixture@example.invalid');update public.organization_members set role='admin',status='active';");
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length, 168); // F3 baseline plus creator, intake, partner, vacancy and three delegation tables.
+assert.equal(effects.tables.length, 174); // F3 baseline plus creator, intake, partner, vacancy, delegation and six content tables.
 assert.ok(effects.functions.length > 143);
-const privateOperations=['f1_context','f1_receipts','f2_receipts','campaign_pilots','campaign_access','campaign_policies','campaign_participants','campaign_contributions','campaign_measurements','campaign_receipts','campaign_events','campaign_report_revisions','campaign_sources','campaign_source_runs','platform_settings','platform_access','creator_profiles','creator_revisions','creator_entries','f4_receipts','f4_limits','intake_forms','intake_handlers','platform_applications','application_events','partner_publication_settings','partner_publication_revisions','partner_publication_entries','vacancy_settings','vacancy_dossiers','vacancy_revisions','vacancy_entries','partner_delegation_settings','partner_delegations','partner_profile_proposals'];
+const privateOperations=['f1_context','f1_receipts','f2_receipts','campaign_pilots','campaign_access','campaign_policies','campaign_participants','campaign_contributions','campaign_measurements','campaign_receipts','campaign_events','campaign_report_revisions','campaign_sources','campaign_source_runs','platform_settings','platform_access','creator_profiles','creator_revisions','creator_entries','f4_receipts','f4_limits','intake_forms','intake_handlers','platform_applications','application_events','partner_publication_settings','partner_publication_revisions','partner_publication_entries','vacancy_settings','vacancy_dossiers','vacancy_revisions','vacancy_entries','partner_delegation_settings','partner_delegations','partner_profile_proposals','site_content_settings','content_migration_records','content_migration_reviews','site_content_dossiers','site_content_revisions','site_content_entries'];
 assert.ok(effects.tables.every((table) => table.rls || (table.schema === 'private' && privateOperations.includes(table.name))));
 assert.ok(effects.tables.filter(table=>table.schema==='private'&&privateOperations.includes(table.name)).every(table=>Object.values(table.grants).every(grants=>Object.values(grants).every(value=>value===false))), 'Private operation tables have no client grants; existing private service grants remain unchanged');
 const dataState = JSON.parse(sql(readFileSync(new URL("../ops/foundation-data-state.sql", import.meta.url), "utf8")));
