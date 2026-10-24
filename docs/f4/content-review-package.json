@@ -1631,7 +1631,7 @@
       "current_facts_verified": false,
       "rights_verified": false,
       "blockers": [
-        "Dit is de oude formulierbeschrijving; er is hiermee geen nieuw algemeen contactformulier gebouwd of geopend. Tekst en contactroute eerst vaststellen."
+        "Oude formulierbeschrijving: koppeling met de afzonderlijk gebouwde contactwerking en de actuele behandelingstekst eerst beoordelen. Dit bronfragment opent geen formulier."
       ],
       "payload": {
         "slug": "contact",

@@ -1,0 +1,30 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+const root = path.dirname(fileURLToPath(import.meta.url));
+const manifest = JSON.parse(fs.readFileSync(path.join(root, 'CANDIDATE.json'), 'utf8'));
+const hash = b => createHash('sha256').update(b).digest('hex');
+const expect = (ok, msg) => { if (!ok) throw Error(msg); };
+const sums = fs.readFileSync(path.join(root, 'SHA256SUMS'), 'utf8').trim().split('\n');
+const names = new Set();
+for (const line of sums) {
+  const m = /^([0-9a-f]{64})  ([a-zA-Z0-9_./-]+)$/.exec(line);
+  expect(m && !m[2].split('/').includes('..') && !path.isAbsolute(m[2]), 'Unsafe checksum entry');
+  const full = path.resolve(root, m[2]);
+  expect(full.startsWith(root + path.sep) && !names.has(m[2]), 'Duplicate or escaping entry');
+  names.add(m[2]);
+  expect(!fs.lstatSync(full).isSymbolicLink() && hash(fs.readFileSync(full)) === m[1], 'Hash mismatch: ' + m[2]);
+}
+const actual = fs.readdirSync(root, {recursive: true}).filter(f => fs.statSync(path.join(root,f)).isFile()).map(f => f.replaceAll('\\','/')).filter(f => f !== 'SHA256SUMS');
+expect(actual.length === names.size && actual.every(f => names.has(f)), 'Unexpected or missing files');
+expect(names.has('CANDIDATE.json') && names.has('verify-f4-candidate.mjs'), 'Incomplete package');
+expect(manifest.format === 'besc-f4-candidate-v1' && manifest.deployment_ready === false && manifest.database_apply_authorized === false, 'Wrong release boundary');
+expect(manifest.images.cc === null && manifest.images.website === null, 'Candidate cannot assign unreviewed images');
+expect(manifest.baseline_count === 126 && manifest.expected_after === 133 && manifest.migrations.length === 7, 'Wrong migration boundary');
+expect(manifest.excluded_seed === '20261001110000_seed_operational_guidelines.sql', 'Wrong seed exclusion');
+const baseline = JSON.parse(fs.readFileSync(path.join(root,'baseline-history.json'),'utf8'));
+expect(baseline.length === 126 && !baseline.some(x => x.file === manifest.excluded_seed), 'Wrong historical set');
+expect(manifest.migrations.every((x,i,a) => /^\d{14}_f4_[a-z_]+\.sql$/.test(x.file) && (i === 0 || a[i-1].file < x.file) && names.has('migrations/'+x.file) && hash(fs.readFileSync(path.join(root,'migrations',x.file))) === x.sha256_lf), 'Wrong migration files');
+expect(fs.readdirSync(path.join(root,'migrations')).length === 7, 'Unexpected SQL');
+console.log(JSON.stringify({candidate_integrity:true,migrations:7,baseline:126,expected_after:133,deployment_ready:false,missing_gates:manifest.missing_gates}));

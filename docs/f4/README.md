@@ -1,3 +1,5 @@
+Actuele bouwstatus: [contact](Implementatie-contact.md) en [F4-opleverkandidaat](Oplevering-F4.md). Review en live vrijgave blijven afzonderlijk.
+
 > Vervolg: informatiepagina’s, bronbehandeling en tijdelijke stagingredirects zijn lokaal gebouwd. Zie [Implementatie inhoud](Implementatie-inhoud.md). De 98 URL’s en drie concepten blijven ongereviewd; niets is live geïmporteerd of gepubliceerd.
 
 > Vervolg: partnerdelegatie en eigen profielvoorstellen zijn lokaal gebouwd. Zie [Implementatie delegatie](Implementatie-delegatie.md). Geen live toegang, migratie of uitrol uitgevoerd.

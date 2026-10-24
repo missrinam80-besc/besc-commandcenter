@@ -29,4 +29,4 @@ export type PagePayload=z.infer<typeof pagePayloadSchema>;
 export type RedirectPayload=z.infer<typeof redirectPayloadSchema>;
 
 export const pageNavigationSchema=z.object({schema_version:z.literal('besc-page-navigation-v1'),items:z.array(z.object({public_id:uuid,slug,locale:z.enum(contentLocales),title:text(240),revision:z.number().int().positive()}).strict()).max(50)}).strict();
-export function legacyRuntimePath(p:string){return safeLegacyPath(p)&&p!=='/'&&!/^\/(api|auth|login|logout|events|nieuws|creators|samenwerkingen|esports|vrijwilligers|mijn-besc|media|creator-media|partner-media|page-media|assets|robots\.txt|favicon\.ico|_next)(\/|$)/.test(p);}
+export function legacyRuntimePath(p:string){return safeLegacyPath(p)&&p!=='/'&&!/^\/(api|auth|login|logout|contact|events|nieuws|creators|samenwerkingen|esports|vrijwilligers|mijn-besc|media|creator-media|partner-media|page-media|assets|robots\.txt|favicon\.ico|_next)(\/|$)/.test(p);}
