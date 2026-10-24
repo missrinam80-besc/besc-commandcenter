@@ -1,3 +1,5 @@
+> Actuele afsluiting (24 oktober 2026): [F4-bouw en DEV-oplevering](Afronding-DEV-20261024.md). Websitevrijgave en volledige productieacceptatie blijven open. Onderstaande voorbereiding en tussenstanden zijn historische momentopnamen.
+
 # F4-oplevering: kandidaat voor review
 
 F4 omvat creatorprofielen, Mijn BESC en private aanvragen, partnerpublicaties, vacatures en sollicitaties, partnerdelegatie, statische pagina’s, navigatie, inhoudsmigratie, oude redirects en algemeen contact. De bestaande nieuws- en eventketen wordt hergebruikt. CC beheert dossiers en vrijgaven; de website blijft een afzonderlijke private repository met een beperkte serververbinding.
