@@ -45,8 +45,8 @@ test('F3 release: exact additive migration, historical SQL unchanged and live ga
   assert.deepEqual(contact.historical_migrations,[...content.historical_migrations,...content.migrations]);
   assert.equal(contact.required_history_before,132);assert.equal(contact.expected_history_if_same_baseline_and_applied,133);assert.equal(contact.live_cloud_apply_authorized,false);assert.equal(contact.runtime_default,'off');
   const f5 = JSON.parse(readFileSync(new URL('ops/f5-completion-release-manifest.json', root), 'utf8'));
-  assert.deepEqual(f5.historical_migrations.map(({ file, sha256_lf }) => ({ file, sha256_lf })), [...contact.historical_migrations, ...contact.migrations].map(({ file, sha256_lf }) => ({ file, sha256_lf })));
-  assert.deepEqual(f5.new_migrations.map(f => f.file), ['20261024150408_f5_own_campaigns_bot.sql','20261024161428_f5_campaign_extensions_and_reconciliation.sql']);
+  assert.deepEqual(f5.historical_migrations.map(({ file, sha256_lf }: {file:string;sha256_lf:string}) => ({ file, sha256_lf })), [...contact.historical_migrations, ...contact.migrations].map(({ file, sha256_lf }: {file:string;sha256_lf:string}) => ({ file, sha256_lf })));
+  assert.deepEqual(f5.new_migrations.map((f: {file:string}) => f.file), ['20261024150408_f5_own_campaigns_bot.sql','20261024161428_f5_campaign_extensions_and_reconciliation.sql']);
   assert.equal(f5.cloud_apply_authorized,false);assert.equal(f5.server_deploy_authorized,false);assert.equal(f5.runtime_activation_authorized,false);
   assert.equal(f5.expected_history_only_if_same_baseline_and_both_applied,135);
   assert.deepEqual(f5.excluded_history,manifest.excluded_history);
