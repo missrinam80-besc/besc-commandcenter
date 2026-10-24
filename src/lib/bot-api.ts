@@ -2,7 +2,7 @@ import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { canViewInternalPath } from "./route-permissions.ts";
 import type { MembershipAccess } from "./permissions.ts";
 
-export type BotScope = "identity:read" | "account:read" | "events:read" | "tickets:create" | "tickets:own:read" | "tickets:ingest" | "tickets:deliver" | "bot-config:read" | "bot-config:report" | "bot-config:deliver" | "slots:deliver" | "rewards:own:read" | "rewards:own:write" | "rewards:activity:ingest";
+export type BotScope = "identity:read" | "account:read" | "events:read" | "campaigns:own:read" | "tickets:create" | "tickets:own:read" | "tickets:ingest" | "tickets:deliver" | "bot-config:read" | "bot-config:report" | "bot-config:deliver" | "slots:deliver" | "rewards:own:read" | "rewards:own:write" | "rewards:activity:ingest";
 export type BotClient = {
   id: string; keyHash: string; organizationId: string; guildId: string;
   scopes: BotScope[]; expiresAt: string; revoked: boolean;
@@ -21,7 +21,7 @@ export interface BotStore {
 export const hashBotKey = (key: string) => createHash("sha256").update(key).digest("hex");
 const snowflake = /^[1-9]\d{16,19}$/;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const scopes: BotScope[] = ["identity:read", "account:read", "events:read", "tickets:create", "tickets:own:read", "tickets:ingest", "tickets:deliver", "bot-config:read", "bot-config:report", "bot-config:deliver", "slots:deliver", "rewards:own:read", "rewards:own:write", "rewards:activity:ingest"];
+const scopes: BotScope[] = ["identity:read", "account:read", "events:read", "campaigns:own:read", "tickets:create", "tickets:own:read", "tickets:ingest", "tickets:deliver", "bot-config:read", "bot-config:report", "bot-config:deliver", "slots:deliver", "rewards:own:read", "rewards:own:write", "rewards:activity:ingest"];
 const MAX_EVENT_OFFSET = 99999;
 
 export function parseBotClients(raw: string | undefined): BotClient[] {
