@@ -1,0 +1,86 @@
+{
+  "synthetic": true,
+  "publication_authorized": false,
+  "items": [
+    {
+      "schema_version": "besc-platform-publication-v1",
+      "type": "creator",
+      "public_id": "00000000-0000-4000-8000-000000000001",
+      "revision": 1,
+      "slug": "testfixture-creator-f4",
+      "locale": "nl-BE",
+      "published_at": "2026-10-23T12:00:00Z",
+      "valid_until": null,
+      "display_name": "TESTFIXTURE — NIET PUBLICEREN — creator F4",
+      "bio": "Fictief profiel voor contractvoorbereiding.",
+      "platform_links": [
+        {
+          "platform": "twitch",
+          "url": "https://www.twitch.tv/testfixture_besc"
+        }
+      ],
+      "disciplines": [
+        "Fictieve discipline"
+      ],
+      "languages": [
+        "nl-BE"
+      ],
+      "avatar": null
+    },
+    {
+      "schema_version": "besc-platform-publication-v1",
+      "type": "partner",
+      "public_id": "00000000-0000-4000-8000-000000000002",
+      "revision": 1,
+      "slug": "testfixture-partner-f4",
+      "locale": "nl-BE",
+      "published_at": "2026-10-23T12:00:00Z",
+      "valid_until": null,
+      "name": "TESTFIXTURE — NIET PUBLICEREN — partner F4",
+      "description": "Geen bestaande samenwerking of sponsorclaim.",
+      "roles": [
+        "esports",
+        "community"
+      ],
+      "website_url": "https://example.invalid",
+      "logo": null
+    },
+    {
+      "schema_version": "besc-platform-publication-v1",
+      "type": "vacancy",
+      "public_id": "00000000-0000-4000-8000-000000000003",
+      "revision": 1,
+      "slug": "testfixture-vacancy-f4",
+      "locale": "nl-BE",
+      "published_at": "2026-10-23T12:00:00Z",
+      "valid_until": null,
+      "title": "TESTFIXTURE — NIET PUBLICEREN — vacature F4",
+      "role_label": "Fictieve taak",
+      "summary": "Geen echte vacature.",
+      "body": {
+        "format": "sanitized_html",
+        "value": "<p>Fictieve taak zonder aanstelling.</p>"
+      },
+      "location_label": "Nog vast te leggen",
+      "availability_label": "Fictieve beschikbaarheid",
+      "closes_at": null
+    },
+    {
+      "schema_version": "besc-platform-publication-v1",
+      "type": "page",
+      "public_id": "00000000-0000-4000-8000-000000000004",
+      "revision": 1,
+      "slug": "testfixture-page-f4",
+      "locale": "nl-BE",
+      "published_at": "2026-10-23T12:00:00Z",
+      "valid_until": null,
+      "title": "TESTFIXTURE — NIET PUBLICEREN — pagina F4",
+      "summary": "Fictieve informatiepagina.",
+      "body": {
+        "format": "sanitized_html",
+        "value": "<p>Voorbereidingsfixture.</p>"
+      },
+      "media": []
+    }
+  ]
+}

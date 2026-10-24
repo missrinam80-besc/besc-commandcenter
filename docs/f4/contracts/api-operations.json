@@ -1,0 +1,253 @@
+{
+  "format": "besc-f4-api-proposal-v1",
+  "status": "proposed_not_implemented",
+  "all_private_writes_require": [
+    "same_origin_csrf",
+    "durable_rate_limit",
+    "strict_payload",
+    "request_id",
+    "current_session_and_binding",
+    "transactional_commit_before_ack"
+  ],
+  "operations": [
+    {
+      "method": "GET",
+      "path": "/api/v1/platform/publications/creators",
+      "actor": "current_staging_viewer_and_server_site_key",
+      "input": [
+        "cursor",
+        "locale",
+        "approved_filters"
+      ],
+      "response": "bounded_list",
+      "authorization": "Only valid exact reviewed revision, current site/window/consent/media/source conditions",
+      "implemented": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/platform/publications/creators/{slug}",
+      "actor": "current_staging_viewer_and_server_site_key",
+      "input": [
+        "slug",
+        "locale"
+      ],
+      "response": "single_public_dto",
+      "authorization": "Only valid exact reviewed revision, current site/window/consent/media/source conditions",
+      "implemented": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/platform/publications/partners",
+      "actor": "current_staging_viewer_and_server_site_key",
+      "input": [
+        "cursor",
+        "locale",
+        "approved_filters"
+      ],
+      "response": "bounded_list",
+      "authorization": "Only valid exact reviewed revision, current site/window/consent/media/source conditions",
+      "implemented": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/platform/publications/partners/{slug}",
+      "actor": "current_staging_viewer_and_server_site_key",
+      "input": [
+        "slug",
+        "locale"
+      ],
+      "response": "single_public_dto",
+      "authorization": "Only valid exact reviewed revision, current site/window/consent/media/source conditions",
+      "implemented": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/platform/publications/vacancies",
+      "actor": "current_staging_viewer_and_server_site_key",
+      "input": [
+        "cursor",
+        "locale",
+        "approved_filters"
+      ],
+      "response": "bounded_list",
+      "authorization": "Only valid exact reviewed revision, current site/window/consent/media/source conditions",
+      "implemented": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/platform/publications/vacancies/{slug}",
+      "actor": "current_staging_viewer_and_server_site_key",
+      "input": [
+        "slug",
+        "locale"
+      ],
+      "response": "single_public_dto",
+      "authorization": "Only valid exact reviewed revision, current site/window/consent/media/source conditions",
+      "implemented": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/platform/publications/pages",
+      "actor": "current_staging_viewer_and_server_site_key",
+      "input": [
+        "cursor",
+        "locale",
+        "approved_filters"
+      ],
+      "response": "bounded_list",
+      "authorization": "Only valid exact reviewed revision, current site/window/consent/media/source conditions",
+      "implemented": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/platform/publications/pages/{slug}",
+      "actor": "current_staging_viewer_and_server_site_key",
+      "input": [
+        "slug",
+        "locale"
+      ],
+      "response": "single_public_dto",
+      "authorization": "Only valid exact reviewed revision, current site/window/consent/media/source conditions",
+      "implemented": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/platform/me",
+      "actor": "own_account",
+      "input": [],
+      "response": "Own allowed capabilities/profile summary and own receipts; no internal notes or F3 data",
+      "authorization": "Verified non-anonymous identity, current session, explicit platform context and current object ownership/delegation; server derives organization/site/actor",
+      "implemented": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/platform/me/profile",
+      "actor": "own_account",
+      "input": [],
+      "response": "Own current public profile and own draft; no other owners",
+      "authorization": "Verified non-anonymous identity, current session, explicit platform context and current object ownership/delegation; server derives organization/site/actor",
+      "implemented": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/platform/me/profile/drafts",
+      "actor": "own_account",
+      "input": [
+        "request_id",
+        "expected_revision",
+        "allowed_profile_fields"
+      ],
+      "response": "Saved own draft revision; no publication",
+      "authorization": "Verified non-anonymous identity, current session, explicit platform context and current object ownership/delegation; server derives organization/site/actor",
+      "implemented": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/platform/me/profile/submit",
+      "actor": "own_account",
+      "input": [
+        "request_id",
+        "draft_id",
+        "expected_hash"
+      ],
+      "response": "Immutable own proposal receipt; no approval",
+      "authorization": "Verified non-anonymous identity, current session, explicit platform context and current object ownership/delegation; server derives organization/site/actor",
+      "implemented": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/platform/me/consents",
+      "actor": "own_account",
+      "input": [
+        "request_id",
+        "purpose_version_id",
+        "exact_selected_scope",
+        "accepted=true"
+      ],
+      "response": "Own declaration receipt after explicit personal confirmation",
+      "authorization": "Verified non-anonymous identity, current session, explicit platform context and current object ownership/delegation; server derives organization/site/actor",
+      "implemented": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/platform/me/consents/{id}/withdraw",
+      "actor": "own_account",
+      "input": [
+        "request_id",
+        "expected_revision"
+      ],
+      "response": "Own withdrawal receipt; no reactivation on replay",
+      "authorization": "Verified non-anonymous identity, current session, explicit platform context and current object ownership/delegation; server derives organization/site/actor",
+      "implemented": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/platform/applications",
+      "actor": "own_account",
+      "input": [
+        "cursor"
+      ],
+      "response": "Own receipts, category, public status and next step only",
+      "authorization": "Verified non-anonymous identity, current session, explicit platform context and current object ownership/delegation; server derives organization/site/actor",
+      "implemented": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/platform/applications",
+      "actor": "own_account",
+      "input": [
+        "strict category payload from intake.schema.json"
+      ],
+      "response": "Durable receipt_id/category/status/submitted_at/next_step after commit",
+      "authorization": "Verified non-anonymous identity, current session, explicit platform context and current object ownership/delegation; server derives organization/site/actor",
+      "implemented": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/platform/applications/{id}/withdraw",
+      "actor": "own_account",
+      "input": [
+        "request_id",
+        "expected_revision"
+      ],
+      "response": "Own receipt state; no internal assessment/history content",
+      "authorization": "Verified non-anonymous identity, current session, explicit platform context and current object ownership/delegation; server derives organization/site/actor",
+      "implemented": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/platform/me/partners",
+      "actor": "current_object_delegation",
+      "input": [],
+      "response": "Only explicitly delegated partner profile proposals and allowed actions",
+      "authorization": "Verified non-anonymous identity, current session, explicit platform context and current object ownership/delegation; server derives organization/site/actor",
+      "implemented": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/platform/me/partners/{public_id}/drafts",
+      "actor": "current_object_delegation",
+      "input": [
+        "request_id",
+        "expected_revision",
+        "allowed_partner_profile_fields"
+      ],
+      "response": "Own delegated proposal, no contact/contract/financial fields",
+      "authorization": "Verified non-anonymous identity, current session, explicit platform context and current object ownership/delegation; server derives organization/site/actor",
+      "implemented": false
+    }
+  ],
+  "response_error_shape": [
+    "code",
+    "request_id"
+  ],
+  "status_semantics": {
+    "401": "No current verified session",
+    "403": "No current allowed context; no object existence disclosure",
+    "404": "No valid public projection",
+    "409": "Revision or idempotency conflict",
+    "413": "Payload too large",
+    "429": "Durable rate limit reached",
+    "503": "Unavailable; never report stored on uncertainty"
+  }
+}

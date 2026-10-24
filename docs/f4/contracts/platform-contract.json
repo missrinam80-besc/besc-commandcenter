@@ -1,0 +1,83 @@
+{
+  "format": "besc-f4-contract-proposal-v1",
+  "status": "proposed_not_implemented",
+  "publication_schema_version": "besc-platform-publication-v1",
+  "legacy_contract_preserved": "besc-website-publication-v1",
+  "public_types": [
+    "creator",
+    "partner",
+    "vacancy",
+    "page"
+  ],
+  "public_collections": [
+    "creators",
+    "partners",
+    "vacancies",
+    "pages"
+  ],
+  "public_routes_prefix": "/api/v1/platform/publications",
+  "private_routes": [
+    "/api/v1/platform/me",
+    "/api/v1/platform/applications"
+  ],
+  "website_routes": [
+    "/creators",
+    "/creators/[slug]",
+    "/samenwerkingen",
+    "/samenwerkingen/[slug]",
+    "/esports",
+    "/vrijwilligers",
+    "/vrijwilligers/vacatures/[slug]",
+    "/vrijwilligers/vacatures/[slug]/aanmelden",
+    "/samenwerken/aanvragen",
+    "/mijn-besc",
+    "/mijn-besc/profiel",
+    "/mijn-besc/aanvragen",
+    "/mijn-besc/toestemmingen",
+    "/over-besc",
+    "/contact",
+    "/privacy"
+  ],
+  "staging_anonymous_access": false,
+  "website_direct_business_table_reads": false,
+  "public_projection_forbidden_fields": [
+    "organization_id",
+    "user_id",
+    "person_id",
+    "partner_id",
+    "source_id",
+    "consent_id",
+    "email",
+    "phone",
+    "address",
+    "notes",
+    "motivation",
+    "budget",
+    "contract",
+    "access_token",
+    "refresh_token",
+    "storage_path"
+  ],
+  "private_intake_categories": [
+    "creator_profile",
+    "partnership",
+    "volunteer_application"
+  ],
+  "identity_fields_server_derived": [
+    "user_id",
+    "organization_id",
+    "site_id",
+    "person_id"
+  ],
+  "idempotency_scope": [
+    "organization",
+    "actor",
+    "request_id"
+  ],
+  "idempotency_conflicting_payload_status": 409,
+  "success_requires_commit": true,
+  "public_page_size_max": 50,
+  "new_runtime_flags_default": "off",
+  "withdrawal_target_seconds": 60,
+  "withdrawal_target_verified": false
+}
