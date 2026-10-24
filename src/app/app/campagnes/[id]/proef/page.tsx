@@ -1,3 +1,4 @@
+import { F5CampaignTools } from '@/components/f5-campaign-tools';
 import { AppShell } from '@/components/app-shell';
 import { CampaignPilotPanel, PilotForm } from '@/components/campaign-pilot-panel';
 import { F1Feedback } from '@/components/f1-feedback';
@@ -29,6 +30,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   ]);
   return <AppShell active="Campagnes"><header className="topbar"><h1>{state.synthetic ? 'Campagneproef' : 'Campagnebijdragen en metingen'}</h1></header><div className="module-body">
     {query.succes && <F1Feedback message="De handeling is opgeslagen. Hieronder staan de actuele gegevens."/>}{(query.fout || query.melding) && <F1Feedback error message={query.melding ?? 'Controleer de velden en gebruik een ondersteunde Twitch- of YouTube-link.'}/>}
+    <F5CampaignTools org={org} campaign={id} synthetic={state.synthetic}/>
     <CampaignPilotPanel state={state} org={org} campaign={id} people={(people.data ?? []).map(p => ({ value: p.id, label: p.display_name }))} members={(members.data ?? []).map(m => ({ value: m.user_id, label: (Array.isArray(m.profiles) ? m.profiles[0] : m.profiles)?.display_name ?? 'Bestaand account' }))} documents={(docs.data ?? []).map(d => ({ value: d.id, label: d.label }))} accounts={(accounts.data ?? []).map(a => ({value:a.id,label:a.account_name}))} twitchCollectionEnabled={process.env.BESC_CAMPAIGN_TWITCH_COLLECTION_ENABLED === 'true'}/>
   </div></AppShell>;
 }

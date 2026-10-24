@@ -39,6 +39,7 @@ yarn-error.log*
 .env*
 !.env.example
 !.env.*.example
+*.private.env
 
 # local monday exports may contain personal or confidential data
 /monday-export/output/
