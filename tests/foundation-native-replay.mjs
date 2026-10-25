@@ -59,14 +59,18 @@ for (const name of names) {
     const beforeF5 = JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql', import.meta.url), 'utf8')));
     assert.equal(beforeF5.tables.length,175,'F4 baseline preserved before three F5 private tables');
   }
+  if (name.endsWith('_f6_explicit_public_read_channels.sql')) {
+    const beforeF6 = JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql', import.meta.url), 'utf8')));
+    assert.equal(beforeF6.tables.length,178,'Existing F5 baseline preserved before two private F6 tables');
+  }
   try { sql(readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8")); }
   catch (error) { throw new Error(`Native replay failed at ${name}: ${error.stderr?.toString() ?? error.message}`); }
   if (name.startsWith("20260712190000_")) sql("insert into auth.users(id,email) values('00000000-0000-4000-8000-000000000001','fixture@example.invalid');update public.organization_members set role='admin',status='active';");
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length, 178); // F4 baseline plus three private F5 operation tables.
-for (const name of ['campaign_ingress_receipts','campaign_source_references','campaign_discovery_runs']) {
+assert.equal(effects.tables.length, 180); // Existing F5 baseline plus two private F6 public-read tables.
+for (const name of ['campaign_ingress_receipts','campaign_source_references','campaign_discovery_runs','public_website_channels','public_website_grants']) {
   const table=effects.tables.find(table=>table.schema==='private'&&table.name===name);
   assert.ok(table?.rls,`${name} is private and RLS enabled`);
   assert.ok(Object.values(table.grants).every(grants=>Object.values(grants).every(value=>value===false)),`${name} has no client grants`);
