@@ -56,7 +56,13 @@ test('F3 release: exact additive migration, historical SQL unchanged and live ga
   assert.equal(f6.required_history_before,135);assert.equal(f6.expected_history_only_if_same_baseline_and_applied,136);
   assert.equal(f6.cloud_apply_authorized,false);assert.equal(f6.server_deploy_authorized,false);assert.equal(f6.runtime_activation_authorized,false);
   assert.equal(f6.runtime_default,'off');assert.deepEqual(f6.excluded_history,manifest.excluded_history);
-  const files = [...f6.historical_migrations, ...f6.new_migrations];
+  const preview = JSON.parse(readFileSync(new URL('ops/f6-own-draft-preview-release-manifest.json', root), 'utf8'));
+  assert.deepEqual(preview.historical_migrations,[...f6.historical_migrations,...f6.new_migrations]);
+  assert.equal(preview.required_history_before,136);assert.equal(preview.expected_history_only_if_same_baseline_and_applied,137);
+  assert.equal(preview.new_migrations.length,1);assert.deepEqual(preview.new_private_tables,[]);
+  assert.equal(preview.cloud_apply_authorized,false);assert.equal(preview.server_deploy_authorized,false);assert.equal(preview.runtime_activation_authorized,false);
+  assert.deepEqual(preview.excluded_history,manifest.excluded_history);assert.equal(preview.existing_rows_changed,false);
+  const files = [...preview.historical_migrations, ...preview.new_migrations];
   assert.deepEqual(readdirSync(new URL('supabase/migrations/', root)).filter(f => f.endsWith('.sql')).sort(), files.map(f => f.file).sort());
   for (const f of files) assert.equal(createHash('sha256').update(readFileSync(new URL('supabase/migrations/' + f.file, root), 'utf8').replaceAll('\r\n', '\n')).digest('hex'), f.sha256_lf, f.file);
   assert.deepEqual(manifest.excluded_history, ['20261001110000_seed_operational_guidelines.sql']);
