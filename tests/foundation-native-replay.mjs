@@ -76,6 +76,9 @@ for (const name of ['campaign_ingress_receipts','campaign_source_references','ca
   assert.ok(Object.values(table.grants).every(grants=>Object.values(grants).every(value=>value===false)),`${name} has no client grants`);
 }
 assert.ok(effects.functions.length > 143);
+const ownPreviewFunction=effects.functions.find(f=>f.schema==='public'&&f.name==='f6_own_page_drafts');
+assert.ok(ownPreviewFunction?.security_definer);assert.equal(ownPreviewFunction.authenticated_execute,true);assert.equal(ownPreviewFunction.anon_execute,false);assert.equal(ownPreviewFunction.service_role_execute,false);
+
 const privateOperations=['f1_context','f1_receipts','f2_receipts','campaign_pilots','campaign_access','campaign_policies','campaign_participants','campaign_contributions','campaign_measurements','campaign_receipts','campaign_events','campaign_report_revisions','campaign_sources','campaign_source_runs','platform_settings','platform_access','creator_profiles','creator_revisions','creator_entries','f4_receipts','f4_limits','intake_forms','intake_handlers','platform_applications','application_events','partner_publication_settings','partner_publication_revisions','partner_publication_entries','vacancy_settings','vacancy_dossiers','vacancy_revisions','vacancy_entries','partner_delegation_settings','partner_delegations','partner_profile_proposals','site_content_settings','content_migration_records','content_migration_reviews','site_content_dossiers','site_content_revisions','site_content_entries','contact_settings'];
 assert.ok(effects.tables.every((table) => table.rls || (table.schema === 'private' && privateOperations.includes(table.name))));
 assert.ok(effects.tables.filter(table=>table.schema==='private'&&privateOperations.includes(table.name)).every(table=>Object.values(table.grants).every(grants=>Object.values(grants).every(value=>value===false))), 'Private operation tables have no client grants; existing private service grants remain unchanged');
