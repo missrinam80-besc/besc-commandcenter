@@ -5,11 +5,13 @@ import {PGlite} from '@electric-sql/pglite';
 import {communityProfileTypes,isNaturalPersonContact} from '../src/lib/community-people.ts';
 import {toPersonPickerOptions} from '../src/lib/person-picker.ts';
 import {isActiveStreamTeamMember} from '../src/lib/reporting-scope.ts';
+import {operationalModules} from '../src/app/app/operations/config.ts';
 
 test('functionele accounts blijven contacten maar geen personen of streamteamleden',()=>{
  const base={id:'shared',display_name:'TESTFIXTURE functioneel',handle:null,discord_handle:null,community_person_roles:[{role:'volunteer'},{role:'streamteam'}]};
  const functional={...base,person_type:'functional_account'};
  assert.equal(communityProfileTypes.functional_account,'Functioneel account');
+ assert.deepEqual(operationalModules.community.types,communityProfileTypes);
  assert.equal(isNaturalPersonContact(functional),false);
  assert.deepEqual(toPersonPickerOptions([functional,{...base,id:'human',person_type:'crew'}]).map(p=>p.id),['human']);
  assert.equal(isActiveStreamTeamMember({...functional,status:'active',roles:[{role:'streamteam'}]}),false);

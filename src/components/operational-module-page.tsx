@@ -1,4 +1,3 @@
-import { isNaturalPersonContact } from "@/lib/community-people";
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import Link from "next/link";
 import { partnerRoleLabels } from "@/lib/f1-workflows";
@@ -113,7 +112,7 @@ export async function OperationalModulePage({
 
   const rows = (rowsResult.data ?? []) as unknown as Row[];
   const all = (allResult.data ?? []) as unknown as {status:string;person_type?:string}[];
-  const peopleCount = module === "community" ? all.filter(row => isNaturalPersonContact(row)).length : 0;
+  const peopleCount = module === "community" ? all.filter(row => row.person_type !== "functional_account").length : 0;
   const functionalCount = module === "community" ? all.length - peopleCount : 0;
   const total = rowsResult.count ?? 0;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));

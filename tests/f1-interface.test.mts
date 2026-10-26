@@ -63,7 +63,7 @@ test('F1 werkbank: echte servercomponent rendert bruikbare formulieren en verber
  async function render(caps:Record<string,boolean>){
   const supabase={rpc:async(name:string)=>({data:name==='f1_capabilities'?caps:name==='f1_publication_consents'?[]:{execution_status:'not_demonstrated'},error:null}),from:(table:string)=>{
    const data=table==='compliance_deadlines'?[{id,title:'TESTFIXTURE — NIET PUBLICEREN',f1_revision:1,due_date:null,unknown_deadline_reason:'Bron nog te beoordelen'}]:table==='organization_members'?[{user_id:id,profiles:[{display_name:'TESTFIXTURE Voorzitter'}]}]:[];
-   const query:Record<string,unknown>={then:(ok:(r:unknown)=>unknown)=>Promise.resolve({data,error:null}).then(ok)};for(const name of ['select','eq','is','not','limit','order'])query[name]=()=>query;return query;
+   const query:Record<string,unknown>={then:(ok:(r:unknown)=>unknown)=>Promise.resolve({data,error:null}).then(ok)};for(const name of ['select','eq','neq','is','not','limit','order'])query[name]=()=>query;return query;
   }};
   const Page=load('src/app/app/administratie/werkstromen/page.tsx',{'next/link':{default:({children,...props}:Record<string,unknown>)=>React.createElement('a',props,children as React.ReactNode)},'@/components/app-shell':{AppShell:({children}:{children:React.ReactNode})=>React.createElement('main',null,children)},'@/components/f1-form':{F1Form:Form},'@/components/f1-feedback':{F1Feedback:Feedback},'@/lib/f1-workflows':workflows,'@/lib/auth-context':{requireActiveMembership:async()=>({supabase,membership:{organization_id:id}})}}).default as (p:unknown)=>Promise<React.ReactNode>;
   return renderToStaticMarkup(await Page({searchParams:Promise.resolve({})}));
