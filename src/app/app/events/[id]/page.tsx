@@ -96,7 +96,7 @@ export default async function Event({
     supabase.from("google_resource_links").select("name,web_url").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "document").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("google_resource_links").select("google_id,name,web_url,updated_at").eq("organization_id", membership.organization_id).eq("entity_type", "event").eq("entity_id", id).eq("resource_type", "calendar_event").maybeSingle(),
     supabase.from("community_assignments").select("id,person_id,role_name,status,starts_at,notes,community_people(display_name)").eq("organization_id", membership.organization_id).eq("event_id", id).order("starts_at", { ascending: true, nullsFirst: false }),
-    supabase.from("community_people").select("id,display_name,handle,discord_handle,community_person_roles(role)").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name")
+    supabase.from("community_people").select("id,display_name,person_type,handle,discord_handle,community_person_roles(role)").eq("organization_id", membership.organization_id).is("deleted_at", null).neq("status", "archived").order("display_name")
   ]);
   if (!e) notFound();
   const [connections, relationOptions, primaryPartnerResult] = await Promise.all([

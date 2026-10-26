@@ -1,6 +1,9 @@
+import { isNaturalPersonContact } from "./community-people.ts";
+
 type RoleRow = { role?: string | null };
 
 type PersonForReporting = {
+  person_type?: string | null;
   status?: string | null;
   roles?: RoleRow[] | RoleRow | null;
 };
@@ -11,7 +14,7 @@ export function isActiveStreamTeamMember(person: PersonForReporting) {
     : person.roles
       ? [person.roles]
       : [];
-  return person.status === "active"
+  return isNaturalPersonContact(person) && person.status === "active"
     && roles.some((role) => role.role === "streamteam");
 }
 

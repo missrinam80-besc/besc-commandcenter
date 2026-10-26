@@ -105,13 +105,15 @@ export async function OperationalModulePage({
     query.range(from, from + PAGE_SIZE - 1),
     supabase
         .from(config.table)
-        .select("status")
+        .select(module === "community" ? "status,person_type" : "status")
         .eq("organization_id", org)
         .is("deleted_at", null)
   ]);
 
   const rows = (rowsResult.data ?? []) as unknown as Row[];
-  const all = allResult.data ?? [];
+  const all = (allResult.data ?? []) as unknown as {status:string;person_type?:string}[];
+  const peopleCount = module === "community" ? all.filter(row => row.person_type !== "functional_account").length : 0;
+  const functionalCount = module === "community" ? all.length - peopleCount : 0;
   const total = rowsResult.count ?? 0;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const active = all.filter(
@@ -159,7 +161,7 @@ export async function OperationalModulePage({
         </p>
         <section className="history-stats">
           <article>
-            <span>Totaal</span>
+            <span>{module === "community" ? "Contacten totaal" : "Totaal"}</span>
             <strong>{all.length}</strong>
           </article>
           <article>
@@ -171,6 +173,7 @@ export async function OperationalModulePage({
             <strong>{all.length - active}</strong>
           </article>
         </section>
+        {module === "community" && <p className="form-help">{peopleCount} personen · {functionalCount} functionele accounts. Functionele accounts tellen niet mee als personen of vrijwilligers.</p>}
         {params.fout && <div className="error-note">{params.fout === "dossier-niet-beschikbaar" ? "Het dossier is niet meer beschikbaar. De link werd niet gewijzigd." : params.fout === "dossier-controleren" ? "Het dossier kon niet worden gecontroleerd. De link werd niet gewijzigd. Probeer opnieuw." : `Opslaan is mislukt (${params.fout}).`}</div>}
         {params.succes && <div className="success">Wijziging opgeslagen.</div>}
 

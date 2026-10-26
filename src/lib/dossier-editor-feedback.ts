@@ -9,6 +9,9 @@ export function editorIssueText(issue:EditorIssue){
 
 type StorageError={code?:string;message?:string;details?:string|null};
 const causes:Record<string,string>={
+ functional_account_not_a_person:"Kies een persoon voor deze koppeling. Een functioneel account vertegenwoordigt geen natuurlijke persoon.",
+ functional_account_has_person_bindings:"Dit contact heeft persoonsdossiers. Beoordeel die koppelingen eerst voordat je het als functioneel account classificeert.",
+ functional_account_classification_requires_read_committed:"De classificatie kon niet met actuele koppelingen worden gecontroleerd. Laat deze wijziging via de normale contacteditor uitvoeren.",
  f1_choose_partner_contribution:"Kies een expliciete partnerbijdrage. Bevestig eerst de actuele partnerrol en je taakrol bij Gedeelde werkstromen.",
  slot_schedule_managed:"Deze agenda-inschrijving hoort bij een boeking. Wijzig de status via Tijdslots en boekingen in het event.",
  choice_unavailable:"Een gekozen type of categorie is ondertussen verwijderd of niet beschikbaar voor deze organisatie. Vernieuw de keuzes en selecteer een beschikbare optie.",

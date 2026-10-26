@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import {communityProfileTypes} from "@/lib/community-people";
 import {partnerRoleLabels} from "@/lib/f1-workflows";
 import {assetHasPurchaseFields,assetAcquisitions,assetStorageValues,materialPeriod,materialBlocked,type AssetCalendar,type AssetFollowup} from "@/lib/asset-followup";
 import {assetStatuses} from "@/lib/asset-bulk";
@@ -87,7 +88,8 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
     const managed=managedChoice(table,field.name),managedOptions=options[choiceOptionKey(table,field.name)]??[];
     const known=(managed?managedOptions.map(option=>option.id):field.options).filter(choice=>field.name==="target_type"?['project','event','campaign','content','partner','community_person','task'].includes(choice):field.name==="resource_type"?['document','folder'].includes(choice):field.name==="status"&&table==="expenses"?!['paid','approved','reimbursed'].includes(choice):field.name==="status"&&table==="budget_envelopes"?choice!=="approved":true);
     const relationTable=({project:"projects",event:"events",campaign:"campaigns",content:"content_items",partner:"partners",community_person:"community_people",task:"tasks"} as Record<string,string>)[String(values.target_type??"")];
-    const candidates=field.name==="target_id"?options[relationTable]??[]:field.reference?options[field.reference]??[]:options[field.name]??[];
+    const personOnly=["person_id","responsible_person_id","owner_person_id"].includes(field.name)||(table==="kpi_records"&&field.name==="community_person_id");
+    const candidates=field.name==="target_id"?options[relationTable]??[]:personOnly?options.natural_person_contacts??[]:field.reference?options[field.reference]??[]:options[field.name]??[];
     const linkedPending=(draft.parts[field.reference??""]??[]).filter(row=>!row.deleted).map(row=>({id:row.id,label:String(row.values.title??row.values.name??"Nieuw onderdeel")}));
     let adjustedCandidates=field.name==="activity_id"?candidates.filter(option=>!(draft.parts.event_activities??[]).some(row=>row.id===option.id&&row.deleted)):candidates;
     if(field.name==="asset_id"&&["event_materials","project_materials"].includes(table)){
@@ -96,6 +98,7 @@ export function DossierEditor({kind,id,record=null,parts={},options={},permissio
     }
     const choices=[...adjustedCandidates,...linkedPending.filter(row=>!candidates.some(candidate=>candidate.id===row.id))];
     if(kind==="event"&&table==="events"&&field.name==="partner_id")return <MultiReferenceField key={field.name} id={inputId} choices={choices} selected={eventPartnerIds(draft)} disabled={readonly||saving||permissions.eventSponsors===false} onChange={ids=>{setTouched(true);setDraft(current=>selectEventPartners(current,ids,()=>crypto.randomUUID()));}}/>;
+    if(table==="community_people"&&field.name==="person_type")return <label key={field.name} htmlFor={inputId}>{label}<select {...shared} value={String(value)} onChange={e=>change(field.name,e.target.value)}>{Object.entries(communityProfileTypes).map(([type,label])=><option key={type} value={type}>{label}</option>)}</select></label>;
     if(kind==="asset"&&table==="assets"&&["status","acquisition_type"].includes(field.name)){
       const labels:Record<string,string>=field.name==="status"?assetStatuses:assetAcquisitions;
       return <label key={field.name} htmlFor={inputId}>{label}<select {...shared} value={String(value)} onChange={e=>change(field.name,e.target.value||null)}><option value="">Kies…</option>{Object.entries(labels).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>;

@@ -22,7 +22,7 @@ export default async function Page({searchParams}:{searchParams:Promise<Record<s
  const consentChoices=(caps.publication_editor||caps.publication_reviewer)?rows(await supabase.rpc("f1_publication_consents",{p_organization_id:org})):[];
  const results=await Promise.all([
   supabase.from('association_members').select('id,full_name,f1_revision,community_person_id').eq('organization_id',org).is('deleted_at',null).limit(60),
-  supabase.from('community_people').select('id,display_name,account_user_id').eq('organization_id',org).is('deleted_at',null).not('account_user_id','is',null).limit(60),
+  supabase.from('community_people').select('id,display_name,account_user_id').neq('person_type','functional_account').eq('organization_id',org).is('deleted_at',null).not('account_user_id','is',null).limit(60),
   supabase.from('document_registry').select('id,label,url,media_rights_revoked_at').eq('organization_id',org).limit(60),
   supabase.from('compliance_deadlines').select('id,title,status,due_date,unknown_deadline_reason,f1_revision').eq('organization_id',org).is('deleted_at',null).limit(40),
   supabase.from('meetings').select('id,title,f1_revision').eq('organization_id',org).is('deleted_at',null).limit(40),

@@ -22,6 +22,20 @@ type Change={id:string;new:boolean;values:Record<string,unknown>;base:Record<str
 type Bundle={kind:string;root:Change;parts:Change[]};
 const library=load("src/lib/dossier-editor-draft.ts") as unknown as {createDossierDraft:(kind:string,id:string,record:Record<string,unknown>|null,parts?:Record<string,Record<string,unknown>[]>)=>Draft;buildEditorBundle:(draft:Draft)=>Bundle;validateEditorBundle:(bundle:Bundle)=>string[];editorHasChanges:(draft:Draft)=>boolean};
 const id="11111111-1111-4111-8111-111111111111",child="22222222-2222-4222-8222-222222222222";
+
+test("Functioneel account is een benoemde profielkeuze; de persoonskiezer laat het contact weg",()=>{
+ const Component=load("src/components/dossier-editor.tsx").DossierEditor as React.ComponentType<Record<string,unknown>>;
+ const html=renderToStaticMarkup(React.createElement(Component,{kind:"community",id,mode:"edit",record:{id,display_name:"TESTFIXTURE account",person_type:"functional_account"},cancelHref:"/app",permissions:{}}));
+ assert.match(html,/<option value="functional_account" selected="">Functioneel account<\/option>/);
+ const schedule=renderToStaticMarkup(React.createElement(Component,{kind:"event",id,mode:"edit",record:{id,title:"TESTFIXTURE event"},parts:{event_schedule_items:[{id:child,title:"TESTFIXTURE shift",person_id:null}]},options:{community_people:[{id:"shared",label:"TESTFIXTURE functioneel account"},{id:"human",label:"TESTFIXTURE vrijwilliger"}],natural_person_contacts:[{id:"human",label:"TESTFIXTURE vrijwilliger"}]},cancelHref:"/app",permissions:{}}));
+ assert.match(schedule,/TESTFIXTURE vrijwilliger/);
+ assert.doesNotMatch(schedule,/<option value="shared">/);
+ const draft=library.createDossierDraft("community",id,{id,display_name:"TESTFIXTURE account",person_type:"functional_account",account_user_id:child});
+ draft.values.display_name="BESC — functioneel account";
+ const bundle=library.buildEditorBundle(draft);
+ assert.deepEqual(Object.keys(bundle.root.values),['display_name']);
+ assert.equal(bundle.root.values.account_user_id,undefined,'Changing the label must not change account binding');
+});
 test("Drive ontkoppelen bundelt beide verwijzingen en bewaart documenten en andere gegevens",()=>{
  const unlink=load("src/lib/dossier-drive-unlink.ts") as unknown as {hasDossierDriveFolder:(d:Draft)=>boolean;unlinkDossierDriveFolder:(d:Draft)=>Draft};
  for(const kind of ["event","project","campaign","partner","community","meeting"]){

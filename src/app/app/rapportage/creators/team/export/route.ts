@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const { supabase, membership } = await requireActiveMembership();
   if (!["admin", "board", "member"].includes(membership.role)) return new Response("Geen toegang", { status: 403 });
   const organizationId = membership.organization_id;
-  const { data: peopleData } = await supabase.from("community_people").select("id,display_name,handle,status,roles:community_person_roles(role)").eq("organization_id", organizationId).is("deleted_at", null).order("display_name");
+  const { data: peopleData } = await supabase.from("community_people").select("id,display_name,handle,status,person_type,roles:community_person_roles(role)").eq("organization_id", organizationId).is("deleted_at", null).order("display_name");
   const people = (peopleData ?? []).filter(isActiveStreamTeamMember);
   const personIds = people.map((person) => person.id);
   const { data: kpis } = personIds.length

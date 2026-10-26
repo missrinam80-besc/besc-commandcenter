@@ -1,3 +1,4 @@
+import { isNaturalPersonContact } from "./community-people";
 import type {AssetFollowup,AssetUse,AssetRepair,AssetProjectUse} from "./asset-followup";
 import {assetTypes} from "./asset-followup";
 import {randomUUID} from "node:crypto";
@@ -49,6 +50,7 @@ export async function loadDossierEditor(kind:string,id?:string,preset:EditorReco
   if(uses.error||repairs.error||projectUses.error)throw Error("De materiaalplanning kan niet worden geladen. Controleer de migratie voor hersteltaken.");
   assetFollowup={uses:((uses.data??[]) as unknown as AssetUse[]).filter(row=>row.events!==null),repairs:(repairs.data??[]) as AssetRepair[],projectUses:((projectUses.data??[]) as unknown as AssetProjectUse[]).filter(row=>row.projects!==null)};
  }
+ let naturalPersonOptions:EditorOption[]=[];
  const options:Record<string,EditorOption[]>=choiceEditorOptions(await loadManagedChoices(supabase,membership.organization_id));
  let assetCalendar;
  if(kind==="event"||kind==="project"){
@@ -75,9 +77,15 @@ export async function loadDossierEditor(kind:string,id?:string,preset:EditorReco
    if(table==="document_registry")lookup=lookup.order("label").order("id");
    const {data,error}=await lookup;
    if(error){options[table]=[];return;}
-   options[table]=(data??[]).filter(row=>!row.deleted_at).map(row=>({id:row.id,label:String(row.label??row.title??row.name??row.display_name??row.full_name??row.id),searchText:[row.handle,row.discord_handle,row.url].filter(Boolean).join(" "),url:row.url}));
+   const activeRows=(data??[]).filter(row=>!row.deleted_at);
+   const toOption=(row:EditorRecord)=>({id:String(row.id),label:String(row.label??row.title??row.name??row.display_name??row.full_name??row.id),searchText:[row.handle,row.discord_handle,row.url].filter(Boolean).join(" "),url:typeof row.url==="string"?row.url:undefined});
+   options[table]=activeRows.map(toOption);
+   if(table==="community_people"){
+     naturalPersonOptions=activeRows.filter(isNaturalPersonContact).map(toOption);
+     options.natural_person_contacts=naturalPersonOptions;
+   }
  }));
- for(const [field,target] of Object.entries({person_id:"community_people",responsible_person_id:"community_people",community_person_id:"community_people",owner_person_id:"community_people",asset_id:"assets",repair_asset_id:"assets"}))options[field]=options[target]??[];
+ for(const [field,target] of Object.entries({person_id:"community_people",responsible_person_id:"community_people",community_person_id:"community_people",owner_person_id:"community_people",asset_id:"assets",repair_asset_id:"assets"}))options[field]=target==="community_people"?naturalPersonOptions:options[target]??[];
  const typeOptions=options["choices:assets.asset_type"];
  if(typeOptions)options["choices:assets.asset_type"]=typeOptions.map(option=>({...option,label:assetTypes[option.id]&&option.label===option.id.replaceAll("_"," ")?assetTypes[option.id]:option.label}));
  return {kind,id:id??randomUUID(),record,parts,options,permissions,preset,assetFollowup,assetCalendar};

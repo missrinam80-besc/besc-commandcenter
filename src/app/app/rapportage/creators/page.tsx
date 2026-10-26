@@ -13,7 +13,7 @@ export default async function CreatorReportsPage() {
   }
   const { data } = await supabase
     .from("community_people")
-    .select("id,display_name,handle,status,roles:community_person_roles(role)")
+    .select("id,display_name,handle,status,person_type,roles:community_person_roles(role)")
     .eq("organization_id", org)
     .is("deleted_at", null)
     .order("display_name");

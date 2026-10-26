@@ -15,7 +15,7 @@ export default async function StreamTeamReport({ searchParams }: { searchParams:
     return <AppShell active="Streamerrapportage"><div className="module-body"><div className="permission-note">Streamerrapportage is alleen beschikbaar voor bestuur en medewerkers.</div></div></AppShell>;
   }
   const organizationId = membership.organization_id;
-  const { data: peopleData } = await supabase.from("community_people").select("id,display_name,handle,status,roles:community_person_roles(role)").eq("organization_id", organizationId).is("deleted_at", null).order("display_name");
+  const { data: peopleData } = await supabase.from("community_people").select("id,display_name,handle,status,person_type,roles:community_person_roles(role)").eq("organization_id", organizationId).is("deleted_at", null).order("display_name");
   const people = (peopleData ?? []).filter(isActiveStreamTeamMember);
   const personIds = people.map((person) => person.id);
   const [kpis, assignments] = personIds.length

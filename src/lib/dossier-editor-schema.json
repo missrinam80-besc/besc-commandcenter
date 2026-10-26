@@ -3575,7 +3575,16 @@
         "type": "text",
         "required": false,
         "default": "volunteer",
-        "options": [],
+        "options": [
+          "crew",
+          "streamer",
+          "creator",
+          "volunteer",
+          "moderator",
+          "guest",
+          "external",
+          "functional_account"
+        ],
         "reference": null
       },
       {

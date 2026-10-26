@@ -1,9 +1,9 @@
-import { communityRoleLabels } from "./community-people.ts";
+import { communityRoleLabels, isNaturalPersonContact } from "./community-people.ts";
 
 export type PersonPickerOption = { id: string; label: string; roles?: string[]; aliases?: string[] };
 
-export function toPersonPickerOptions(rows: { id: string; display_name: string; handle: string | null; discord_handle: string | null; community_person_roles: { role: string }[] }[]): PersonPickerOption[] {
-  return rows.map((person) => ({
+export function toPersonPickerOptions(rows: { id: string; display_name: string; person_type?: string | null; handle: string | null; discord_handle: string | null; community_person_roles: { role: string }[] }[]): PersonPickerOption[] {
+  return rows.filter(isNaturalPersonContact).map((person) => ({
     id: person.id,
     label: person.display_name,
     aliases: [person.handle, person.discord_handle].filter((value): value is string => Boolean(value)),
