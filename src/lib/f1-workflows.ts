@@ -49,6 +49,7 @@ export function f1Feedback(error: {code?:string;message?:string}|null|undefined)
  if(/evidence|proof|reviews_required|execution_required/.test(message))return 'Het vereiste bewijs of de beoordeling ontbreekt of is niet meer geldig.';
  if(/purpose|consent|policy|scope/.test(message))return 'Het doel, de verklaring of het beleidsbesluit is niet beschikbaar of niet geldig.';
  if(/partner|contribution/.test(message))return 'Kies een actuele partnerrol en een expliciete bijdrage.';
+ if(/functional_account/.test(message))return 'Een functioneel account kan niet als persoon worden gekoppeld. Controleer eerst de bestaande persoonsdossiers.';
  if(/unknown_deadline/.test(message))return 'Vermeld waarom de termijn nog onbekend is.';
  if(/public_|media_|source_event_time|event_source_time/.test(message))return 'Controleer de publieke inhoud, brongegevens, tijden en mediarechten.';
  if(/23505/.test(error?.code??''))return 'Deze actuele koppeling of versie bestaat al.';

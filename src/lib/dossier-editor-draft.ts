@@ -3,6 +3,7 @@ import {assetStorageValues} from "./asset-followup";
 import schemas from "./dossier-editor-schema.json";
 import {eventEditorValues,eventEditorStorageValues,eventEditorTimingError} from "./event-editor-timing";
 import {managedChoice,choiceKey} from "./dossier-choices";
+import {communityProfileTypes} from "./community-people";
 
 export type FieldSchema={name:string;type:string;required:boolean;default:unknown;options:string[];reference:string|null};
 export type EditorRecord=Record<string,unknown>;
@@ -11,7 +12,8 @@ export type DossierDraft={kind:string;id:string;values:EditorRecord;base:EditorR
 export type EditorChange={id:string;new:boolean;values:EditorRecord;base:EditorRecord|null;delete?:boolean;collection?:string};
 export type EditorBundle={kind:string;root:EditorChange;parts:EditorChange[];partner_contribution?:string};
 export function editorFields(kind:string,table:string):FieldSchema[]{
-  return (schemas as unknown as Record<string,Record<string,FieldSchema[]>>)[kind]?.[table]??[];
+  const fields=(schemas as unknown as Record<string,Record<string,FieldSchema[]>>)[kind]?.[table]??[];
+  return table==="community_people"?fields.map(field=>field.name==="person_type"?{...field,options:Object.keys(communityProfileTypes)}:field):fields;
 }
 export function defaultEditorValues(kind:string,table:string):EditorRecord {
   return Object.fromEntries(editorFields(kind,table).filter(field=>field.default!==null).map(field=>[field.name,field.default]));

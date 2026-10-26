@@ -69,8 +69,8 @@ export default async function ManagementReportPage({
     supabase.from("content_items").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).is("deleted_at", null).gte("publication_at", previousStart).lt("publication_at", previousEnd).eq("status", "published"),
     supabase.from("events").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).is("deleted_at", null).gte("start_at", start).lt("start_at", end).not("status", "in", "(cancelled,archived)"),
     supabase.from("events").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).is("deleted_at", null).gte("start_at", previousStart).lt("start_at", previousEnd).not("status", "in", "(cancelled,archived)"),
-    supabase.from("community_people").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).is("deleted_at", null).gte("created_at", start).lt("created_at", end),
-    supabase.from("community_people").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).is("deleted_at", null).gte("created_at", previousStart).lt("created_at", previousEnd),
+    supabase.from("community_people").select("id", { count: "exact", head: true }).neq("person_type", "functional_account").eq("organization_id", organizationId).is("deleted_at", null).gte("created_at", start).lt("created_at", end),
+    supabase.from("community_people").select("id", { count: "exact", head: true }).neq("person_type", "functional_account").eq("organization_id", organizationId).is("deleted_at", null).gte("created_at", previousStart).lt("created_at", previousEnd),
     supabase.from("tasks").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).is("deleted_at", null).not("status", "in", "(done,cancelled)"),
     supabase.from("tasks").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).is("deleted_at", null).lt("due_at", today).not("status", "in", "(done,cancelled)"),
     supabase.from("projects").select("id,title,status,due_date").eq("organization_id", organizationId).is("deleted_at", null).not("status", "eq", "archived"),
@@ -195,8 +195,8 @@ export default async function ManagementReportPage({
           <article><CheckCircle2/><div><span>Afgeronde taken</span><strong>{taskDone}</strong><Delta current={taskDone} previous={previousCompletedTasks.count ?? 0}/></div></article>
           <article><Gauge/><div><span>Gepubliceerde content</span><strong>{contentDone}</strong><Delta current={contentDone} previous={previousPublishedContent.count ?? 0}/></div></article>
           <article><Target/><div><span>Events in periode</span><strong>{eventsDone}</strong><Delta current={eventsDone} previous={previousPeriodEvents.count ?? 0}/></div></article>
-          <article><Users/><div><span>Nieuwe profielen</span><strong>{peopleAdded}</strong><Delta current={peopleAdded} previous={previousNewPeople.count ?? 0}/></div></article>
-          <Link href="#risicos" className={riskCount ? "risk" : "healthy"}><AlertTriangle/><div><span>Open risico’s</span><strong>{riskCount}</strong><small>Bekijk risico’s en aandachtspunten</small></div><ArrowRight size={16}/></Link>
+          <article><Users/><div><span>Nieuwe personen</span><strong>{peopleAdded}</strong><Delta current={peopleAdded} previous={previousNewPeople.count ?? 0}/></div></article>
+          <Link href="#risicos" className={riskCount ? "risk" : "healthy"}><AlertTriangle/><div><span>Open risicoâ€™s</span><strong>{riskCount}</strong><small>Bekijk risicoâ€™s en aandachtspunten</small></div><ArrowRight size={16}/></Link>
         </section>
 
         <div className="management-grid">
@@ -221,7 +221,7 @@ export default async function ManagementReportPage({
 
         <div className="management-grid">
           <section className="panel management-finance">
-            <div className="panel-head"><div><span className="eyebrow">FINANCIËLE KERNCIJFERS</span><h3>{range.label}</h3></div><Link href="/app/financien/rapportage">Financieel rapport</Link></div>
+            <div className="panel-head"><div><span className="eyebrow">FINANCIÃ‹LE KERNCIJFERS</span><h3>{range.label}</h3></div><Link href="/app/financien/rapportage">Financieel rapport</Link></div>
             <div className="management-finance-grid">
               <article><span>Inkomsten</span><strong>{money(incomeTotal)}</strong></article>
               <article><span>Kosten</span><strong>{money(expenseTotal)}</strong></article>
@@ -230,8 +230,8 @@ export default async function ManagementReportPage({
             </div>
           </section>
           <section className="panel management-kpis">
-            <div className="panel-head"><div><span className="eyebrow">KPI & DOELEN</span><h3>Doelrealisatie</h3></div><Link href="/app/rapportage">Alle KPI’s</Link></div>
-            <div className="management-target-score"><div style={{ "--score": `${kpiScore.percentage ?? 0}%` } as CSSProperties}><strong>{kpiScore.percentage === null ? "—" : `${kpiScore.percentage}%`}</strong></div><span><b>{kpiScore.reached} van {kpiScore.total}</b> KPI-doelen behaald in deze periode · {kpiScore.unassessed} niet te beoordelen</span></div>
+            <div className="panel-head"><div><span className="eyebrow">KPI & DOELEN</span><h3>Doelrealisatie</h3></div><Link href="/app/rapportage">Alle KPIâ€™s</Link></div>
+            <div className="management-target-score"><div style={{ "--score": `${kpiScore.percentage ?? 0}%` } as CSSProperties}><strong>{kpiScore.percentage === null ? "â€”" : `${kpiScore.percentage}%`}</strong></div><span><b>{kpiScore.reached} van {kpiScore.total}</b> KPI-doelen behaald in deze periode Â· {kpiScore.unassessed} niet te beoordelen</span></div>
           </section>
         </div>
 
@@ -239,13 +239,13 @@ export default async function ManagementReportPage({
           <section className="panel management-progress">
             <div className="panel-head"><div><span className="eyebrow">PROJECTVOORTGANG</span><h3>Taken en mijlpalen</h3></div><Link href="/app/projecten">Alle projecten</Link></div>
             <div className="management-progress-list">
-              {progressRows.slice(0, 8).map((project) => <Link href={`/app/projecten/${project.id}`} key={project.id}><div><strong>{project.title}</strong><span>{project.completed} van {project.total} onderdelen afgerond · {project.open} open</span></div><i><b style={{width:`${project.percentage}%`}}/></i><em>{project.percentage}%</em></Link>)}
+              {progressRows.slice(0, 8).map((project) => <Link href={`/app/projecten/${project.id}`} key={project.id}><div><strong>{project.title}</strong><span>{project.completed} van {project.total} onderdelen afgerond Â· {project.open} open</span></div><i><b style={{width:`${project.percentage}%`}}/></i><em>{project.percentage}%</em></Link>)}
               {!progressRows.length && <div className="empty">Geen actieve projecten met voortgangsgegevens.</div>}
             </div>
           </section>
           <section className="panel management-workload">
-            <div className="panel-head"><div><span className="eyebrow">WERKDRUK</span><h3>Open werk per persoon</h3></div><Link href="/app/taken?weergave=open">Alle taken</Link></div>
-            <div className="management-table-wrap"><table className="management-table"><thead><tr><th>Persoon</th><th>Open</th><th>Te laat</th><th>Urgent</th><th>Wacht</th></tr></thead><tbody>{workloadRows.slice(0, 10).map((row)=><tr key={row.id}><td>{row.name}</td><td>{row.open}</td><td className={row.overdue?"negative":""}>{row.overdue}</td><td>{row.urgent}</td><td>{row.waiting}</td></tr>)}</tbody></table>{!workloadRows.length&&<div className="empty">Geen open toegewezen taken.</div>}</div>
+            <div className="panel-head"><div><span className="eyebrow">WERKDRUK</span><h3>Open werk per account</h3></div><Link href="/app/taken?weergave=open">Alle taken</Link></div>
+            <div className="management-table-wrap"><table className="management-table"><thead><tr><th>Account</th><th>Open</th><th>Te laat</th><th>Urgent</th><th>Wacht</th></tr></thead><tbody>{workloadRows.slice(0, 10).map((row)=><tr key={row.id}><td>{row.name}</td><td>{row.open}</td><td className={row.overdue?"negative":""}>{row.overdue}</td><td>{row.urgent}</td><td>{row.waiting}</td></tr>)}</tbody></table>{!workloadRows.length&&<div className="empty">Geen open toegewezen taken.</div>}</div>
           </section>
         </div>
 
@@ -260,11 +260,11 @@ export default async function ManagementReportPage({
         </section>
 
         <section id="risicos" className="panel management-risks">
-          <div className="panel-head"><div><span className="eyebrow">RISICO’S & AANDACHTSPUNTEN</span><h3>Prioriteiten voor het bestuur</h3></div><span>{risks.length} van {riskCount} getoond</span></div>
-          <div>{risks.map((risk) => <Link href={risk.href} key={risk.id}><AlertTriangle size={15}/><span><strong>{risk.title}</strong><small>{risk.type}{risk.date ? ` · ${new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium" }).format(new Date(risk.date))}` : ""}</small></span><ArrowRight size={14}/></Link>)}{!risks.length && <div className="empty">Geen achterstallige of geblokkeerde dossiers.</div>}</div>
+          <div className="panel-head"><div><span className="eyebrow">RISICOâ€™S & AANDACHTSPUNTEN</span><h3>Prioriteiten voor het bestuur</h3></div><span>{risks.length} van {riskCount} getoond</span></div>
+          <div>{risks.map((risk) => <Link href={risk.href} key={risk.id}><AlertTriangle size={15}/><span><strong>{risk.title}</strong><small>{risk.type}{risk.date ? ` Â· ${new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium" }).format(new Date(risk.date))}` : ""}</small></span><ArrowRight size={14}/></Link>)}{!risks.length && <div className="empty">Geen achterstallige of geblokkeerde dossiers.</div>}</div>
         </section>
 
-        <footer className="management-source-note"><CircleDollarSign size={14}/>Bronnen: live operationele tabellen en handmatig geregistreerde KPI’s in Supabase. Financiële bedragen volgen de geselecteerde rapportageperiode.</footer>
+        <footer className="management-source-note"><CircleDollarSign size={14}/>Bronnen: live operationele tabellen en handmatig geregistreerde KPIâ€™s in Supabase. FinanciÃ«le bedragen volgen de geselecteerde rapportageperiode.</footer>
       </div>
     </AppShell>
   );
