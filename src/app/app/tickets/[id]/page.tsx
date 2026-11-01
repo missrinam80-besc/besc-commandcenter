@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/auth-context";
 import { ticketStatuses, ticketLinkLabels, ticketDeliveryLabels, ticketErrors } from "@/lib/tickets";
 import { updateTicket } from "../actions";
+import { WorkspaceArchiveForm } from "@/components/workspace-archive-form";
 
 export default async function Ticket({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string,string|undefined>> }) {
   const { supabase, membership } = await requirePermission("manageTickets");
@@ -14,10 +15,11 @@ export default async function Ticket({ params, searchParams }: { params: Promise
   const ticket = result.data;
   if (!ticket) notFound();
   const messagePage = Math.min(1000,Math.max(1,Number.parseInt(query.pagina??"1",10)||1));
-  const [messages, deliveries, candidates] = await Promise.all([
+  const [messages, deliveries, candidates, archive] = await Promise.all([
     supabase.from("support_ticket_messages").select("id,direction,content,created_at",{count:"exact"}).eq("organization_id",membership.organization_id).eq("ticket_id",id).order("created_at",{ascending:false}).order("id").range((messagePage-1)*50,messagePage*50-1),
     supabase.from("support_ticket_deliveries").select("id,state,kind,last_error").eq("organization_id",membership.organization_id).eq("ticket_id",id).order("sequence",{ascending:false}).limit(50),
     supabase.rpc("ticket_staff_candidates",{p_org:membership.organization_id}),
+    supabase.from("workspace_record_archives").select("archived_at,version").eq("organization_id",membership.organization_id).eq("entity_type","ticket").eq("record_id",id).maybeSingle(),
   ]);
   const messageIds = (messages.data ?? []).filter(m=>m.direction==='staff').map(m=>m.id);
   const messageDeliveries = messageIds.length ? await supabase.from("support_ticket_deliveries").select("message_id,state")
@@ -26,11 +28,13 @@ export default async function Ticket({ params, searchParams }: { params: Promise
   const snapshot = ticket.intake_snapshot as {name?:string;questions?:{id:string;label:string;options?:{value:string;label:string}[]}[]}|null;
   const intakeAnswers = ticket.intake_answers as Record<string,string|string[]>|null;
   const closed = ticket.status === "closed";
-  return <AppShell active="Discordtickets"><header className="topbar module-top ticket-detail-top"><div><p>DISCORDTICKET</p><h1>{ticket.subject}</h1></div><Link className="secondary" href="/app/tickets">Alle tickets</Link></header>
+  const archived = Boolean(archive.data?.archived_at);
+  return <AppShell active="Discordtickets"><header className="topbar module-top ticket-detail-top"><div><p>DISCORDTICKET</p><h1>{ticket.subject}</h1></div><Link className="secondary" href={archived?"/app/tickets?archief=1":"/app/tickets"}>Alle tickets</Link></header>
     <div className="module-body ticket-layout">
       {query.fout && <p className="error-note" role="alert">{ticketErrors[query.fout] ?? ticketErrors.upstream_unavailable}</p>}
       {query.opgeslagen && <p className="ticket-success" role="status">Opgeslagen. Externe antwoorden worden afzonderlijk door Discord bevestigd.</p>}
-      {(messages.error||deliveries.error||candidates.error||messageDeliveries.error) && <p className="error-note">Niet alle ticketgegevens konden worden geladen.</p>}
+      {(messages.error||deliveries.error||candidates.error||messageDeliveries.error||archive.error) && <p className="error-note">Niet alle ticketgegevens konden worden geladen.</p>}
+      {!archive.error&&<section className="panel"><p>{archived?"Dit ticket staat in het archief. De ticketstatus en bewaartermijn blijven gelden. Een nieuw bericht van de aanvrager zet het terug bij Actief.":"Dit ticket staat in het actieve overzicht."}</p><WorkspaceArchiveForm entity="ticket" id={id} version={archive.data?.version??0} archived={archived}/></section>}
       <div className="ticket-detail-panels"><section className="panel ticket-treatment"><div className="ticket-section-heading"><div><span className="eyebrow">BEHANDELING</span><h2>Ticketgegevens</h2></div></div><span className={"ticket-status ticket-status-"+ticket.status}>{ticketStatuses[ticket.status as keyof typeof ticketStatuses]}</span><dl className="ticket-meta"><div><dt>Discordkoppeling</dt><dd>{ticketLinkLabels[ticket.link_status]}</dd></div><div><dt>Aanvrager op Discord</dt><dd>{ticket.requester_discord_id}</dd></div></dl>
       {ticket.thread_id && <a className="secondary" href={`https://discord.com/channels/${ticket.guild_id}/${ticket.thread_id}`} target="_blank" rel="noreferrer">Open privéthread</a>}
       {closed ? <p className="ticket-closed-note">Gesloten · verwijderen vanaf {new Date(ticket.purge_at).toLocaleString("nl-BE",{timeZone:"Europe/Brussels"})}</p> : <>

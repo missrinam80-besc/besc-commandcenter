@@ -7,6 +7,7 @@ import ts from "typescript";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import * as labels from "../src/lib/tickets.ts";
+import * as archiveMessages from "../src/lib/workspace-archive.ts";
 const require=createRequire(import.meta.url),id="20000000-0000-4000-8000-000000000001",org="10000000-0000-4000-8000-000000000001";
 function load(path:string,dependencies:Record<string,unknown>){
  const compiled={exports:{} as {default:(props:{params:Promise<{id:string}>;searchParams:Promise<Record<string,string>>})=>Promise<React.ReactNode>}};
@@ -16,11 +17,12 @@ function load(path:string,dependencies:Record<string,unknown>){
 function fixture(denied=false){
  const seen:unknown[][]=[];
  const ticket={id,subject:"<script>TESTFIXTURE</script>",status:"open",link_status:"linked",version:3,requester_discord_id:"111111111111111111",guild_id:"1067893182387474432",thread_id:"222222222222222222",assigned_to:null};
- const db={from(table:string){const q:Record<string,unknown>={};for(const key of ["select","eq","order","range","limit","is","neq","in"])q[key]=(...args:unknown[])=>{seen.push([table,key,...args]);return q;};
+ const db={from(table:string){const q:Record<string,unknown>={};for(const key of ["select","eq","order","range","limit","is","neq","in","not"])q[key]=(...args:unknown[])=>{seen.push([table,key,...args]);return q;};
   q.maybeSingle=async()=>({data:ticket});q.then=(fn:(v:unknown)=>unknown)=>Promise.resolve({data:table==="support_ticket_messages"?[{id:"m",direction:"internal",content:"<b>PRIVATE NOTE</b>",created_at:"2026-10-11"},{id:"staff",direction:"staff",content:"External fixture",created_at:"2026-10-11"}]:table==="support_ticket_deliveries"?[{id:"d",message_id:"staff",state:"uncertain",kind:"send_message",last_error:"outcome_unknown"}]:[ticket],count:2}).then(fn);return q;
  },async rpc(...args:unknown[]){seen.push(["rpc",...args]);return{data:[]};}};
  const dependencies={"@/lib/auth-context":{async requirePermission(capability:string){assert.equal(capability,"manageTickets");if(denied)throw Error("denied");return{supabase:db,membership:{organization_id:org}};}},
   "@/components/app-shell":{AppShell:({children}:{children:React.ReactNode})=>React.createElement("main",null,children)},
+  "@/components/workspace-archive-form":{WorkspaceArchiveForm:()=>null},"@/lib/workspace-archive":archiveMessages,
   "@/lib/permissions":{hasPermission:()=>false},"@/lib/tickets":labels,"../actions":{updateTicket:()=>{}},"./actions":{retryTicketCleanup:()=>{}},
   "next/link":{default:({children,...props}:{children:React.ReactNode})=>React.createElement("a",props,children)},"next/navigation":{notFound:()=>{throw Error("not_found");}}};
  return{seen,dependencies};
@@ -35,4 +37,15 @@ test("Rendered ticket UI distinguishes internal note, explicit external send and
 });
 test("Unauthorized overview/detail stops before any data access",async()=>{
  for(const path of ["src/app/app/tickets/page.tsx","src/app/app/tickets/[id]/page.tsx"]){const f=fixture(true);const page=load(path,f.dependencies);await assert.rejects(page.default({params:Promise.resolve({id}),searchParams:Promise.resolve({})}),/denied/);assert.equal(f.seen.length,0);}
+});
+
+test("Ticket overview keeps source status filters separate from active/archive visibility",async()=>{
+ for(const archived of [false,true]){
+  const f=fixture();const page=load("src/app/app/tickets/page.tsx",f.dependencies);
+  const params:Record<string,string>=archived?{archief:"1",status:"closed"}:{};
+  const html=renderToStaticMarkup(await page.default({params:Promise.resolve({id}),searchParams:Promise.resolve(params)}));
+  assert.ok(html.includes("Het sluit het gesprek niet"));
+  assert.ok(f.seen.some(row=>row[0]==="support_tickets_workspace"&&row[1]===(archived?"not":"is")&&row[2]==="archived_at"));
+  if(archived){assert.ok(html.includes('name="archief"'));assert.ok(f.seen.some(row=>row[0]==="support_tickets_workspace"&&row[1]==="eq"&&row[2]==="status"&&row[3]==="closed"));}
+ }
 });

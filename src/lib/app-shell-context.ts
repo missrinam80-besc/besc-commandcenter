@@ -21,7 +21,7 @@ export const getAppShellContext = cache(async function getAppShellContext() {
     supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("read_at", null),
     approvalCountQuery,
     canManageTickets
-      ? supabase.from("support_tickets").select("id", { count: "exact", head: true }).eq("organization_id", membership.organization_id).eq("status", "open")
+      ? supabase.from("support_tickets_workspace").select("id", { count: "exact", head: true }).eq("organization_id", membership.organization_id).eq("status", "open").is("archived_at", null)
       : Promise.resolve({ count: 0, error: null }),
   ]);
 
