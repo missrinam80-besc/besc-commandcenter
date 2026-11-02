@@ -76,7 +76,11 @@ test('F3 release: exact additive migration, historical SQL unchanged and live ga
   assert.equal(archive.cloud_migration_authorized, false);
   assert.equal(archive.deployment_authorized, false);
   assert.equal(archive.live_document_or_ticket_archiving_authorized, false);
-  const files = [...functional.historical_migrations, ...functional.new_migrations, archive.migration];
+  const discord = JSON.parse(readFileSync(new URL('ops/discord-events-release-manifest.json', root), 'utf8'));
+  assert.deepEqual(discord.historical_migrations, [...functional.historical_migrations, ...functional.new_migrations, {file:archive.migration.file,sha256_lf:archive.migration.sha256_lf}]);
+  assert.equal(discord.required_history_before,139);assert.equal(discord.expected_history_only_if_same_baseline_and_applied,140);
+  assert.equal(discord.cloud_apply_authorized,false);assert.equal(discord.runtime_activation_authorized,false);assert.equal(discord.server_deploy_authorized,false);
+  const files = [...discord.historical_migrations, ...discord.new_migrations];
   assert.deepEqual(readdirSync(new URL('supabase/migrations/', root)).filter(f => f.endsWith('.sql')).sort(), files.map(f => f.file).sort());
   for (const f of files) assert.equal(createHash('sha256').update(readFileSync(new URL('supabase/migrations/' + f.file, root), 'utf8').replaceAll('\r\n', '\n')).digest('hex'), f.sha256_lf, f.file);
   assert.deepEqual(manifest.excluded_history, ['20261001110000_seed_operational_guidelines.sql']);

@@ -67,13 +67,14 @@ for (const name of names) {
     const beforeArchive = JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql', import.meta.url), 'utf8')));
     assert.equal(beforeArchive.tables.length, 180, 'F6 baseline preserved before workspace archive');
   }
+  if(name.endsWith('_discord_event_publication_and_presence.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,181);
   try { sql(readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8")); }
   catch (error) { throw new Error(`Native replay failed at ${name}: ${error.stderr?.toString() ?? error.message}`); }
   if (name.startsWith("20260712190000_")) sql("insert into auth.users(id,email) values('00000000-0000-4000-8000-000000000001','fixture@example.invalid');update public.organization_members set role='admin',status='active';");
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length, 181); // F6 baseline plus one workspace archive metadata table.
+assert.equal(effects.tables.length, 186); // Archive baseline plus five private BO04 tables.
 const archiveTable = effects.tables.find(table => table.schema === 'public' && table.name === 'workspace_record_archives');
 assert.ok(archiveTable?.rls, 'Workspace archive metadata is protected by RLS');
 for (const role of ['anon', 'service_role']) assert.ok(Object.values(archiveTable.grants[role]).every(value => value === false), `${role} has no archive table grants`);
@@ -88,7 +89,7 @@ assert.ok(archiveFunction?.security_definer);
 assert.equal(archiveFunction.authenticated_execute, true);
 assert.equal(archiveFunction.anon_execute, false);
 assert.equal(archiveFunction.service_role_execute, false);
-for (const name of ['campaign_ingress_receipts','campaign_source_references','campaign_discovery_runs','public_website_channels','public_website_grants']) {
+for (const name of ['event_discord_settings','event_discord_publications','event_discord_jobs','event_presence','event_discord_interest','campaign_ingress_receipts','campaign_source_references','campaign_discovery_runs','public_website_channels','public_website_grants']) {
   const table=effects.tables.find(table=>table.schema==='private'&&table.name===name);
   assert.ok(table?.rls,`${name} is private and RLS enabled`);
   assert.ok(Object.values(table.grants).every(grants=>Object.values(grants).every(value=>value===false)),`${name} has no client grants`);
@@ -97,6 +98,7 @@ assert.ok(effects.functions.length > 143);
 const ownPreviewFunction=effects.functions.find(f=>f.schema==='public'&&f.name==='f6_own_page_drafts');
 assert.ok(ownPreviewFunction?.security_definer);assert.equal(ownPreviewFunction.authenticated_execute,true);assert.equal(ownPreviewFunction.anon_execute,false);assert.equal(ownPreviewFunction.service_role_execute,false);
 
+for(const [name,anon,authenticated,service]of [['event_discord_manage',false,true,false],['event_public_info',true,true,false],['event_presence_own',false,true,false],['event_discord_bot',false,false,true]]){const fn=effects.functions.find(f=>f.schema==='public'&&f.name===name);assert.ok(fn?.security_definer);assert.equal(fn.anon_execute,anon);assert.equal(fn.authenticated_execute,authenticated);assert.equal(fn.service_role_execute,service);}
 const privateOperations=['f1_context','f1_receipts','f2_receipts','campaign_pilots','campaign_access','campaign_policies','campaign_participants','campaign_contributions','campaign_measurements','campaign_receipts','campaign_events','campaign_report_revisions','campaign_sources','campaign_source_runs','platform_settings','platform_access','creator_profiles','creator_revisions','creator_entries','f4_receipts','f4_limits','intake_forms','intake_handlers','platform_applications','application_events','partner_publication_settings','partner_publication_revisions','partner_publication_entries','vacancy_settings','vacancy_dossiers','vacancy_revisions','vacancy_entries','partner_delegation_settings','partner_delegations','partner_profile_proposals','site_content_settings','content_migration_records','content_migration_reviews','site_content_dossiers','site_content_revisions','site_content_entries','contact_settings'];
 assert.ok(effects.tables.every((table) => table.rls || (table.schema === 'private' && privateOperations.includes(table.name))));
 assert.ok(effects.tables.filter(table=>table.schema==='private'&&privateOperations.includes(table.name)).every(table=>Object.values(table.grants).every(grants=>Object.values(grants).every(value=>value===false))), 'Private operation tables have no client grants; existing private service grants remain unchanged');
