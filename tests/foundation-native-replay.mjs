@@ -63,13 +63,31 @@ for (const name of names) {
     const beforeF6 = JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql', import.meta.url), 'utf8')));
     assert.equal(beforeF6.tables.length,178,'Existing F5 baseline preserved before two private F6 tables');
   }
+  if (name.endsWith('_workspace_record_archive.sql')) {
+    const beforeArchive = JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql', import.meta.url), 'utf8')));
+    assert.equal(beforeArchive.tables.length, 180, 'F6 baseline preserved before workspace archive');
+  }
   try { sql(readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8")); }
   catch (error) { throw new Error(`Native replay failed at ${name}: ${error.stderr?.toString() ?? error.message}`); }
   if (name.startsWith("20260712190000_")) sql("insert into auth.users(id,email) values('00000000-0000-4000-8000-000000000001','fixture@example.invalid');update public.organization_members set role='admin',status='active';");
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length, 180); // Existing F5 baseline plus two private F6 public-read tables.
+assert.equal(effects.tables.length, 181); // F6 baseline plus one workspace archive metadata table.
+const archiveTable = effects.tables.find(table => table.schema === 'public' && table.name === 'workspace_record_archives');
+assert.ok(archiveTable?.rls, 'Workspace archive metadata is protected by RLS');
+for (const role of ['anon', 'service_role']) assert.ok(Object.values(archiveTable.grants[role]).every(value => value === false), `${role} has no archive table grants`);
+assert.equal(archiveTable.grants.authenticated.select, true);
+assert.ok(Object.entries(archiveTable.grants.authenticated).every(([key, value]) => key === 'select' || value === false), 'Authenticated clients can only read archive metadata');
+for (const name of ['document_registry_workspace', 'support_tickets_workspace']) {
+  const view = effects.views.find(view => view.schema === 'public' && view.name === name);
+  assert.ok(view?.options?.includes('security_invoker=true'), `${name} preserves source RLS`);
+}
+const archiveFunction = effects.functions.find(f => f.schema === 'public' && f.name === 'set_workspace_record_archive');
+assert.ok(archiveFunction?.security_definer);
+assert.equal(archiveFunction.authenticated_execute, true);
+assert.equal(archiveFunction.anon_execute, false);
+assert.equal(archiveFunction.service_role_execute, false);
 for (const name of ['campaign_ingress_receipts','campaign_source_references','campaign_discovery_runs','public_website_channels','public_website_grants']) {
   const table=effects.tables.find(table=>table.schema==='private'&&table.name===name);
   assert.ok(table?.rls,`${name} is private and RLS enabled`);

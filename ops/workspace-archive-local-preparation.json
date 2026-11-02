@@ -1,0 +1,25 @@
+{
+  "format": "besc-workspace-archive-local-preparation-v1",
+  "date": "2026-11-02",
+  "base_main": "643e044b9a19c2cb4fd25583e4aabe8b8c2e1ebe",
+  "migration": {
+    "file": "20261101225803_workspace_record_archive.sql",
+    "sha256_lf": "cc94005ac803fc86e3c4819fbc1601be3f3140feac3e26289617e1adb2c071f8",
+    "baseline_cloud_history": 138,
+    "expected_history_after_separate_approval": 139,
+    "applied": false
+  },
+  "local_preparation_authorized": true,
+  "targeted_cases_passed": 24,
+  "typecheck_passed": true,
+  "changed_file_lint_passed": true,
+  "production_build_passed": true,
+  "sql_test_layer": "PGlite synthetic platform fixture, existing migration chain; no new native or Cloud acceptance",
+  "push_authorized": false,
+  "merge_authorized": false,
+  "cloud_migration_authorized": false,
+  "deployment_authorized": false,
+  "live_document_or_ticket_archiving_authorized": false,
+  "bot_repository_changed": false,
+  "preserve_source_RLS_evidence_ticket_status_retention_and_delivery": true
+}

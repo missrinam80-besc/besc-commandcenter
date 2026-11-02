@@ -1,11 +1,16 @@
 import {requireActiveMembership} from "@/lib/auth-context";
 import {hasPermission} from "@/lib/permissions";
 import {addRegistryDocument} from "@/app/app/documenten/actions";
+import Link from "next/link";
+import {WorkspaceArchiveForm} from "@/components/workspace-archive-form";
+import {workspaceArchiveMessages} from "@/lib/workspace-archive";
 
 export async function DocumentRegistryPanel({searchParams}:{searchParams:Promise<Record<string,string|undefined>>}){
  const q=await searchParams,{supabase,membership}=await requireActiveMembership();
  const page=Math.max(1,Number.parseInt(q.pagina??"1",10)||1),term=(q.zoek??"").trim().slice(0,120);
- let request=supabase.from("document_registry").select("id,label,url,created_at",{count:"exact"}).eq("organization_id",membership.organization_id).order("label").order("id").range((page-1)*50,page*50-1);
+ const archived=q.register_archief==="1",canManage=hasPermission(membership,"manageOrganization");
+ let request=supabase.from("document_registry_workspace").select("id,label,url,created_at,archived_at,archive_version",{count:"exact"}).eq("organization_id",membership.organization_id).order("label").order("id").range((page-1)*50,page*50-1);
+ request=archived?request.not("archived_at","is",null):request.is("archived_at",null);
  if(term)request=request.ilike("label","%"+term.replace(/[%,_]/g,"")+"%");
  const {data,error,count}=await request;
  const ids=(data??[]).map(row=>row.id);
@@ -22,12 +27,14 @@ export async function DocumentRegistryPanel({searchParams}:{searchParams:Promise
   return rows.filter((row,index)=>rows.findIndex(other=>other.href===row.href)===index);
  }
 
- return <section className="documents-register"><p className="lead">Eén register voor documentlinks. Kies een bestaand document in een fiche of voeg daar een nieuwe link toe; die verschijnt automatisch hier.</p>
+ return <section className="documents-register"><p className="lead">Eén register voor documentlinks. Kies een bestaand document in een fiche of voeg daar een nieuwe link toe; die verschijnt automatisch hier. Archiveren verandert het document of bewijs niet.</p>
+ <nav aria-label="Documentregisterweergave"><Link className="secondary" href="/app/documenten" aria-current={!archived?"page":undefined}>Actief</Link>{" "}<Link className="secondary" href="/app/documenten?register_archief=1" aria-current={archived?"page":undefined}>Archief</Link></nav>
+ {q.archief_melding&&workspaceArchiveMessages[q.archief_melding]&&<p role="status" className={["archived","restored"].includes(q.archief_melding)?"success":"error-note"}>{workspaceArchiveMessages[q.archief_melding]}</p>}
  {["velden","opslaan"].includes(q.fout??"")&&<p className="error-note">Het document kon niet worden toegevoegd. Controleer het label en de volledige http- of https-link.</p>}
  {q.melding==="bestaand"&&<p className="success" role="status">Deze documentlink staat al in het register. Kies het bestaande document in je fiche.</p>}
  {q.succes==="toegevoegd"&&<p className="success" role="status">Document toegevoegd.</p>}
- <form className="documents-search"><label>Zoek op label<input name="zoek" defaultValue={term}/></label><button>Zoeken</button></form>
+ <form className="documents-search">{archived&&<input type="hidden" name="register_archief" value="1"/>}<label>Zoek op label<input name="zoek" defaultValue={term}/></label><button>Zoeken</button></form>
  {hasPermission(membership,"manageOrganization")&&<details className="form-card"><summary>Nieuw document toevoegen</summary><form action={addRegistryDocument}><label>Label<input name="label" required maxLength={120}/></label><label>Documentlink<input name="url" type="url" required maxLength={2000}/></label><div className="form-actions"><button className="primary">Toevoegen</button></div></form></details>}
- <section className="project-task-section"><div className="section-heading"><h2>Documentregister</h2><span>{count??0} documenten</span></div>{(error||assets.error||links.error||sources.error||google.error)?<p className="error-note">Het documentregister kon niet worden geladen. Controleer de migratie.</p>:<><div className="documents-table-scroll"><table><thead><tr><th>Label</th><th>Link</th><th>Gekoppelde fiches</th></tr></thead><tbody>{data?.map(doc=><tr key={doc.id}><td>{doc.label}</td><td><a href={doc.url} target="_blank" rel="noreferrer">Open document</a></td><td>{attachments(doc.id).map(row=><a className="document-fiche-link" key={row.href} href={row.href}>{row.label}</a>)}{!attachments(doc.id).length&&<span>Nog niet gekoppeld</span>}</td></tr>)}</tbody></table></div>{!data?.length&&<p className="form-help">Geen documenten gevonden.</p>}</>}
- <nav aria-label="Documentpagina’s">{page>1&&<a href={"?pagina="+(page-1)+"&zoek="+encodeURIComponent(term)}>Vorige</a>}{page*50<(count??0)&&<a href={"?pagina="+(page+1)+"&zoek="+encodeURIComponent(term)}>Volgende</a>}</nav></section></section>;
+ <section className="project-task-section"><div className="section-heading"><h2>{archived?"Documentregister · Archief":"Documentregister"}</h2><span>{count??0} documenten</span></div>{(error||assets.error||links.error||sources.error||google.error)?<p className="error-note">Het documentregister kon niet worden geladen. Controleer de migratie.</p>:<><div className="documents-table-scroll"><table><thead><tr><th>Label</th><th>Link</th><th>Gekoppelde fiches</th>{canManage&&<th>Actie</th>}</tr></thead><tbody>{data?.map(doc=><tr key={doc.id}><td>{doc.label}</td><td><a href={doc.url} target="_blank" rel="noreferrer">Open document</a></td><td>{attachments(doc.id).map(row=><a className="document-fiche-link" key={row.href} href={row.href}>{row.label}</a>)}{!attachments(doc.id).length&&<span>Nog niet gekoppeld</span>}</td>{canManage&&<td><WorkspaceArchiveForm entity="document" id={doc.id} version={doc.archive_version} archived={archived}/></td>}</tr>)}</tbody></table></div>{!data?.length&&<p className="form-help">Geen documenten gevonden.</p>}</>}
+ <nav aria-label="Documentpagina’s">{page>1&&<a href={"?pagina="+(page-1)+"&zoek="+encodeURIComponent(term)+(archived?"&register_archief=1":"")}>Vorige</a>}{page*50<(count??0)&&<a href={"?pagina="+(page+1)+"&zoek="+encodeURIComponent(term)+(archived?"&register_archief=1":"")}>Volgende</a>}</nav></section></section>;
 }

@@ -19,13 +19,14 @@ function load<T>(path: string, dependencies: Record<string, unknown>): T {
   return compiled.exports;
 }
 
-type Row = { organization_id: string; status: string };
+type Row = { organization_id: string; status: string; archived_at?: string | null };
 function fixture(role = "admin", capabilities: string[] = [], failure = false) {
   const organization = "10000000-0000-4000-8000-000000000001";
   const rows: Row[] = [
     { organization_id: organization, status: "open" }, { organization_id: organization, status: "open" },
     { organization_id: organization, status: "in_progress" }, { organization_id: organization, status: "waiting_requester" },
     { organization_id: organization, status: "closed" }, { organization_id: "other-org", status: "open" },
+    { organization_id: organization, status: "open", archived_at: "2026-11-01" },
   ];
   const calls: { table: string; steps: unknown[][] }[] = [];
   const supabase = {
@@ -36,8 +37,8 @@ function fixture(role = "admin", capabilities: string[] = [], failure = false) {
       for (const method of ["select", "eq", "is", "in", "maybeSingle"]) query[method] = (...args: unknown[]) => { call.steps.push([method, ...args]); return query; };
       query.then = (resolve: (data: unknown) => unknown, reject: (e: unknown) => unknown) => {
         if (table === "profiles") return Promise.resolve({ data: { display_name: "TESTFIXTURE", theme_preference: "dark" } }).then(resolve, reject);
-        if (table !== "support_tickets") return Promise.resolve({ count: 0 }).then(resolve, reject);
-        const matches = rows.filter(row => call.steps.filter(step => step[0] === "eq").every(([, key, value]) => row[key as keyof Row] === value));
+        if (table !== "support_tickets_workspace") return Promise.resolve({ count: 0 }).then(resolve, reject);
+        const matches = rows.filter(row => call.steps.filter(step => step[0] === "eq" || step[0] === "is").every(([method, key, value]) => method === "is" ? (row[key as keyof Row] ?? null) === value : row[key as keyof Row] === value));
         return Promise.resolve(failure ? { count: null, error: { message: "PRIVATE_DATABASE_ERROR" } } : { count: matches.length, error: null }).then(resolve, reject);
       };
       return query;
@@ -54,10 +55,11 @@ for (const [role, capabilities] of [["admin", []], ["board", []], ["member", ["m
   test(`${role}/${capabilities.join(",")} telt alleen Open tickets binnen de actieve organisatie zonder inhoud op te halen`, async () => {
     const f = fixture(role, [...capabilities]); const data = await f.context();
     assert.equal(data.ticketCount, 2); assert.equal(data.canManageTickets, true);
-    const query = f.calls.find(call => call.table === "support_tickets")!;
+    const query = f.calls.find(call => call.table === "support_tickets_workspace")!;
     assert.equal(query.steps.find(step => step[0] === "select")?.[1], "id");
     assert.equal(JSON.stringify(query.steps.find(step => step[0] === "select")?.[2]), JSON.stringify({ count: "exact", head: true }));
     assert.ok(query.steps.some(step => step[0] === "eq" && step[1] === "organization_id" && step[2] === f.organization));
+    assert.ok(query.steps.some(step => step[0] === "is" && step[1] === "archived_at" && step[2] === null));
     f.rows[0].status = "in_progress"; assert.equal((await f.context()).ticketCount, 1);
     f.rows[1].status = "closed"; assert.equal((await f.context()).ticketCount, 0);
   });
@@ -67,7 +69,7 @@ for (const [role, capabilities] of [["member", []], ["volunteer", []], ["member"
   test(`${role}/${capabilities.join(",")} krijgt geen ticketquery of telling zonder ticketrecht`, async () => {
     const f = fixture(role, [...capabilities]); const data = await f.context();
     assert.equal(data.canManageTickets, false); assert.equal(data.ticketCount, 0);
-    assert.ok(!f.calls.some(call => call.table === "support_tickets"));
+    assert.ok(!f.calls.some(call => call.table === "support_tickets_workspace"));
   });
 }
 
