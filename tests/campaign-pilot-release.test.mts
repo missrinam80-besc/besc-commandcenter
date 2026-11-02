@@ -68,7 +68,15 @@ test('F3 release: exact additive migration, historical SQL unchanged and live ga
   assert.equal(functional.cloud_apply_authorized,false);assert.equal(functional.server_deploy_authorized,false);assert.equal(functional.data_correction_authorized,false);
   assert.equal(functional.existing_rows_changed,false);assert.deepEqual(functional.excluded_history,manifest.excluded_history);
   assert.deepEqual(functional.new_migrations.map((f:{file:string})=>f.file),['20261026160127_functional_account_profiles.sql']);
-  const files = [...functional.historical_migrations, ...functional.new_migrations];
+  const archive = JSON.parse(readFileSync(new URL('ops/workspace-archive-local-preparation.json', root), 'utf8'));
+  assert.equal(archive.migration.file, '20261101225803_workspace_record_archive.sql');
+  assert.equal(archive.migration.baseline_cloud_history, 138);
+  assert.equal(archive.migration.expected_history_after_separate_approval, 139);
+  assert.equal(archive.migration.applied, false);
+  assert.equal(archive.cloud_migration_authorized, false);
+  assert.equal(archive.deployment_authorized, false);
+  assert.equal(archive.live_document_or_ticket_archiving_authorized, false);
+  const files = [...functional.historical_migrations, ...functional.new_migrations, archive.migration];
   assert.deepEqual(readdirSync(new URL('supabase/migrations/', root)).filter(f => f.endsWith('.sql')).sort(), files.map(f => f.file).sort());
   for (const f of files) assert.equal(createHash('sha256').update(readFileSync(new URL('supabase/migrations/' + f.file, root), 'utf8').replaceAll('\r\n', '\n')).digest('hex'), f.sha256_lf, f.file);
   assert.deepEqual(manifest.excluded_history, ['20261001110000_seed_operational_guidelines.sql']);
