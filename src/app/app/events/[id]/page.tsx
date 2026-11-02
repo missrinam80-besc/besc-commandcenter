@@ -1,3 +1,4 @@
+import { EventDiscordPanel } from "@/components/event-discord-panel";
 import { dossierEditorGate } from "@/components/dossier-editor-gate";
 import {EventSlotBookingsPanel} from "@/components/event-slot-bookings-panel";
 import { EventRegistrationsPanel } from "@/components/event-registrations-panel";
@@ -137,9 +138,9 @@ export default async function Event({
         {eventDossierTabs.map(tab => <Link key={tab.id} href={`?tab=${tab.id}`} scroll={false} aria-current={activeTab === tab.id ? "page" : undefined}>{tab.label}</Link>)}
       </nav>
       <div className="project-detail-body event-dossier">
-        {q.succes && <div className="success">{q.succes === "activiteit-opgeslagen" ? "Activiteit opgeslagen." : q.succes === "activiteit-verwijderd" ? "Activiteit verwijderd." : q.succes === "inschrijving-opgeslagen" ? "Inschrijvingen bijgewerkt." : q.succes === "financieel-opgeslagen" ? "Financiële registratie opgeslagen." : q.succes === "giveaway-opgeslagen" ? "Giveaway-item opgeslagen." : q.succes === "giveaway-verwijderd" ? "Giveaway-item verwijderd." : q.succes === "schema-opgeslagen" ? "Schemaonderdeel opgeslagen." : q.succes === "schema-verwijderd" ? "Schemaonderdeel verwijderd." : q.succes === "materiaal-opgeslagen" ? "Materiaal op de eventlijst opgeslagen." : q.succes === "materiaal-verwijderd" ? "Materiaal van de eventlijst verwijderd." : q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
+        {q.succes && <div className="success">{q.succes === "discord-opgeslagen" ? "Discord-keuze en registratie opgeslagen." : q.succes === "activiteit-opgeslagen" ? "Activiteit opgeslagen." : q.succes === "activiteit-verwijderd" ? "Activiteit verwijderd." : q.succes === "inschrijving-opgeslagen" ? "Inschrijvingen bijgewerkt." : q.succes === "financieel-opgeslagen" ? "Financiële registratie opgeslagen." : q.succes === "giveaway-opgeslagen" ? "Giveaway-item opgeslagen." : q.succes === "giveaway-verwijderd" ? "Giveaway-item verwijderd." : q.succes === "schema-opgeslagen" ? "Schemaonderdeel opgeslagen." : q.succes === "schema-verwijderd" ? "Schemaonderdeel verwijderd." : q.succes === "materiaal-opgeslagen" ? "Materiaal op de eventlijst opgeslagen." : q.succes === "materiaal-verwijderd" ? "Materiaal van de eventlijst verwijderd." : q.succes.startsWith("kalender-") ? `Google Calendar is ${q.succes === "kalender-created" ? "gekoppeld" : "bijgewerkt"}.` : q.succes === "geannuleerd" ? "Event geannuleerd." : q.succes === "drive-geordend" ? "De mapstructuur is gecontroleerd en de eventmap staat onder Google Drive → Events." : q.succes === "drive-al-geordend" ? "De mapstructuur is gecontroleerd. De eventmap stond al onder Google Drive → Events." : q.succes === "drive-aangevuld" ? "Ontbrekende basismappen toegevoegd. De eventmap bleef op haar bestaande plek." : q.succes === "drive" ? "Drive-map gekoppeld." : "Event opgeslagen."}</div>}
         {q.waarschuwing === "kalender-sync" && <div className="error-note">Het event is opgeslagen, maar Google Calendar kon niet automatisch worden bijgewerkt. Gebruik hieronder “Opnieuw synchroniseren”.</div>}
-        {q.fout && <div className="error-note">{driveErrors[q.fout] ?? "Opslaan mislukt."}</div>}
+        {q.fout && <div className="error-note">{(q.fout === "discord-niet-bevestigd" ? "De wijziging kon niet worden bevestigd. Controleer de actuele gegevens voordat je opnieuw probeert." : driveErrors[q.fout]) ?? "Opslaan mislukt."}</div>}
 
         {activeTab === "overzicht" && <>
         <section className="form-card record-overview">
@@ -243,7 +244,7 @@ export default async function Event({
         </section>
         </>}
         {activeTab === "communicatie" && <>
-        <EmailCommunicationPanel entityType="event" entityId={id}/>
+        <EventDiscordPanel eventId={id} eventTitle={e.title} offset={Math.max(0,Math.min(10000,Number.isSafeInteger(Number(q.aanmeldingen))?Number(q.aanmeldingen):0))}/><EmailCommunicationPanel entityType="event" entityId={id}/>
         </>}
       </div>
     </AppShell>

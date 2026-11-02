@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "6mb",
     },
   },
+  async headers() { return [{ source: '/events/aanmelden/:path*', headers: [
+    { key: 'Cache-Control', value: 'private, no-store, max-age=0' },
+    { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
+    { key: 'Referrer-Policy', value: 'no-referrer' },
+  ] }]; },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**.supabase.co" },
