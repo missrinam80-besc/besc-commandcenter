@@ -1,0 +1,37 @@
+{
+  "work_items": [
+    "RE02",
+    "RE03"
+  ],
+  "expected_history_before": 141,
+  "expected_history_after_both": 143,
+  "new_migrations": [
+    {
+      "file": "20261103202956_re02_verified_earning.sql",
+      "sha256_lf": "7047691312f7f94f7b81e9586cc553918b1e2e4ef8ba645f98cdc7642e9cdabe"
+    },
+    {
+      "file": "20261103202957_re03_controlled_balance_transfer.sql",
+      "sha256_lf": "314b33f20432011996144a1687653c9e7a7f91c0771baac6d2b44e3f25d1e457"
+    }
+  ],
+  "new_private_tables": 7,
+  "existing_row_updates": false,
+  "cloud_migration_authorized": false,
+  "deploy_authorized": false,
+  "activation_authorized": false,
+  "actual_import_authorized": false,
+  "runtime_default": "off",
+  "flags": [
+    "BESC_REWARDS_EARNING_ADMIN_ENABLED",
+    "BESC_REWARDS_TWITCH_VERIFIED_ENABLED",
+    "BESC_REWARDS_TRANSFER_ENABLED"
+  ],
+  "source_receipt_intake_remains_inert": true,
+  "transfer_mode": "target_balance_difference",
+  "source_one_time_fence": true,
+  "bot_compatibility_before_first_transfer": true,
+  "excluded_history": [
+    "20261001110000_seed_operational_guidelines.sql"
+  ]
+}

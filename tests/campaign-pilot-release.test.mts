@@ -87,7 +87,13 @@ test('F3 release: exact additive migration, historical SQL unchanged and live ga
   assert.equal(re01.existing_row_updates, false);assert.equal(re01.new_tables, 0);
   assert.equal(re01.bot_compatibility_before_first_refund, true);
   assert.equal(re01.migration, '20261103164042_re01_reward_refunds_and_management.sql');
-  const files = [...discord.historical_migrations, ...discord.new_migrations, {file: re01.migration, sha256_lf: re01.migration_sha256_lf}];
+  const earning = JSON.parse(readFileSync(new URL('ops/re02-re03-release-manifest.json', root), 'utf8'));
+  assert.deepEqual(earning.work_items,['RE02','RE03']);assert.equal(earning.expected_history_before,141);assert.equal(earning.expected_history_after_both,143);
+  assert.equal(earning.new_private_tables,7);assert.equal(earning.runtime_default,'off');assert.equal(earning.existing_row_updates,false);
+  for(const key of ['cloud_migration_authorized','deploy_authorized','activation_authorized','actual_import_authorized'])assert.equal(earning[key],false);
+  assert.equal(earning.source_receipt_intake_remains_inert,true);assert.equal(earning.bot_compatibility_before_first_transfer,true);
+  assert.deepEqual(earning.new_migrations.map((m:{file:string})=>m.file),['20261103202956_re02_verified_earning.sql','20261103202957_re03_controlled_balance_transfer.sql']);
+  const files = [...discord.historical_migrations, ...discord.new_migrations, {file: re01.migration, sha256_lf: re01.migration_sha256_lf},...earning.new_migrations];
   assert.deepEqual(readdirSync(new URL('supabase/migrations/', root)).filter(f => f.endsWith('.sql')).sort(), files.map(f => f.file).sort());
   for (const f of files) assert.equal(createHash('sha256').update(readFileSync(new URL('supabase/migrations/' + f.file, root), 'utf8').replaceAll('\r\n', '\n')).digest('hex'), f.sha256_lf, f.file);
   assert.deepEqual(manifest.excluded_history, ['20261001110000_seed_operational_guidelines.sql']);
