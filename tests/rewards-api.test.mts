@@ -8,6 +8,12 @@ import { canViewInternalPath, requiredCapabilityForQuery } from "../src/lib/rout
 import { readFileSync } from "node:fs";
 const guild="1067893182387474432", actor="111111111111111111", channel="1558853872766689382", org="10000000-0000-4000-8000-000000000001",uid="20000000-0000-4000-8000-000000000003";
 const token="bb_fixture-rewards."+"a".repeat(43);
+
+test("RE01: nieuwe beheertabs blijven beschermd en terugbetaling vereist expliciete bevestiging",()=>{
+ for(const tab of ['deelnemers','catalogusbeheer'])assert.equal(requiredCapabilityForQuery('/app/bucks',new URLSearchParams({tab})),'manageRewards');
+ assert.equal(rewardSchemas.refund.safeParse({id:uid,version:2,reason:'TESTFIXTURE',confirmed:false}).success,false);
+ assert.equal(rewardSchemas.refund.safeParse({id:uid,version:2,reason:'TESTFIXTURE',confirmed:true}).success,true);
+});
 const client:BotClient={id:"fixture-rewards",keyHash:hashBotKey(token),organizationId:org,guildId:guild,revoked:false,expiresAt:"2099-01-01T00:00:00Z",scopes:["rewards:own:read","rewards:own:write","rewards:activity:ingest"]};
 function fixture(patch:Partial<Parameters<typeof handleRewardsBotRequest>[1]>={}){
  const calls:{op:string;actor:string|null;data:Record<string,unknown>;key?:string}[]=[];

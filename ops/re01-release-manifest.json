@@ -1,0 +1,31 @@
+{
+  "work_item": "RE01",
+  "prepared_date": "2026-11-03",
+  "cloud_migration_authorized": false,
+  "deploy_authorized": false,
+  "expected_history_before": 140,
+  "expected_history_after": 141,
+  "migration": "20261103164042_re01_reward_refunds_and_management.sql",
+  "migration_sha256_lf": "3aa2c0621777364adcf44e14189eee2ca03ddc389e4ba7d4ebf6193cbacaf77f",
+  "new_tables": 0,
+  "existing_row_updates": false,
+  "added_status": "refunded",
+  "added_ledger_kind": "refund",
+  "new_private_helper": "private.reward_manage_view(uuid,uuid,jsonb)",
+  "replaced_function": "private.reward_operation(uuid,uuid,text,text,text,jsonb,text)",
+  "preserve_existing_rows_rights_balances_and_settings": true,
+  "bot_compatibility_before_first_refund": true,
+  "automatic_earning_unchanged": true,
+  "no_registration_or_scope_change": true,
+  "local_validation": {
+    "CC_focused_cases_passed": 44,
+    "bot_focused_cases_passed": 36,
+    "native_PostgreSQL_17_concurrency_cases_passed": 7,
+    "native_ledger_totals_invariant_passed": true,
+    "CC_and_bot_typecheck": true,
+    "changed_CC_source_lint": true,
+    "bot_build": true,
+    "full_CC_Linux_image_build": "pending GitHub review pipeline",
+    "broad_integral_acceptance": "deferred until preproduction"
+  }
+}

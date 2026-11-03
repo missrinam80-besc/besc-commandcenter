@@ -9,6 +9,7 @@ export const rewardSchemas = {
   grant: z.object({ user_id: uuid, xp: amount, bucks: amount, reason }).strict()
     .refine(d => d.xp + d.bucks > 0, { message: "Vul XP of Bucks in", path: ["xp"] }),
   correct: z.object({ user_id: uuid, entry_id: uuid, reason }).strict(),
+  refund: z.object({ id: uuid, version, reason, confirmed: z.literal(true) }).strict(),
   catalog_save: z.object({ id: uuid.optional(), version: version.optional(), title: z.string().trim().min(1).max(120),
     description: z.string().max(2000), price: amount.min(1), stock: amount.nullable(), active: z.boolean() }).strict(),
   rule_save: z.object({ guild_id: snow, kind: z.enum(["text", "voice"]), channel_ids: z.array(snow).max(100),
@@ -35,11 +36,11 @@ export const rewardSchemas = {
 };
 export type RewardOperation = keyof typeof rewardSchemas;
 export const rewardStatusLabels: Record<string, string> = {
-  pending: "Aangevraagd", approved: "Goedgekeurd", rejected: "Afgewezen", cancelled: "Geannuleerd", fulfilled: "Afgehandeld",
+  pending: "Aangevraagd", approved: "Goedgekeurd", rejected: "Afgewezen", cancelled: "Geannuleerd", fulfilled: "Afgehandeld", refunded: "Terugbetaald",
 };
 export const rewardKindLabels: Record<string, string> = {
   manual: "Handmatige toekenning", correction: "Correctie", activity: "Discordactiviteit", reserve: "Gereserveerd",
-  spend: "Besteed", release: "Vrijgegeven", fulfill: "Afgehandeld",
+  spend: "Besteed", release: "Vrijgegeven", fulfill: "Afgehandeld", refund: "Terugbetaald",
 };
 export const rewardErrors: Record<string, string> = {
   invalid_fields: "Een veld bevat een ongeldige waarde.", reason_required: "Vul een reden in (maximaal 1000 tekens).",
@@ -50,6 +51,7 @@ export const rewardErrors: Record<string, string> = {
   self_approval_forbidden: "Laat je eigen aanvraag door een andere bevoegde beheerder behandelen.",
   invalid_state: "Deze aanvraag is al behandeld of kan niet meer worden gewijzigd.", stock_reserved: "De voorraad kan niet lager zijn dan het aantal gereserveerde of bestede beloningen.",
   correction_unavailable: "Deze boeking kan niet worden gecorrigeerd of is al gecorrigeerd.",
+  refund_unavailable: "Alleen een goedgekeurde, nog niet geleverde beloning kan eenmaal worden terugbetaald.",
   idempotency_conflict: "Deze inzending is al met andere gegevens verwerkt. Controleer de historiek.",
   not_found: "De gevraagde beloning, boeking of aanvraag is niet gevonden.", channels_required: "Kies minstens één kanaal.",
   rewards_forbidden: "Je hebt geen toegang tot deze actie.", unavailable: "De Bucks- en XP-module kon niet worden bereikt. Er is geen succes bevestigd.",
