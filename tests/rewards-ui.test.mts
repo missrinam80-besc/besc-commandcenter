@@ -11,7 +11,7 @@ import * as permissions from "../src/lib/permissions.ts";
 import * as rewards from "../src/lib/rewards.ts";
 const require = createRequire(import.meta.url);
 const org="10000000-0000-4000-8000-000000000001",user="20000000-0000-4000-8000-000000000003";
-async function page(tab:string,role="member",data:Record<string,unknown>={}){
+async function page(tab:string,role="member",data:Record<string,unknown>={},params:Record<string,string>={}){
  const output=ts.transpileModule(readFileSync(new URL("../src/app/app/bucks/page.tsx",import.meta.url),"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
  const exports:Record<string,unknown>={};
  const calls:string[]=[];
@@ -25,9 +25,9 @@ async function page(tab:string,role="member",data:Record<string,unknown>={}){
   if(name.endsWith(".css"))return {};
   return require(name);
  };
- runInNewContext(output,{exports,require:mock,process:{env:{BESC_REWARDS_ACTIVITY_ENABLED:"false"}}});
+ runInNewContext(output,{exports,require:mock,URLSearchParams,process:{env:{BESC_REWARDS_ACTIVITY_ENABLED:"false"}}});
  const component=exports.default as (p:{searchParams:Promise<Record<string,string>>})=>Promise<React.ReactElement>;
- const dom=new JSDOM(renderToStaticMarkup(await component({searchParams:Promise.resolve({tab})})));
+ const dom=new JSDOM(renderToStaticMarkup(await component({searchParams:Promise.resolve({tab,...params})})));
  return {dom,document:dom.window.document,calls};
 }
 test("Bucks-pagina: eigen saldo en reservering zijn apart zichtbaar, beheer blijft verborgen",async()=>{
@@ -62,4 +62,26 @@ test("Bucks-opslagactie: configuratie kan niet per ongeluk automatisering active
  const source=readFileSync(new URL("../src/app/app/bucks/actions.ts",import.meta.url),"utf8");
  assert.match(source,/case "rule_save"[\s\S]*?enabled: false/);
  assert.match(source,/requireActiveMembership/);assert.match(source,/hasPermission\(membership, "manageRewards"\)/);
+});
+
+test("RE01-pagina: onafhankelijke terugbetaling toont bedrag, reden en verplichte bevestiging",async()=>{
+ const p=await page("beheer","admin",{requests:[{id:org,user_id:"20000000-0000-4000-8000-000000000004",display_name:"TESTFIXTURE elders in lijst",title:"TESTFIXTURE",description:"Vaste omschrijving",price:60,status:"approved",reason:"",version:2,created_at:"2026-10-17T12:00:00Z"}],has_more:false});try{
+ const form=[...p.document.querySelectorAll("form")].find(f=>f.querySelector<HTMLInputElement>('[name="operation"]')?.value==="refund");assert.ok(form);
+ assert.equal(form.querySelector('[name="confirmed"]')?.hasAttribute("required"),true);assert.equal(form.querySelector('[name="reason"]')?.hasAttribute("required"),true);
+ assert.match(p.document.body.textContent!,/TESTFIXTURE elders in lijst/);assert.match(p.document.body.textContent!,/60 Bucks terugboeken/);
+ assert.equal(p.document.querySelector('[name="user_id"]'),null);
+}finally{p.dom.window.close();}});
+
+test("RE01-pagina: geen terugbetaling voor eigen of geleverde aanvraag",async()=>{
+ for(const q of [{user_id:user,status:"approved"},{user_id:org,status:"fulfilled"}]){
+ const p=await page("beheer","admin",{requests:[{id:org,title:"TESTFIXTURE",price:60,reason:"",version:2,created_at:"2026-10-17T12:00:00Z",...q}]});try{
+ assert.equal(p.document.querySelector('[name="operation"][value="refund"]'),null);
+ }finally{p.dom.window.close();}}
+});
+
+test("RE01-pagina: onafhankelijke paginering bewaart zoekterm en statusfilter",async()=>{
+ const p=await page("beheer","admin",{requests:[],has_more:true},{zoeken:"TESTFIXTURE & naam",status:"approved",pagina:"2"});try{
+ const next=[...p.document.querySelectorAll<HTMLAnchorElement>('a')].find(a=>a.textContent==="Volgende");assert.ok(next);
+ const url=new URL(next.getAttribute("href")!,"https://fixture.invalid");assert.equal(url.searchParams.get("pagina"),"3");assert.equal(url.searchParams.get("zoeken"),"TESTFIXTURE & naam");assert.equal(url.searchParams.get("status"),"approved");
+ }finally{p.dom.window.close();}
 });

@@ -71,7 +71,7 @@ export function requiredCapabilityForQuery(
   pathname: string,
   searchParams: URLSearchParams,
 ): Capability | null {
-  if (pathname === "/app/bucks" && ["beheer", "regels", "historiek"].includes(searchParams.get("tab") ?? "")) return "manageRewards";
+  if (pathname === "/app/bucks" && ["beheer", "deelnemers", "catalogusbeheer", "regels", "historiek"].includes(searchParams.get("tab") ?? "")) return "manageRewards";
   if (pathname === "/app/beheer/discordbot" || pathname.startsWith("/app/beheer/discordbot/")) return "manageDiscordBot";
   const createMode = searchParams.get("nieuw");
   const editMode = searchParams.has("bewerken");

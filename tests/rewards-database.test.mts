@@ -7,9 +7,10 @@ const org="10000000-0000-4000-8000-000000000001", foreign="10000000-0000-4000-80
 const uid=(n:number)=>`20000000-0000-4000-8000-${String(n).padStart(12,"0")}`;
 const guild="1067893182387474432", channel="1558853872766689382";
 type Result={error?:string;id?:string;requestId?:string;ok?:boolean;xp:number;bucks:number;reserved:number;available:number;level:number;items:{id:string;price:number;version:number}[];requests:{id:string;price:number;status:string;version:number}[];rules:unknown[]};
-async function setup(){
+async function setup(completion=true){
  const db=new PGlite(); await db.exec(readFileSync(new URL("./helpers/rewards-fixture.sql",import.meta.url),"utf8"));
  await db.exec(readFileSync(new URL("../supabase/migrations/20261017162100_bucks_xp_v1.sql",import.meta.url),"utf8"));
+ if(completion) await db.exec(readFileSync(new URL("../supabase/migrations/20261103164042_re01_reward_refunds_and_management.sql",import.meta.url),"utf8"));
  await db.query("insert into organizations values($1),($2)",[org,foreign]);
  for(let n=1;n<=7;n++){
   const discord=`11111111111111111${n}`;
@@ -138,4 +139,73 @@ test("Discordregels: een uitgeschakelde configuratie kent niets toe en vreemde s
  assert.equal((await t.rule("text",{enabled:false})).ok,true);assert.deepEqual((await t.bot("activity_config")).rules,[]);
  assert.equal((await t.bot("activity",{kind:"text",channel_id:channel,occurred_at:new Date().toISOString()})).error,"activity_disabled");
  assert.equal((await t.rule("text",{guild_id:"222222222222222222"})).error,"server_unavailable");
+}finally{await t.db.close();}});
+
+test("RE01: terugbetaling gebruikt de oorspronkelijke besteding eenmaal en geeft voorraad vrij",async()=>{const t=await setup();try{
+ await t.grant();const item=await t.catalog();const q=await t.request(item.id!);await t.login(1);
+ await t.web("decide",{id:q.requestId,version:1,decision:"approved",reason:""});
+ await t.admin();await t.db.exec("update reward_catalog set price=999");await t.login(1);
+ const data={id:q.requestId,version:2,reason:"TESTFIXTURE niet geleverd",confirmed:true},key=randomUUID();
+ const r=await t.web("refund",data,key);assert.equal(r.ok,true);assert.deepEqual(await t.web("refund",data,key),r);
+ assert.equal((await t.web("refund",{...data,reason:"Andere reden"},key)).error,"idempotency_conflict");
+ assert.equal((await t.web("refund",{...data,version:3})).error,"refund_unavailable");
+ const a=await t.account();assert.equal(a.bucks,100);assert.equal(a.xp,50);assert.equal(a.reserved,0);
+ await t.admin();const rows=(await t.db.query<{bucks_delta:number;correction_of:string;kind:string}>("select * from reward_ledger where kind='refund'")).rows;
+ assert.equal(rows.length,1);assert.equal(rows[0].bucks_delta,60);assert.ok(rows[0].correction_of);
+ // The price changed before the refund; the original request still costs 60.
+ const requests=(await t.db.query<{price:number;status:string}>("select price,status from reward_requests")).rows;
+ assert.deepEqual(requests,[{price:60,status:"refunded"}]);
+ await t.login(3);assert.equal((await t.web("catalog")).items[0].price,999);
+}finally{await t.db.close();}});
+
+test("RE01: alleen onafhankelijke beheerder mag niet-geleverde besteding terugbetalen",async()=>{const t=await setup();try{
+ await t.grant(1);const item=await t.catalog();const q=await t.request(item.id!,1);await t.login(2);
+ await t.web("decide",{id:q.requestId,version:1,decision:"approved",reason:""});
+ const d={id:q.requestId,version:2,reason:"TESTFIXTURE",confirmed:true};
+ await t.login(1);assert.equal((await t.web("refund",d)).error,"self_approval_forbidden");
+ await t.login(3);await assert.rejects(t.web("refund",d),/rewards_forbidden/);
+ await t.login(7);assert.equal((await t.web("refund",d,randomUUID(),foreign)).error,"not_found");
+ await t.login(2);assert.equal((await t.web("refund",{...d,confirmed:false})).error,"invalid_fields");
+ assert.equal((await t.web("refund",{...d,reason:""})).error,"reason_required");
+ assert.equal((await t.web("refund",{...d,version:1})).error,"stale_version");
+ await t.web("fulfill",{id:q.requestId,version:2});
+ assert.equal((await t.web("refund",{...d,version:3})).error,"refund_unavailable");
+}finally{await t.db.close();}});
+
+test("RE01: terugbetalen blijft mogelijk na ontkoppeling zonder nieuwe punten toe te kennen",async()=>{const t=await setup();try{
+ await t.grant();const item=await t.catalog();const q=await t.request(item.id!);await t.login(1);await t.web("decide",{id:q.requestId,version:1,decision:"approved",reason:""});
+ await t.admin();await t.db.query("delete from auth.identities where user_id=$1",[uid(3)]);
+ await t.login(1);assert.equal((await t.web("refund",{id:q.requestId,version:2,reason:"TESTFIXTURE ontkoppeld",confirmed:true})).ok,true);
+ const view=await t.web("manage",{section:"participants",search:"TESTFIXTURE 3"}) as unknown as {accounts:{user_id:string;bucks:number;eligible:boolean}[]};
+ assert.equal(view.accounts[0].user_id,uid(3));assert.equal(view.accounts[0].bucks,100);assert.equal(view.accounts[0].eligible,false);
+ await t.admin();assert.equal((await t.db.query<{bucks:number}>("select bucks from reward_accounts where user_id=$1",[uid(3)])).rows[0].bucks,100);
+}finally{await t.db.close();}});
+
+test("RE01: beheer zoekt over alle deelnemers, toont nulstanden en pagineert per onderdeel",async()=>{const t=await setup();try{
+ await t.admin();for(let n=10;n<40;n++){
+  const discord=`222222222222222${String(n).padStart(3,"0")}`;
+  await t.db.query("insert into profiles values($1,$2,$3)",[uid(n),discord,`TESTFIXTURE Zoeker ${n}`]);
+  await t.db.query("insert into auth.users values($1,null)",[uid(n)]);
+  await t.db.query("insert into auth.identities values($1,'discord',$2,'{}')",[uid(n),discord]);
+  await t.db.query("insert into organization_members values($1,$2,'active','member',null)",[org,uid(n)]);
+ }
+ await t.login(1);const first=await t.web("manage",{section:"participants",offset:0}) as unknown as {participants:{user_id:string;bucks:number}[];has_more:boolean};
+ assert.equal(first.participants.length,25);assert.equal(first.has_more,true);
+ const result=await t.web("manage",{section:"participants",search:"Zoeker 39"}) as unknown as typeof first;
+ assert.deepEqual(result.participants.map(p=>({id:p.user_id,bucks:p.bucks})),[{id:uid(39),bucks:0}]);assert.equal(result.has_more,false);
+ const last=await t.web("manage",{section:"participants",offset:25}) as unknown as typeof first;assert.equal(last.has_more,false);
+ assert.equal((await t.web("manage",{section:"requests",status:"invalid"})).error,"invalid_fields");
+ await t.login(3);await assert.rejects(t.web("manage",{section:"participants"}),/rewards_forbidden/);
+ await assert.rejects(t.db.query("select private.reward_manage_view($1,$2,'{}')",[org,uid(1)]),/permission denied/);
+}finally{await t.db.close();}});
+
+test("RE01: migratie behoudt bestaande saldi, aanvragen, rechten en gecorrigeerde historiek",async()=>{const t=await setup(false);try{
+ await t.grant();const item=await t.catalog();await t.request(item.id!);await t.admin();
+ const before=(await t.db.query("select (select jsonb_agg(to_jsonb(a)) from reward_accounts a) accounts,(select jsonb_agg(to_jsonb(a)) from reward_requests a) requests,(select jsonb_agg(to_jsonb(a)) from reward_ledger a) ledger")).rows;
+ await t.db.exec(readFileSync(new URL("../supabase/migrations/20261103164042_re01_reward_refunds_and_management.sql",import.meta.url),"utf8"));
+ const after=(await t.db.query("select (select jsonb_agg(to_jsonb(a)) from reward_accounts a) accounts,(select jsonb_agg(to_jsonb(a)) from reward_requests a) requests,(select jsonb_agg(to_jsonb(a)) from reward_ledger a) ledger")).rows;assert.deepEqual(after,before);
+ await t.login(1);const view=await t.web("manage",{section:"requests",status:"pending"}) as unknown as {requests:{display_name:string}[]};assert.equal(view.requests[0].display_name,"TESTFIXTURE 3");
+ await t.login(3);await assert.rejects(t.db.exec("update reward_accounts set bucks=9000"),/permission denied/);
+ await t.admin();const acl=(await t.db.query<{can_read:boolean;can_call:boolean;is_rls:boolean}>("select has_function_privilege('authenticated','private.reward_manage_view(uuid,uuid,jsonb)','EXECUTE') can_read,has_function_privilege('anon','public.rewards_web(text,jsonb,text)','EXECUTE') can_call,(select bool_and(relrowsecurity) from pg_class where oid in ('public.reward_accounts'::regclass,'public.reward_requests'::regclass,'public.reward_ledger'::regclass)) is_rls")).rows[0];
+ assert.deepEqual(acl,{can_read:false,can_call:false,is_rls:true});
 }finally{await t.db.close();}});

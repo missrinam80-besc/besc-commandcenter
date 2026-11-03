@@ -17,10 +17,11 @@ function processSql(query,interactive=false){
  const args=["-X","-q","-A","-t","-v","ON_ERROR_STOP=1","-d",database];
  const command=container?docker:"psql";
  const all=container?["exec","-i",container,"psql","-h","/tmp","-U","postgres",...args]:args;
- const child=spawn(command,interactive?all:[...all,"-c",query],{env:process.env,stdio:["pipe","pipe","pipe"]});
+ const child=spawn(command,all,{env:process.env,stdio:["pipe","pipe","pipe"]});
  let out="",err="";const listeners=[];
  child.stdout.on("data",x=>{out+=x;for(const notify of listeners)notify(out);});child.stderr.on("data",x=>{err+=x;});
  const done=new Promise((resolve,reject)=>{child.on("error",reject);child.on("close",code=>resolve({code,out,err}));});
+ if(!interactive)child.stdin.end(query);
  return {child,done,write:x=>child.stdin.write(x),ready:()=>new Promise((resolve,reject)=>{
   const timer=setTimeout(()=>reject(Error("Holder not ready")),15000);
   const notify=x=>{if(x.includes("BESC_REWARD_READY")){clearTimeout(timer);resolve();}};listeners.push(notify);notify(out);
@@ -36,7 +37,7 @@ const fixture=readFileSync(new URL("./helpers/rewards-fixture.sql",import.meta.u
  if not exists(select 1 from pg_roles where rolname='authenticated') then create role authenticated;end if;
  if not exists(select 1 from pg_roles where rolname='service_role') then create role service_role bypassrls;end if;
  end$$;`);
-await sql(fixture+readFileSync(new URL("../supabase/migrations/20261017162100_bucks_xp_v1.sql",import.meta.url),"utf8"));
+await sql(fixture+readFileSync(new URL("../supabase/migrations/20261017162100_bucks_xp_v1.sql",import.meta.url),"utf8")+readFileSync(new URL("../supabase/migrations/20261103164042_re01_reward_refunds_and_management.sql",import.meta.url),"utf8"));
 const org="10000000-0000-4000-8000-000000000001";
 const uid=n=>`20000000-0000-4000-8000-${String(n).padStart(12,"0")}`;
 await sql(`insert into organizations values('${org}');`);
@@ -79,6 +80,16 @@ console.log("Echte overlap: twee behandelaars beslissen niet dubbel: OK");
 const rolled=await overlap(login(1)+"begin;"+op("grant",{user_id:uid(4),xp:2,bucks:2,reason:"TESTFIXTURE rollback"},"rollback-key"),op("grant",{user_id:uid(4),xp:2,bucks:2,reason:"TESTFIXTURE rollback"},"rollback-key"),1,"rollback",true);assert.match(rolled,/"ok": true/);
 assert.equal(await sql("select count(*) from reward_ledger where reason='TESTFIXTURE rollback'"),"1");
 console.log("Echte overlap: volledige rollback laat veilige herhaling toe: OK");
+const refund={id:requestId,version:2,reason:"TESTFIXTURE niet geleverd",confirmed:true};
+const refunded=await overlap(login(1)+"begin;"+op("refund",refund,"refund-first"),op("refund",refund,"refund-second"),2,"refund");assert.match(refunded,/stale_version/);
+assert.equal(await sql("select count(*) from reward_ledger where kind='refund'"),"1");
+console.log("RE01 echte overlap: twee terugbetalingen maken precies een tegenboeking: OK");
+const otherRequest=await sql(`select id from reward_requests where user_id='${uid(4)}'`);
+await sql(login(1)+op("decide",{id:otherRequest,version:1,decision:"approved",reason:""},"approve-refund-race"));
+const delivery=await overlap(login(1)+"begin;"+op("fulfill",{id:otherRequest,version:2},"fulfill-first"),op("refund",{...refund,id:otherRequest},"refund-versus-fulfill"),2,"refund-fulfill");assert.match(delivery,/stale_version/);
+assert.equal(await sql(`select status from reward_requests where id='${otherRequest}'`),"fulfilled");
+assert.equal(await sql("select count(*) from reward_ledger where kind='refund'"),"1");
+console.log("RE01 echte overlap: leveren en terugbetalen kunnen niet allebei slagen: OK");
 assert.equal(await sql(`select count(*) from reward_accounts a where a.xp<>(select coalesce(sum(xp_delta),0) from reward_ledger l where l.organization_id=a.organization_id and l.user_id=a.user_id)
  or a.bucks<>(select coalesce(sum(bucks_delta),0) from reward_ledger l where l.organization_id=a.organization_id and l.user_id=a.user_id)
  or a.reserved<>(select coalesce(sum(reserved_delta),0) from reward_ledger l where l.organization_id=a.organization_id and l.user_id=a.user_id)`),"0");

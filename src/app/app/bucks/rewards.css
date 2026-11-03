@@ -33,7 +33,7 @@
 .reward-status-pending { color:var(--ink); background:color-mix(in srgb,#d69a21 18%,var(--theme-surface)); border-color:#b48428; }
 .reward-status-approved,.reward-status-fulfilled { color:var(--ink); background:color-mix(in srgb,#309871 18%,var(--theme-surface)); border-color:#309871; }
 .reward-status-rejected { color:var(--ink); background:color-mix(in srgb,var(--besc-red) 14%,var(--theme-surface)); border-color:var(--besc-red); }
-.reward-status-cancelled,.reward-status-neutral { color:var(--muted); background:var(--theme-control); }
+.reward-status-cancelled,.reward-status-refunded,.reward-status-neutral { color:var(--muted); background:var(--theme-control); }
 .reward-table { width:100%; border-collapse:collapse; font-size:12px; }
 .reward-table :is(th,td) { padding:12px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top; }
 .reward-table th { background:var(--theme-control); color:var(--muted); font-size:11px; }
@@ -41,3 +41,5 @@
 .reward-table td { overflow-wrap:anywhere; }
 @media(max-width:900px) { .reward-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } .reward-decision { grid-template-columns:1fr; } }
 @media(max-width:600px) { .reward-catalog,.reward-form { grid-template-columns:1fr; } .rewards-page .panel { padding:16px; } }
+
+.reward-toolbar label { display:grid; gap:6px; font-size:12px; }
