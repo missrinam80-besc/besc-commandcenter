@@ -39,7 +39,7 @@ export const rewardStatusLabels: Record<string, string> = {
   pending: "Aangevraagd", approved: "Goedgekeurd", rejected: "Afgewezen", cancelled: "Geannuleerd", fulfilled: "Afgehandeld", refunded: "Terugbetaald",
 };
 export const rewardKindLabels: Record<string, string> = {
-  manual: "Handmatige toekenning", correction: "Correctie", activity: "Discordactiviteit", reserve: "Gereserveerd",
+  manual: "Handmatige toekenning", correction: "Correctie", activity: "Bewezen activiteit", external_transfer: "StreamElements-saldo-overgang", reserve: "Gereserveerd",
   spend: "Besteed", release: "Vrijgegeven", fulfill: "Afgehandeld", refund: "Terugbetaald",
 };
 export const rewardErrors: Record<string, string> = {
