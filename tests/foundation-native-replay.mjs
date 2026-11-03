@@ -68,13 +68,27 @@ for (const name of names) {
     assert.equal(beforeArchive.tables.length, 180, 'F6 baseline preserved before workspace archive');
   }
   if(name.endsWith('_discord_event_publication_and_presence.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,181);
+  if(name.endsWith('_re02_verified_earning.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,186,'RE01 baseline preserved before RE02');
+  if(name.endsWith('_re03_controlled_balance_transfer.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,191,'RE02 adds exactly five private tables');
   try { sql(readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8")); }
   catch (error) { throw new Error(`Native replay failed at ${name}: ${error.stderr?.toString() ?? error.message}`); }
   if (name.startsWith("20260712190000_")) sql("insert into auth.users(id,email) values('00000000-0000-4000-8000-000000000001','fixture@example.invalid');update public.organization_members set role='admin',status='active';");
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length, 186); // Archive baseline plus five private BO04 tables.
+assert.equal(effects.tables.length, 193); // RE01 baseline plus five RE02 and two RE03 tables.
+for(const name of ['re02_approvals','re02_twitch_rules','re02_receipts','re02_revocations','re02_audit','re03_batches','re03_release']){
+ const table=effects.tables.find(t=>t.schema==='private'&&t.name===name);
+ assert.ok(table?.rls,`${name} is private and RLS enabled`);
+ assert.ok(Object.values(table.grants).every(grants=>Object.values(grants).every(value=>value===false)),`${name} has no client grants`);
+}
+for(const [name,authenticated,service]of [['re02_admin',true,false],['re02_twitch',false,true],['re03_transfer',true,false],['re03_set_enabled',false,true]]){
+ const fn=effects.functions.find(f=>f.schema==='public'&&f.name===name);
+ assert.ok(fn&&!fn.security_definer,`${name} is a narrow invoker wrapper`);
+ assert.equal(fn.anon_execute,false);assert.equal(fn.authenticated_execute,authenticated);assert.equal(fn.service_role_execute,service);
+}
+const oldRewards=effects.functions.find(f=>f.schema==='private'&&f.name==='reward_operation_re01');
+assert.ok(oldRewards);assert.equal(oldRewards.anon_execute,false);assert.equal(oldRewards.authenticated_execute,false);assert.equal(oldRewards.service_role_execute,false);
 const archiveTable = effects.tables.find(table => table.schema === 'public' && table.name === 'workspace_record_archives');
 assert.ok(archiveTable?.rls, 'Workspace archive metadata is protected by RLS');
 for (const role of ['anon', 'service_role']) assert.ok(Object.values(archiveTable.grants[role]).every(value => value === false), `${role} has no archive table grants`);
