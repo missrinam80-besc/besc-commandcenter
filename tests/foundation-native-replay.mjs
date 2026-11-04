@@ -70,13 +70,23 @@ for (const name of names) {
   if(name.endsWith('_discord_event_publication_and_presence.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,181);
   if(name.endsWith('_re02_verified_earning.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,186,'RE01 baseline preserved before RE02');
   if(name.endsWith('_re03_controlled_balance_transfer.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,191,'RE02 adds exactly five private tables');
+  if(name.endsWith('_step11_agent_workflows.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,193,'RE02/RE03 baseline preserved before step 11');
   try { sql(readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8")); }
   catch (error) { throw new Error(`Native replay failed at ${name}: ${error.stderr?.toString() ?? error.message}`); }
   if (name.startsWith("20260712190000_")) sql("insert into auth.users(id,email) values('00000000-0000-4000-8000-000000000001','fixture@example.invalid');update public.organization_members set role='admin',status='active';");
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length, 193); // RE01 baseline plus five RE02 and two RE03 tables.
+assert.equal(effects.tables.length,195); // 193 baseline plus exactly two step 11 private tables.
+for(const name of ['agent_execution_controls','agent_document_handoffs']){
+ const table=effects.tables.find(t=>t.schema==='public'&&t.name===name);
+ assert.ok(table?.rls,`${name} has RLS`);
+ for(const role of ['anon','authenticated'])assert.ok(Object.values(table.grants[role]??{}).every(v=>v===false),`${name} has no browser grants`);
+}
+for(const [name,authenticated,service]of [['create_agent_workflow_job',false,true],['approve_agent_workflow_budget',true,false],['set_agent_workflow_pause',true,false],['record_agent_workflow_cost',true,false],['record_agent_document_handoff',false,true],['review_agent_workflow_result',true,false]]){
+ const fn=effects.functions.find(f=>f.schema==='public'&&f.name===name);
+ assert.ok(fn,`${name} exists`);assert.equal(fn.anon_execute,false);assert.equal(fn.authenticated_execute,authenticated);assert.equal(fn.service_role_execute,service);
+}
 for(const name of ['re02_approvals','re02_twitch_rules','re02_receipts','re02_revocations','re02_audit','re03_batches','re03_release']){
  const table=effects.tables.find(t=>t.schema==='private'&&t.name===name);
  assert.ok(table?.rls,`${name} is private and RLS enabled`);

@@ -1,5 +1,7 @@
 # Command Center-leeskoppeling en verbeteronderzoek
 
+Actuele uitbreiding: zie [Agentwerkstromen stap 11](AGENT_WERKSTROMEN.md). De onderstaande beschrijving bevat ook historische bewijsgrenzen; zij verklaart de nieuwe code niet live vrijgegeven.
+
 ## Gebouwde eerste stap
 
 Afzonderlijke MCP-route `/mcp/commandcenter`, met eigen OAuth-scope `commandcenter:read`, eigen sleutel, toestemmingen en tokentabellen. De bestaande social-koppeling blijft ongewijzigd. Alleen actieve beheerders en bestuursleden kunnen deze eerste versie toestaan; iedere aanvraag controleert de actuele gebruiker en het lidmaatschap. De server kiest de BESC-organisatie. Agents kunnen geen organisatie-ID, tabel of willekeurige velden invoeren.
