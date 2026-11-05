@@ -77,7 +77,11 @@ for (const name of names) {
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length,195); // 193 baseline plus exactly two step 11 private tables.
+assert.equal(effects.tables.length,196); // Step 11 baseline plus one private permanent website-access table.
+const adminAccess=effects.tables.find(t=>t.schema==='private'&&t.name==='publication_admin_access');
+assert.ok(adminAccess?.rls);
+assert.ok(Object.values(adminAccess.grants).every(g=>Object.values(g).every(v=>v===false)));
+
 for(const name of ['agent_execution_controls','agent_document_handoffs']){
  const table=effects.tables.find(t=>t.schema==='public'&&t.name===name);
  assert.ok(table?.rls,`${name} has RLS`);
