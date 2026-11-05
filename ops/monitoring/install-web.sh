@@ -4,6 +4,7 @@ set -Eeuo pipefail
 umask 077
 if [[ ${1:-} == --help ]]; then echo 'Install bounded read-only web monitoring, a five-minute timer and journal size limits. No backups, cleanup, app restart or outgoing mail.';exit 0;fi
 [[ $# == 1 && $EUID == 0 && $(hostname -s) == BESCSRVDEV ]] || { echo 'Vereist root op BESCSRVDEV en een organisatie-ID.' >&2;exit 1; }
+for dir in /usr/local/lib/besc-operations /var/lib/besc-operations /var/backups/besc-command-center/op01-install /etc/besc;do [[ ! -L $dir ]] || exit 1;done
 org=$1
 [[ $org =~ ^[a-f0-9-]{36}$ ]] || exit 1
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"

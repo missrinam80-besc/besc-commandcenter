@@ -3,3 +3,5 @@ ops/*.cjs text eol=lf
 ops/*.service text eol=lf
 ops/*.timer text eol=lf
 ops/supabase-ca-2021.crt -text
+
+ops/monitoring/* text eol=lf
