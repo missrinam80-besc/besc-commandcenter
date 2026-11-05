@@ -7,7 +7,7 @@ const config={host:process.env.PGHOST,port:Number(process.env.PGPORT??5432),data
 const db=new pg.Client(config);await db.connect();const peers=[];
 try{
   assert.match((await db.query('show server_version')).rows[0].server_version,/^17\./);
-  assert.equal(Number((await db.query("select count(*) from pg_tables where schemaname in('public','private')")).rows[0].count),195);
+  assert.equal(Number((await db.query("select count(*) from pg_tables where schemaname in('public','private')")).rows[0].count),196);
   const user='00000000-0000-4000-8000-000000000001';
   assert.equal((await db.query('select email from auth.users where id=$1',[user])).rows[0].email,'fixture@example.invalid');
   const org=(await db.query('select organization_id from organization_members where user_id=$1',[user])).rows[0].organization_id;
