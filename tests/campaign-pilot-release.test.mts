@@ -105,7 +105,11 @@ test('F3 release: exact additive migration, historical SQL unchanged and live ga
   assert.equal(step11.runtime_default,'off');assert.equal(step11.dispatch_default,'paused');assert.equal(step11.credits_allocated_per_job,5);assert.equal(step11.provider_hard_credit_cap,false);
   for(const key of ['cloud_apply_authorized','server_deploy_authorized','runtime_activation_authorized','new_agent_access_authorized','paid_run_authorized'])assert.equal(step11[key],false);
   assert.equal(step11.existing_columns_and_rows_preserved,true);assert.equal(step11.legacy_job_and_result_history_preserved,true);
-  const files = [...beforeStep11,...step11.new_migrations];
+  const adminAccess=JSON.parse(readFileSync(new URL('ops/persistent-admin-website-access-release.json',root),'utf8'));
+  assert.equal(adminAccess.required_cloud_history_before,144);
+  assert.equal(adminAccess.expected_cloud_history_after,145);
+  assert.equal(adminAccess.access_seeded_by_migration,false);
+  const files = [...beforeStep11,...step11.new_migrations,adminAccess.migration];
   assert.deepEqual(readdirSync(new URL('supabase/migrations/', root)).filter(f => f.endsWith('.sql')).sort(), files.map(f => f.file).sort());
   for (const f of files) assert.equal(createHash('sha256').update(readFileSync(new URL('supabase/migrations/' + f.file, root), 'utf8').replaceAll('\r\n', '\n')).digest('hex'), f.sha256_lf, f.file);
   assert.deepEqual(manifest.excluded_history, ['20261001110000_seed_operational_guidelines.sql']);

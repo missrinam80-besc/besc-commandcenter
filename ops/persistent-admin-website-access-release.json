@@ -1,0 +1,14 @@
+{
+  "required_cloud_history_before": 144,
+  "expected_cloud_history_after": 145,
+  "migration": {
+    "file": "20261105151301_persistent_admin_website_access.sql",
+    "sha256_lf": "768cfeaef1743cc11569ad979ac2ea274444597bafaf7a71ee61364d71f03132"
+  },
+  "new_table": "private.publication_admin_access",
+  "changed_function": "private.f2_viewer(uuid)",
+  "access_seeded_by_migration": false,
+  "public_access_enabled": false,
+  "server_image_change_required": false,
+  "behavior": "Explicit site/user grant with live active-admin, site-active, account and session checks; ordinary tester rules retained."
+}
