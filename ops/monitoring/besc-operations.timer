@@ -1,0 +1,11 @@
+[Unit]
+Description=BESC health and capacity check every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+AccuracySec=15s
+Unit=besc-operations.service
+
+[Install]
+WantedBy=timers.target

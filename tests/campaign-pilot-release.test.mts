@@ -109,7 +109,9 @@ test('F3 release: exact additive migration, historical SQL unchanged and live ga
   assert.equal(adminAccess.required_cloud_history_before,144);
   assert.equal(adminAccess.expected_cloud_history_after,145);
   assert.equal(adminAccess.access_seeded_by_migration,false);
-  const files = [...beforeStep11,...step11.new_migrations,adminAccess.migration];
+  const operations=JSON.parse(readFileSync(new URL('ops/op01-release.json',root),'utf8'));
+  assert.equal(operations.required_cloud_history_before,145);assert.equal(operations.expected_cloud_history_after,146);
+  const files = [...beforeStep11,...step11.new_migrations,adminAccess.migration,operations.migration];
   assert.deepEqual(readdirSync(new URL('supabase/migrations/', root)).filter(f => f.endsWith('.sql')).sort(), files.map(f => f.file).sort());
   for (const f of files) assert.equal(createHash('sha256').update(readFileSync(new URL('supabase/migrations/' + f.file, root), 'utf8').replaceAll('\r\n', '\n')).digest('hex'), f.sha256_lf, f.file);
   assert.deepEqual(manifest.excluded_history, ['20261001110000_seed_operational_guidelines.sql']);

@@ -1,0 +1,22 @@
+[Unit]
+Description=BESC read-only health and capacity monitor
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/lib/besc-operations/collect.py
+TimeoutStartSec=150
+UMask=0077
+Environment=LC_ALL=C
+Environment=DOCKER_CONFIG=/var/lib/besc-operations/docker-config
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ReadWritePaths=/var/lib/besc-operations
+MemoryMax=96M
+CPUQuota=20%

@@ -77,7 +77,10 @@ for (const name of names) {
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length,196); // Step 11 baseline plus one private permanent website-access table.
+assert.equal(effects.tables.length,197); // Permanent access baseline plus bounded operations state.
+const opsState=effects.tables.find(t=>t.schema==='private'&&t.name==='operations_state');
+assert.ok(opsState?.rls);assert.ok(Object.values(opsState.grants).every(g=>Object.values(g).every(v=>v===false)));
+for(const [name,human,machine] of [['ops_read_status',true,false],['ops_record_snapshot',false,true],['ops_database_snapshot',false,true]]){const f=effects.functions.find(x=>x.schema==='public'&&x.name===name);assert.ok(f&&!f.security_definer);assert.equal(f.anon_execute,false);assert.equal(f.authenticated_execute,human);assert.equal(f.service_role_execute,machine);}
 const adminAccess=effects.tables.find(t=>t.schema==='private'&&t.name==='publication_admin_access');
 assert.ok(adminAccess?.rls);
 assert.ok(Object.values(adminAccess.grants).every(g=>Object.values(g).every(v=>v===false)));

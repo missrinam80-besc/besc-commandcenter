@@ -192,6 +192,9 @@ jobs:
       - name: Dependencies installeren
         run: pnpm install --frozen-lockfile
 
+      - name: Operationele sensoren zonder servercontact controleren
+        run: python3 -m unittest discover -s tests/monitoring -v
+
       - name: Rechten- en auditcontroles uitvoeren
         run: pnpm test
 
