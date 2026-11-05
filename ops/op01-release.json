@@ -1,0 +1,19 @@
+{
+  "required_cloud_history_before": 145,
+  "expected_cloud_history_after": 146,
+  "migration": {
+    "file": "20261105154724_op01_operations_status.sql",
+    "sha256_lf": "3b30d15f45f8c0f9f310ca565dbe94b19b24e351cab9527d96b34ee9ae121c7f"
+  },
+  "new_private_table": "private.operations_state",
+  "access": "active organization admins with verified account and existing session",
+  "snapshot_writes": "service_role only through narrow wrappers",
+  "raw_logs_or_credentials_stored": false,
+  "max_status_changes_per_target": 20,
+  "monitor_interval_minutes": 5,
+  "stale_after_minutes": 15,
+  "daily_backups_installed": false,
+  "outgoing_messages_enabled": false,
+  "paid_services_added": false,
+  "bot_live_access_required": true
+}

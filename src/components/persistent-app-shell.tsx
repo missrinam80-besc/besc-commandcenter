@@ -106,6 +106,7 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Discordbot", href:"/app/beheer/discordbot", icon:Bot, discordbot:true },
       { label: "Integraties", href: "/app/integraties", icon: CloudCog, roles: ["admin"] },
+      { label: "Systeemstatus", href: "/app/administratie/systeemstatus", icon: ShieldCheck, roles: ["admin"] },
       { label: "CSV-import", href: "/app/beheer/import", icon: FolderKanban, roles: ["admin"] },
       { label: "Rechtencontrole", href: "/app/beheer/rechten", icon: ShieldCheck, roles: ["admin"] },
       { label: "Keuzevelden", href: "/app/beheer/keuzevelden", icon: ListChecks, roles: ["admin"] },
@@ -143,6 +144,7 @@ const helpSearchByActive: Record<string, string> = {
   "Rapportage & KPI": "Rapportage",
   "Documenten & Drive": "Drive",
   Integraties: "Integraties",
+  Systeemstatus: "Systeemstatus",
   Rechtencontrole: "Rollen rechten",
   Archief: "Archiveren",
   Historiek: "Historiek",
