@@ -1,6 +1,6 @@
 # Interne beoordeling van socialberichten
 
-Lokale implementatie van 6 november 2026. Nog niet op Cloud DEV toegepast of uitgerold. Dit voegt geen publicatiekoppeling toe.
+Implementatie van PR #138, op 6 november 2026 afzonderlijk goedgekeurd en uitgerold naar Cloud DEV als versie `74f7a37`, met migratie `20261106220010`. Dit voegt geen publicatiekoppeling toe.
 
 ## Werkwijze
 
@@ -23,6 +23,8 @@ Lokale implementatie van 6 november 2026. Nog niet op Cloud DEV toegepast of uit
 
 De nieuwe databaseproeven bouwen alle migraties op in een geïsoleerde PGlite-database en gebruiken echte rollen, policies, triggers en de dossier-RPC. Schermproeven renderen de echte component en testen de echte serveractie met afgeschermde afhankelijkheden. Bestaande werkvoorraad-, audit-, dossierfout- en opslagcontroles blijven slagen.
 
-Native PostgreSQL-concurrency en een visuele DEV-proef met twee eigen bevoegde accounts zijn nog niet uitgevoerd. De bestaande afspraak om de live proef met een tweede goedkeurder open te laten blijft behouden.
+De 14 databaseproeven slagen ook op een aparte lokale PostgreSQL 17.11-database. Daarnaast slagen zeven proeven met echte gelijktijdige verbindingen en gecontroleerde wachtrijen: dubbele aanvragen, tegenstrijdige besluiten, hoofdtekst wijzigen tijdens goedkeuring, kanaaltekst wijzigen vóór indiening, kanaaltekst wijzigen tijdens goedkeuring, variant verwijderen vóór indiening en beoordelaarsrechten intrekken vóór een wachtend besluit. Historie en momentopnamen blijven daarbij behouden. De nieuwe CI-controle herhaalt beide testbestanden op een eigen tijdelijke database; deze uitbreiding is lokaal voorbereid en nog niet op GitHub uitgevoerd.
 
-Voor Cloud DEV zijn aparte goedkeuring van migratie en uitrol nodig. Het lokale [releasemanifest](../../ops/social-internal-approval-release.json) legt die grenzen vast. Er zijn geen providerverzoeken, berichten, video's, e-mails of automatische synchronisaties toegevoegd.
+De DEV-werkvoorraad is na uitrol alleen-lezen gecontroleerd. Er zijn daarbij geen socialberichten of goedkeuringsaanvragen gemaakt. Een volledige visuele DEV-proef met twee eigen bevoegde accounts blijft open; de eerdere afspraak om te wachten op een tweede goedkeurder blijft behouden.
+
+Het [releasemanifest](../../ops/social-internal-approval-release.json) bewaart de oorspronkelijke grens: samenvoegen en imagebouw geven geen toestemming voor migratie of uitrol. Die twee stappen zijn daarna apart goedgekeurd en uitgevoerd. Deze aanvullende testwijziging voegt geen migratie, uitrol, providerverzoek, bericht, video, e-mail of automatische synchronisatie toe.
