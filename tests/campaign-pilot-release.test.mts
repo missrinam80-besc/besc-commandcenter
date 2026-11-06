@@ -111,7 +111,13 @@ test('F3 release: exact additive migration, historical SQL unchanged and live ga
   assert.equal(adminAccess.access_seeded_by_migration,false);
   const operations=JSON.parse(readFileSync(new URL('ops/op01-release.json',root),'utf8'));
   assert.equal(operations.required_cloud_history_before,145);assert.equal(operations.expected_cloud_history_after,146);
-  const files = [...beforeStep11,...step11.new_migrations,adminAccess.migration,operations.migration];
+  const socialAlerts=JSON.parse(readFileSync(new URL('ops/social-sync-notifications-release.json',root),'utf8'));
+  assert.equal(socialAlerts.required_cloud_history_before,operations.expected_cloud_history_after);
+  assert.equal(socialAlerts.expected_cloud_history_after_separate_apply,147);
+  assert.equal(socialAlerts.new_private_table,'private.social_sync_notification_state');
+  assert.equal(socialAlerts.existing_notification_values_preserved,true);
+  for(const key of ['cloud_apply_authorized','server_deploy_authorized','live_notification_test_authorized','provider_requests_added','existing_sync_settings_changed','raw_provider_errors_copied_to_notifications'])assert.equal(socialAlerts[key],false);
+  const files = [...beforeStep11,...step11.new_migrations,adminAccess.migration,operations.migration,socialAlerts.migration];
   assert.deepEqual(readdirSync(new URL('supabase/migrations/', root)).filter(f => f.endsWith('.sql')).sort(), files.map(f => f.file).sort());
   for (const f of files) assert.equal(createHash('sha256').update(readFileSync(new URL('supabase/migrations/' + f.file, root), 'utf8').replaceAll('\r\n', '\n')).digest('hex'), f.sha256_lf, f.file);
   assert.deepEqual(manifest.excluded_history, ['20261001110000_seed_operational_guidelines.sql']);

@@ -10,6 +10,10 @@ export const maxDuration = 60;
 export async function GET(request: Request) {
   return handleScheduledSocialSync(request, {
     secret: process.env.CRON_SECRET,
+    refreshAlerts: async () => {
+      const { error } = await createAdminClient().rpc("refresh_social_sync_notifications");
+      if (error) throw new Error("Socialwaarschuwingen konden niet worden bijgewerkt.");
+    },
     loadAccounts: () => loadScheduledAccounts(async (from, to) => {
       const admin = createAdminClient();
       const { data, error } = await admin.from("social_accounts")

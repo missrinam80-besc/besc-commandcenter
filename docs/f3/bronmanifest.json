@@ -21,7 +21,9 @@
     },
     {
       "path": "src/lib/social-sync-scheduler.ts",
-      "sha256": "0a4b1f5d86bb64fb514705a135442978bfe22320fb1e918d92c76742b1315bbf"
+      "sha256": "f4316ad9bcb5c73453dee915bab6c441a6063ddb6f37cc30ee6ad66a1f05f217",
+      "previous_sha256": "0a4b1f5d86bb64fb514705a135442978bfe22320fb1e918d92c76742b1315bbf",
+      "review_note": "SO05 2026-11-06: after the existing authorized provider batch, reconcile personal warnings once; skip on dry-run and unauthorized requests. Account selection, provider scheduling and campaign privacy/export behavior unchanged. Auth, no-extra-sync and alert-failure cases covered by social-sync-scheduler.test.mts."
     },
     {
       "path": "src/lib/social-metrics-export.ts",
