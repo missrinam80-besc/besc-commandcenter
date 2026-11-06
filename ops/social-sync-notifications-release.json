@@ -1,0 +1,18 @@
+{
+  "required_cloud_history_before": 146,
+  "expected_cloud_history_after_separate_apply": 147,
+  "migration": {
+    "file": "20261106210000_social_sync_notifications.sql",
+    "sha256_lf": "e8c9258cb1f8153396175e395e710fdc5c0218828ed30af6fb22aa5a4f62f768"
+  },
+  "new_private_table": "private.social_sync_notification_state",
+  "new_preference": "social_sync_notifications",
+  "recipients": "active organization admins and board members with personal preference enabled",
+  "existing_notification_values_preserved": true,
+  "provider_requests_added": false,
+  "existing_sync_settings_changed": false,
+  "raw_provider_errors_copied_to_notifications": false,
+  "cloud_apply_authorized": false,
+  "server_deploy_authorized": false,
+  "live_notification_test_authorized": false
+}
