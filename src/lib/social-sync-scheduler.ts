@@ -29,6 +29,7 @@ type Dependencies = {
   secret: string | undefined;
   loadAccounts: () => Promise<ScheduledAccount[]>;
   syncAccount: (account: ScheduledAccount) => Promise<{ status: string }>;
+  refreshAlerts?: () => Promise<void>;
   now?: () => number;
 };
 
@@ -66,6 +67,17 @@ export async function handleScheduledSocialSync(request: Request, dependencies: 
       else failed += 1;
     } catch {
       failed += 1;
+    }
+  }
+  // Run even when no accounts are due, and after failed/partial provider runs.
+  // This only reconciles notifications; it never requests another provider sync.
+  if (dependencies.refreshAlerts) {
+    try {
+      await dependencies.refreshAlerts();
+    } catch {
+      return reply({ ok: false, error: "alert_refresh_failed", considered: accounts.length,
+        due: due.length, processed: batch.length, succeeded, partial, failed, skipped,
+        remaining: Math.max(0, due.length - batch.length) }, 503);
     }
   }
   const ok = failed === 0 && partial === 0;

@@ -9,6 +9,39 @@ const request = (query = "", token = "secret") => new Request(`http://localhost/
   headers: token ? { Authorization: `Bearer ${token}` } : {},
 });
 
+test("alerts reconcile after the provider batch, including failed and partial results", async () => {
+  for (const status of ["succeeded", "failed", "partial"]) {
+    const calls: string[] = [];
+    await handleScheduledSocialSync(request(), { secret: "secret", now: () => now,
+      loadAccounts: async () => [account()], syncAccount: async () => { calls.push(status); return { status }; },
+      refreshAlerts: async () => { calls.push("alerts"); } });
+    assert.deepEqual(calls, [status, "alerts"]);
+  }
+});
+
+test("alerts run when no provider is due, without requesting another synchronization", async () => {
+  let alerts = 0;
+  const response = await handleScheduledSocialSync(request(), { secret: "secret", loadAccounts: async () => [],
+    syncAccount: async () => { throw Error("Unexpected provider sync"); }, refreshAlerts: async () => { alerts++; } });
+  assert.equal(response.status, 200); assert.equal(alerts, 1);
+});
+
+test("unauthorized, unconfigured and dry-run requests do not create alerts", async () => {
+  let alerts = 0;
+  const deps = { secret: "secret", loadAccounts: async () => [], syncAccount: async () => ({status:"succeeded"}), refreshAlerts: async () => { alerts++; } };
+  await handleScheduledSocialSync(request("", "wrong"), deps);
+  await handleScheduledSocialSync(request(), {...deps, secret: undefined});
+  await handleScheduledSocialSync(request("?dry_run=1"), deps);
+  assert.equal(alerts, 0);
+});
+
+test("alert storage failure does not masquerade as a healthy planner result or retry providers", async () => {
+  let syncs = 0;
+  const response = await handleScheduledSocialSync(request(), { secret: "secret", loadAccounts: async () => [account()],
+    syncAccount: async () => { syncs++; return {status:"succeeded"}; }, refreshAlerts: async () => { throw Error("PRIVATE"); } });
+  assert.equal(response.status,503);const body=await response.json();assert.equal(body.error,"alert_refresh_failed");assert.equal(body.succeeded,1);assert.equal(syncs,1);assert.doesNotMatch(JSON.stringify(body),/PRIVATE/);
+});
+
 test("ontbrekende configuratie en verkeerde tokens raken de database niet", async () => {
   let calls = 0;
   const deps = { secret: "secret", loadAccounts: async () => { calls++; return []; }, syncAccount: async () => { calls++; return { status: "succeeded" }; } };
