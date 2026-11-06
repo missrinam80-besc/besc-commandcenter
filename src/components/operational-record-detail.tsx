@@ -4,6 +4,7 @@ import { ContactDossierPanels } from "@/components/contact-dossier-panels";
 import { DossierTabContent } from "@/components/dossier-tab-content";
 import { contactTabs, resolveContactTab } from "@/lib/contact-dossier-tabs";
 import Link from "next/link";
+import { SocialApprovalPanel } from "@/components/social-approval-panel";
 import { ExternalLink } from "lucide-react";
 import { notFound } from "next/navigation";
 import { operationalModules, type OperationalModule } from "@/app/app/operations/config";
@@ -190,6 +191,7 @@ export async function OperationalRecordDetail({
             {connectionEntity && <RecordConnectionsPanel entityType={connectionEntity} entityId={id} links={connections.links} documents={connections.documents} relationships={connections.relationships} options={relationOptions} canManage={hasPermission(membership, "manageOrganization")} modal={query.koppeling} selectedLinkId={query.link}/>} 
             {module !== "social" && <section className="form-card record-notes"><div className="form-heading"><h2>Notities en briefing</h2></div>{record.notes ? <MarkdownContent>{String(record.notes)}</MarkdownContent> : <p>Nog geen notities toegevoegd.</p>}</section>}
             {module === "social" && <SocialRelations record={record} variants={(variantsResult.data ?? []) as unknown as RelatedRow[]}/>}
+            {module === "social" && <SocialApprovalPanel id={id} status={String(record.status)} deleted={Boolean(record.deleted_at)}/>}
             <RecordLifecyclePanel
               entity={lifecycleEntity[module]}
               id={id}

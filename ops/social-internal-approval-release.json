@@ -1,0 +1,22 @@
+{
+  "migration": {
+    "sha256_lf": "7275c9b1af165d43662b33cecde531bfef720ed03f2f607541de2c117bac4829",
+    "file": "20261106220010_social_internal_approval.sql"
+  },
+  "source": "SO06 local implementation",
+  "prior_cloud_history_last_verified": 147,
+  "expected_history_after_separate_apply": 148,
+  "preflight_reverification_required": true,
+  "new_tables": 0,
+  "added_columns": [
+    "approval_requests.source_snapshot",
+    "social_posts.review_version"
+  ],
+  "trigger_functions_security": "invoker",
+  "legacy_records_backfilled_as_approved": false,
+  "provider_requests_added": false,
+  "cloud_apply_authorized": false,
+  "server_deploy_authorized": false,
+  "live_social_fixture_authorized": false,
+  "publication_authorized": false
+}

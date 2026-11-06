@@ -10,6 +10,11 @@ const load=editorLoader();
 const {validateEditorIssues}=load("src/lib/dossier-editor-draft.ts") as {validateEditorIssues:(b:Bundle)=>Issue[]};
 const feedback=load("src/lib/dossier-editor-feedback.ts") as {dossierStorageFeedback:(e:Record<string,unknown>,b:Bundle)=>{message:string;issues?:Issue[]};editorIssueText:(i:Issue)=>string};
 
+test("Socialbeoordeling geeft begrijpelijke uitleg bij een vergrendelde of niet-goedgekeurde versie",()=>{
+ assert.match(feedback.dossierStorageFeedback({message:"social_review_pending"},fixture()).message,/inhoud|tekst en kanaalvarianten staan vast/);
+ assert.match(feedback.dossierStorageFeedback({message:"social_review_approval_required"},fixture()).message,/andere bevoegde goedkeurder/);
+});
+
 test("Tijdslotfouten wijzen naar het juiste veld, tabblad en onderdeel",()=>{
  for(const [values,field]of [[{ends_at:"2026-10-08T10:00:00Z"},"ends_at"],[{starts_at:null},"starts_at"],[{title:"x"},"title"],[{location:"x".repeat(301)},"location"],[{notes:"x".repeat(4001)},"notes"],[{starts_at:"invalid"},"starts_at"]] as const){
   const issue=validateEditorIssues(fixture(values)).find(i=>i.field===field);

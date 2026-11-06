@@ -14,6 +14,8 @@ Leg per release apart vast: broncommit, checks, migratiestatus, image/deploy, ru
 
 ## Actuele releasewerkwijze
 
+Social planning: de [interne beoordeling](Social-interne-beoordeling.md) is lokaal voorbereid. De bijbehorende migratie en uitrol zijn nog niet uitgevoerd; goedkeuren publiceert niets.
+
 1. Controleer de wijziging lokaal: tests, lint, gegenereerde editorbronnen en productiebuild.
 2. Maak een GitHub-PR en laat de kwaliteitscontrole slagen.
 3. Merge na akkoord en wacht op de GitHub-imagebouw. Bouw geen losse gewijzigde code op de server.

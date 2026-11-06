@@ -1,6 +1,7 @@
 import type { MembershipAccess } from "@/lib/permissions";
 
 export const approvalEntityLabels = {
+  social: "Socialbericht",
   content: "Content",
   expense: "Kost",
   partner: "Sponsorafspraak",
@@ -10,6 +11,7 @@ export const approvalEntityLabels = {
 } as const;
 
 export const approvalModuleLabels = {
+  social: "Social planning",
   content: "Content",
   finance: "Financiën",
   sponsors: "Sponsors",
