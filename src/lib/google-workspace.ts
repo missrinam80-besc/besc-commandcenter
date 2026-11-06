@@ -317,6 +317,7 @@ export function googleCalendarMeetingPayload(meeting: GoogleCalendarSourceMeetin
 export async function syncGoogleCalendarMeeting(
   meeting: GoogleCalendarSourceMeeting,
   knownGoogleEventId?: string | null,
+  options: { existingOnly?: boolean } = {},
 ) {
   const config = googleWorkspaceConfiguration();
   if (!config.configured) throw new Error(`Ontbrekende variabelen: ${config.missing.join(", ")}`);
@@ -339,9 +340,10 @@ export async function syncGoogleCalendarMeeting(
         operation: "updated" as const,
       };
     } catch (error) {
-      if (!(error instanceof GoogleApiError) || ![404, 410].includes(error.status)) throw error;
+      if (options.existingOnly || !(error instanceof GoogleApiError) || ![404, 410].includes(error.status)) throw error;
     }
   }
+  if (options.existingOnly) throw new Error("Het gekoppelde agenda-item ontbreekt. Controleer de koppeling voordat je opnieuw publiceert.");
   const created = await googleJson<GoogleCalendarEvent>(
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(config.calendarId)}/events?sendUpdates=none`,
     { method: "POST", body: JSON.stringify(payload) },

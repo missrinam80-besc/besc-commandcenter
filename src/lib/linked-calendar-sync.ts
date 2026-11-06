@@ -114,7 +114,7 @@ export async function syncLinkedMeeting(
   meetingId: string,
   cancelledAction: CancelledCalendarAction = "keep",
 ) {
-  const [{ data: meeting }, { data: link }] = await Promise.all([
+  const [meetingResult, linkResult] = await Promise.all([
     context.supabase
       .from("meetings")
       .select("*")
@@ -131,7 +131,13 @@ export async function syncLinkedMeeting(
       .eq("resource_type", "calendar_event")
       .maybeSingle(),
   ]);
-  if (!meeting) return false;
+  if (meetingResult.error) throw meetingResult.error;
+  if (linkResult.error) throw linkResult.error;
+  const meeting = meetingResult.data;
+  const link = linkResult.data;
+  // Only an explicit publish action may create or recreate a calendar item.
+  if (!meeting || !link || link.name?.startsWith("[VERWIJDERD]")) return false;
+  if (!link.google_id) throw new Error("De bestaande agendakoppeling heeft geen item-ID.");
   if (meeting.status === "cancelled" && cancelledAction === "remove" && link) {
     await deleteGoogleCalendarEvent(link.google_id);
     const { error } = await context.supabase
@@ -158,7 +164,7 @@ export async function syncLinkedMeeting(
     endAt: meeting.ends_at,
     attendees: meeting.attendees ?? [],
     minutesUrl: meeting.minutes_url,
-  }, link?.google_id);
+  }, link.google_id, { existingOnly: true });
   await persistLink(context, "meeting", meetingId, result);
   return true;
 }
