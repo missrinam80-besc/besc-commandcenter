@@ -22,6 +22,7 @@ export function latestApprovalRequests<T extends ApprovalIdentity>(rows: T[]): T
 }
 
 const sourceTables = {
+  social: { table: "social_posts", softDelete: true },
   content: { table: "content_items", softDelete: true },
   expense: { table: "expenses", softDelete: true },
   partner: { table: "partners", softDelete: true },

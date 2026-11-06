@@ -20,6 +20,8 @@ const causes:Record<string,string>={
  dossier_unavailable:"De fiche of een gewijzigd onderdeel is verwijderd of niet meer toegankelijk. Vernieuw de fiche en vergelijk je invoer.",
  dossier_reference_unavailable:"Een gekoppeld dossier, persoon of account is verwijderd, inactief of niet toegankelijk. Kies een beschikbare koppeling.",
  dossier_separate_approval:"Goedkeuring wijzigen kan alleen via de afzonderlijke goedkeuringsactie.",
+ social_review_pending:"Dit socialbericht wacht op beoordeling. De ingediende tekst en kanaalvarianten staan vast tot de beslissing.",
+ social_review_approval_required:"Leg deze versie eerst ter beoordeling voor. Alleen een andere bevoegde goedkeurder kan ze goedkeuren.",
  dossier_separate_payment:"Betalingen en betaalstatussen moeten via de afzonderlijke betaalactie worden verwerkt.",
  dossier_locked_newsletter:"Deze nieuwsbrief is vergrendeld voor bewerken. Controleer de goedkeurings- of verzendstatus.",
  dossier_project_outcomes_required:"Vul Doel, Oplevering, Acceptatiecriteria en Afsluitevaluatie in voordat je het project afrondt.",

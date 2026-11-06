@@ -14,7 +14,7 @@ export const auditEntityGroups = {
   },
   content: {
     label: "Content & communicatie",
-    tables: ["content_items", "events", "campaigns", "social_posts"],
+    tables: ["content_items", "events", "campaigns", "social_posts", "social_post_variants", "approval_requests"],
   },
   relations: {
     label: "Relaties & community",
@@ -70,6 +70,8 @@ export const auditEntityLabels: Record<string, string> = {
   partners: "Partner",
   community_people: "Communityprofiel",
   social_posts: "Social post",
+  social_post_variants: "Social kanaalvariant",
+  approval_requests: "Goedkeuringsaanvraag",
   meetings: "Vergadering",
   meeting_action_items: "Actiepunt",
   shop_products: "Shopproduct",

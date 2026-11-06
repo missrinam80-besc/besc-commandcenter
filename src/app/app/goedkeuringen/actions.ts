@@ -6,8 +6,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { canReviewApproval } from "@/lib/approvals";
+import { hasPermission } from "@/lib/permissions";
 
-const entityType = z.enum(["content", "expense", "partner", "document", "email", "newsletter"]);
+const entityType = z.enum(["content", "expense", "partner", "document", "email", "newsletter", "social"]);
 const safeHref = z.string().startsWith("/app/").max(500);
 
 async function sourceRecord(
@@ -16,6 +17,12 @@ async function sourceRecord(
   id: string,
 ) {
   const org = context.membership.organization_id;
+  if (type === "social") {
+    if (!hasPermission(context.membership, "manageOrganization")) return null;
+    const { data } = await context.supabase.from("social_posts").select("id,title,status")
+      .eq("organization_id", org).eq("id", id).is("deleted_at", null).maybeSingle();
+    return data && data.status !== "archived" ? { title: data.title, module: "social" as const } : null;
+  }
   if (type === "content") {
     const { data } = await context.supabase.from("content_items").select("id,title").eq("organization_id", org).eq("id", id).is("deleted_at", null).maybeSingle();
     return data ? { title: data.title, module: "content" as const } : null;
@@ -139,18 +146,19 @@ export async function decideApproval(formData: FormData) {
   if (!canReviewApproval(context.membership, request.entity_type)) {
     redirect(appendContactTab(`${parsed.data.return_to}?fout=geen-toegang`,formData));
   }
-  if (["email", "newsletter"].includes(request.entity_type) && request.requested_by === context.user.id) {
-    redirect(appendContactTab(`${parsed.data.return_to}?fout=eigen-email-goedkeuren`,formData));
+  if (["email", "newsletter", "social"].includes(request.entity_type) && request.requested_by === context.user.id) {
+    redirect(appendContactTab(`${parsed.data.return_to}?fout=${request.entity_type === "social" ? "eigen-social-goedkeuren" : "eigen-email-goedkeuren"}`,formData));
   }
   const now = new Date().toISOString();
-  const { error } = await context.supabase.from("approval_requests").update({
+  const update = context.supabase.from("approval_requests").update({
     status: parsed.data.decision,
     decided_by: context.user.id,
     decision_note: parsed.data.decision_note || null,
     decided_at: now,
     updated_at: now,
   }).eq("organization_id", context.membership.organization_id).eq("id", request.id).eq("status", "pending");
-  if (error) redirect(appendContactTab(`${parsed.data.return_to}?fout=beslissing-opslaan`,formData));
+  const result = request.entity_type === "social" ? await update.select("id") : await update;
+  if (result.error || (request.entity_type === "social" && !result.data?.length)) redirect(appendContactTab(`${parsed.data.return_to}?fout=beslissing-opslaan`,formData));
 
   if (request.entity_type === "content") {
     await context.supabase.from("content_items").update({
