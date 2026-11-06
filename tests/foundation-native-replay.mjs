@@ -71,13 +71,21 @@ for (const name of names) {
   if(name.endsWith('_re02_verified_earning.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,186,'RE01 baseline preserved before RE02');
   if(name.endsWith('_re03_controlled_balance_transfer.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,191,'RE02 adds exactly five private tables');
   if(name.endsWith('_step11_agent_workflows.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,193,'RE02/RE03 baseline preserved before step 11');
+  if(name.endsWith('_social_sync_notifications.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,197,'Existing schema preserved before social notification state');
   try { sql(readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8")); }
   catch (error) { throw new Error(`Native replay failed at ${name}: ${error.stderr?.toString() ?? error.message}`); }
   if (name.startsWith("20260712190000_")) sql("insert into auth.users(id,email) values('00000000-0000-4000-8000-000000000001','fixture@example.invalid');update public.organization_members set role='admin',status='active';");
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length,197); // Permanent access baseline plus bounded operations state.
+assert.equal(effects.tables.length,198); // Existing 197 tables plus per-recipient social incident state.
+const socialState=effects.tables.find(t=>t.schema==='private'&&t.name==='social_sync_notification_state');
+assert.ok(socialState?.rls,'Social incident state is private and RLS protected');
+assert.ok(Object.values(socialState.grants.anon).every(v=>v===false),'No anonymous incident table grants');
+for(const role of ['authenticated','service_role'])for(const [permission,allowed]of Object.entries(socialState.grants[role]))assert.equal(allowed,['select','insert','update'].includes(permission),`Social state ${role}.${permission}`);
+const socialRefresh=effects.functions.find(f=>f.schema==='public'&&f.name==='refresh_social_sync_notifications');
+assert.ok(socialRefresh&&!socialRefresh.security_definer,'Social notification reconciliation keeps invoker rights');
+assert.equal(socialRefresh.anon_execute,false);assert.equal(socialRefresh.authenticated_execute,true);assert.equal(socialRefresh.service_role_execute,true);
 const opsState=effects.tables.find(t=>t.schema==='private'&&t.name==='operations_state');
 assert.ok(opsState?.rls);assert.ok(Object.values(opsState.grants).every(g=>Object.values(g).every(v=>v===false)));
 for(const [name,human,machine] of [['ops_read_status',true,false],['ops_record_snapshot',false,true],['ops_database_snapshot',false,true]]){const f=effects.functions.find(x=>x.schema==='public'&&x.name===name);assert.ok(f&&!f.security_definer);assert.equal(f.anon_execute,false);assert.equal(f.authenticated_execute,human);assert.equal(f.service_role_execute,machine);}
