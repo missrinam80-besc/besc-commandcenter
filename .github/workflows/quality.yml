@@ -10,6 +10,39 @@ permissions:
   contents: read
 
 jobs:
+  social-review-native:
+    name: Socialbeoordeling en races PostgreSQL 17
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      postgres-social-review:
+        image: postgres:17.11
+        env:
+          POSTGRES_DB: besc_f1_fixture
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: fixture-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d besc_f1_fixture"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      F1_NATIVE_TEST: '1'
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: besc_f1_fixture
+      PGUSER: postgres
+      PGPASSWORD: fixture-only
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node --test tests/social-approval.test.mts
+      - run: node tests/social-approval-concurrency.mjs
+
   f5-native-campaign-read:
     name: F5 campagneketen en saldovergelijking PostgreSQL 17
     runs-on: ubuntu-latest
