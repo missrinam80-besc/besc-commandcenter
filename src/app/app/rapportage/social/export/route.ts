@@ -1,4 +1,5 @@
 import { kpiTargetLabel, targetDirectionLabels, measuredValue } from "@/lib/management-report";
+import { socialMetricPresentation, socialMeasurementAvailable } from "@/lib/social-report-presentation";
 import { requireActiveMembership } from "@/lib/auth-context";
 
 const cell = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
@@ -15,6 +16,9 @@ export async function GET(request: Request) {
     supabase.from("social_metric_snapshots").select("normalized_metric,platform_metric,metric_value,period_start,period_end,fetched_at,source_url,social_accounts(account_name,platform)").eq("organization_id", membership.organization_id).gte("period_end", start).lte("period_end", end),
     supabase.from("social_metric_snapshots").select("normalized_metric,platform_metric,metric_value,period_start,period_end,fetched_at,source_url,social_accounts(account_name,platform)").eq("organization_id", membership.organization_id).is("period_end", null).gte("fetched_at", start).lte("fetched_at", end),
   ]);
+  if (kpis.error || periodMetrics.error || lifetimeMetrics.error) {
+    return new Response("De rapportgegevens konden niet volledig worden geladen. Probeer later opnieuw.", { status: 503, headers: { "Cache-Control": "no-store" } });
+  }
   const rows: unknown[][] = [
     ["Social inzichten", year],
     [],
@@ -25,7 +29,7 @@ export async function GET(request: Request) {
     }),
     ...[...(periodMetrics.data ?? []), ...(lifetimeMetrics.data ?? [])].map((item) => {
       const account = item.social_accounts as unknown as { account_name?: string; platform?: string } | null;
-      return ["Officiële API", account?.account_name, account?.platform, item.normalized_metric, item.platform_metric, item.metric_value, null, "measured", null, null, null, item.source_url, "api", "Rechtstreeks opgehaald via de officiële platform-API", item.period_start, item.period_end, item.fetched_at];
+      return ["Officiële API", account?.account_name, account?.platform, item.normalized_metric, item.platform_metric, socialMeasurementAvailable(item.metric_value) ? item.metric_value : "Ontbrekende meting", null, socialMeasurementAvailable(item.metric_value) ? "measured" : "missing", null, null, socialMetricPresentation(item.normalized_metric, item.platform_metric).unit || null, item.source_url, "api", "Rechtstreeks opgehaald via de officiële platform-API; historische totaalstanden en overlappende perioden niet optellen", item.period_start, item.period_end, item.fetched_at];
     }),
   ];
   return new Response(`\uFEFF${rows.map((row) => row.map(cell).join(";")).join("\r\n")}`, {
