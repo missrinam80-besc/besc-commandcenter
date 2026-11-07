@@ -6,6 +6,6 @@ const native=createRequire(import.meta.url);
 export function loadCreatorModule(filename,overrides={}){
  const compiled={exports:{}};
  const source=readFileSync(new URL('../../src/lib/'+filename,import.meta.url),'utf8');
- runInNewContext(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,{module:compiled,exports:compiled.exports,Buffer,URL,process,require:name=>name==='server-only'?{}:overrides[name]??native(name)});
+ runInNewContext(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,{module:compiled,exports:compiled.exports,Buffer,URL,URLSearchParams,Headers,Request,Response,AbortController,TextDecoder,setTimeout,clearTimeout,process,require:name=>name==='server-only'?{}:overrides[name]??native(name)});
  return compiled.exports;
 }

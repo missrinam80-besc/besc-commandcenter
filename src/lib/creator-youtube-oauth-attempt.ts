@@ -22,7 +22,7 @@ export type CreatorResponsePort={
 type Principal={organizationId:string;userId:string;sessionId:string};
 type Kernel=Pick<CreatorYouTubeKernel,'beginAuthorization'|'authorize'|'withdraw'>&Partial<Pick<CreatorYouTubeKernel,'recoverCapturedAuthorization'|'beginRefresh'|'refreshPrepared'>>;
 const uuid=z.string().uuid();
-const attemptSchema=z.object({link:uuid,binding:z.string().length(64),browser:z.string().length(64),state:z.string().length(64),verifier:z.string().regex(/^[A-Za-z0-9_-]{43}$/).optional(),expires:z.number().int(),status:z.enum(['pending','running','completed','cancelled','expired','failed','cleanup_pending','recovered','refresh_abandoned']),cleanupReason:z.enum(['cancelled','expired','failed']).optional(),cleanupStatus:z.enum(['pending','failed','complete','blocked_isolation','uncertain']).optional(),kind:z.enum(['authorize','refresh']).optional()}).strict();
+const attemptSchema=z.object({link:uuid,binding:z.string().length(64),browser:z.string().length(64),state:z.string().length(64),verifier:z.string().regex(/^[A-Za-z0-9_-]{43}$/).optional(),expires:z.number().int(),status:z.enum(['pending','running','completed','cancelled','expired','failed','cleanup_pending','recovered','refresh_abandoned']),cleanupReason:z.enum(['cancelled','expired','failed']).optional(),cleanupStatus:z.enum(['pending','failed','complete','blocked_isolation','uncertain']).optional(),kind:z.enum(['authorize','refresh']).optional(),exchangeNotStarted:z.literal(true).optional()}).strict();
 const refreshSlotSchema=z.object({purpose:z.literal('creator_youtube_refresh_slot_v1'),link:uuid,jobId:uuid,binding:z.string().length(64),status:z.enum(['held','free'])}).strict();
 type Attempt=z.infer<typeof attemptSchema>;
 const hash=(value:string)=>createHash('sha256').update(value).digest('hex');
@@ -103,7 +103,7 @@ export class CreatorYouTubeOAuthAttempt {
   for(let retry=0;retry<4;retry++){
    const record=await this.ports.store.read(id);if(!record)throw Error('Missing cleanup request');const value=await this.open(id,record);
    if(!same(value.binding,known.binding)||!same(value.browser,known.browser)||value.link!==known.link)throw Error('Changed cleanup owner');
-   const queued:Attempt={...value,verifier:undefined,status:'cleanup_pending',cleanupReason:value.cleanupReason??reason,cleanupStatus:'pending'};
+   const queued:Attempt={...value,verifier:undefined,status:'cleanup_pending',cleanupReason:value.cleanupReason??reason,cleanupStatus:'pending',...((value.kind!=='refresh'&&value.status==='pending'||value.exchangeNotStarted)?{exchangeNotStarted:true as const}:{})};
    // Persist intent before crossing the withdrawal/provider boundary. A restart may safely retry it.
    if(!await this.write(id,record.revision,queued))continue;
    let provider:NonNullable<Attempt['cleanupStatus']>='uncertain';
@@ -111,11 +111,13 @@ export class CreatorYouTubeOAuthAttempt {
     const result=await this.ports.kernel.withdraw(value.link);
     if(result.local===true){
      provider=result.provider;
-     if(this.ports.responses)provider=await this.ports.responses.recover(this.responseBinding(id,value),answer=>this.ports.kernel.recoverCapturedAuthorization!(id,value.link,answer));
+     // A CAS from pending proves that no worker has claimed the code exchange. Persist this
+     // proof before withdrawal, so denial/cancel recovery need not invent a missing receipt.
+     if(this.ports.responses&&!queued.exchangeNotStarted)provider=await this.ports.responses.recover(this.responseBinding(id,value),answer=>this.ports.kernel.recoverCapturedAuthorization!(id,value.link,answer));
     }
    }catch{/* Keep durable uncertain work; never report provider completion. */}
    const status=provider==='complete'?'recovered' as const:'cleanup_pending' as const;
-   if(await this.write(id,record.revision+1,{...queued,status,cleanupStatus:provider})){if(provider==='complete')await this.releaseRefreshSlot(id,value);return{status,provider};}
+   if(await this.write(id,record.revision+1,{...queued,status,cleanupStatus:provider})){if(provider==='complete')await this.releaseRefreshSlot(id,value);return{status,provider,...(queued.exchangeNotStarted?{exchangeNotStarted:true as const}:{})};}
   }
   throw Error('Cleanup outcome not confirmed');
  }
@@ -132,7 +134,7 @@ export class CreatorYouTubeOAuthAttempt {
   if(value.status!=='pending'||value.kind==='refresh')throw Error('Request consumed');
   if(this.ports.now()>=value.expires){await this.cleanup(input.jobId,value,'expired');throw Error('Request expired');}
   if((input.code===undefined)===(input.error===undefined)||input.code!==undefined&&(!input.code||input.code.length>8192)||input.error!==undefined&&(!input.error||input.error.length>256))throw Error('Invalid callback');
-  if(input.error!==undefined){const result=await this.cleanup(input.jobId,value,'cancelled');return{status:'cancelled' as const,provider:result.provider};}
+  if(input.error!==undefined){const result=await this.cleanup(input.jobId,value,'cancelled');return{status:'cancelled' as const,provider:result.provider,...(result.exchangeNotStarted?{exchangeNotStarted:true as const}:{})};}
   if(!value.verifier||!await this.write(input.jobId,record.revision,{...value,status:'running'}))throw Error('Request conflict');
   try{
    await this.ports.kernel.authorize(input.jobId,input.state,input.code!,{codeVerifier:value.verifier,redirectUri:this.redirectUri},async()=>{
@@ -188,7 +190,7 @@ export class CreatorYouTubeOAuthAttempt {
   const {value}=await this.read(jobId,browserNonce);
   if(value.kind==='refresh'&&await this.abandonUnusedRefresh(jobId,value))return{status:'cancelled' as const,provider:'none' as const};
   const result=await this.cleanup(jobId,value,'cancelled');
-  return{status:'cancelled' as const,provider:result.provider};
+  return{status:'cancelled' as const,provider:result.provider,...(result.exchangeNotStarted?{exchangeNotStarted:true as const}:{})};
  });}
  async recover(jobId:string,browserNonce:string){return this.run(async()=>{
   const {value}=await this.read(jobId,browserNonce);
