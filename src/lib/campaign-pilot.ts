@@ -60,6 +60,15 @@ export function parsePilotPostUrl(input: string): { platform: 'youtube' | 'twitc
 }
 
 export type PilotPost = { id: string; participant_id: string; platform?: string; canonical_url: string; external_id: string; revision: number; status: string; availability: string; checked_at: string | null };
+export const campaignReviewHistorySchema = z.object({
+  post_id: uuid,
+  items: z.array(z.object({ request_id: uuid, reviewer_id: uuid, reviewer_name: z.string().min(1), reviewed_at: timestamp,
+    from_revision: z.number().int().positive(), to_revision: z.number().int().positive(), decision: z.enum(['verified', 'rejected']),
+    availability: z.enum(['available', 'private', 'deleted', 'unavailable', 'unknown']), reason: z.string().min(2).max(24000),
+  }).strict().refine(item => item.to_revision === item.from_revision + 1)).max(25),
+  has_more: z.boolean(), next_before_revision: z.number().int().positive().nullable(),
+}).strict().refine(page => page.has_more ? page.items.length === 25 && page.next_before_revision === page.items.at(-1)?.from_revision : page.next_before_revision === null);
+export type CampaignReviewHistory = z.infer<typeof campaignReviewHistorySchema>;
 export type PilotMeasurement = {
   id: string; contribution_id: string; revision: number; metric: string; definition: string; unit: string;
   source_binding_id?: string | null;

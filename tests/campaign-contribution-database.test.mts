@@ -11,6 +11,8 @@ async function state(){return(await f.db.query<{v:PilotState}>(`select public.f3
 async function deny(action:()=>Promise<unknown>,error:RegExp){await f.db.exec('savepoint rejected');await assert.rejects(action(),error);await f.db.exec('rollback to rejected');}
 async function submit(external_id='abcdefghijk',platform='youtube'){await actor(f.ids.member);return call('post.submit',{participant_id:participant,platform,external_id});}
 const review=(id:string,revision=1,decision='verified',reason='TESTFIXTURE - NIET PUBLICEREN - independently checked')=>({id,expected_revision:revision,decision,availability:'available',reason});
+type History={post_id:string;items:{request_id:string;reviewer_id:string;reviewer_name:string;reviewed_at:string;from_revision:number;to_revision:number;decision:string;reason:string;availability:string}[];has_more:boolean;next_before_revision:number|null};
+async function history(id:string,before:number|null=null,c=campaign,o=f.ids.org){return(await f.db.query<{v:History}>(`select public.f3_review_history(${q(o)},${q(c)},${q(id)},${before===null?'null':before}) v`)).rows[0].v;}
 async function counts(){await f.owner();return(await f.db.query<{posts:number;events:number;receipts:number}>(`select (select count(*)::int from private.campaign_contributions where campaign_id=${q(campaign)}) posts,(select count(*)::int from private.campaign_events where campaign_id=${q(campaign)}) events,(select count(*)::int from private.campaign_receipts where campaign_id=${q(campaign)}) receipts`)).rows[0];}
 before(async()=>{
  f=await f1Database();await f.owner();for(const id of [f.ids.chair,f.ids.member,f.ids.reviewer,f.ids.admin,f.ids.other]){const s=randomUUID();sessions.set(id,s);await f.db.exec(`update auth.users set email_confirmed_at=now() where id=${q(id)};insert into auth.sessions(id,user_id) values(${q(s)},${q(id)})`);}
@@ -70,4 +72,35 @@ test('CA02 DB: revoked reviewer cannot replay successful review receipt',async()
 });
 test('CA02 DB: withdrawn participant blocks review but retains prior submission history',async()=>{
  const p=await submit();await call('participant.withdraw',{id:participant});const baseline=await counts();await actor(f.ids.reviewer);await deny(()=>call('post.review',review(p.id)),/consent_required/);assert.deepEqual(await counts(),baseline);await actor(f.ids.reviewer);assert.equal((await state()).posts.length,0);
+});
+
+test('CA02 history: empty candidate history is an explicit read without new events',async()=>{
+ const p=await submit(),baseline=await counts();await actor(f.ids.member);assert.deepEqual(await history(p.id),{post_id:p.id,items:[],has_more:false,next_before_revision:null});assert.deepEqual(await counts(),baseline);
+});
+test('CA02 history: actual decisions, reasons, reviewer and timestamps appear newest first',async()=>{
+ const p=await submit();await actor(f.ids.reviewer);await call('post.review',review(p.id,1,'verified','TESTFIXTURE first decision'));await call('post.review',review(p.id,2,'rejected','TESTFIXTURE revised decision'));const baseline=await counts();await actor(f.ids.member);const h=await history(p.id);assert.equal(h.items.length,2);assert.deepEqual(h.items.map(x=>[x.from_revision,x.to_revision,x.decision,x.reason]),[[2,3,'rejected','TESTFIXTURE revised decision'],[1,2,'verified','TESTFIXTURE first decision']]);assert(h.items.every(x=>x.reviewer_id===f.ids.reviewer&&x.reviewer_name.length>0&&Number.isFinite(Date.parse(x.reviewed_at))));assert.equal(h.has_more,false);assert.deepEqual(await counts(),baseline);
+});
+test('CA02 history: current campaign editor, reviewer, reader and own participant can read',async()=>{
+ const p=await submit();await actor(f.ids.reviewer);await call('post.review',review(p.id));for(const id of [f.ids.chair,f.ids.reviewer,f.ids.admin,f.ids.member]){await actor(id);assert.equal((await history(p.id)).items.length,1);}
+});
+test('CA02 history: chair/admin without current campaign task, other campaign and other org have no bypass',async()=>{
+ const p=await submit();await f.owner();await f.db.exec(`update private.campaign_access set revoked_at=clock_timestamp() where campaign_id=${q(campaign)} and user_id in(${q(f.ids.chair)},${q(f.ids.admin)})`);for(const id of [f.ids.chair,f.ids.admin,f.ids.other]){await actor(id);await deny(()=>history(p.id),/not_available/);}await actor(f.ids.member);await deny(()=>history(p.id,null,randomUUID()),/not_available/);await deny(()=>history(p.id,null,campaign,f.ids.otherOrg),/not_available/);await deny(()=>history(randomUUID()),/not_available/);
+});
+test('CA02 history: participant cannot read another participant source',async()=>{
+ await actor(f.ids.chair);const other=await call('participant.select',{person_id:f.ids.person,policy_id:policy,expires_at:new Date(Date.now()+3600000).toISOString()});await call('participant.accept',{id:other.id,accepted:true});const p=await call('post.submit',{participant_id:other.id,external_id:'12345678901'});await actor(f.ids.member);await deny(()=>history(p.id),/not_available/);
+});
+test('CA02 history: revoked or expired reviewer and revoked auth session cannot read old pages',async()=>{
+ const p=await submit();await actor(f.ids.reviewer);await call('post.review',review(p.id));await f.owner();await f.db.exec(`update private.campaign_access set valid_until=clock_timestamp()-interval '1 second' where user_id=${q(f.ids.reviewer)}`);await actor(f.ids.reviewer);await deny(()=>history(p.id),/not_available/);await f.owner();await f.db.exec(`delete from auth.sessions where user_id=${q(f.ids.member)}`);await actor(f.ids.member);await deny(()=>history(p.id),/not_available/);
+});
+test('CA02 history: withdrawal or replacement declaration hides stored historical reasons',async()=>{
+ const p=await submit();await actor(f.ids.reviewer);await call('post.review',review(p.id));await actor(f.ids.member);await call('participant.withdraw',{id:participant});await actor(f.ids.reviewer);await deny(()=>history(p.id),/not_available/);await f.owner();assert.equal((await f.db.query<{n:number}>(`select count(*)::int n from private.campaign_receipts where campaign_id=${q(campaign)} and operation='post.review'`)).rows[0].n,1);
+});
+test('CA02 history: renewed consent never exposes review reasons from the prior purpose',async()=>{
+ const p=await submit();await actor(f.ids.reviewer);await call('post.review',review(p.id));await actor(f.ids.chair);const pol=await call('policy.set',{version:2,body:'TESTFIXTURE new purpose',retention:'Local fixture only',fields:['post_url','views'],document_id:f.ids.policyDoc});const next=await call('participant.select',{person_id:f.ids.otherPerson,policy_id:pol.id,expires_at:new Date(Date.now()+3600000).toISOString()});await actor(f.ids.member);await call('participant.accept',{id:next.id,accepted:true});assert.equal((await call('post.submit',{participant_id:next.id,external_id:'abcdefghijk'})).id,p.id);assert.equal((await history(p.id)).items.length,0);await actor(f.ids.reviewer);await call('post.review',review(p.id,3,'verified','TESTFIXTURE new-purpose reason'));assert.deepEqual((await history(p.id)).items.map(x=>x.reason),['TESTFIXTURE new-purpose reason']);
+});
+test('CA02 history: keyset pages return all decisions exactly once and recheck access',async()=>{
+ const p=await submit();await actor(f.ids.reviewer);for(let i=1;i<=28;i++)await call('post.review',review(p.id,i,i%2?'verified':'rejected','TESTFIXTURE decision '+i));const first=await history(p.id);assert.equal(first.items.length,25);assert.equal(first.has_more,true);assert.equal(first.next_before_revision,4);const second=await history(p.id,first.next_before_revision);assert.deepEqual(second.items.map(x=>x.from_revision),[3,2,1]);assert.equal(second.has_more,false);assert.equal(new Set([...first.items,...second.items].map(x=>x.request_id)).size,28);await deny(()=>history(p.id,0),/invalid_revision/);await f.owner();await f.db.exec(`update private.campaign_access set revoked_at=clock_timestamp() where user_id=${q(f.ids.reviewer)}`);await actor(f.ids.reviewer);await deny(()=>history(p.id,first.next_before_revision),/not_available/);
+});
+test('CA02 history: fixed read-only RPC is not callable by anonymous or service role',async()=>{
+ const p=await submit();for(const role of ['anon','service_role']){await f.owner();await f.db.exec(`set role ${role}`);await deny(()=>history(p.id),/permission denied/);}await f.owner();const fn=(await f.db.query<{provolatile:string;prosecdef:boolean;proconfig:string[]}>("select provolatile,prosecdef,proconfig from pg_proc where oid='public.f3_review_history(uuid,uuid,uuid,integer)'::regprocedure")).rows[0];assert.equal(fn.provolatile,'s');assert.equal(fn.prosecdef,true);assert(fn.proconfig.includes('search_path=""'));
 });

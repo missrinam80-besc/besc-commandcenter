@@ -1,0 +1,25 @@
+{
+  "migration": {
+    "file": "20261107083706_campaign_review_history.sql",
+    "sha256_lf": "6e4c4cef6ed33bcfb26b807135c932f7d224bb4f4ada0221da6a399b8a03777c"
+  },
+  "prior_cloud_history_last_verified": 149,
+  "expected_history_after_separate_apply": 150,
+  "preflight_reverification_required": true,
+  "new_tables": 0,
+  "new_read_rpc": "public.f3_review_history(uuid,uuid,uuid,integer)",
+  "new_indexes": [
+    "private.campaign_review_history_lookup"
+  ],
+  "read_rpc_security": "definer, empty search_path, explicit actual-session/current-purpose authorization; authenticated execute only",
+  "page_size": 25,
+  "source": "Existing committed private.campaign_receipts post.review payloads; no reconstructed transitions",
+  "old_purpose_reviews_visible": false,
+  "historical_events_backfilled": false,
+  "existing_workflow_or_report_functions_changed": false,
+  "private_table_grants_changed": false,
+  "cloud_apply_authorized": false,
+  "server_deploy_authorized": false,
+  "live_test_authorized": false,
+  "publication_authorized": false
+}
