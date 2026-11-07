@@ -20,6 +20,8 @@ Op Windows kan deze adapter geen portable directory-fsync of volledige ACL-contr
 
 ## Wat dit nog niet oplost
 
+Vervolg: [lokale opvang van providerantwoorden](ca03-youtube-provider-inbox.md) bewaart ontvangen codewisselantwoorden vóór activering. Uitval vóór de eerste duurzame vastlegging blijft een expliciet onbekende externe uitkomst.
+
 Vervolg: [lokale sleutelopslag en rotatie](ca03-youtube-local-keyring.md) voegt een versleutelde gegevenssleutelring toe. De productiebron, backup en rotatie van de afzonderlijke hoofdsleutel blijven buiten die lokale stap.
 
 Een crash nadat een provider een grant/token heeft afgegeven maar vóór lokale ontvangst of opslag kan niet door deze adapter worden teruggedraaid. In de echte kern blijft zo'n onbekend antwoord open voor opruiming; het wordt niet als voltooid verzonnen. Duurzame opvang van providerantwoorden, providerreconciliatie en een definitieve aanpak voor verkeerde kanaal-/scopegrants blijven nodig vóór live gebruik.

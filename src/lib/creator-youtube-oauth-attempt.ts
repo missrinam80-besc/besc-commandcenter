@@ -1,7 +1,7 @@
 import 'server-only';
 import {createCipheriv,createDecipheriv,createHash,randomBytes,timingSafeEqual} from 'node:crypto';
 import {z} from 'zod';
-import type {CreatorYouTubeKernel} from './creator-youtube-kernel';
+import type {CreatorYouTubeKernel,CreatorYouTubeCleanupOutcome} from './creator-youtube-kernel';
 
 // No HTTP routes or production provider adapter. Storage must implement atomic CAS across workers.
 export type CreatorAttemptStore={
@@ -13,8 +13,14 @@ export type CreatorAttemptCipher={
  seal:(id:string,revision:number,plaintext:string)=>Promise<string>;
  open:(id:string,revision:number,sealed:string)=>Promise<string>;
 };
+export type CreatorResponseBinding={jobId:string;link:string;ownerBinding:string;browserBinding:string;stateHash:string};
+export type CreatorResponsePort={
+ receive:(binding:CreatorResponseBinding,exchange:()=>Promise<unknown>)=>Promise<unknown>;
+ applied:(binding:CreatorResponseBinding)=>Promise<void>;
+ recover:(binding:CreatorResponseBinding,cleanup:(answer:unknown)=>Promise<CreatorYouTubeCleanupOutcome>)=>Promise<CreatorYouTubeCleanupOutcome>;
+};
 type Principal={organizationId:string;userId:string;sessionId:string};
-type Kernel=Pick<CreatorYouTubeKernel,'beginAuthorization'|'authorize'|'withdraw'>;
+type Kernel=Pick<CreatorYouTubeKernel,'beginAuthorization'|'authorize'|'withdraw'>&Partial<Pick<CreatorYouTubeKernel,'recoverCapturedAuthorization'>>;
 const uuid=z.string().uuid();
 const attemptSchema=z.object({link:uuid,binding:z.string().length(64),browser:z.string().length(64),state:z.string().length(64),verifier:z.string().regex(/^[A-Za-z0-9_-]{43}$/).optional(),expires:z.number().int(),status:z.enum(['pending','running','completed','cancelled','expired','failed','cleanup_pending','recovered']),cleanupReason:z.enum(['cancelled','expired','failed']).optional(),cleanupStatus:z.enum(['pending','failed','complete','blocked_isolation','uncertain']).optional()}).strict();
 type Attempt=z.infer<typeof attemptSchema>;
@@ -24,7 +30,8 @@ const same=(a:string,b:string)=>a.length===b.length&&timingSafeEqual(Buffer.from
 export class CreatorYouTubeOAuthAttempt {
  private readonly key:Buffer|null;
  private readonly cipher:CreatorAttemptCipher|null;
- constructor(private readonly ports:{store:CreatorAttemptStore;kernel:Kernel;principal:()=>Promise<Principal>;now:()=>number},key:Uint8Array|CreatorAttemptCipher,private readonly redirectUri:string,private readonly enabled=false){
+ constructor(private readonly ports:{store:CreatorAttemptStore;kernel:Kernel;principal:()=>Promise<Principal>;now:()=>number;responses?:CreatorResponsePort},key:Uint8Array|CreatorAttemptCipher,private readonly redirectUri:string,private readonly enabled=false){
+  if(ports.responses&&typeof ports.kernel.recoverCapturedAuthorization!=='function')throw Error('creator_attempt_configuration');
   if(!key||typeof key!=='object')throw Error('creator_attempt_configuration');
   if('seal'in key){
    if(typeof key.seal!=='function'||typeof key.open!=='function'||typeof key.ready!=='function')throw Error('creator_attempt_configuration');
@@ -37,6 +44,7 @@ export class CreatorYouTubeOAuthAttempt {
   if(url.protocol!=='https:'||url.username||url.password||url.hash||url.search||url.href!==redirectUri)throw Error('creator_attempt_configuration');
  }
  private async run<T>(fn:()=>Promise<T>){if(!this.enabled)throw Error('creator_attempt_disabled');try{return await fn();}catch{throw Error('creator_attempt_not_confirmed');}}
+ private responseBinding(jobId:string,value:Attempt):CreatorResponseBinding{return{jobId,link:value.link,ownerBinding:value.binding,browserBinding:value.browser,stateHash:value.state};}
  private async binding(){const p=await this.ports.principal();return hash(JSON.stringify([uuid.parse(p.organizationId),uuid.parse(p.userId),uuid.parse(p.sessionId)]));}
  private async seal(id:string,revision:number,value:Attempt){
   if(this.cipher)return this.cipher.seal(id,revision,JSON.stringify(value));
@@ -67,7 +75,13 @@ export class CreatorYouTubeOAuthAttempt {
    // Persist intent before crossing the withdrawal/provider boundary. A restart may safely retry it.
    if(!await this.write(id,record.revision,queued))continue;
    let provider:NonNullable<Attempt['cleanupStatus']>='uncertain';
-   try{const result=await this.ports.kernel.withdraw(value.link);if(result.local===true)provider=result.provider;}catch{/* Keep durable uncertain work; never report provider completion. */}
+   try{
+    const result=await this.ports.kernel.withdraw(value.link);
+    if(result.local===true){
+     provider=result.provider;
+     if(this.ports.responses)provider=await this.ports.responses.recover(this.responseBinding(id,value),answer=>this.ports.kernel.recoverCapturedAuthorization!(id,value.link,answer));
+    }
+   }catch{/* Keep durable uncertain work; never report provider completion. */}
    const status=provider==='complete'?'recovered' as const:'cleanup_pending' as const;
    if(await this.write(id,record.revision+1,{...queued,status,cleanupStatus:provider}))return{status,provider};
   }
@@ -94,9 +108,10 @@ export class CreatorYouTubeOAuthAttempt {
      const current=await this.read(input.jobId,input.browserNonce,input.state);
      if(current.record.revision!==record.revision+1||current.value.status!=='running'||this.ports.now()>=value.expires)throw Error('Request no longer valid');
     }catch{await this.ports.kernel.withdraw(value.link);throw Error('Request no longer valid');}
-   });
+   },this.ports.responses?exchange=>this.ports.responses!.receive(this.responseBinding(input.jobId,value),exchange):undefined);
    if(!same(value.binding,await this.binding()))throw Error('Session changed');
    if(this.ports.now()>=value.expires)throw Error('Request expired');
+   await this.ports.responses?.applied(this.responseBinding(input.jobId,value));
    if(!await this.write(input.jobId,record.revision+1,{...value,verifier:undefined,status:'completed'})){await this.ports.kernel.withdraw(value.link);throw Error('Request superseded');}
    return{status:'completed' as const};
   }catch{
