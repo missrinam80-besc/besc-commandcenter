@@ -14,6 +14,8 @@ Deze vervolgmodule bouwt voort op de toestemmingskern uit PR #144. Zij staat sta
 
 ## Bewuste grenzen
 
+Vervolg: [lokale duurzame opslag en herstel](ca03-youtube-local-recovery.md) voegt een expliciete bestandsadapter en eigenaargebonden herstel toe. De onderstaande productievoorwaarden blijven open; deze oorspronkelijke stap gebruikte alleen een opslagdubbel.
+
 Dit is een lokale protocolmodule, geen werkende browserkoppeling. Een productieadapter voor duurzame opslag met echte multi-worker-CAS, sleutelbeheer en rotatie, HTTP-aanmeld- en callbackroutes, CSRF-beveiliging van begin/annuleren en een veilige `HttpOnly; Secure; SameSite`-cookie ontbreken nog. Een echte Google-adapter moet de PKCE-parameters aantoonbaar gebruiken, providerlooptijden begrenzen en actuele projectisolatie verifiëren.
 
 De opslagpoort bevat geen nieuwe SQL-adapter. De tests tonen echte lokale AES-GCM-eigenschappen aan, maar geen Vault-encryptie of duurzame opslag. De bestaande Vault- en providerpoorten zijn nog testdubbels. Er is geen automatische taak gestart.
