@@ -126,6 +126,10 @@ export class CreatorYouTubeOAuthAttempt {
   }
   throw Error('Cleanup outcome not confirmed');
  }
+ async inspect(jobId:string,browserNonce:string){return this.run(async()=>{
+  const {value}=await this.read(jobId,browserNonce);
+  return{link:value.link,kind:value.kind??'authorize',status:value.status,expires:value.expires,provider:value.cleanupStatus??null};
+ });}
  async begin(link:string){return this.run(async()=>{
   await this.cipher?.ready();
   uuid.parse(link);const binding=await this.binding(),browserNonce=randomBytes(32).toString('base64url'),verifier=randomBytes(32).toString('base64url');

@@ -87,7 +87,7 @@ for(const name of creatorTables){
  assert.ok(table?.rls,`${name} has RLS`);
  for(const role of ['anon','authenticated','service_role'])assert.ok(Object.values(table.grants[role]).every(allowed=>allowed===false),`${name} has no direct ${role} grants`);
 }
-for(const [schema,name,authenticated,service]of [['public','creator_youtube_owner',true,false],['public','creator_youtube_server',false,true],['private','cy_session',false,false]]){
+for(const [schema,name,authenticated,service]of [['public','creator_youtube_account',true,false],['public','creator_youtube_owner',true,false],['public','creator_youtube_server',false,true],['private','cy_session',false,false]]){
  const fn=effects.functions.find(f=>f.schema===schema&&f.name===name);
  assert.ok(fn?.security_definer,`${name} uses the tested private-store boundary`);
  assert.ok(fn.settings?.includes('search_path=""'),`${name} has an empty search path`);

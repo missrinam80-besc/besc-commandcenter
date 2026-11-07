@@ -10,7 +10,9 @@ type Ticket=z.infer<typeof ticket>;
 type Ports={
  authenticate:()=>Promise<void>;
  kernel:Pick<CreatorYouTubeKernel,'consent'|'withdraw'|'collect'>;
- attempts:Pick<CreatorYouTubeOAuthAttempt,'begin'|'callback'|'beginRefresh'|'refresh'|'cancel'|'recover'>;
+ attempts:Pick<CreatorYouTubeOAuthAttempt,'begin'|'callback'|'beginRefresh'|'refresh'|'cancel'|'recover'>&Partial<Pick<CreatorYouTubeOAuthAttempt,'inspect'>>;
+ account?:(after:string|null)=>Promise<unknown>;
+ read?:(link:string)=>Promise<unknown>;
  google:Pick<CreatorYouTubeGoogle,'authorizationUrl'|'ready'>;
 };
 const link=z.string().uuid();
@@ -41,6 +43,22 @@ export class CreatorYouTubeUserFlow {
   return ticket.parse(JSON.parse(Buffer.from(value,'base64url').toString('utf8')));
  }
  private gate(){if(!this.enabled)throw Error('creator_flow_disabled');}
+ async status(request:Request):Promise<Response>{
+  if(!this.enabled)return this.json({status:'unavailable'},503);
+  try{
+   this.gate();const url=new URL(request.url);
+   if(request.method!=='GET'||url.origin!==this.origin||url.pathname!=='/api/creator-youtube'||url.hash||url.search.length>150||!['same-origin',null].includes(request.headers.get('Sec-Fetch-Site'))||request.headers.get('Origin')!==null&&request.headers.get('Origin')!==this.origin)throw Error('Invalid status read');
+   const keys=[...url.searchParams.keys()];if(keys.length>1||keys.some(k=>!['link','after'].includes(k)))throw Error('Invalid selection');
+   await this.ports.authenticate();
+   const current=this.readCookie(request);
+   const pending=current?await this.ports.attempts.inspect?.(current.jobId,current.browserNonce):null;
+   if(current&&!pending)throw Error('Pending request not confirmed');
+   const selected=url.searchParams.get('link'),after=url.searchParams.get('after');
+   if(selected!==null){link.parse(selected);if(!this.ports.read)throw Error('Read not configured');return this.json({status:'ready',link:await this.ports.read(selected),pending});}
+   if(after!==null)link.parse(after);if(!this.ports.account)throw Error('Account not configured');
+   return this.json({status:'ready',account:await this.ports.account(after),pending});
+  }catch{return this.json({status:'not_confirmed'},400);}
+ }
  private async input(request:Request){
   if(request.method!=='POST'||new URL(request.url).origin!==this.origin||new URL(request.url).pathname!=='/api/creator-youtube'||new URL(request.url).search||request.headers.get('Origin')!==this.origin||!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(request.headers.get('Content-Type')??'')||!['same-origin',null].includes(request.headers.get('Sec-Fetch-Site')))throw Error('Invalid mutation');
   const reader=request.body?.getReader();if(!reader)throw Error('Missing input');const parts:Uint8Array[]=[];let size=0;

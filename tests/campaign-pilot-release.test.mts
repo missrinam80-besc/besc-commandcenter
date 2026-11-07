@@ -152,7 +152,12 @@ test('F3 release: exact additive migration, historical SQL unchanged and live ga
   assert.equal(youtubeClosure.new_private_tables,1);
   assert.equal(youtubeClosure.legacy_dispatch_state,'unknown');
   for(const key of ['cloud_apply_authorized','server_deploy_authorized','live_provider_authorized','publication_authorized'])assert.equal(youtubeClosure[key],false);
-  const files = [...beforeStep11,...step11.new_migrations,adminAccess.migration,operations.migration,socialAlerts.migration,socialReview.migration,deliverableHistory.migration,reviewHistory.migration,youtube.migration,youtubeClosure.migration];
+  const youtubeAccount=JSON.parse(readFileSync(new URL('ops/creator-youtube-session-ui-release.json',root),'utf8'));
+  assert.equal(youtubeAccount.required_history_before,youtubeClosure.expected_history_after_separate_apply);
+  assert.equal(youtubeAccount.expected_history_after_separate_apply,153);
+  assert.equal(youtubeAccount.new_functions,1);assert.equal(youtubeAccount.new_private_tables,0);assert.equal(youtubeAccount.runtime_default,'off');
+  for(const key of ['cloud_apply_authorized','server_deploy_authorized','live_provider_authorized','publication_authorized'])assert.equal(youtubeAccount[key],false);
+  const files = [...beforeStep11,...step11.new_migrations,adminAccess.migration,operations.migration,socialAlerts.migration,socialReview.migration,deliverableHistory.migration,reviewHistory.migration,youtube.migration,youtubeClosure.migration,youtubeAccount.migration];
   assert.deepEqual(readdirSync(new URL('supabase/migrations/', root)).filter(f => f.endsWith('.sql')).sort(), files.map(f => f.file).sort());
   for (const f of files) assert.equal(createHash('sha256').update(readFileSync(new URL('supabase/migrations/' + f.file, root), 'utf8').replaceAll('\r\n', '\n')).digest('hex'), f.sha256_lf, f.file);
   assert.deepEqual(manifest.excluded_history, ['20261001110000_seed_operational_guidelines.sql']);

@@ -8,6 +8,7 @@ type Props={
  configured?:boolean;
  connected:boolean;
  pending:boolean;
+ revocationPending?:boolean;
  link:string|null;
  consent:Omit<CreatorYouTubeConsent,'accepted'>;
  action:(input:Record<string,unknown>)=>Promise<CreatorYouTubeFlowReply>;
@@ -16,11 +17,11 @@ type Props={
 
 // Reusable local UI, not mounted on an account page. The host supplies an authenticated
 // own-link read and same-origin actions; a callback query string is never proof of connection.
-export function CreatorYouTubeConnect({configured=false,connected:initialConnected,pending:initialPending,link:initialLink,consent,action,navigate}:Props){
+export function CreatorYouTubeConnect({configured=false,connected:initialConnected,pending:initialPending,revocationPending:initialRevocationPending=false,link:initialLink,consent,action,navigate}:Props){
  const [accepted,setAccepted]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[connected,setConnected]=useState(initialConnected),[pending,setPending]=useState(initialPending),[link,setLink]=useState(initialLink);
  const working=useRef(false);
  const [uncertain,setUncertain]=useState(false);
- const [revocationPending,setRevocationPending]=useState(false);
+ const [revocationPending,setRevocationPending]=useState(initialRevocationPending);
  async function run(command:'start'|'refresh'|'collect'|'disconnect'|'cancel'|'recover'){
   if(!configured||working.current||command==='start'&&!accepted)return;
   working.current=true;setBusy(true);setMessage('Bezig met je YouTube-koppeling…');
@@ -74,7 +75,7 @@ export function CreatorYouTubeConnect({configured=false,connected:initialConnect
   {!connected&&!pending&&!revocationPending&&<label className="flex gap-2"><input type="checkbox" checked={accepted} disabled={busy||!configured} onChange={event=>setAccepted(event.target.checked)}/>Ik geef toestemming voor het bovenstaande doel, de geselecteerde video’s en de vermelde termijnen.</label>}
   <div className="flex flex-wrap gap-2">
    {!connected&&!pending&&!revocationPending&&<button type="button" disabled={!configured||!accepted||busy||uncertain} onClick={()=>void run('start')}>Toestemming geven en naar Google</button>}
-   {revocationPending&&<button type="button" disabled={!configured||busy} onClick={()=>void run('disconnect')}>Intrekking opnieuw controleren</button>}
+   {revocationPending&&!pending&&<button type="button" disabled={!configured||busy} onClick={()=>void run('disconnect')}>Intrekking opnieuw controleren</button>}
    {connected&&<>
     <button type="button" disabled={!configured||busy||pending||uncertain} onClick={()=>void run('collect')}>Statistieken ophalen</button>
     <button type="button" disabled={!configured||busy||pending||uncertain} onClick={()=>void run('refresh')}>Toegang vernieuwen</button>
