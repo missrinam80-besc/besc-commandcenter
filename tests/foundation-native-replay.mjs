@@ -72,13 +72,27 @@ for (const name of names) {
   if(name.endsWith('_re03_controlled_balance_transfer.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,191,'RE02 adds exactly five private tables');
   if(name.endsWith('_step11_agent_workflows.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,193,'RE02/RE03 baseline preserved before step 11');
   if(name.endsWith('_social_sync_notifications.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,197,'Existing schema preserved before social notification state');
+  if(name.endsWith('_creator_youtube_consent_kernel.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,198,'Existing schema preserved before five private creator consent tables');
   try { sql(readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8")); }
   catch (error) { throw new Error(`Native replay failed at ${name}: ${error.stderr?.toString() ?? error.message}`); }
   if (name.startsWith("20260712190000_")) sql("insert into auth.users(id,email) values('00000000-0000-4000-8000-000000000001','fixture@example.invalid');update public.organization_members set role='admin',status='active';");
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length,198); // Existing 197 tables plus per-recipient social incident state.
+assert.equal(effects.tables.length,203); // Existing 198 tables plus five private creator consent tables.
+const creatorTables=['cy_links','cy_credentials','cy_jobs','cy_samples','cy_events'];
+assert.deepEqual(effects.tables.filter(t=>t.schema==='private'&&t.name.startsWith('cy_')).map(t=>t.name).sort(),creatorTables.toSorted());
+for(const name of creatorTables){
+ const table=effects.tables.find(t=>t.schema==='private'&&t.name===name);
+ assert.ok(table?.rls,`${name} has RLS`);
+ for(const role of ['anon','authenticated','service_role'])assert.ok(Object.values(table.grants[role]).every(allowed=>allowed===false),`${name} has no direct ${role} grants`);
+}
+for(const [schema,name,authenticated,service]of [['public','creator_youtube_owner',true,false],['public','creator_youtube_server',false,true],['private','cy_session',false,false]]){
+ const fn=effects.functions.find(f=>f.schema===schema&&f.name===name);
+ assert.ok(fn?.security_definer,`${name} uses the tested private-store boundary`);
+ assert.ok(fn.settings?.includes('search_path=""'),`${name} has an empty search path`);
+ assert.equal(fn.anon_execute,false);assert.equal(fn.authenticated_execute,authenticated);assert.equal(fn.service_role_execute,service);
+}
 const socialState=effects.tables.find(t=>t.schema==='private'&&t.name==='social_sync_notification_state');
 assert.ok(socialState?.rls,'Social incident state is private and RLS protected');
 assert.ok(Object.values(socialState.grants.anon).every(v=>v===false),'No anonymous incident table grants');
