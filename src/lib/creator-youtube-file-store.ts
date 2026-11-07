@@ -6,7 +6,7 @@ import {z} from 'zod';
 import type {CreatorAttemptStore} from './creator-youtube-oauth-attempt';
 
 const idSchema=z.string().uuid().regex(/^[a-f0-9-]+$/);
-const recordSchema=z.object({revision:z.number().int().min(1).max(Number.MAX_SAFE_INTEGER-1),sealed:z.string().min(40).max(16000).regex(/^[A-Za-z0-9_-]+$/)}).strict();
+const recordSchema=z.object({revision:z.number().int().min(1).max(Number.MAX_SAFE_INTEGER-1),sealed:z.string().min(40).max(65536).regex(/^[A-Za-z0-9_-]+$/)}).strict();
 type RecordValue=z.infer<typeof recordSchema>;
 const missing=(e:unknown,code:string)=>typeof e==='object'&&e!==null&&'code'in e&&e.code===code;
 const normalized=(p:string)=>process.platform==='win32'?p.toLowerCase():p;
@@ -41,9 +41,9 @@ export class CreatorYouTubeFileStore implements CreatorAttemptStore {
   revisions.sort();if(!revisions.length)return null;
   for(let i=0;i<revisions.length;i++)if(revisions[i]!==`${String(i+1).padStart(16,'0')}.json`)throw Error('Incomplete revision history');
   const filename=path.join(directory,revisions.at(-1)!);const stat=await lstat(filename);
-  if(!stat.isFile()||stat.isSymbolicLink()||(process.platform!=='win32'&&(stat.mode&0o077)!==0)||stat.size>17000)throw Error('Invalid record');
+  if(!stat.isFile()||stat.isSymbolicLink()||(process.platform!=='win32'&&(stat.mode&0o077)!==0)||stat.size>66000)throw Error('Invalid record');
   const file=await open(filename,'r');try{
-   const actual=await file.stat();if(actual.ino!==stat.ino||actual.size>17000)throw Error('Changed record');
+   const actual=await file.stat();if(actual.ino!==stat.ino||actual.size>66000)throw Error('Changed record');
    const record=recordSchema.parse(JSON.parse(await file.readFile('utf8')));
    if(record.revision!==revisions.length)throw Error('Invalid revision');return record;
   }finally{await file.close();}

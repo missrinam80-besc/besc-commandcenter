@@ -7,7 +7,7 @@ const uuid=z.string().uuid();
 const keySchema=z.string().regex(/^[A-Za-z0-9_-]{43}$/);
 const ringSchema=z.object({format:z.literal(1),active:uuid,legacy:uuid.nullable(),keys:z.array(z.object({id:uuid,requestId:uuid,material:keySchema}).strict()).min(1).max(32)}).strict();
 type Ring=z.infer<typeof ringSchema>;
-const envelopeSchema=z.object({version:z.literal(2),keyId:uuid,iv:z.string().length(16),tag:z.string().length(22),ciphertext:z.string().max(12000)}).strict();
+const envelopeSchema=z.object({version:z.literal(2),keyId:uuid,iv:z.string().length(16),tag:z.string().length(22),ciphertext:z.string().max(44000)}).strict();
 const magic=Buffer.from('BESCYT02');
 
 function decode(value:string){if(!/^[A-Za-z0-9_-]*$/.test(value))throw Error('Invalid encoding');const b=Buffer.from(value,'base64url');if(b.toString('base64url')!==value)throw Error('Invalid encoding');return b;}
@@ -71,15 +71,15 @@ export class CreatorYouTubeKeyring implements CreatorAttemptCipher {
  });}
  private validateBinding(id:string,revision:number){uuid.parse(id);if(!Number.isSafeInteger(revision)||revision<1)throw Error('Invalid request binding');}
  async seal(id:string,revision:number,plaintext:string){return this.run(async()=>{
-  this.validateBinding(id,revision);if(Buffer.byteLength(plaintext,'utf8')>8000)throw Error('Payload too large');
+  this.validateBinding(id,revision);if(Buffer.byteLength(plaintext,'utf8')>32768)throw Error('Payload too large');
   const {state}=await this.#read(),key=state.keys.find(k=>k.id===state.active)!;
   const encrypted=encrypt(decode(key.material),`creator-youtube-attempt:v2:${this.ringId}:${id}:${revision}:${key.id}`,plaintext);
   const envelope={version:2,keyId:key.id,iv:encrypted.iv.toString('base64url'),tag:encrypted.tag().toString('base64url'),ciphertext:encrypted.ciphertext.toString('base64url')};
   const sealed=Buffer.concat([magic,Buffer.from(JSON.stringify(envelope))]).toString('base64url');
-  if(sealed.length>16000)throw Error('Payload too large');return sealed;
+  if(sealed.length>65536)throw Error('Payload too large');return sealed;
  });}
  async open(id:string,revision:number,sealed:string){return this.run(async()=>{
-  this.validateBinding(id,revision);if(sealed.length>16000)throw Error('Payload too large');
+  this.validateBinding(id,revision);if(sealed.length>65536)throw Error('Payload too large');
   const {state}=await this.#read(),bytes=decode(sealed);
   if(!bytes.subarray(0,magic.length).equals(magic)){
    const key=state.keys.find(k=>k.id===state.legacy);if(!key)throw Error('Legacy key not configured');

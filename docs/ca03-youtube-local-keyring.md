@@ -27,6 +27,8 @@ Annulering en openstaande opruiming blijven na rotatie herstelbaar met de eerder
 
 ## Grenzen vóór live gebruik
 
+Vervolg: [lokale opvang van providerantwoorden](ca03-youtube-provider-inbox.md) gebruikt de sleutelring voor ontvangen codewisselantwoorden. Dit sluit het gat vóór de eerste lokale vastlegging niet af.
+
 Dit levert lokale opslag en rotatie van **gegevenssleutels**, geen productiebron of rotatie van de hoofdsleutel. De keuze en inrichting van een OS-kluis of externe sleutelbeheerder, toegang voor de applicatieaccount, hoofdsleutelbackup en herstel bij sleutelverlies blijven open. Er is geen DPAPI-, KMS- of andere sleutelservice aangeroepen en er zijn geen echte sleutels geïmporteerd.
 
 Dezelfde [bestandsopslaggrenzen](ca03-youtube-local-recovery.md) blijven gelden: procesuitval is getest, geen garantie bij stroomuitval, een teruggezette schijfsnapshot, verloren sleutel of toegang door een beheerder die de sleutel en bestanden bezit. Windows-ACL-beleid moet vóór activering worden vastgesteld. Oude versleutelde revisies, sleutelretentie, vernietiging en schijflimieten zijn niet automatisch geregeld.
