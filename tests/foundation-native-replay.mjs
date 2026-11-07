@@ -79,8 +79,8 @@ for (const name of names) {
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length,203); // Existing 198 tables plus five private creator consent tables.
-const creatorTables=['cy_links','cy_credentials','cy_jobs','cy_samples','cy_events'];
+assert.equal(effects.tables.length,204); // Existing 198 tables plus six private creator consent/closure tables.
+const creatorTables=['cy_links','cy_credentials','cy_jobs','cy_samples','cy_events','cy_authorization_closures'];
 assert.deepEqual(effects.tables.filter(t=>t.schema==='private'&&t.name.startsWith('cy_')).map(t=>t.name).sort(),creatorTables.toSorted());
 for(const name of creatorTables){
  const table=effects.tables.find(t=>t.schema==='private'&&t.name===name);

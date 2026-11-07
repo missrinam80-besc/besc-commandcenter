@@ -1,0 +1,22 @@
+{
+  "work_item": "CA03-package-1",
+  "scope": "local definitive unstarted authorization closure",
+  "migration": {
+    "file": "20261107212328_creator_youtube_unstarted_closure.sql",
+    "sha256_lf": "51676ddc2623c3139b8bdb750cbc07e3e5cebcc49df05774ba06ea1d218a5ca8"
+  },
+  "required_history_before": 151,
+  "expected_history_after_separate_apply": 152,
+  "preflight_reverification_required": true,
+  "atomic_apply_required": true,
+  "runtime_default": "off",
+  "new_private_tables": 1,
+  "legacy_dispatch_state": "unknown",
+  "legacy_jobs_automatically_closed": false,
+  "existing_token_data_deleted": false,
+  "provider_revocation_fabricated": false,
+  "cloud_apply_authorized": false,
+  "server_deploy_authorized": false,
+  "live_provider_authorized": false,
+  "publication_authorized": false
+}

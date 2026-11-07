@@ -20,9 +20,9 @@ export type CreatorResponsePort={
  recover:(binding:CreatorResponseBinding,cleanup:(answer:unknown)=>Promise<CreatorYouTubeCleanupOutcome>)=>Promise<CreatorYouTubeCleanupOutcome>;
 };
 type Principal={organizationId:string;userId:string;sessionId:string};
-type Kernel=Pick<CreatorYouTubeKernel,'beginAuthorization'|'authorize'|'withdraw'>&Partial<Pick<CreatorYouTubeKernel,'recoverCapturedAuthorization'|'beginRefresh'|'refreshPrepared'>>;
+type Kernel=Pick<CreatorYouTubeKernel,'beginAuthorization'|'authorize'|'withdraw'>&Partial<Pick<CreatorYouTubeKernel,'recoverCapturedAuthorization'|'beginRefresh'|'refreshPrepared'|'closeUnstartedAuthorization'>>;
 const uuid=z.string().uuid();
-const attemptSchema=z.object({link:uuid,binding:z.string().length(64),browser:z.string().length(64),state:z.string().length(64),verifier:z.string().regex(/^[A-Za-z0-9_-]{43}$/).optional(),expires:z.number().int(),status:z.enum(['pending','running','completed','cancelled','expired','failed','cleanup_pending','recovered','refresh_abandoned']),cleanupReason:z.enum(['cancelled','expired','failed']).optional(),cleanupStatus:z.enum(['pending','failed','complete','blocked_isolation','uncertain']).optional(),kind:z.enum(['authorize','refresh']).optional(),exchangeNotStarted:z.literal(true).optional()}).strict();
+const attemptSchema=z.object({link:uuid,binding:z.string().length(64),browser:z.string().length(64),state:z.string().length(64),verifier:z.string().regex(/^[A-Za-z0-9_-]{43}$/).optional(),expires:z.number().int(),status:z.enum(['pending','running','completed','cancelled','expired','failed','cleanup_pending','recovered','refresh_abandoned']),cleanupReason:z.enum(['denied','cancelled','expired','failed']).optional(),cleanupStatus:z.enum(['none','pending','failed','complete','blocked_isolation','uncertain']).optional(),kind:z.enum(['authorize','refresh']).optional(),exchangeNotStarted:z.literal(true).optional()}).strict();
 const refreshSlotSchema=z.object({purpose:z.literal('creator_youtube_refresh_slot_v1'),link:uuid,jobId:uuid,binding:z.string().length(64),status:z.enum(['held','free'])}).strict();
 type Attempt=z.infer<typeof attemptSchema>;
 const hash=(value:string)=>createHash('sha256').update(value).digest('hex');
@@ -99,7 +99,7 @@ export class CreatorYouTubeOAuthAttempt {
   if(!same(value.binding,await this.binding())||!same(value.browser,hash(browserNonce))||(state!==undefined&&(!/^[a-f0-9]{64}$/.test(state)||!same(value.state,hash(state)))))throw Error('Invalid callback binding');
   return{record,value};
  }
- private async cleanup(id:string,known:Attempt,reason:'cancelled'|'expired'|'failed'){
+ private async cleanup(id:string,known:Attempt,reason:'denied'|'cancelled'|'expired'|'failed'){
   for(let retry=0;retry<4;retry++){
    const record=await this.ports.store.read(id);if(!record)throw Error('Missing cleanup request');const value=await this.open(id,record);
    if(!same(value.binding,known.binding)||!same(value.browser,known.browser)||value.link!==known.link)throw Error('Changed cleanup owner');
@@ -108,7 +108,12 @@ export class CreatorYouTubeOAuthAttempt {
    if(!await this.write(id,record.revision,queued))continue;
    let provider:NonNullable<Attempt['cleanupStatus']>='uncertain';
    try{
-    const result=await this.ports.kernel.withdraw(value.link);
+    let result;
+    const close=value.kind!=='refresh'&&this.ports.kernel.closeUnstartedAuthorization;
+    if(close){
+     try{result=await close.call(this.ports.kernel,id,value.link,queued.cleanupReason??reason);if(result.local===true)queued.exchangeNotStarted=true;}
+     catch(error){if(queued.exchangeNotStarted)throw error;result=await this.ports.kernel.withdraw(value.link);}
+    }else result=await this.ports.kernel.withdraw(value.link);
     if(result.local===true){
      provider=result.provider;
      // A CAS from pending proves that no worker has claimed the code exchange. Persist this
@@ -116,7 +121,7 @@ export class CreatorYouTubeOAuthAttempt {
      if(this.ports.responses&&!queued.exchangeNotStarted)provider=await this.ports.responses.recover(this.responseBinding(id,value),answer=>this.ports.kernel.recoverCapturedAuthorization!(id,value.link,answer));
     }
    }catch{/* Keep durable uncertain work; never report provider completion. */}
-   const status=provider==='complete'?'recovered' as const:'cleanup_pending' as const;
+   const status=provider==='complete'||provider==='none'?'recovered' as const:'cleanup_pending' as const;
    if(await this.write(id,record.revision+1,{...queued,status,cleanupStatus:provider})){if(provider==='complete')await this.releaseRefreshSlot(id,value);return{status,provider,...(queued.exchangeNotStarted?{exchangeNotStarted:true as const}:{})};}
   }
   throw Error('Cleanup outcome not confirmed');
@@ -132,9 +137,9 @@ export class CreatorYouTubeOAuthAttempt {
  async callback(input:{jobId:string;browserNonce:string;state:string;code?:string;error?:string}){return this.run(async()=>{
   const {record,value}=await this.read(input.jobId,input.browserNonce,input.state);
   if(value.status!=='pending'||value.kind==='refresh')throw Error('Request consumed');
-  if(this.ports.now()>=value.expires){await this.cleanup(input.jobId,value,'expired');throw Error('Request expired');}
+  if(this.ports.now()>=value.expires){const result=await this.cleanup(input.jobId,value,'expired');return{status:'expired' as const,provider:result.provider,...(result.exchangeNotStarted?{exchangeNotStarted:true as const}:{})};}
   if((input.code===undefined)===(input.error===undefined)||input.code!==undefined&&(!input.code||input.code.length>8192)||input.error!==undefined&&(!input.error||input.error.length>256))throw Error('Invalid callback');
-  if(input.error!==undefined){const result=await this.cleanup(input.jobId,value,'cancelled');return{status:'cancelled' as const,provider:result.provider,...(result.exchangeNotStarted?{exchangeNotStarted:true as const}:{})};}
+  if(input.error!==undefined){const result=await this.cleanup(input.jobId,value,'denied');return{status:'cancelled' as const,provider:result.provider,...(result.exchangeNotStarted?{exchangeNotStarted:true as const}:{})};}
   if(!value.verifier||!await this.write(input.jobId,record.revision,{...value,status:'running'}))throw Error('Request conflict');
   try{
    await this.ports.kernel.authorize(input.jobId,input.state,input.code!,{codeVerifier:value.verifier,redirectUri:this.redirectUri},async()=>{
@@ -169,7 +174,7 @@ export class CreatorYouTubeOAuthAttempt {
   const {record,value}=await this.read(jobId,browserNonce);
   if(value.kind!=='refresh'||value.status!=='pending')throw Error('Refresh consumed');
   await this.assertRefreshSlot(jobId,value);
-  if(this.ports.now()>=value.expires){if(!await this.abandonUnusedRefresh(jobId,value))await this.cleanup(jobId,value,'expired');throw Error('Refresh expired');}
+  if(this.ports.now()>=value.expires){if(await this.abandonUnusedRefresh(jobId,value))return{status:'expired' as const,provider:'none' as const};await this.cleanup(jobId,value,'expired');throw Error('Refresh expired');}
   if(!await this.write(jobId,record.revision,{...value,status:'running'}))throw Error('Refresh conflict');
   try{
    await this.ports.kernel.refreshPrepared(jobId,async()=>{

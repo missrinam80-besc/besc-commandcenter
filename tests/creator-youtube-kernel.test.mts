@@ -24,7 +24,7 @@ const consent=():CreatorYouTubeConsent=>({accepted:true,purpose:'TESTFIXTURE - N
 const token=(suffix='1'):CreatorYouTubeToken=>({channel_id:channel,scopes:[...creatorYouTubeScopes],access_token:'MOCK-ACCESS-'+suffix,refresh_token:'MOCK-REFRESH-'+suffix,expires_at:new Date(Date.now()+3600000).toISOString()});
 async function actor(user:string,role='authenticated'){await f.owner();await f.actor(user,role);await f.db.exec(`select set_config('request.jwt.claims',${q(JSON.stringify({sub:user,role,session_id:sessions.get(user)}))},false)`);}
 async function statement<T>(sql:string){await f.db.exec('savepoint api');try{const result=(await f.db.query<{v:T}>(sql)).rows[0].v;await f.db.exec('release savepoint api');return result;}catch(e){await f.db.exec('rollback to api');await f.db.exec('release savepoint api');throw e;}}
-async function owner(op:string,link:string|null,data:unknown={},user=f.ids.member,org=f.ids.org){await actor(user);return statement<{id:string;job_id?:string|null;status?:string;provider_revocation?:string;samples?:unknown[]}>(`select public.creator_youtube_owner(${q(org)},${q(op)},${link?q(link):'null'},${j(data)}) v`);}
+async function owner(op:string,link:string|null,data:unknown={},user=f.ids.member,org=f.ids.org){await actor(user);return statement<{id:string;job_id?:string|null;status?:string;provider_revocation?:import('../src/lib/creator-youtube-kernel.ts').CreatorYouTubeCleanupOutcome|'none';samples?:unknown[]}>(`select public.creator_youtube_owner(${q(org)},${q(op)},${link?q(link):'null'},${j(data)}) v`);}
 async function server(job:string,op:string,data:unknown={}){await actor(f.ids.admin,'service_role');return statement(`select public.creator_youtube_server(${q(job)},${q(op)},${j(data)}) v`);}
 function setup(){const calls:string[]=[];const provider:CreatorYouTubePorts['provider']={isolatedProject:true,exchange:async()=>{calls.push('exchange');return token();},refresh:async()=>{calls.push('refresh');return token('2');},collect:async()=>{calls.push('collect');return[{video_id:'abcdefghijk',metric:'views',value:0,quality:'known'},{video_id:'abcdefghijk',metric:'estimatedMinutesWatched',value:null,quality:'missing'}];},revoke:async()=>{calls.push('revoke');}};const ports:CreatorYouTubePorts={owner:(op,link,data)=>owner(op,link,data),server,provider};return{kernel:new CreatorYouTubeKernel(ports,true),ports,provider,calls};}
 async function active(){const s=setup();const link=(await s.kernel.consent(consent())).id;const auth=await s.kernel.beginAuthorization(link);await s.kernel.authorize(auth.jobId,auth.state,'MOCK-CODE');return{...s,link};}
@@ -88,6 +88,103 @@ test('CA03 provider validation: refresh receipt is present before verification a
 
 test('CA03 provider validation: isolation lost during verification blocks activation and remote cleanup',async()=>{const s=setup(),link=(await s.kernel.consent(consent())).id,{ring,inbox}=await testInbox(),flow=flowFor(s.kernel,Date.now,ring,inbox),r=await flow.begin(link);s.provider.requiresCapture=true;s.provider.validate=async value=>{s.provider.isolatedProject=false;return value;};await assert.rejects(flow.callback({...r,code:'MOCK'}),/not_confirmed/);assert.equal((await owner('read',link)).status,'revoked');assert.equal(await privateCount('cy_credentials'),0);assert(!s.calls.includes('revoke'));assert.equal((await flow.recover(r.jobId,r.browserNonce)).provider,'blocked_isolation');});
 
-test('CA03 user flow integration: denied unclaimed exchange needs no receipt and cannot later activate',async()=>{const s=setup(),link=(await s.kernel.consent(consent())).id,{ring,inbox}=await testInbox(),flow=flowFor(s.kernel,Date.now,ring,inbox),r=await flow.begin(link);const outcome=await flow.callback({...r,error:'access_denied'});assert.equal('provider'in outcome?outcome.provider:null,'pending');assert.equal('exchangeNotStarted'in outcome&&outcome.exchangeNotStarted,true);assert.equal((await owner('read',link)).status,'revoked');const recovered=await flow.recover(r.jobId,r.browserNonce);assert.equal(recovered.provider,'pending');assert.equal('exchangeNotStarted'in recovered&&recovered.exchangeNotStarted,true);await assert.rejects(flow.callback({...r,code:'MOCK'}),/not_confirmed/);assert.equal(s.calls.length,0);assert.equal(await privateCount('cy_credentials'),0);});
+test('CA03 user flow integration: denied unclaimed exchange needs no receipt and cannot later activate',async()=>{const s=setup(),link=(await s.kernel.consent(consent())).id,{ring,inbox}=await testInbox(),flow=flowFor(s.kernel,Date.now,ring,inbox),r=await flow.begin(link);const outcome=await flow.callback({...r,error:'access_denied'});assert.equal('provider'in outcome?outcome.provider:null,'none');assert.equal('exchangeNotStarted'in outcome&&outcome.exchangeNotStarted,true);assert.equal((await owner('read',link)).status,'revoked');const recovered=await flow.recover(r.jobId,r.browserNonce);assert.equal(recovered.provider,'none');assert.equal('exchangeNotStarted'in recovered&&recovered.exchangeNotStarted,true);await assert.rejects(flow.callback({...r,code:'MOCK'}),/not_confirmed/);assert.equal(s.calls.length,0);assert.equal(await privateCount('cy_credentials'),0);});
 
-test('CA03 user flow integration: never-started proof survives lost withdrawal acknowledgment without provider replay',async()=>{const s=setup(),link=(await s.kernel.consent(consent())).id,{ring,inbox}=await testInbox(),flow=flowFor(s.kernel,Date.now,ring,inbox),r=await flow.begin(link),original=s.ports.owner;let lost=true;s.ports.owner=async(op,id,data)=>{const result=await original(op,id,data);if(op==='withdraw'&&lost){lost=false;throw Error('MOCK withdrawal acknowledgment lost');}return result;};assert.equal((await flow.cancel(r.jobId,r.browserNonce)).provider,'uncertain');const recovered=await flow.recover(r.jobId,r.browserNonce);assert.equal(recovered.provider,'pending');assert.equal('exchangeNotStarted'in recovered&&recovered.exchangeNotStarted,true);assert.equal((await owner('read',link)).status,'revoked');await assert.rejects(flow.callback({...r,code:'MOCK'}),/not_confirmed/);assert.equal(s.calls.length,0);});
+test('CA03 user flow integration: never-started proof survives lost withdrawal acknowledgment without provider replay',async()=>{const s=setup(),link=(await s.kernel.consent(consent())).id,{ring,inbox}=await testInbox(),flow=flowFor(s.kernel,Date.now,ring,inbox),r=await flow.begin(link),original=s.ports.owner;let lost=true;s.ports.owner=async(op,id,data)=>{const result=await original(op,id,data);if(op==='withdraw'&&lost){lost=false;throw Error('MOCK withdrawal acknowledgment lost');}return result;};assert.equal((await flow.cancel(r.jobId,r.browserNonce)).provider,'uncertain');const recovered=await flow.recover(r.jobId,r.browserNonce);assert.equal(recovered.provider,'none');assert.equal('exchangeNotStarted'in recovered&&recovered.exchangeNotStarted,true);assert.equal((await owner('read',link)).status,'revoked');await assert.rejects(flow.callback({...r,code:'MOCK'}),/not_confirmed/);assert.equal(s.calls.length,0);});
+
+async function closureRows(job:string){await f.owner();return(await f.db.query<{job_id:string;actor:string;reason:string;proof:string}>(`select job_id,actor,reason,proof from private.cy_authorization_closures where job_id=${q(job)}`)).rows;}
+
+test('CA03 closure: denial, cancellation and expiry close SQL work exactly once without a provider event',async()=>{
+ for(const reason of ['denied','cancelled','expired'] as const){
+  let now=Date.now();const s=setup(),link=(await s.kernel.consent(consent())).id,{ring,inbox}=await testInbox(),flow=flowFor(s.kernel,()=>now,ring,inbox),r=await flow.begin(link);
+  let result;if(reason==='denied')result=await flow.callback({...r,error:'access_denied'});else if(reason==='cancelled')result=await flow.cancel(r.jobId,r.browserNonce);else{now+=300000;result=await flow.callback({...r,code:'MOCK'});assert.equal(result.status,'expired');}
+  assert.equal('provider'in result&&result.provider,'none');assert.equal((await owner('read',link)).provider_revocation,'none');
+  assert.equal((await flow.recover(r.jobId,r.browserNonce)).provider,'none');const rows=await closureRows(r.jobId);assert.equal(rows.length,1);assert.equal(rows[0].actor,f.ids.member);assert.equal(rows[0].reason,reason);assert.equal(rows[0].proof,'sql_never_started');
+  await f.owner();const jobs=(await f.db.query<{used:boolean;dispatch_state:string;kind:string}>(`select used,dispatch_state,kind from private.cy_jobs where link_id=${q(link)}`)).rows;
+  assert(jobs.every(j=>j.used));assert.equal(jobs.find(j=>j.kind==='authorize')?.dispatch_state,'closed');
+  assert.equal((await f.db.query<{n:number}>(`select count(*)::int n from private.cy_events where link_id=${q(link)} and operation='provider_revoked'`)).rows[0].n,0);
+  await assert.rejects(server(r.jobId,'read'),/stale_job/);await assert.rejects(server(r.jobId,'finish',token()),/stale_job/);assert.equal(s.calls.length,0);
+ }
+});
+
+test('CA03 closure: SQL dispatch claim blocks a never-started assertion even without a captured answer',async()=>{
+ const s=setup(),link=(await s.kernel.consent(consent())).id,{ring,inbox}=await testInbox(),flow=flowFor(s.kernel,Date.now,ring,inbox),r=await flow.begin(link);
+ await server(r.jobId,'read');assert.equal((await flow.cancel(r.jobId,r.browserNonce)).provider,'uncertain');
+ assert.equal((await closureRows(r.jobId)).length,0);assert.equal((await owner('read',link)).provider_revocation,'pending');assert.equal(s.calls.length,0);
+});
+
+test('CA03 closure: active credentials and refresh jobs cannot be retired as unstarted authorization',async()=>{
+ const s=await active(),job=(await owner('begin',s.link,{kind:'refresh',request_id:randomUUID()})).id;
+ await assert.rejects(s.kernel.closeUnstartedAuthorization(job,s.link,'cancelled'),/not_confirmed/);assert.equal(await privateCount('cy_credentials'),1);assert.equal((await closureRows(job)).length,0);assert.equal((await owner('read',s.link)).provider_revocation,'pending');
+});
+
+test('CA03 closure: owner/org boundary is checked before the server closure can run',async()=>{
+ const s=setup(),link=(await s.kernel.consent(consent())).id,r=await s.kernel.beginAuthorization(link);
+ const original=s.ports.owner;for(const user of [f.ids.admin,f.ids.chair,f.ids.other]){s.ports.owner=(op,id,data)=>owner(op,id,data,user);await assert.rejects(s.kernel.closeUnstartedAuthorization(r.jobId,link,'cancelled'),/not_confirmed/);}
+ s.ports.owner=original;assert.equal((await owner('read',link)).status,'pending');assert.equal((await closureRows(r.jobId)).length,0);
+});
+
+test('CA03 closure: direct table access and authenticated/anonymous server closure are denied',async()=>{
+ const s=setup(),link=(await s.kernel.consent(consent())).id,r=await s.kernel.beginAuthorization(link);await owner('withdraw',link);
+ for(const role of ['anon','authenticated','service_role']){await actor(f.ids.member,role);await assert.rejects(statement('select to_jsonb(t) v from private.cy_authorization_closures t'),/permission denied/);if(role!=='service_role')await assert.rejects(statement(`select public.creator_youtube_server(${q(r.jobId)},'close_unstarted',${j({link_id:link,reason:'cancelled'})}) v`),/permission denied/);}
+});
+
+test('CA03 closure: wrong link, reason and extra fields do not create a closure',async()=>{
+ const s=setup(),link=(await s.kernel.consent(consent())).id,r=await s.kernel.beginAuthorization(link);await owner('withdraw',link);
+ for(const data of [{link_id:randomUUID(),reason:'cancelled'},{link_id:link,reason:'invented'},{link_id:link,reason:'cancelled',success:true}])await assert.rejects(server(r.jobId,'close_unstarted',data),/unstarted_not_confirmed/);
+ assert.equal((await closureRows(r.jobId)).length,0);
+});
+
+test('CA03 closure: receipt failure rolls back job retirement and can be recovered',async()=>{
+ const s=setup(),link=(await s.kernel.consent(consent())).id,{ring,inbox}=await testInbox(),flow=flowFor(s.kernel,Date.now,ring,inbox),r=await flow.begin(link);
+ await f.owner();await f.db.exec("create function pg_temp.reject_cy_close() returns trigger language plpgsql as $$begin raise exception 'MOCK closure unavailable';end$$;create trigger fixture_close_failure before insert on private.cy_authorization_closures for each row execute function pg_temp.reject_cy_close();");
+ assert.equal((await flow.cancel(r.jobId,r.browserNonce)).provider,'uncertain');assert.equal((await closureRows(r.jobId)).length,0);
+ assert.equal((await f.db.query<{used:boolean}>(`select used from private.cy_jobs where id=${q(r.jobId)}`)).rows[0].used,false);
+ await f.db.exec('drop trigger fixture_close_failure on private.cy_authorization_closures');assert.equal((await flow.recover(r.jobId,r.browserNonce)).provider,'none');assert.equal((await closureRows(r.jobId)).length,1);
+});
+
+test('CA03 closure: lost or mismatched SQL acknowledgment recovers without a duplicate receipt',async()=>{
+ for(const variant of ['lost','mismatched']){
+  const s=setup(),link=(await s.kernel.consent(consent())).id,{ring,inbox}=await testInbox(),flow=flowFor(s.kernel,Date.now,ring,inbox),r=await flow.begin(link),original=s.ports.server;let once=true;
+  s.ports.server=async(job,op,data)=>{const result=await original(job,op,data);if(op==='close_unstarted'&&once){once=false;if(variant==='lost')throw Error('MOCK acknowledgment lost');return{...result as object,closed_job_id:randomUUID()};}return result;};
+  assert.equal((await flow.cancel(r.jobId,r.browserNonce)).provider,'uncertain');assert.equal((await flow.recover(r.jobId,r.browserNonce)).provider,'none');assert.equal((await closureRows(r.jobId)).length,1);assert.equal(s.calls.length,0);
+ }
+});
+
+test('CA03 closure: reason stays immutable on an idempotent request',async()=>{
+ const s=setup(),link=(await s.kernel.consent(consent())).id,r=await s.kernel.beginAuthorization(link);
+ assert.equal((await s.kernel.closeUnstartedAuthorization(r.jobId,link,'denied')).provider,'none');await assert.rejects(s.kernel.closeUnstartedAuthorization(r.jobId,link,'expired'),/not_confirmed/);
+ assert.equal((await closureRows(r.jobId))[0].reason,'denied');assert.equal((await closureRows(r.jobId)).length,1);assert.equal((await s.kernel.withdraw(link)).provider,'none');
+});
+
+test('CA03 closure: multiple unstarted jobs keep pending work until each is closed',async()=>{
+ const s=setup(),link=(await s.kernel.consent(consent())).id,r1=await s.kernel.beginAuthorization(link);await f.owner();await f.db.exec(`update private.cy_jobs set expires_at=clock_timestamp()-interval '1 second' where id=${q(r1.jobId)}`);const r2=await s.kernel.beginAuthorization(link);
+ assert.equal((await s.kernel.closeUnstartedAuthorization(r1.jobId,link,'expired')).provider,'pending');assert.equal((await s.kernel.closeUnstartedAuthorization(r2.jobId,link,'cancelled')).provider,'none');assert.equal((await s.kernel.closeUnstartedAuthorization(r1.jobId,link,'expired')).provider,'none');assert.equal(await privateCount('cy_authorization_closures'),2);assert.equal(s.calls.length,0);
+});
+
+test('CA03 closure: an unresolved legacy job prevents a false whole-link completion',async()=>{
+ const s=setup(),link=(await s.kernel.consent(consent())).id,r1=await s.kernel.beginAuthorization(link);await f.owner();await f.db.exec(`update private.cy_jobs set dispatch_state='unknown',expires_at=clock_timestamp()-interval '1 second' where id=${q(r1.jobId)}`);const r2=await s.kernel.beginAuthorization(link);
+ assert.equal((await s.kernel.closeUnstartedAuthorization(r2.jobId,link,'cancelled')).provider,'pending');await assert.rejects(s.kernel.closeUnstartedAuthorization(r1.jobId,link,'expired'),/not_confirmed/);assert.equal((await owner('read',link)).provider_revocation,'pending');
+});
+
+test('CA03 closure: proven no-exchange closure works without an isolated provider project',async()=>{
+ const s=setup(),link=(await s.kernel.consent(consent())).id,r=await s.kernel.beginAuthorization(link);s.provider.isolatedProject=false;assert.equal((await s.kernel.closeUnstartedAuthorization(r.jobId,link,'cancelled')).provider,'none');assert.equal(s.calls.length,0);
+});
+
+test('CA03 closure: a real local upgrade classifies existing jobs as unknown rather than unused',async()=>{
+ await f.owner();const original=readFileSync(new URL('../supabase/migrations/20261107115106_creator_youtube_consent_kernel.sql',import.meta.url),'utf8');await f.db.exec(original.slice(original.indexOf('create function public.creator_youtube_owner')).replaceAll('create function public.','create or replace function public.'));
+ await f.db.exec('drop table private.cy_authorization_closures;alter table private.cy_jobs drop column dispatch_state;');
+ const s=setup(),link=(await s.kernel.consent(consent())).id,r=await s.kernel.beginAuthorization(link);
+ await f.owner();await f.db.exec(readFileSync(new URL('../supabase/migrations/20261107212328_creator_youtube_unstarted_closure.sql',import.meta.url),'utf8'));
+ assert.equal((await f.db.query<{dispatch_state:string}>(`select dispatch_state from private.cy_jobs where id=${q(r.jobId)}`)).rows[0].dispatch_state,'unknown');await assert.rejects(s.kernel.closeUnstartedAuthorization(r.jobId,link,'cancelled'),/not_confirmed/);assert.equal((await closureRows(r.jobId)).length,0);
+});
+
+test('CA03 closure: failed SQL read before dispatch can close a locally claimed request',async()=>{
+ const s=setup(),link=(await s.kernel.consent(consent())).id,{ring,inbox}=await testInbox(),flow=flowFor(s.kernel,Date.now,ring,inbox),r=await flow.begin(link),original=s.ports.server;let once=true;
+ s.ports.server=async(job,op,data)=>{if(op==='read'&&job===r.jobId&&once){once=false;throw Error('MOCK failed before SQL dispatch');}return original(job,op,data);};
+ await assert.rejects(flow.callback({...r,code:'MOCK'}),/not_confirmed/);assert.equal((await flow.recover(r.jobId,r.browserNonce)).provider,'none');assert.equal((await closureRows(r.jobId))[0].reason,'failed');assert.equal(s.calls.length,0);
+});
+
+test('CA03 closure: cancelling a completed authorization still revokes the actual grant',async()=>{
+ const s=setup(),link=(await s.kernel.consent(consent())).id,{ring,inbox}=await testInbox(),flow=flowFor(s.kernel,Date.now,ring,inbox),r=await flow.begin(link);await flow.callback({...r,code:'MOCK'});assert.equal((await flow.cancel(r.jobId,r.browserNonce)).provider,'complete');assert(s.calls.includes('revoke'));assert.equal((await closureRows(r.jobId)).length,0);assert.equal(await privateCount('cy_credentials'),0);
+});
