@@ -7,7 +7,7 @@ const config={host:process.env.PGHOST,port:Number(process.env.PGPORT??5432),data
 const db=new pg.Client(config);await db.connect();const peers=[];
 try{
   assert.match((await db.query('show server_version')).rows[0].server_version,/^17\./);
-  assert.equal(Number((await db.query("select count(*) from pg_tables where schemaname in('public','private')")).rows[0].count),203,'Full replay includes five private creator consent tables');
+  assert.equal(Number((await db.query("select count(*) from pg_tables where schemaname in('public','private')")).rows[0].count),204,'Full replay includes six private creator consent/closure tables');
   assert.equal((await db.query("select count(*)::int n from pg_tables where schemaname='private' and tablename='social_sync_notification_state' and rowsecurity")).rows[0].n,1);
   const user='00000000-0000-4000-8000-000000000001';
   assert.equal((await db.query('select email from auth.users where id=$1',[user])).rows[0].email,'fixture@example.invalid');

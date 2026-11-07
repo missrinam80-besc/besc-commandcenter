@@ -73,10 +73,10 @@ export class CreatorYouTubeUserFlow {
    }
    if(input.action==='collect'){if(current)throw Error('Resolve the pending request first');await this.ports.kernel.collect(input.link);return this.json({status:'collected'});}
    if(!current)throw Error('Missing request cookie');
-   if(input.action==='refresh'){await this.ports.attempts.refresh(current.jobId,current.browserNonce);return this.json({status:'completed'},200,this.cookie(null));}
+   if(input.action==='refresh'){const result=await this.ports.attempts.refresh(current.jobId,current.browserNonce);return this.json(result,200,this.cookie(null));}
    const result=input.action==='cancel'?await this.ports.attempts.cancel(current.jobId,current.browserNonce):await this.ports.attempts.recover(current.jobId,current.browserNonce);
    const notStarted='exchangeNotStarted'in result&&result.exchangeNotStarted===true;
-   const done=result.provider==='complete'||result.provider==='none'||notStarted;
+   const done=result.provider==='complete'||result.provider==='none';
    return this.json({status:result.status,provider:result.provider,...(notStarted?{exchangeNotStarted:true}:{})},200,done?this.cookie(null):undefined);
   }catch{return this.json({status:'not_confirmed'},400);}
  }
@@ -91,7 +91,7 @@ export class CreatorYouTubeUserFlow {
    const state=url.searchParams.get('state')??'',code=url.searchParams.get('code'),error=url.searchParams.get('error');
    if((code===null)===(error===null))throw Error('Invalid callback');
    const result=await this.ports.attempts.callback({...current,state,...(code!==null?{code}:{error:'denied'})});
-   status=result.status;clear=result.status==='completed'||'provider'in result&&result.provider==='complete'||'exchangeNotStarted'in result&&result.exchangeNotStarted===true;
+   status=result.status;clear=result.status==='completed'||'provider'in result&&(result.provider==='complete'||result.provider==='none');
   }catch{/* Callback codes, provider errors and credentials never reach a result URL or log. */}
   const headers=this.headers();headers.set('Location',`${this.origin}/app/account?creator_youtube=${status}`);if(clear)headers.set('Set-Cookie',this.cookie(null));return new Response(null,{status:303,headers});
  }

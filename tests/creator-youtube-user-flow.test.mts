@@ -20,7 +20,7 @@ async function fixture(){
  const store=await CreatorYouTubeFileStore.create(path.join(root,'attempts')),receiptStore=await CreatorYouTubeFileStore.create(path.join(root,'receipts')),keyStore=await CreatorYouTubeFileStore.create(path.join(root,'keys')),wrappingKey=randomBytes(32),ringId=randomUUID();
  const ring=await CreatorYouTubeKeyring.initialize(keyStore,wrappingKey,ringId),receipts=new CreatorYouTubeProviderInbox(receiptStore,ring,true);
  const link=randomUUID(),owner=randomUUID(),organizationId=randomUUID();let principal={userId:owner,organizationId,sessionId:randomUUID()},now=Date.now(),authenticated=true,active=false,credential:Record<string,unknown>|null=null,finishes=0,ownerCalls=0,revocations=0,exchanges=0,channels=0,revokeStatus=200;
- let channelReply=channel,onChannel:()=>Promise<void>=async()=>undefined;
+ let channelReply=channel,closeFailure=false,onChannel:()=>Promise<void>=async()=>undefined;
  const jobs=new Map<string,Record<string,unknown>>();
  const ownerPort:CreatorYouTubePorts['owner']=async(op,id,data)=>{
   ownerCalls++;if(principal.userId!==owner||principal.organizationId!==organizationId)throw Error('Not owner');
@@ -32,7 +32,12 @@ async function fixture(){
  };
  const server:CreatorYouTubePorts['server']=async(jobId,op,data)=>{
   if(!jobs.has(jobId))throw Error('Unknown job');
-  if(op==='read')return jobs.get(jobId);
+  if(op==='close_unstarted'){
+   if(closeFailure)throw Error('MOCK closure unavailable');
+   const job=jobs.get(jobId)!;if(job.kind!=='authorize'||job.started||active||credential||data.link_id!==link)throw Error('Unstarted close denied');
+   return{id:link,closed_job_id:jobId,closed:true,reason:data.reason,provider_revocation:'none'};
+  }
+  if(op==='read'){const job=jobs.get(jobId)!;if(job.kind==='authorize')job.started=true;return job;}
   if(op==='quarantine'){if(active||data.channel_id!==channel)throw Error('No quarantine');credential=data;return{id:link};}
   if(op==='revocation'){if(data.success===true)credential=null;return{id:link};}
   finishes++;if(data.access_token){credential=data;active=true;}return{id:link};
@@ -57,7 +62,7 @@ async function fixture(){
  const callback=async(state:string,query='code=MOCK-CODE',overrideCookie=cookie)=>{
   const response=await flow.callback(new Request(origin+'/auth/creator-youtube/callback?state='+state+'&'+query,{headers:{Cookie:overrideCookie}}));const next=response.headers.get('Set-Cookie');if(next)cookie=next.includes('Max-Age=0')?'':next.split(';')[0];return response;
  };
- return{root,link,kernel,google,make,start,callback,post,consent,flow:()=>flow,cookie:()=>cookie,active:()=>active,counts:()=>({ownerCalls,exchanges,channels,revocations,finishes}),setAuth:(v:boolean)=>{authenticated=v;},setPrincipal:(p:Partial<typeof principal>)=>{principal={...principal,...p};},setNow:(v:number)=>{now=v;},now:()=>now,setChannel:(v:string)=>{channelReply=v;},onChannel:(fn:()=>Promise<void>)=>{onChannel=fn;},setRevoke:(v:number)=>{revokeStatus=v;},restart:async()=>{const reopened=await CreatorYouTubeKeyring.open(keyStore,wrappingKey,ringId);flow=make(true,makeAttempts(reopened,new CreatorYouTubeProviderInbox(receiptStore,reopened,true)));}};
+ return{root,link,kernel,google,make,start,callback,post,consent,setCloseFailure:(v:boolean)=>{closeFailure=v;},flow:()=>flow,cookie:()=>cookie,active:()=>active,counts:()=>({ownerCalls,exchanges,channels,revocations,finishes}),setAuth:(v:boolean)=>{authenticated=v;},setPrincipal:(p:Partial<typeof principal>)=>{principal={...principal,...p};},setNow:(v:number)=>{now=v;},now:()=>now,setChannel:(v:string)=>{channelReply=v;},onChannel:(fn:()=>Promise<void>)=>{onChannel=fn;},setRevoke:(v:number)=>{revokeStatus=v;},restart:async()=>{const reopened=await CreatorYouTubeKeyring.open(keyStore,wrappingKey,ringId);flow=make(true,makeAttempts(reopened,new CreatorYouTubeProviderInbox(receiptStore,reopened,true)));}};
 }
 test('CA03 user flow: defaults off before authentication, storage or owner use',async()=>{const f=await fixture(),off=new CreatorYouTubeUserFlow({authenticate:async()=>{throw Error('Unexpected auth');},kernel:f.kernel,attempts:{} as never,google:f.google},origin);const response=await off.action(new Request(origin+'/api/creator-youtube',{method:'POST'}));assert.equal(response.status,503);assert.equal(f.counts().ownerCalls,0);});
 test('CA03 user flow: start requires exact explicit consent and sets only secure HttpOnly browser ticket',async()=>{const f=await fixture();assert.equal((await f.post({action:'start',consent:{...f.consent,accepted:false}})).status,400);const {response,data}=await f.start(),cookie=response.headers.get('Set-Cookie')!;for(const flag of ['__Host-besc-creator-youtube=','Secure','HttpOnly','SameSite=Lax','Path=/'])assert(cookie.includes(flag));for(const secret of ['MOCK-SECRET','MOCK-ACCESS','MOCK-REFRESH','browserNonce','codeVerifier'])assert(!JSON.stringify(data).includes(secret));assert(!cookie.includes('MOCK'));assert.equal(f.counts().exchanges,0);assert.equal(response.headers.get('Cache-Control'),'no-store, private');assert.equal(response.headers.get('Referrer-Policy'),'no-referrer');});
@@ -79,4 +84,10 @@ test('CA03 user flow: oversized JSON and unexpected fields are rejected before c
 
 test('CA03 user flow: separate disconnect/collect cannot hide unfinished receipt cleanup',async()=>{const f=await fixture(),start=await f.start();await f.callback(start.state);await f.post({action:'prepare-refresh',link:f.link});const count=f.counts().ownerCalls;for(const action of ['disconnect','collect'])assert.equal((await f.post({action,link:f.link})).status,400);assert.equal(f.counts().ownerCalls,count);assert(f.active());assert.equal((await f.post({action:'cancel'})).status,200);});
 
-test('CA03 user flow: denial/unused cancellation resolves without inventing an uncertain provider exchange',async()=>{for(const mode of ['denial','cancel']){const f=await fixture(),start=await f.start();if(mode==='denial')await f.callback(start.state,'error=access_denied');else{const result=await f.post({action:'cancel'});assert.equal((await result.json()).provider,'complete');}assert.equal(f.cookie(),'');assert.equal(f.counts().exchanges,0);assert.equal(f.counts().revocations,0);await f.restart();await f.start();assert(f.cookie());}});
+test('CA03 user flow: denial/unused cancellation resolves without inventing an uncertain provider exchange',async()=>{for(const mode of ['denial','cancel']){const f=await fixture(),start=await f.start();if(mode==='denial')await f.callback(start.state,'error=access_denied');else{const result=await f.post({action:'cancel'});assert.equal((await result.json()).provider,'none');}assert.equal(f.cookie(),'');assert.equal(f.counts().exchanges,0);assert.equal(f.counts().revocations,0);await f.restart();await f.start();assert(f.cookie());}});
+
+test('CA03 user flow: expired authorization returns an explicit expiry and clears only a confirmed closed ticket',async()=>{const f=await fixture(),start=await f.start();f.setNow(f.now()+300000);const response=await f.callback(start.state);assert.match(response.headers.get('Location')!,/expired$/);assert.equal(f.cookie(),'');assert.equal(f.counts().exchanges,0);assert(!f.active());});
+
+test('CA03 user flow: expired unused refresh never reports a completed refresh or revokes the active grant',async()=>{const f=await fixture(),start=await f.start();await f.callback(start.state);await f.post({action:'prepare-refresh',link:f.link});f.setNow(f.now()+300000);const response=await f.post({action:'refresh'}),body=await response.json();assert.equal(body.status,'expired');assert.equal(body.provider,'none');assert(f.active());assert.equal(f.counts().exchanges,1);assert.equal(f.counts().revocations,0);assert.equal(f.cookie(),'');});
+
+test('CA03 user flow: failed unstarted SQL closure retains cookie and recovery rather than claiming completion',async()=>{const f=await fixture();await f.start();f.setCloseFailure(true);const response=await f.post({action:'cancel'});assert.equal((await response.json()).provider,'uncertain');assert(f.cookie());assert.equal((await f.post({action:'start',consent:f.consent})).status,400);await f.restart();f.setCloseFailure(false);assert.equal((await(await f.post({action:'recover'})).json()).provider,'none');assert.equal(f.cookie(),'');assert.equal(f.counts().exchanges,0);});

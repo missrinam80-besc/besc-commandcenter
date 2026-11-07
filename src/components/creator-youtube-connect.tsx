@@ -42,13 +42,13 @@ export function CreatorYouTubeConnect({configured=false,connected:initialConnect
     result=await action({action:command,...(['collect','disconnect'].includes(command)?{link}:{})});
     if(result.status==='not_confirmed'||result.status==='unavailable')throw Error('Unconfirmed');
     if(command==='disconnect'&&result.status==='disconnected'){
-     setConnected(false);setRevocationPending(result.provider!=='complete');setMessage(result.provider==='complete'?'Koppeling ingetrokken.':'Toegang lokaal ingetrokken. De intrekking bij Google is nog niet bevestigd.');
+     setConnected(false);setRevocationPending(!['complete','none'].includes(result.provider??''));setMessage(result.provider==='none'?'Geen Google-intrekking nodig: er is geen tokenwisseling gestart.':result.provider==='complete'?'Koppeling ingetrokken.':'Toegang lokaal ingetrokken. De intrekking bij Google is nog niet bevestigd.');
     }else if(command==='collect'&&result.status==='collected')setMessage('De geselecteerde statistieken zijn opgeslagen.');
     else if(result.status==='completed'&&command==='refresh'){setPending(false);setMessage('Toegang veilig vernieuwd.');}
     else if(['cancelled','expired','recovered','completed','cleanup_pending'].includes(result.status)){
-     const done=result.provider==='complete'||result.provider==='none'||result.exchangeNotStarted===true;setPending(!done);
+     const done=result.provider==='complete'||result.provider==='none';setPending(!done);
      if(result.provider!=='none')setConnected(false);
-     setMessage(result.exchangeNotStarted&&result.provider!=='complete'?'De aanvraag is gestopt vóór tokenwisseling. De serveropvolging is nog niet bevestigd.':done?'De aanvraag is afgehandeld.':'Toegang is geblokkeerd; opruiming is nog niet bevestigd.');
+     setMessage(result.exchangeNotStarted&&result.provider==='none'?'De aanvraag is afgesloten zonder tokenwisseling. Er was geen Google-intrekking nodig.':result.exchangeNotStarted&&result.provider!=='complete'?'De aanvraag is gestopt vóór tokenwisseling. De serveropvolging is nog niet bevestigd.':done?'De aanvraag is afgehandeld.':'Toegang is geblokkeerd; opruiming is nog niet bevestigd.');
     }else throw Error('Unconfirmed');
    }
   }catch{
