@@ -5,7 +5,7 @@ import type {CreatorAttemptCipher,CreatorAttemptStore,CreatorResponseBinding,Cre
 import type {CreatorYouTubeCleanupOutcome} from './creator-youtube-kernel';
 
 const uuid=z.string().uuid().regex(/^[a-f0-9-]+$/),hash=z.string().regex(/^[a-f0-9]{64}$/);
-const bindingSchema=z.object({jobId:uuid,link:uuid,ownerBinding:hash,browserBinding:hash,stateHash:hash}).strict();
+const bindingSchema=z.object({jobId:uuid,link:uuid,ownerBinding:hash,browserBinding:hash,stateHash:hash,kind:z.enum(['authorize','refresh']).optional()}).strict();
 const answerSchema=z.object({access_token:z.string().min(1).max(8192).optional(),refresh_token:z.string().min(1).max(8192).optional(),channel_id:z.string().max(128).optional(),scopes:z.array(z.string().max(256)).max(20).optional(),expires_at:z.string().max(128).optional()}).strict().refine(v=>!!(v.access_token||v.refresh_token));
 const receiptSchema=z.object({purpose:z.literal('creator_youtube_provider_answer_v1'),binding:bindingSchema,status:z.enum(['exchanging','received','uncertain','applied','cleanup_pending','complete']),answer:answerSchema.optional(),outcome:z.enum(['pending','failed','complete','blocked_isolation','uncertain']).optional()}).strict();
 type Receipt=z.infer<typeof receiptSchema>;
@@ -23,7 +23,7 @@ export class CreatorYouTubeProviderInbox implements CreatorResponsePort {
  constructor(private readonly store:CreatorAttemptStore,private readonly cipher:CreatorAttemptCipher,private readonly enabled=false){}
  private async run<T>(fn:()=>Promise<T>){if(!this.enabled)throw Error('creator_response_disabled');try{return await fn();}catch{throw Error('creator_response_not_confirmed');}}
  private receiptId(binding:CreatorResponseBinding){
-  bindingSchema.parse(binding);const bytes=createHash('sha256').update('creator-youtube-provider-receipt:'+binding.jobId).digest().subarray(0,16);bytes[6]=(bytes[6]&15)|80;bytes[8]=(bytes[8]&63)|128;
+  bindingSchema.parse(binding);const bytes=createHash('sha256').update('creator-youtube-provider-receipt:'+(binding.kind==='refresh'?'refresh:':'')+binding.jobId).digest().subarray(0,16);bytes[6]=(bytes[6]&15)|80;bytes[8]=(bytes[8]&63)|128;
   const s=bytes.toString('hex');return`${s.slice(0,8)}-${s.slice(8,12)}-${s.slice(12,16)}-${s.slice(16,20)}-${s.slice(20)}`;
  }
  private async read(binding:CreatorResponseBinding){

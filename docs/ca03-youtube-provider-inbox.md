@@ -2,6 +2,8 @@
 
 Deze stap bouwt een expliciet versleuteld ontvangstlog voor de **codewisseling tijdens de persoonlijke YouTube-aanmelding**. Het antwoord wordt vastgelegd voordat de bestaande kern kanaal, scopes en activering afhandelt. De koppeling en het ontvangstlog staan standaard uit en zijn niet aan HTTP-routes, Google of een automatische taak gekoppeld. Geen migratie of serverinstelling is gewijzigd.
 
+Vervolg: [lokale opvang van tokenvernieuwing](ca03-youtube-refresh-inbox.md) voegt een afzonderlijk refreshpad en een duurzame linkreservering toe. De onderstaande beschrijving blijft het oorspronkelijke aanmeldpad beschrijven; de koppeling is nog niet live ingericht.
+
 ## Volgorde en herstel
 
 1. De coördinator controleert de oorspronkelijke eigenaar, organisatie, sessie, browser en state. De kern controleert de echte aanvraag en de projectisolatiepoort. Het ontvangstlog legt daarna een eenmalige reservering vast, vóór de providerpoort wordt aangeroepen.
