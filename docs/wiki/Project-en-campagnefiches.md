@@ -35,3 +35,5 @@ Het geselecteerde tabblad staat in de URL. Tabwissels gebruiken de bestaande nav
 Het algemene bewerkformulier behoudt alle bestaande velden, ook als je vanuit een ander tabblad bewerkt. Nieuwe content en social posts volgen na opslaan hun bestaande navigatie naar de betreffende module. Archiveren en verwijderen behouden de bestaande bevestiging en vervolgroute.
 
 Voor deze indeling is geen databasemigratie nodig. De live weergave kan na deployment op DEV worden gecontroleerd.
+
+De aanvullende [historie van campagneopleveringen](Campagneopleveringen-historie.md) is lokaal voorbereid en heeft een afzonderlijk databasewijzigingsbestand. Dit is nog geen live herstel van de ontbrekende auditregistratie.

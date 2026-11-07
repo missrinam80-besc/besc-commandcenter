@@ -126,7 +126,14 @@ test('F3 release: exact additive migration, historical SQL unchanged and live ga
   assert.deepEqual(socialReview.added_columns,['approval_requests.source_snapshot','social_posts.review_version']);
   assert.equal(socialReview.trigger_functions_security,'invoker');
   for(const key of ['legacy_records_backfilled_as_approved','provider_requests_added','cloud_apply_authorized','server_deploy_authorized','live_social_fixture_authorized','publication_authorized'])assert.equal(socialReview[key],false);
-  const files = [...beforeStep11,...step11.new_migrations,adminAccess.migration,operations.migration,socialAlerts.migration,socialReview.migration];
+  const deliverableHistory=JSON.parse(readFileSync(new URL('ops/campaign-deliverable-history-release.json',root),'utf8'));
+  assert.equal(deliverableHistory.prior_cloud_history_last_verified,socialReview.expected_history_after_separate_apply);
+  assert.equal(deliverableHistory.expected_history_after_separate_apply,149);
+  assert.equal(deliverableHistory.preflight_reverification_required,true);
+  assert.equal(deliverableHistory.migration.file,'20261107001527_campaign_deliverable_history.sql');
+  assert.equal(deliverableHistory.new_tables,0);
+  for(const key of ['existing_generic_audit_function_changed','rls_or_table_grants_changed','historical_events_backfilled','cloud_apply_authorized','server_deploy_authorized','publication_authorized'])assert.equal(deliverableHistory[key],false);
+  const files = [...beforeStep11,...step11.new_migrations,adminAccess.migration,operations.migration,socialAlerts.migration,socialReview.migration,deliverableHistory.migration];
   assert.deepEqual(readdirSync(new URL('supabase/migrations/', root)).filter(f => f.endsWith('.sql')).sort(), files.map(f => f.file).sort());
   for (const f of files) assert.equal(createHash('sha256').update(readFileSync(new URL('supabase/migrations/' + f.file, root), 'utf8').replaceAll('\r\n', '\n')).digest('hex'), f.sha256_lf, f.file);
   assert.deepEqual(manifest.excluded_history, ['20261001110000_seed_operational_guidelines.sql']);
