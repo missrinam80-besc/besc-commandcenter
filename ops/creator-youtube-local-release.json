@@ -1,0 +1,21 @@
+{
+  "work_item": "CA03",
+  "scope": "local consent and revocation kernel only",
+  "migration": {
+    "file": "20261107115106_creator_youtube_consent_kernel.sql",
+    "sha256_lf": "49a034f457015af72ea74b71e9dd6ba61ce65fe303d6b17d1c395bc78ca8da6a"
+  },
+  "required_history_before": 150,
+  "expected_history_after_separate_apply": 151,
+  "preflight_reverification_required": true,
+  "runtime_default": "off",
+  "new_private_tables": 5,
+  "cloud_apply_authorized": false,
+  "server_deploy_authorized": false,
+  "live_provider_authorized": false,
+  "publication_authorized": false,
+  "existing_rows_changed": false,
+  "provider": "injected test double only",
+  "vault_test": "explicit SQL double; real encryption not verified",
+  "live_adapter_included": false
+}
