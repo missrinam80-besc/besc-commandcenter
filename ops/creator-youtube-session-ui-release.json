@@ -1,0 +1,19 @@
+{
+  "work_item": "CA03-package-2",
+  "migration": {
+    "file": "20261107222720_creator_youtube_account_read.sql",
+    "sha256_lf": "0906814f6fbb100cab8d225d8d398b57384f92e0a74839d56a922c3462285687"
+  },
+  "required_history_before": 152,
+  "expected_history_after_separate_apply": 153,
+  "depends_on": "20261107212328_creator_youtube_unstarted_closure.sql",
+  "runtime_default": "off",
+  "new_private_tables": 0,
+  "new_functions": 1,
+  "preflight_reverification_required": true,
+  "atomic_apply_required": true,
+  "cloud_apply_authorized": false,
+  "server_deploy_authorized": false,
+  "live_provider_authorized": false,
+  "publication_authorized": false
+}

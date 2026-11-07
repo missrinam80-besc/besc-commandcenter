@@ -1,5 +1,7 @@
 # CA03 — lokale gebruikersflow en Google-adapter
 
+Actuele vervolgstap: [pakket 2 — eigen sessie en gebruikersbediening](ca03-youtube-session-ui.md). Dit document beschrijft de eerdere ongemounte bouwstap van PR #150.
+
 Vervolg: [pakket 1 — definitieve lokale afsluiting](ca03-youtube-unstarted-closure.md) repareert de hieronder beschreven lege SQL-opruimtaak in een nieuw, nog niet live toegepast migratiebestand. Dit document bewaart de grenzen van de eerdere PR #150.
 
 Deze stap verbindt een herbruikbaar toestemmingsscherm en een lokale HTTP-grens met de bestaande eigenaargebonden kernel, sleutelring en versleutelde ontvangstlog. De Google-adapter gebruikt de vorm van de officiële endpoints, maar alle uitvoeringstests gebruiken een geïnjecteerd nagebootst transport. Er is geen globale `fetch`, omgevingsconfiguratie of bestaande organisatiecredential aangesloten.

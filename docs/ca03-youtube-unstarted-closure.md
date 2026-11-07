@@ -1,5 +1,7 @@
 # CA03 — pakket 1: aanvragen zonder tokenwisseling afsluiten
 
+Vervolg: [pakket 2 — eigen sessie en gebruikersbediening](ca03-youtube-session-ui.md) voegt standaard uitgeschakelde routes en de accountaansluiting toe. Onderstaande beschrijving bewaart de scope van pakket 1.
+
 Dit pakket repareert lokaal de openstaande SQL-opruimstatus na weigering, annulering of verval vóór een autorisatiecode is gewisseld. De persoonlijke YouTube-flow blijft uit en ongemonteerd. De nieuwe SQL is uitsluitend voorbereid en in tijdelijke fixtures uitgevoerd; er is geen Cloud-migratie, serveruitrol, echte Google-aanroep of accountwijziging.
 
 ## Wat nu als afgesloten geldt

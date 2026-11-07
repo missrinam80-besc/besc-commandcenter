@@ -6,6 +6,8 @@ import {
   Monitor, Moon, ShieldCheck, Sun, Unlink, UserRound,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { CreatorYouTubeAccount } from "@/components/creator-youtube-account";
+import { creatorYouTubeEnabled } from "@/lib/creator-youtube-runtime";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { discordIdentityDetails, findIdentity, twitchIdentityDetails } from "@/lib/profile-identities";
 import { personalTwitchLinkEnabled } from "@/lib/personal-twitch-link";
@@ -274,6 +276,7 @@ export default async function AccountPage({
           </aside>
         </div>
 
+        {creatorYouTubeEnabled() && <CreatorYouTubeAccount/>}
         <section className="account-security-grid">
           <article className="form-card">
             <div className="form-heading"><div><span className="eyebrow">INLOGGEGEVENS</span><h2>E-mailadres wijzigen</h2><p>Je ontvangt bevestigingsmails voordat het nieuwe adres actief wordt.</p></div><Mail/></div>
