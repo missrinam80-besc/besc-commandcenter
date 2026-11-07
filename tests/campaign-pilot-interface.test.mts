@@ -23,6 +23,28 @@ const link = ({ href, children }: { href: string; children: React.ReactNode }) =
 const panels = load('src/components/campaign-pilot-panel.tsx', { 'next/link': { default: link }, '@/app/app/campagnes/[id]/proef/actions': { runCampaignPilot: async () => {} } });
 const Panel = panels.CampaignPilotPanel as React.ComponentType<{ state: PilotState; org: string; campaign: string; people: unknown[]; members: unknown[]; documents: unknown[] }>;
 function markup(state: PilotState) { return renderToStaticMarkup(React.createElement(Panel, { state, org: 'org', campaign: 'campaign', people: [], members: [], documents: [] })); }
+
+test('CA02 UI: candidate, verified and rejected retain distinct labels and canonical source', () => {
+  const posts = ['candidate', 'verified', 'rejected'].map((status, index) => ({ id: `post-${index}`, participant_id: 'person', platform: 'youtube', canonical_url: `https://www.youtube.com/watch?v=fixture000${index}x`, external_id: `fixture000${index}x`, revision: index + 1, status, availability: 'unknown', checked_at: null }));
+  const dom = new JSDOM(markup({ ...empty, reader: true, posts }));
+  const articles = [...dom.window.document.querySelectorAll('article')];
+  for (const [index, label] of ['Kandidaat', 'Geverifieerd', 'Afgewezen'].entries()) {
+    assert(articles[index].textContent?.includes(label));
+    assert.equal(articles[index].querySelector('h3')?.textContent, posts[index].canonical_url);
+    assert.equal(articles[index].querySelector('form'), null);
+  }
+});
+
+test('CA02 UI: reviewer form preserves contribution id and current revision with required reason', () => {
+  const post = { id: 'post', participant_id: 'person', canonical_url: 'https://www.youtube.com/watch?v=abcdefghijk', external_id: 'abcdefghijk', revision: 7, status: 'candidate', availability: 'unknown', checked_at: null };
+  const dom = new JSDOM(markup({ ...empty, reviewer: true, posts: [post] }));
+  const form = dom.window.document.querySelector('input[value="post.review"]')?.closest('form');
+  assert(form);
+  assert.equal(form.querySelector('input[name="data_id"]')?.getAttribute('value'), 'post');
+  assert.equal(form.querySelector('input[name="data_expected_revision"]')?.getAttribute('value'), '7');
+  assert(form.querySelector('textarea[name="data_reason"]')?.hasAttribute('required'));
+  assert.deepEqual([...form.querySelectorAll('select[name="data_decision"] option')].map(o => o.getAttribute('value')), ['', 'verified', 'rejected']);
+});
 test('F3 UI: reader has no mutation forms', () => { const html = markup({ ...empty, reader: true }); assert(!html.includes('access.assign')); assert(!html.includes('policy.set')); assert(!html.includes('measurement.record')); assert(html.includes('Intern testrapport')); });
 test('F3 UI: chair gets explicit access/policy actions, no automatic measurement editor', () => { const html = markup({ ...empty, chair: true }); assert(html.includes('access.assign')); assert(html.includes('policy.set')); assert(!html.includes('measurement.record')); });
 test('F3 UI: own participant sees exact text and own confirmation, never another person selector', () => {
@@ -44,7 +66,7 @@ test('F3 UI: date windows use Brussels conversion, finite freshness and no overl
 });
 test('F3 action: URL is parsed without fetch and invalid operator cannot reach RPC', async () => {
   const calls: unknown[] = [];
-  const compiled = load('src/app/app/campagnes/[id]/proef/actions.ts', { 'next/navigation': { redirect: (target: string) => { throw Error('REDIRECT:' + target); } }, 'next/cache': { revalidatePath: () => {} }, '@/lib/campaign-pilot': { ...pilot, campaignWorkflowEnabled: (synthetic?: boolean) => synthetic !== false }, '@/lib/format': { localDateTimeToIso: (x: string) => x }, '@/lib/supabase/server': { createClient: async () => ({ auth: { getUser: async () => ({ data: { user: { id: 'actor' } } }) }, rpc: async (...args: unknown[]) => { calls.push(args); return { data: { synthetic: true }, error: null }; } }) } });
+  const compiled = load('src/app/app/campagnes/[id]/proef/actions.ts', { 'next/navigation': { redirect: (target: string) => { throw Error('REDIRECT:' + target); } }, 'next/cache': { revalidatePath: () => {} }, '@/lib/campaign-pilot': { ...pilot, campaignWorkflowEnabled: (synthetic?: boolean) => synthetic !== false }, '@/lib/format': { localDateTimeToIso: (x: string) => x }, '@/lib/supabase/server': { createClient: async () => ({ auth: { getUser: async () => ({ data: { user: { id: 'actor' } } }) }, rpc: async (...args: unknown[]) => { calls.push(args); return { data: args[0] === 'f3_workflow' ? { id: '11111111-1111-4111-8111-111111111111' } : { synthetic: true }, error: null }; } }) } });
   const action = compiled.runCampaignPilot as (data: FormData) => Promise<void>;
   const data = new FormData(); const id = '11111111-1111-4111-8111-111111111111'; for (const [k, v] of Object.entries({ campaign_id: id, organization_id: id, request_id: id, operation: 'post.submit', data_participant_id: id, post_url: 'https://127.0.0.1/secret' })) data.set(k, v);
   await assert.rejects(action(data), /fout=link/); assert.equal(calls.length, 0);

@@ -41,10 +41,13 @@ export async function runCampaignPilot(form: FormData) {
   if (!/^[a-f0-9-]{36}$/i.test(request) || !/^[a-f0-9-]{36}$/i.test(org)) redirect(route + '?fout=velden');
   if (!['pilot.open','campaign.open'].includes(operation)) {
     const state = await supabase.rpc('f3_campaign_state', { p_organization_id: org, p_campaign_id: campaign });
-    if (state.error || !campaignWorkflowEnabled(state.data.synthetic)) redirect(route + '?fout=uitgeschakeld');
+    if (state.error || typeof state.data?.synthetic !== 'boolean' || !campaignWorkflowEnabled(state.data.synthetic)) redirect(route + '?fout=uitgeschakeld');
   }
   const result = await supabase.rpc('f3_workflow', { p_organization_id: org, p_campaign_id: campaign, p_operation: operation, p_data: parsed.data, p_request_id: request });
   if (result.error) redirect(route + '?melding=' + encodeURIComponent(pilotFeedback(result.error.code)));
+  const confirmedId = result.data?.id;
+  if (typeof confirmedId !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(confirmedId)
+    || ('id' in parsed.data && confirmedId !== parsed.data.id)) redirect(route + '?melding=' + encodeURIComponent(pilotFeedback()));
   revalidatePath(route);
   if (operation === 'report.capture') redirect(route + '/rapport?revisie=' + encodeURIComponent(String(result.data.id)));
   redirect(route + '?succes=opgeslagen');
