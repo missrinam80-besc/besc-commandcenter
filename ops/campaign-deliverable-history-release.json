@@ -1,0 +1,19 @@
+{
+  "migration": {
+    "file": "20261107001527_campaign_deliverable_history.sql",
+    "sha256_lf": "511c54de9ae947ffb782be80bf6e50144d293ff986d20c9bc30bf098ccd4bf1a"
+  },
+  "prior_cloud_history_last_verified": 148,
+  "expected_history_after_separate_apply": 149,
+  "preflight_reverification_required": true,
+  "scope": "Future audit events for campaign deliverables only",
+  "new_tables": 0,
+  "existing_generic_audit_function_changed": false,
+  "rls_or_table_grants_changed": false,
+  "historical_events_backfilled": false,
+  "function": "private.log_campaign_deliverable_change()",
+  "function_security": "definer; fixed empty search_path; trigger-only; no PUBLIC/anon/authenticated/service_role execute",
+  "cloud_apply_authorized": false,
+  "server_deploy_authorized": false,
+  "publication_authorized": false
+}

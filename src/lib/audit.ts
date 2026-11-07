@@ -14,7 +14,7 @@ export const auditEntityGroups = {
   },
   content: {
     label: "Content & communicatie",
-    tables: ["content_items", "events", "campaigns", "social_posts", "social_post_variants", "approval_requests"],
+    tables: ["content_items", "events", "campaigns", "campaign_deliverables", "social_posts", "social_post_variants", "approval_requests"],
   },
   relations: {
     label: "Relaties & community",
@@ -67,6 +67,7 @@ export const auditEntityLabels: Record<string, string> = {
   content_items: "Contentitem",
   events: "Event",
   campaigns: "Campagne",
+  campaign_deliverables: "Campagneoplevering",
   partners: "Partner",
   community_people: "Communityprofiel",
   social_posts: "Social post",
@@ -120,7 +121,14 @@ export function auditEntityHref(
   entityType: string,
   entityId: string,
   action: AuditAction,
+  metadata?: Record<string, unknown> | null,
 ) {
+  if (entityType === "campaign_deliverables") {
+    if (action === "archived" || action === "deleted") return null;
+    const campaign = metadata?.campaign_id;
+    return typeof campaign === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(campaign)
+      ? `/app/campagnes/${campaign}?tab=deliverables` : "/app/campagnes";
+  }
   const route = auditRoutes[entityType];
   if (!route || action === "archived" || action === "deleted") return null;
   if (
@@ -154,6 +162,23 @@ export function describeChangedFields(fields: string[]) {
     project_id: "projectkoppeling",
     assignee: "toewijzing",
     comment: "reactie",
+    approval_status: "goedkeuringsstatus",
+    community_person_id: "verantwoordelijke persoon",
+    campaign_id: "campagnekoppeling",
   };
   return fields.slice(0, 4).map((field) => labels[field] ?? field.replaceAll("_", " ")).join(", ");
+}
+
+export function auditStatusLabel(entityType: string, status: string | null) {
+  if (!status) return "—";
+  const labels: Record<string, string> = {todo: "Te doen", doing: "Bezig", review: "In review", approved: "Goedgekeurd", completed: "Afgerond", blocked: "Geblokkeerd", cancelled: "Geannuleerd"};
+  return entityType === "campaign_deliverables" && Object.hasOwn(labels, status) ? labels[status] : status;
+}
+
+export function auditApprovalTransition(entityType: string, metadata?: Record<string, unknown> | null) {
+  if (entityType !== "campaign_deliverables") return null;
+  const before = metadata?.previous_approval_status, after = metadata?.new_approval_status;
+  const labels: Record<string, string> = {not_required: "Geen goedkeuring", pending: "Wacht op goedkeuring", changes_requested: "Aanpassingen nodig", approved: "Goedgekeurd"};
+  if (typeof before !== "string" || typeof after !== "string" || before === after || !Object.hasOwn(labels, before) || !Object.hasOwn(labels, after)) return null;
+  return `${labels[before]} → ${labels[after]}`;
 }

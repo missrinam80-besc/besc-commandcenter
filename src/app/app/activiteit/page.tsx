@@ -10,6 +10,8 @@ import {
 import { AppShell } from "@/components/app-shell";
 import {
   auditActions,
+  auditStatusLabel,
+  auditApprovalTransition,
   auditEntityGroups,
   auditEntityHref,
   auditEntityLabels,
@@ -31,6 +33,7 @@ type EventRow = {
   new_status: string | null;
   created_at: string;
   actor_id: string | null;
+  metadata: Record<string, unknown> | null;
   profiles: { display_name: string | null } | null;
 };
 
@@ -82,7 +85,7 @@ export default async function ActivityPage({
   let request = supabase
     .from("audit_log")
     .select(
-      "id,entity_type,entity_id,action,entity_label,changed_fields,previous_status,new_status,created_at,actor_id,profiles!audit_log_actor_id_fkey(display_name)",
+      "id,entity_type,entity_id,action,entity_label,changed_fields,previous_status,new_status,created_at,actor_id,metadata,profiles!audit_log_actor_id_fkey(display_name)",
       { count: "exact" },
     )
     .eq("organization_id", organizationId)
@@ -203,10 +206,12 @@ export default async function ActivityPage({
               event.entity_type,
               event.entity_id,
               event.action,
+              event.metadata,
             );
             const changed = describeChangedFields(event.changed_fields ?? []);
             const statusChanged = event.previous_status !== event.new_status
               && (event.previous_status || event.new_status);
+            const approvalChanged = auditApprovalTransition(event.entity_type, event.metadata);
 
             return (
               <article key={event.id}>
@@ -225,10 +230,11 @@ export default async function ActivityPage({
                   {changed && <small>Gewijzigd: {changed}</small>}
                   {statusChanged && (
                     <small>
-                      Status: {event.previous_status || "—"} →{" "}
-                      {event.new_status || "—"}
+                      Status: {auditStatusLabel(event.entity_type, event.previous_status)} →{" "}
+                      {auditStatusLabel(event.entity_type, event.new_status)}
                     </small>
                   )}
+                  {approvalChanged && <small>Goedkeuring: {approvalChanged}</small>}
                   <time>
                     {new Intl.DateTimeFormat("nl-BE", {
                       dateStyle: "medium",
