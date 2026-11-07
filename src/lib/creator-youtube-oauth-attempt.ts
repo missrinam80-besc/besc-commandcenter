@@ -1,0 +1,90 @@
+import 'server-only';
+import {createCipheriv,createDecipheriv,createHash,randomBytes,timingSafeEqual} from 'node:crypto';
+import {z} from 'zod';
+import type {CreatorYouTubeKernel} from './creator-youtube-kernel';
+
+// Local protocol boundary only. No HTTP routes, production storage or provider adapter.
+// Storage must implement atomic compare-and-swap across workers; process-local maps are test doubles only.
+export type CreatorAttemptStore={
+ read:(id:string)=>Promise<{revision:number;sealed:string}|null>;
+ compareAndSwap:(id:string,expectedRevision:number|null,next:{revision:number;sealed:string})=>Promise<boolean>;
+};
+type Principal={organizationId:string;userId:string;sessionId:string};
+type Kernel=Pick<CreatorYouTubeKernel,'beginAuthorization'|'authorize'|'withdraw'>;
+const uuid=z.string().uuid();
+const attemptSchema=z.object({link:uuid,binding:z.string().length(64),browser:z.string().length(64),state:z.string().length(64),verifier:z.string().regex(/^[A-Za-z0-9_-]{43}$/).optional(),expires:z.number().int(),status:z.enum(['pending','running','completed','cancelled','expired','failed'])}).strict();
+type Attempt=z.infer<typeof attemptSchema>;
+const hash=(value:string)=>createHash('sha256').update(value).digest('hex');
+const same=(a:string,b:string)=>a.length===b.length&&timingSafeEqual(Buffer.from(a),Buffer.from(b));
+
+export class CreatorYouTubeOAuthAttempt {
+ private readonly key:Buffer;
+ constructor(private readonly ports:{store:CreatorAttemptStore;kernel:Kernel;principal:()=>Promise<Principal>;now:()=>number},key:Uint8Array,private readonly redirectUri:string,private readonly enabled=false){
+  if(key.length!==32)throw Error('creator_attempt_configuration');
+  this.key=Buffer.from(key);
+  const url=new URL(redirectUri);
+  if(url.protocol!=='https:'||url.username||url.password||url.hash||url.search||url.href!==redirectUri)throw Error('creator_attempt_configuration');
+ }
+ private async run<T>(fn:()=>Promise<T>){if(!this.enabled)throw Error('creator_attempt_disabled');try{return await fn();}catch{throw Error('creator_attempt_not_confirmed');}}
+ private async binding(){const p=await this.ports.principal();return hash(JSON.stringify([uuid.parse(p.organizationId),uuid.parse(p.userId),uuid.parse(p.sessionId)]));}
+ private seal(id:string,revision:number,value:Attempt){
+  const iv=randomBytes(12),cipher=createCipheriv('aes-256-gcm',this.key,iv);
+  cipher.setAAD(Buffer.from(`creator-youtube-attempt:${id}:${revision}`));
+  const encrypted=Buffer.concat([cipher.update(JSON.stringify(value),'utf8'),cipher.final()]);
+  return Buffer.concat([iv,cipher.getAuthTag(),encrypted]).toString('base64url');
+ }
+ private open(id:string,record:{revision:number;sealed:string}){
+  if(!Number.isSafeInteger(record.revision)||record.revision<1||record.sealed.length>16000)throw Error('Invalid storage');
+  const bytes=Buffer.from(record.sealed,'base64url'),decipher=createDecipheriv('aes-256-gcm',this.key,bytes.subarray(0,12));
+  decipher.setAAD(Buffer.from(`creator-youtube-attempt:${id}:${record.revision}`));decipher.setAuthTag(bytes.subarray(12,28));
+  return attemptSchema.parse(JSON.parse(Buffer.concat([decipher.update(bytes.subarray(28)),decipher.final()]).toString('utf8')));
+ }
+ private write(id:string,revision:number|null,value:Attempt){const next=(revision??0)+1;return this.ports.store.compareAndSwap(id,revision,{revision:next,sealed:this.seal(id,next,value)});}
+ private async read(id:string,browserNonce:string,state?:string){
+  uuid.parse(id);if(!/^[A-Za-z0-9_-]{43}$/.test(browserNonce))throw Error('Invalid browser binding');
+  const record=await this.ports.store.read(id);if(!record)throw Error('Unknown request');const value=this.open(id,record);
+  if(!same(value.binding,await this.binding())||!same(value.browser,hash(browserNonce))||(state!==undefined&&(!/^[a-f0-9]{64}$/.test(state)||!same(value.state,hash(state)))))throw Error('Invalid callback binding');
+  return{record,value};
+ }
+ async begin(link:string){return this.run(async()=>{
+  uuid.parse(link);const binding=await this.binding(),browserNonce=randomBytes(32).toString('base64url'),verifier=randomBytes(32).toString('base64url');
+  const job=await this.ports.kernel.beginAuthorization(link);uuid.parse(job.jobId);if(!/^[a-f0-9]{64}$/.test(job.state))throw Error('Invalid request');
+  const value:Attempt={link,binding,browser:hash(browserNonce),state:hash(job.state),verifier,expires:this.ports.now()+300000,status:'pending'};
+  if(!await this.write(job.jobId,null,value))throw Error('Request collision');
+  return{jobId:job.jobId,state:job.state,browserNonce,codeChallenge:createHash('sha256').update(verifier).digest('base64url'),codeChallengeMethod:'S256' as const,redirectUri:this.redirectUri};
+ });}
+ async callback(input:{jobId:string;browserNonce:string;state:string;code?:string;error?:string}){return this.run(async()=>{
+  const {record,value}=await this.read(input.jobId,input.browserNonce,input.state);
+  if(value.status!=='pending')throw Error('Request consumed');
+  if(this.ports.now()>=value.expires){await this.ports.kernel.withdraw(value.link);await this.write(input.jobId,record.revision,{...value,verifier:undefined,status:'expired'});throw Error('Request expired');}
+  if((input.code===undefined)===(input.error===undefined)||input.code!==undefined&&(!input.code||input.code.length>8192)||input.error!==undefined&&(!input.error||input.error.length>256))throw Error('Invalid callback');
+  if(input.error!==undefined){await this.ports.kernel.withdraw(value.link);if(!await this.write(input.jobId,record.revision,{...value,verifier:undefined,status:'cancelled'}))throw Error('Request conflict');return{status:'cancelled' as const};}
+  if(!value.verifier||!await this.write(input.jobId,record.revision,{...value,status:'running'}))throw Error('Request conflict');
+  try{
+   await this.ports.kernel.authorize(input.jobId,input.state,input.code!,{codeVerifier:value.verifier,redirectUri:this.redirectUri},async()=>{
+    try{
+     const current=await this.read(input.jobId,input.browserNonce,input.state);
+     if(current.record.revision!==record.revision+1||current.value.status!=='running'||this.ports.now()>=value.expires)throw Error('Request no longer valid');
+    }catch{await this.ports.kernel.withdraw(value.link);throw Error('Request no longer valid');}
+   });
+   if(!same(value.binding,await this.binding()))throw Error('Session changed');
+   if(this.ports.now()>=value.expires){await this.ports.kernel.withdraw(value.link);await this.write(input.jobId,record.revision+1,{...value,verifier:undefined,status:'expired'});throw Error('Request expired');}
+   if(!await this.write(input.jobId,record.revision+1,{...value,verifier:undefined,status:'completed'})){await this.ports.kernel.withdraw(value.link);throw Error('Request superseded');}
+   return{status:'completed' as const};
+  }catch{
+   // No provider error or code in persisted state. Unknown outcome stays failed, never completed.
+   await this.ports.kernel.withdraw(value.link).catch(()=>undefined);
+   await this.write(input.jobId,record.revision+1,{...value,verifier:undefined,status:'failed'}).catch(()=>false);
+   throw Error('Authorization not confirmed');
+  }
+ });}
+ async cancel(jobId:string,browserNonce:string){return this.run(async()=>{
+  for(let retry=0;retry<4;retry++){
+   const {record,value}=await this.read(jobId,browserNonce);
+   // Revocation remains authoritative even if callback completion races the CAS below.
+   await this.ports.kernel.withdraw(value.link);
+   if(await this.write(jobId,record.revision,{...value,verifier:undefined,status:'cancelled'}))return{status:'cancelled' as const};
+  }
+  throw Error('Request conflict');
+ });}
+}
