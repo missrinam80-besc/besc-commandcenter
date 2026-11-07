@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import Link from 'next/link';
 import { runCampaignPilot, runCampaignTwitch } from '@/app/app/campagnes/[id]/proef/actions';
-import type { PilotOperation, PilotState } from '@/lib/campaign-pilot';
+import type { CampaignReviewHistory, PilotOperation, PilotState } from '@/lib/campaign-pilot';
 import '@/app/app/administratie/werkstromen/workflows.css';
 
 type Choice = { value: string; label: string };
@@ -15,7 +15,7 @@ export function PilotForm({ title, operation, org, campaign, fields = [], hidden
 }
 const labels: Record<string, string> = { editor: 'Campagneproef voorbereiden', reviewer: 'Bijdragen beoordelen', reader: 'Rapport lezen', candidate: 'Kandidaat', verified: 'Geverifieerd', rejected: 'Afgewezen', available: 'Beschikbaar', private: 'Privé', deleted: 'Verwijderd', unavailable: 'Tijdelijk niet bereikbaar', unknown: 'Onbekend', post_url: 'Postlink', views: 'Views', likes: 'Likes', comments: 'Reacties', reach: 'Bereik', impressions: 'Impressies', engagements: 'Engagements', shares: 'Gedeeld', current_viewers: 'Livekijkers op meetmoment' };
 const choices = (values: Record<string, string>) => Object.entries(values).map(([value, label]) => ({ value, label }));
-export function CampaignPilotPanel({ state, org, campaign, people, members, documents, accounts = [], twitchCollectionEnabled = false }: { state: PilotState; org: string; campaign: string; people: Choice[]; members: Choice[]; documents: Choice[]; accounts?: Choice[]; twitchCollectionEnabled?: boolean }) {
+export function CampaignPilotPanel({ state, org, campaign, people, members, documents, accounts = [], twitchCollectionEnabled = false, reviewHistory, reviewHistoryRequested = false }: { state: PilotState; org: string; campaign: string; people: Choice[]; members: Choice[]; documents: Choice[]; accounts?: Choice[]; twitchCollectionEnabled?: boolean; reviewHistory?: CampaignReviewHistory | null; reviewHistoryRequested?: boolean }) {
   const form = (title: string, operation: PilotOperation, fields: Field[] = [], hidden: Record<string, string> = {}) => <PilotForm title={title} operation={operation} org={org} campaign={campaign} fields={fields} hidden={hidden}/>;
   return <div className="f1-workspace"><p>{state.synthetic ? 'TESTFIXTURE — NIET PUBLICEREN. Deze afgeschermde proef gebruikt fictieve gegevens en handmatig testbewijs.' : 'Afgeschermde campagnebijdragen en metingen. Deelname, bronrechten en onafhankelijke beoordeling zijn afzonderlijk vastgelegd.'} Een postlink bewijst geen bereik of toegang tot privéinzichten.</p>
     <nav><Link href={`/app/campagnes/${campaign}`}>Naar het campagnedossier</Link>{state.reader && <Link href={`/app/campagnes/${campaign}/proef/rapport`}>{state.synthetic ? 'Intern testrapport' : 'Intern campagnerapport'}</Link>}</nav>
@@ -34,6 +34,7 @@ export function CampaignPilotPanel({ state, org, campaign, people, members, docu
     </section>
     <section><h2>Bijdragen en bewijs</h2><p>{state.excluded_posts ?? 0} bijdragen uitgesloten door ontbrekende of ingetrokken deelname. Kandidaten worden niet als geverifieerde resultaten meegeteld.</p>{!state.posts.length && <p>Geen beschikbare bijdragen.</p>}
       {state.posts.map(p => <article key={p.id}><h3>{p.canonical_url}</h3><p>{labels[p.status] ?? p.status} · {labels[p.availability] ?? p.availability} · versie {p.revision}</p>
+        <Link href={`/app/campagnes/${campaign}/proef?bijdrage=${p.id}#beoordelingshistorie`}>Beoordelingshistorie</Link>
         {state.reviewer && form('Deze bijdrage beoordelen', 'post.review', [{ name: 'data_decision', label: 'Beoordeling', choices: choices({ verified: 'Geverifieerd', rejected: 'Afgewezen' }) }, { name: 'data_availability', label: 'Beschikbaarheid', choices: choices({ available: 'Beschikbaar', private: 'Privé', deleted: 'Verwijderd', unavailable: 'Tijdelijk niet bereikbaar', unknown: 'Onbekend' }) }, { name: 'data_reason', label: 'Onderbouwing', type: 'textarea' }], { data_id: p.id, data_expected_revision: String(p.revision) })}
         {state.editor && p.status === 'verified' && form(state.synthetic ? 'Een testmeting met bron vastleggen' : 'Een meting of gecontroleerde bronexport vastleggen', 'measurement.record', [
           { name: 'data_metric', label: 'Metric', choices: choices({ views: 'Views', likes: 'Likes', comments: 'Reacties', reach: 'Bereik', impressions: 'Impressies', engagements: 'Engagements volgens vastgelegde definitie', shares: 'Gedeeld', current_viewers: 'Livekijkers op meetmoment' }) }, { name: 'data_definition', label: 'Exacte meetdefinitie en versie' }, { name: 'data_semantics', label: 'Soort waarde', choices: choices({ period: 'Waarde voor deze periode', cumulative: 'Cumulatieve teller op meetmoment', instant: 'Momentopname' }) },
@@ -44,6 +45,19 @@ export function CampaignPilotPanel({ state, org, campaign, people, members, docu
         </div>}
       </article>)}
     </section>
+    {reviewHistoryRequested && <section id="beoordelingshistorie"><h2>Beoordelingshistorie</h2>
+      {!reviewHistory || !state.posts.some(post => post.id === reviewHistory.post_id) ? <p role="status">De beoordelingshistorie kan niet worden geladen. De actuele bijdrage is niet gewijzigd.</p> : <>
+        <p>{state.posts.find(post => post.id === reviewHistory.post_id)?.canonical_url}</p><p>Alleen beoordelingen binnen de actuele deelname. Nieuwste eerst.</p>
+        {!reviewHistory.items.length && <p>Nog geen beoordelingen binnen deze deelname.</p>}
+        <ol>{reviewHistory.items.map(item => <li key={item.request_id}>
+          <strong>{labels[item.decision]} · versie {item.from_revision} → {item.to_revision}</strong>
+          <p>{item.reviewer_name} · <time dateTime={item.reviewed_at}>{new Intl.DateTimeFormat('nl-BE',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Brussels'}).format(new Date(item.reviewed_at))}</time></p>
+          <p>Beschikbaarheid: {labels[item.availability]}</p><p style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{item.reason}</p>
+        </li>)}</ol>
+        {reviewHistory.has_more && <Link href={`/app/campagnes/${campaign}/proef?bijdrage=${reviewHistory.post_id}&voor_revisie=${reviewHistory.next_before_revision}#beoordelingshistorie`}>Oudere beoordelingen</Link>}
+        <Link href={`/app/campagnes/${campaign}/proef?bijdrage=${reviewHistory.post_id}#beoordelingshistorie`}>Nieuwste beoordelingen</Link>
+      </>}
+    </section>}
     {!state.synthetic && (state.chair || state.reader) && <section><h2>Twitch-bronrechten</h2><p>Een bron koppelen vraagt een bestaande organisatiekoppeling, dezelfde Twitch-identiteit als de deelnemer en een leesbaar besluit. Persoonlijke Twitch-aanmelding alleen geeft geen toestemming voor campagnemetingen.</p>
       {state.sources?.map(s => <article key={s.id}><p>Twitch-account {s.broadcaster_id} · {s.revoked_at ? 'Ingetrokken' : s.valid ? 'Actueel geldig' : 'Niet beschikbaar'} · maximaal {s.daily_limit} verzoeken per dag</p>{state.chair && !s.revoked_at && form('Deze campagnebron intrekken','source.revoke',[],{data_id:s.id})}</article>)}
       {state.chair && form('Twitch-bron voor een deelnemer vastleggen','source.assign',[{name:'data_participant_id',label:'Deelnemer met geldige verklaring',choices:state.participants.filter(p => p.valid).map(p => ({value:p.id,label:people.find(x => x.value === p.person_id)?.label ?? 'Geselecteerde deelnemer'}))},{name:'data_account_id',label:'Bestaand verbonden Twitch-account',choices:accounts},{name:'data_document_id',label:'Besluit en bronrechten',choices:documents},{name:'data_daily_limit',label:'Maximum API-verzoeken per dag (3 tot 100)',type:'number',value:'30',hint:'Elke meting reserveert drie verzoeken, met minimaal een minuut tussen twee ophaalacties.'}])}

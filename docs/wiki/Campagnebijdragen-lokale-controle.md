@@ -23,4 +23,6 @@ De regressietests tonen de oorspronkelijke foutpaden en controleren de reparatie
 
 De historie hierboven is technisch gecontroleerd in de private ontvangst- en gebeurtenisregistratie. Het bestaande campagnepaneel toont de actuele status, beschikbaarheid en revisie; het biedt nog geen volledige tijdlijn met eerdere beoordelingsredenen. De centrale Activiteit-uitbreiding voor campagneopleveringen van PR #140 is een afzonderlijke functie en wordt hier niet gelijkgesteld aan die private tijdlijn.
 
+Een volgende lokale aanvulling bouwt de [beoordelingshistorie in het campagnepaneel](Campagnebijdragen-beoordelingshistorie.md). Die aanvulling is nog niet op Cloud DEV toegepast of uitgerold; de vorige alinea beschrijft de eerdere/live situatie van PR #141.
+
 Volledige live CA02-acceptatie blijft open. Die vraagt afzonderlijk akkoord voor een afgebakende proef en een eigen account van een onafhankelijke beoordelaar. Lokale testrollen zijn geen toekenning van echte toegang. Bestaande live testregistraties zijn ongewijzigd.
