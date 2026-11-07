@@ -8,6 +8,11 @@ export type CreatorAttemptStore={
  read:(id:string)=>Promise<{revision:number;sealed:string}|null>;
  compareAndSwap:(id:string,expectedRevision:number|null,next:{revision:number;sealed:string})=>Promise<boolean>;
 };
+export type CreatorAttemptCipher={
+ ready:()=>Promise<void>;
+ seal:(id:string,revision:number,plaintext:string)=>Promise<string>;
+ open:(id:string,revision:number,sealed:string)=>Promise<string>;
+};
 type Principal={organizationId:string;userId:string;sessionId:string};
 type Kernel=Pick<CreatorYouTubeKernel,'beginAuthorization'|'authorize'|'withdraw'>;
 const uuid=z.string().uuid();
@@ -17,37 +22,46 @@ const hash=(value:string)=>createHash('sha256').update(value).digest('hex');
 const same=(a:string,b:string)=>a.length===b.length&&timingSafeEqual(Buffer.from(a),Buffer.from(b));
 
 export class CreatorYouTubeOAuthAttempt {
- private readonly key:Buffer;
- constructor(private readonly ports:{store:CreatorAttemptStore;kernel:Kernel;principal:()=>Promise<Principal>;now:()=>number},key:Uint8Array,private readonly redirectUri:string,private readonly enabled=false){
-  if(key.length!==32)throw Error('creator_attempt_configuration');
-  this.key=Buffer.from(key);
+ private readonly key:Buffer|null;
+ private readonly cipher:CreatorAttemptCipher|null;
+ constructor(private readonly ports:{store:CreatorAttemptStore;kernel:Kernel;principal:()=>Promise<Principal>;now:()=>number},key:Uint8Array|CreatorAttemptCipher,private readonly redirectUri:string,private readonly enabled=false){
+  if(!key||typeof key!=='object')throw Error('creator_attempt_configuration');
+  if('seal'in key){
+   if(typeof key.seal!=='function'||typeof key.open!=='function'||typeof key.ready!=='function')throw Error('creator_attempt_configuration');
+   this.cipher=key;this.key=null;
+  }else{
+   if(key.length!==32)throw Error('creator_attempt_configuration');
+   this.key=Buffer.from(key);this.cipher=null;
+  }
   const url=new URL(redirectUri);
   if(url.protocol!=='https:'||url.username||url.password||url.hash||url.search||url.href!==redirectUri)throw Error('creator_attempt_configuration');
  }
  private async run<T>(fn:()=>Promise<T>){if(!this.enabled)throw Error('creator_attempt_disabled');try{return await fn();}catch{throw Error('creator_attempt_not_confirmed');}}
  private async binding(){const p=await this.ports.principal();return hash(JSON.stringify([uuid.parse(p.organizationId),uuid.parse(p.userId),uuid.parse(p.sessionId)]));}
- private seal(id:string,revision:number,value:Attempt){
-  const iv=randomBytes(12),cipher=createCipheriv('aes-256-gcm',this.key,iv);
+ private async seal(id:string,revision:number,value:Attempt){
+  if(this.cipher)return this.cipher.seal(id,revision,JSON.stringify(value));
+  const iv=randomBytes(12),cipher=createCipheriv('aes-256-gcm',this.key!,iv);
   cipher.setAAD(Buffer.from(`creator-youtube-attempt:${id}:${revision}`));
   const encrypted=Buffer.concat([cipher.update(JSON.stringify(value),'utf8'),cipher.final()]);
   return Buffer.concat([iv,cipher.getAuthTag(),encrypted]).toString('base64url');
  }
- private open(id:string,record:{revision:number;sealed:string}){
+ private async open(id:string,record:{revision:number;sealed:string}){
   if(!Number.isSafeInteger(record.revision)||record.revision<1||record.sealed.length>16000)throw Error('Invalid storage');
-  const bytes=Buffer.from(record.sealed,'base64url'),decipher=createDecipheriv('aes-256-gcm',this.key,bytes.subarray(0,12));
+  if(this.cipher)return attemptSchema.parse(JSON.parse(await this.cipher.open(id,record.revision,record.sealed)));
+  const bytes=Buffer.from(record.sealed,'base64url'),decipher=createDecipheriv('aes-256-gcm',this.key!,bytes.subarray(0,12));
   decipher.setAAD(Buffer.from(`creator-youtube-attempt:${id}:${record.revision}`));decipher.setAuthTag(bytes.subarray(12,28));
   return attemptSchema.parse(JSON.parse(Buffer.concat([decipher.update(bytes.subarray(28)),decipher.final()]).toString('utf8')));
  }
- private write(id:string,revision:number|null,value:Attempt){const next=(revision??0)+1;return this.ports.store.compareAndSwap(id,revision,{revision:next,sealed:this.seal(id,next,value)});}
+ private async write(id:string,revision:number|null,value:Attempt){const next=(revision??0)+1;return this.ports.store.compareAndSwap(id,revision,{revision:next,sealed:await this.seal(id,next,value)});}
  private async read(id:string,browserNonce:string,state?:string){
   uuid.parse(id);if(!/^[A-Za-z0-9_-]{43}$/.test(browserNonce))throw Error('Invalid browser binding');
-  const record=await this.ports.store.read(id);if(!record)throw Error('Unknown request');const value=this.open(id,record);
+  const record=await this.ports.store.read(id);if(!record)throw Error('Unknown request');const value=await this.open(id,record);
   if(!same(value.binding,await this.binding())||!same(value.browser,hash(browserNonce))||(state!==undefined&&(!/^[a-f0-9]{64}$/.test(state)||!same(value.state,hash(state)))))throw Error('Invalid callback binding');
   return{record,value};
  }
  private async cleanup(id:string,known:Attempt,reason:'cancelled'|'expired'|'failed'){
   for(let retry=0;retry<4;retry++){
-   const record=await this.ports.store.read(id);if(!record)throw Error('Missing cleanup request');const value=this.open(id,record);
+   const record=await this.ports.store.read(id);if(!record)throw Error('Missing cleanup request');const value=await this.open(id,record);
    if(!same(value.binding,known.binding)||!same(value.browser,known.browser)||value.link!==known.link)throw Error('Changed cleanup owner');
    const queued:Attempt={...value,verifier:undefined,status:'cleanup_pending',cleanupReason:value.cleanupReason??reason,cleanupStatus:'pending'};
    // Persist intent before crossing the withdrawal/provider boundary. A restart may safely retry it.
@@ -60,6 +74,7 @@ export class CreatorYouTubeOAuthAttempt {
   throw Error('Cleanup outcome not confirmed');
  }
  async begin(link:string){return this.run(async()=>{
+  await this.cipher?.ready();
   uuid.parse(link);const binding=await this.binding(),browserNonce=randomBytes(32).toString('base64url'),verifier=randomBytes(32).toString('base64url');
   const job=await this.ports.kernel.beginAuthorization(link);uuid.parse(job.jobId);if(!/^[a-f0-9]{64}$/.test(job.state))throw Error('Invalid request');
   const value:Attempt={link,binding,browser:hash(browserNonce),state:hash(job.state),verifier,expires:this.ports.now()+300000,status:'pending'};

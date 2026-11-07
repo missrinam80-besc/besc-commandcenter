@@ -20,6 +20,8 @@ Op Windows kan deze adapter geen portable directory-fsync of volledige ACL-contr
 
 ## Wat dit nog niet oplost
 
+Vervolg: [lokale sleutelopslag en rotatie](ca03-youtube-local-keyring.md) voegt een versleutelde gegevenssleutelring toe. De productiebron, backup en rotatie van de afzonderlijke hoofdsleutel blijven buiten die lokale stap.
+
 Een crash nadat een provider een grant/token heeft afgegeven maar vóór lokale ontvangst of opslag kan niet door deze adapter worden teruggedraaid. In de echte kern blijft zo'n onbekend antwoord open voor opruiming; het wordt niet als voltooid verzonnen. Duurzame opvang van providerantwoorden, providerreconciliatie en een definitieve aanpak voor verkeerde kanaal-/scopegrants blijven nodig vóór live gebruik.
 
 Herstel is nu expliciet en per bekende aanvraag. Er is geen scanner, automatische planner of beheerdersfunctie die de oorspronkelijke eigenaar-/sessiecontrole omzeilt. Herstel na verlies van de browserbinding, definitief sessieverlies of verlies van de sleutel vereist nog een afzonderlijk ontworpen beperkte beheerroute. De sleutel wordt in de herstartproeven opnieuw aangeleverd door de testfixture; productie-sleutelbeheer en rotatie zijn niet gebouwd.
