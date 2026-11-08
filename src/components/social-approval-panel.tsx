@@ -22,6 +22,8 @@ function SubmittedVersion({ record }: { record: SnapshotRecord }) {
     {record.hashtags ? <p>{String(record.hashtags)}</p> : null}
     {record.call_to_action ? <p>{String(record.call_to_action)}</p> : null}
     {record.scheduled_at ? <p>Gepland: {formatDateTime(String(record.scheduled_at))}</p> : null}
+    {record.instagram_image_url ? <p>Instagram-afbeelding: {String(record.instagram_image_url)}</p> : null}
+    {record.instagram_target && typeof record.instagram_target === 'object' ? <p>Instagram-account: {String((record.instagram_target as SnapshotRecord).name)} · {String((record.instagram_target as SnapshotRecord).external_id)}</p> : null}
     {record.canva_url ? <p>Ontwerp: {String(record.canva_url)}</p> : null}
     {record.notes ? <p style={{ whiteSpace: "pre-wrap" }}>{String(record.notes)}</p> : null}
   </div>;

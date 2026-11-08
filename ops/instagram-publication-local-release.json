@@ -1,0 +1,21 @@
+{
+  "work_item": "package5-instagram-single-image",
+  "required_history_before": 153,
+  "expected_history_after_separate_apply": 154,
+  "migration": {
+    "file": "20261108113531_instagram_publication_local.sql",
+    "sha256_lf": "921cc32ee099b8acb33bcb1e49fca7a0070136129657be5f83d610418f7bd7e0"
+  },
+  "new_private_tables": 2,
+  "runtime_default": "off",
+  "cloud_apply_authorized": false,
+  "server_deploy_authorized": false,
+  "publication_authorized": false,
+  "live_provider_authorized": false,
+  "oauth_scopes_changed": false,
+  "automatic_scheduler_added": false,
+  "legacy_empty_image_snapshots_preserved": true,
+  "live_runtime_factory_included": true,
+  "single_image_only": true,
+  "runtime_factory_default": "off"
+}

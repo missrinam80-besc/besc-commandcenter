@@ -1,5 +1,7 @@
 # Interne beoordeling van socialberichten
 
+De lokale vervolgketen voor Instagram met een verplichte afbeelding staat beschreven in [pakket 5](Instagram-publicatie-pakket-5.md). Die voorbereiding activeert geen publicatie.
+
 Implementatie van PR #138, op 6 november 2026 afzonderlijk goedgekeurd en uitgerold naar Cloud DEV als versie `74f7a37`, met migratie `20261106220010`. Dit voegt geen publicatiekoppeling toe.
 
 ## Werkwijze

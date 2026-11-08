@@ -5,6 +5,7 @@ import { DossierTabContent } from "@/components/dossier-tab-content";
 import { contactTabs, resolveContactTab } from "@/lib/contact-dossier-tabs";
 import Link from "next/link";
 import { SocialApprovalPanel } from "@/components/social-approval-panel";
+import { InstagramPublicationPanel } from "@/components/instagram-publication-panel";
 import { ExternalLink } from "lucide-react";
 import { notFound } from "next/navigation";
 import { operationalModules, type OperationalModule } from "@/app/app/operations/config";
@@ -167,7 +168,9 @@ export async function OperationalRecordDetail({
       {isTabbedDossier && <nav className="event-dossier-tabs" aria-label="Onderdelen van de fiche">{contactTabs(module).map(t=><Link key={t.id} href={`?tab=${t.id}`} scroll={false} aria-current={activeTab===t.id?"page":undefined}>{t.label}</Link>)}</nav>}
       <DossierTabContent tab={activeTab}><div className={`project-detail-body ${isTabbedDossier ? "contact-dossier" : ""}`}>
         {module==='sponsors'&&activeTab==='algemeen'&&<F1PartnerRoles partnerId={id}/>}
-        {query.fout && <div className="error-note">De wijziging kon niet worden opgeslagen ({query.fout}).</div>}
+        {query.fout && <div className="error-note">{query.fout.startsWith('instagram-')
+          ? ({'instagram-uitgeschakeld':'Instagram-publicatie staat nog uit.','instagram-rechten':'Je hebt geen rechten om deze Instagram-publicatie te beheren.','instagram-controle':'Niet opgeslagen. Controleer de gekozen afbeelding, accountrechten, goedkeuring en planning. Een lopende of onzekere publicatie kan niet opnieuw worden vrijgegeven.'} as Record<string,string>)[query.fout]??'De Instagram-gegevens zijn niet volledig ingevuld.'
+          : `De wijziging kon niet worden opgeslagen (${query.fout}).`}</div>}
         {query.succes && <div className="success">De wijziging is opgeslagen.</div>}
         {(
           isContactDossier ? <>
@@ -192,6 +195,7 @@ export async function OperationalRecordDetail({
             {module !== "social" && <section className="form-card record-notes"><div className="form-heading"><h2>Notities en briefing</h2></div>{record.notes ? <MarkdownContent>{String(record.notes)}</MarkdownContent> : <p>Nog geen notities toegevoegd.</p>}</section>}
             {module === "social" && <SocialRelations record={record} variants={(variantsResult.data ?? []) as unknown as RelatedRow[]}/>}
             {module === "social" && <SocialApprovalPanel id={id} status={String(record.status)} deleted={Boolean(record.deleted_at)}/>}
+            {module === "social" && !record.deleted_at && <InstagramPublicationPanel id={id}/>}
             <RecordLifecyclePanel
               entity={lifecycleEntity[module]}
               id={id}
