@@ -49,7 +49,7 @@ export function CreatorYouTubeAccount({transport=fetch,navigate=(url:string)=>wi
   }catch{setError('Controleer kanaal, video-ID’s, doel, meetperiode en toekomstige toestemmings- en bewaartermijn.');}
  }
  const current=detail?.consent??draft;
- const connected=Boolean(detail?.status==='active'&&Date.parse(detail.consent.valid_until)>now&&Date.parse(detail.consent.retain_until)>now);
+ const connected=Boolean(detail?.status==='active'&&detail.access_available!==false&&Date.parse(detail.consent.valid_until)>now&&Date.parse(detail.consent.retain_until)>now);
  const revoked=Boolean(detail?.status==='revoked'&&['pending','failed'].includes(detail.provider_revocation));
  const ownPending=Boolean(pending&&(!detail||pending.link===detail.id));
  const missingTicket=detail?.status==='pending'&&!ownPending;
@@ -74,7 +74,8 @@ export function CreatorYouTubeAccount({transport=fetch,navigate=(url:string)=>wi
     <button type="submit">Toestemming controleren</button>
    </form>}
    {missingTicket&&<p>Deze aanvraag heeft geen herstelbewijs in deze browser. Gebruik de oorspronkelijke browser en sessie; er wordt niets automatisch overgenomen of herhaald.</p>}
-   {detail?.status==='active'&&!connected&&<p>De toestemmings- of bewaartermijn is verstreken. Er worden geen metingen getoond of opgehaald.</p>}
+   {detail?.access_available===false&&<p>De proefperiode is verstreken. Je kunt de koppeling nog intrekken.</p>}
+   {detail?.status==='active'&&!connected&&detail.access_available!==false&&<p>De toestemmings- of bewaartermijn is verstreken. Er worden geen metingen getoond of opgehaald.</p>}
    {current&&<CreatorYouTubeConnect key={revision+':'+(detail?.id??'new')} configured={!missingTicket&&Boolean(draft||connected||ownPending||revoked||detail?.status==='active')} connected={connected} pending={ownPending} revocationPending={revoked||Boolean(detail?.status==='active'&&!connected)} link={detail?.id??null} consent={current} action={action} navigate={navigate}/>}
    {detail&&connected&&!changed&&<div><h3>Eigen opgeslagen metingen</h3><p>Ontbrekende waarden betekenen niet nul. Controleer meetperiode en meettijd; deze cijfers worden niet gepubliceerd.</p>
     <table><thead><tr><th>Video</th><th>Meting</th><th>Waarde</th><th>Eenheid</th><th>Meetperiode</th><th>Gemeten op</th></tr></thead><tbody>{detail.samples.map((s,i)=><tr key={i}><td>{s.video_id}</td><td>{labels[s.metric]}</td><td>{s.quality==='missing'||s.value===null?'Ontbreekt':s.value.toLocaleString('nl-BE')}</td><td>{units[s.unit]}</td><td>{s.start_date} – {s.end_date}</td><td>{s.measured_at}</td></tr>)}</tbody></table>{!detail.samples.length&&<p>Er zijn nog geen metingen opgeslagen.</p>}</div>}

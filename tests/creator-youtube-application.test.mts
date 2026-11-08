@@ -22,7 +22,7 @@ after(async()=>{await f.db.close();});
 beforeEach(async()=>{await f.owner();await f.db.exec('truncate private.cy_links cascade');for(const [user,session]of sessions)await f.db.exec(`update auth.users set email_confirmed_at=now(),deleted_at=null,banned_until=null where id=${q(user)};update public.organization_members set status='active' where user_id=${q(user)};insert into auth.sessions(id,user_id) values(${q(session)},${q(user)}) on conflict do nothing;`);});
 afterEach(async()=>{for(const root of roots.splice(0)){assert.equal(path.dirname(path.resolve(root)),path.resolve(tmpdir()));assert(path.basename(root).startsWith('besc-ca03-app-'));await rm(root,{recursive:true,force:true});}});
 function jwt(user:string,session=sessions.get(user)!,extra:Record<string,unknown>={}){return Buffer.from('{"alg":"HS256"}').toString('base64url')+'.'+Buffer.from(JSON.stringify({sub:user,session_id:session,role:'authenticated',exp:Math.floor(Date.now()/1000)+3600,...extra})).toString('base64url')+'.MOCK';}
-async function fixture(){
+async function fixture(pilot?:import('../src/lib/creator-youtube-session.ts').CreatorYouTubePilot){
  const root=await mkdtemp(path.join(tmpdir(),'besc-ca03-app-'));roots.push(root);const attempts=await CreatorYouTubeFileStore.create(path.join(root,'attempts')),receipts=await CreatorYouTubeFileStore.create(path.join(root,'receipts')),keys=await CreatorYouTubeFileStore.create(path.join(root,'keys')),wrap=randomBytes(32),ringId=randomUUID();await CreatorYouTubeKeyring.initialize(keys,wrap,ringId);
  const registry=new Map([...sessions].map(([user])=>[jwt(user),user]));const tokens=new Map([...registry].map(([token,user])=>[user,token]));
  let actor:string=f.ids.member,token=tokens.get(actor)!,cookie='',authOk=true,revokeStatus=200,now=Date.now(),duringChannel:()=>Promise<void>=async()=>{},lostFinish=false;const log:{name:string;bearer:string;method:string;operation?:string}[]=[],providerCalls:string[]=[];
@@ -58,7 +58,7 @@ async function fixture(){
   if(u.pathname==='/v2/reports')return Response.json({columnHeaders:[{name:'video',columnType:'DIMENSION',dataType:'STRING'},{name:'views',columnType:'METRIC',dataType:'INTEGER'},{name:'estimatedMinutesWatched',columnType:'METRIC',dataType:'FLOAT'},{name:'averageViewDuration',columnType:'METRIC',dataType:'FLOAT'}],rows:[[video,0,null,2.5]]});
   if(u.pathname==='/revoke')return new Response(null,{status:revokeStatus});throw Error('Unexpected provider endpoint');
  };
- const app=async()=>{const session=new CreatorYouTubeSession(browser(),bearer=>sdk('MOCK-PUBLISHABLE',bearer),()=>sdk('MOCK-SERVER-SECRET'),f.ids.org,true);return createCreatorYouTubeApplication({session,google:new CreatorYouTubeGoogle({clientId:'fixture.apps.googleusercontent.com',clientSecret:'MOCK-YT-SECRET',redirectUri:origin+'/auth/creator-youtube/callback',isolatedProject:true},provider,()=>now,true),attempts,receipts,cipher:await CreatorYouTubeKeyring.open(keys,wrap,ringId),origin,now:()=>now},true);};
+ const app=async()=>{const session=new CreatorYouTubeSession(browser(),bearer=>sdk('MOCK-PUBLISHABLE',bearer),()=>sdk('MOCK-SERVER-SECRET'),f.ids.org,true,pilot);return createCreatorYouTubeApplication({session,google:new CreatorYouTubeGoogle({clientId:'fixture.apps.googleusercontent.com',clientSecret:'MOCK-YT-SECRET',redirectUri:origin+'/auth/creator-youtube/callback',isolatedProject:true},provider,()=>now,true),attempts,receipts,cipher:await CreatorYouTubeKeyring.open(keys,wrap,ringId),origin,now:()=>now},true);};
  const save=(response:Response)=>{const next=response.headers.get('Set-Cookie');if(next)cookie=next.includes('Max-Age=0')?'':next.split(';')[0];return response;};
  const consent={accepted:true,purpose:'TESTFIXTURE - NIET PUBLICEREN - package 2',channel_id:channel,video_ids:[video],start_date:'2026-11-01',end_date:'2026-11-06',valid_until:new Date(now+86400000).toISOString(),retain_until:new Date(now+172800000).toISOString()};
  const action=async(input:unknown)=>save(await(await app()).action(new Request(origin+'/api/creator-youtube',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json',Cookie:cookie},body:JSON.stringify(input)})));
@@ -122,11 +122,38 @@ test('CA03 runtime: disabled routes and missing private configuration have no se
 test('CA03 runtime: explicit private synthetic files connect the same real SDK and SQL chain without auto-initialization',async()=>{
  const a=await fixture(),saved={...process.env},secretRoot=await mkdtemp(path.join(tmpdir(),'besc-ca03-app-'));roots.push(secretRoot);
  const configFile=path.join(secretRoot,'creator.json'),keyFile=path.join(secretRoot,'wrap.key');await chmod(secretRoot,0o700);await chmod(a.root,0o700);await writeFile(keyFile,a.wrap.toString('base64url'),{mode:0o600});
- const config={organizationId:f.ids.org,origin,storageRoot:a.root,wrappingKeyFile:keyFile,keyringId:a.ringId,google:{clientId:'fixture.apps.googleusercontent.com',clientSecret:'MOCK-YT-SECRET',isolatedProject:true}};await writeFile(configFile,JSON.stringify(config),{mode:0o600});
+ const config={organizationId:f.ids.org,origin,storageRoot:a.root,wrappingKeyFile:keyFile,keyringId:a.ringId,pilot:{ownerId:f.ids.member,channelId:channel,expiresAt:new Date(Date.now()+172800000).toISOString()},google:{clientId:'fixture.apps.googleusercontent.com',clientSecret:'MOCK-YT-SECRET',isolatedProject:true}};await writeFile(configFile,JSON.stringify(config),{mode:0o600});
  try{
   Object.assign(process.env,{BESC_CREATOR_YOUTUBE_ENABLED:'true',BESC_CREATOR_YOUTUBE_CONFIG_FILE:configFile,NEXT_PUBLIC_SITE_URL:origin,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:'MOCK-PUBLISHABLE'});
   const run=creatorApplicationModules({'./supabase/server':{createClient:a.browser},'./supabase/admin':{createAdminClient:()=>a.sdk('MOCK-SERVER-SECRET')},'./supabase/url':{getSupabaseServerUrl:()=>supabase},'@supabase/supabase-js':{createClient:(_url:string,key:string,options:{accessToken:()=>Promise<string>})=>createClient(supabase,key,{...options,global:{fetch:a.transport}})},__fetch:a.provider})('creator-youtube-runtime') as typeof import('../src/lib/creator-youtube-runtime.ts');
   const response=await run.creatorYouTubeRoute(new Request(origin+'/api/creator-youtube'),'status');assert.equal(response.status,200);assert.deepEqual((await response.json()).account.links,[]);assert.equal(a.providerCalls.length,0);
+  assert.equal(await run.creatorYouTubePilotVisible(f.ids.member),true);assert.equal(await run.creatorYouTubePilotVisible(f.ids.admin),false);
+  a.changeActor(f.ids.admin);const beforeCalls=a.log.length;
+  await writeFile(configFile,JSON.stringify({...config,storageRoot:path.join(secretRoot,'does-not-exist')}),{mode:0o600});assert.equal((await run.creatorYouTubeRoute(new Request(origin+'/api/creator-youtube'),'status')).status,503);assert(a.log.slice(beforeCalls).every(call=>call.name==='auth'));a.changeActor(f.ids.member);
+  const {pilot:omittedPilot,...unrestricted}=config;assert(omittedPilot.ownerId);await writeFile(configFile,JSON.stringify(unrestricted),{mode:0o600});assert.equal((await run.creatorYouTubeRoute(new Request(origin+'/api/creator-youtube'),'status')).status,503);assert.equal(await run.creatorYouTubePilotVisible(f.ids.member),false);
   await writeFile(configFile,JSON.stringify({...config,keyringId:randomUUID()}),{mode:0o600});assert.equal((await run.creatorYouTubeRoute(new Request(origin+'/api/creator-youtube'),'status')).status,503);
  }finally{for(const key of Object.keys(process.env))if(!(key in saved))delete process.env[key];Object.assign(process.env,saved);}
+});
+
+test('CA03 pilot: only the designated owner can reach owner/server RPCs, even with an admin role',async()=>{
+ const pilot={ownerId:f.ids.member,channelId:channel,expiresAt:new Date(Date.now()+172800000).toISOString()},a=await fixture(pilot);const r=await a.start();assert.equal((await(await a.status()).json()).account.links[0].id,r.link);
+ for(const actor of [f.ids.admin,f.ids.other]){a.changeActor(actor);const before=a.log.length;assert.equal((await a.status()).status,400);assert.equal((await a.action({action:'start',consent:a.consent})).status,400);assert(a.log.slice(before).every(call=>call.name==='auth'));assert.equal(a.providerCalls.length,0);}
+ a.changeActor(f.ids.member);assert.equal((await(await a.action({action:'cancel'})).json()).provider,'none');
+});
+
+test('CA03 pilot: another channel and a consent extending past the pilot cannot create SQL consent',async()=>{
+ const a=await fixture({ownerId:f.ids.member,channelId:channel,expiresAt:new Date(Date.now()+172800000).toISOString()});
+ for(const change of [{channel_id:'UC'+'B'.repeat(22)},{valid_until:new Date(Date.now()+259200000).toISOString(),retain_until:new Date(Date.now()+345600000).toISOString()}])assert.equal((await a.action({action:'start',consent:{...a.consent,...change}})).status,400);
+ assert.equal(a.providerCalls.length,0);assert.equal(a.log.filter(call=>call.name==='creator_youtube_owner').length,0);assert.deepEqual((await(await a.status()).json()).account.links,[]);
+});
+
+test('CA03 pilot: expiry hides measurements and blocks new collection/refresh while owner withdrawal remains possible',async()=>{
+ const pilot={ownerId:f.ids.member,channelId:channel,expiresAt:new Date(Date.now()+172800000).toISOString()},a=await fixture(pilot),r=await a.start();assert.match((await a.callback(r.state)).headers.get('Location')!,/completed$/);assert.equal((await a.action({action:'collect',link:r.link})).status,200);assert((await(await a.status('?link='+r.link)).json()).link.samples.length>0);
+ pilot.expiresAt=new Date(Date.now()-1000).toISOString();const status=await(await a.status('?link='+r.link)).json();assert.equal(status.link.status,'active');assert.equal(status.link.access_available,false);assert.deepEqual(status.link.samples,[]);const before=a.providerCalls.length;
+ assert.equal((await a.action({action:'collect',link:r.link})).status,400);assert.equal((await a.action({action:'prepare-refresh',link:r.link})).status,400);assert.equal(a.providerCalls.length,before);assert.equal((await(await a.action({action:'disconnect',link:r.link})).json()).provider,'complete');assert.equal((await(await a.status('?link='+r.link)).json()).link.status,'revoked');
+});
+
+test('CA03 pilot: a changed channel boundary cannot dispatch an older stored request',async()=>{
+ const pilot={ownerId:f.ids.member,channelId:channel,expiresAt:new Date(Date.now()+172800000).toISOString()},a=await fixture(pilot),r=await a.start();pilot.channelId='UC'+'B'.repeat(22);
+ assert.match((await a.callback(r.state)).headers.get('Location')!,/not_confirmed$/);assert.equal(a.providerCalls.length,0);assert(a.cookie());assert.equal((await a.status('?link='+r.link)).status,400);
 });

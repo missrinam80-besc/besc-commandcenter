@@ -1,0 +1,17 @@
+{
+  "organizationId": "<BESC_ORGANIZATION_UUID>",
+  "origin": "https://cc-dev.belgianstreamerscommunity.be",
+  "storageRoot": "/var/lib/besc-creator-youtube",
+  "wrappingKeyFile": "/run/besc-creator/wrapping.key",
+  "keyringId": "<PREVIOUSLY_INITIALIZED_KEYRING_UUID>",
+  "pilot": {
+    "ownerId": "<APPROVED_CREATOR_BESC_USER_UUID>",
+    "channelId": "<VERIFIED_UC_CHANNEL_ID>",
+    "expiresAt": "<APPROVED_PILOT_END_ISO8601>"
+  },
+  "google": {
+    "clientId": "<SEPARATE_TEST_PROJECT_WEB_CLIENT_ID>",
+    "clientSecret": "<PRIVATE_SECRET_NEVER_COMMIT_REAL_VALUE>",
+    "isolatedProject": false
+  }
+}

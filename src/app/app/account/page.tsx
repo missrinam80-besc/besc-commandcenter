@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { CreatorYouTubeAccount } from "@/components/creator-youtube-account";
-import { creatorYouTubeEnabled } from "@/lib/creator-youtube-runtime";
+import { creatorYouTubePilotVisible } from "@/lib/creator-youtube-runtime";
 import { requireActiveMembership } from "@/lib/auth-context";
 import { discordIdentityDetails, findIdentity, twitchIdentityDetails } from "@/lib/profile-identities";
 import { personalTwitchLinkEnabled } from "@/lib/personal-twitch-link";
@@ -101,6 +101,7 @@ export default async function AccountPage({
 }) {
   const query = await searchParams;
   const { supabase, user, membership } = await requireActiveMembership();
+  const creatorPilotVisible = await creatorYouTubePilotVisible(user.id);
   const [{ data: profileData }, { data: memberData }, identitiesResult] = await Promise.all([
     supabase.from("profiles").select("display_name,avatar_url,first_name,last_name,pronouns,bio,location,preferred_language,timezone,website_url,discord_user_id,discord_username,discord_avatar_url,theme_preference").eq("id", user.id).maybeSingle(),
     supabase.from("organization_members").select("role,finance_role,status,joined_at").eq("organization_id", membership.organization_id).eq("user_id", user.id).maybeSingle(),
@@ -276,7 +277,7 @@ export default async function AccountPage({
           </aside>
         </div>
 
-        {creatorYouTubeEnabled() && <CreatorYouTubeAccount/>}
+        {creatorPilotVisible && <CreatorYouTubeAccount/>}
         <section className="account-security-grid">
           <article className="form-card">
             <div className="form-heading"><div><span className="eyebrow">INLOGGEGEVENS</span><h2>E-mailadres wijzigen</h2><p>Je ontvangt bevestigingsmails voordat het nieuwe adres actief wordt.</p></div><Mail/></div>
