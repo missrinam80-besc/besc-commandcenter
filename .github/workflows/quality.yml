@@ -76,6 +76,40 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: node --test tests/creator-youtube-application.test.mts
 
+  instagram-publication-native:
+    name: Instagram publicatie en races PostgreSQL 17
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      postgres-instagram:
+        image: postgres:17.11
+        env:
+          POSTGRES_DB: besc_f1_fixture
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: fixture-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d besc_f1_fixture"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      F1_NATIVE_TEST: '1'
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: besc_f1_fixture
+      PGUSER: postgres
+      PGPASSWORD: fixture-only
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node --test tests/instagram-publication.test.mts
+
+      - run: node tests/instagram-publication-concurrency.mjs
+
   campaign-contribution-native:
     name: CA02 bijdragen en beoordeling PostgreSQL 17
     runs-on: ubuntu-latest
