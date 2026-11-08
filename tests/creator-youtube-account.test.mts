@@ -18,11 +18,11 @@ const cleanups:(()=>Promise<void>)[]=[];
 afterEach(async()=>{for(const undo of cleanups.splice(0).reverse())await undo();});
 const link='00000000-0000-4000-8000-000000000001',channel='UC'+'A'.repeat(22),video='abcdefghijk';
 const consent={purpose:'TESTFIXTURE - NIET PUBLICEREN',channel_id:channel,video_ids:[video],start_date:'2026-11-01',end_date:'2026-11-06',valid_until:'2030-01-01T00:00:00Z',retain_until:'2030-02-01T00:00:00Z'};
-async function mount(options:{empty?:boolean;fail?:boolean;status?:'pending'|'active'|'revoked';provider?:string;pending?:boolean;expired?:boolean;samples?:unknown[];next?:string}={}){
+async function mount(options:{empty?:boolean;fail?:boolean;status?:'pending'|'active'|'revoked';provider?:string;pending?:boolean;expired?:boolean;pilotExpired?:boolean;samples?:unknown[];next?:string}={}){
  const dom=new JSDOM('<!doctype html><main id="root"></main>',{url:'https://creator.fixture.invalid/app/account?creator_youtube=completed&link=FOREIGN'}),saved=new Map<string,PropertyDescriptor|undefined>();
  for(const [key,value]of Object.entries({window:dom.window,document:dom.window.document,navigator:dom.window.navigator,HTMLElement:dom.window.HTMLElement,FormData:dom.window.FormData,IS_REACT_ACT_ENVIRONMENT:true})){saved.set(key,Object.getOwnPropertyDescriptor(globalThis,key));Object.defineProperty(globalThis,key,{value,writable:true,configurable:true});}
  const calls:{url:string;input?:Record<string,unknown>}[]=[],destinations:string[]=[];
- const detail={id:link,channel_id:channel,status:options.status??'active',provider_revocation:options.provider??'none',consent:{...consent,...(options.expired?{valid_until:'2026-01-01T00:00:00Z'}:{})},samples:options.samples??[]};
+ const detail={access_available:!options.pilotExpired,id:link,channel_id:channel,status:options.status??'active',provider_revocation:options.provider??'none',consent:{...consent,...(options.expired?{valid_until:'2026-01-01T00:00:00Z'}:{})},samples:options.samples??[]};
  const summary={id:link,channel_id:channel,status:detail.status,provider_revocation:detail.provider_revocation,valid_until:detail.consent.valid_until,retain_until:consent.retain_until};
  const transport=async(url:string,init:RequestInit)=>{
   const input=init.body?JSON.parse(String(init.body)):undefined;calls.push({url,input});
@@ -60,3 +60,6 @@ test('CA03 account UI: new scope requires explicit fields and a separate consent
 
 
 test('CA03 account UI: browser recovery takes precedence over an empty ordinary revocation retry',async()=>{const a=await mount({status:'revoked',provider:'pending',pending:true});assert(a.button('Aanvraag herstellen'));assert(a.button('Aanvraag annuleren'));assert(!a.button('Intrekking opnieuw controleren'));await a.click('Aanvraag herstellen');assert.equal(a.calls.at(-1)?.input?.action,'recover');});
+
+
+test('CA03 pilot UI: expired pilot hides metrics but still offers owner withdrawal',async()=>{const a=await mount({pilotExpired:true});assert(a.text().includes('De proefperiode is verstreken'));assert(!a.button('Statistieken ophalen'));assert(!a.button('Toegang vernieuwen'));assert(a.button('Intrekking opnieuw controleren'));await a.click('Intrekking opnieuw controleren');assert.equal(a.calls.at(-1)?.input?.action,'disconnect');});

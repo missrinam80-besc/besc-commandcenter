@@ -1,0 +1,25 @@
+# Preparation only: never loaded by the existing deployment command.
+# Provision and validate private files and backup/restore before using this override.
+services:
+  web:
+    environment:
+      BESC_CREATOR_YOUTUBE_ENABLED: "false"
+      BESC_CREATOR_YOUTUBE_CONFIG_FILE: /run/besc-creator/config.json
+    volumes:
+      - type: bind
+        source: /opt/besc-secrets/creator-youtube/config.json
+        target: /run/besc-creator/config.json
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /opt/besc-secrets/creator-youtube/wrapping.key
+        target: /run/besc-creator/wrapping.key
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /var/lib/besc-creator-youtube
+        target: /var/lib/besc-creator-youtube
+        bind:
+          create_host_path: false
