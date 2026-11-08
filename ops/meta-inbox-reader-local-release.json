@@ -1,0 +1,78 @@
+{
+  "work_item": "package7-meta-inbox-reader-local",
+  "base_commit": "8453b0ef161e08b25ff2482c27495b81b697fb6c",
+  "runtime_default": "off",
+  "database_changes_required": false,
+  "migration_added": false,
+  "required_inbox_migration": "20261108141811_social_inbox_local.sql",
+  "provider_factory_included": true,
+  "runtime_factory_included": false,
+  "ambient_fetch": false,
+  "automatic_retry": false,
+  "webhook_added": false,
+  "scheduler_added": false,
+  "oauth_scopes_changed": false,
+  "cloud_apply_authorized": false,
+  "server_deploy_authorized": false,
+  "live_provider_authorized": false,
+  "live_message_read_authorized": false,
+  "activation_authorized": false,
+  "reply_authorized": false,
+  "moderation_authorized": false,
+  "live_contract_verified": false,
+  "bounds": {
+    "page_size": 25,
+    "max_pages": 20,
+    "max_requests": 40,
+    "max_messages": 50,
+    "max_comment_roots": 5,
+    "max_response_bytes": 262144,
+    "request_timeout_ms": 10000
+  },
+  "preserved_files": [
+    {
+      "file": "src/lib/meta-integration.ts",
+      "sha256_lf": "889c7a63b09d62a1b2131f67a8779a186ce3e14fe6fe08103547fabde4e6845a"
+    },
+    {
+      "file": "src/lib/meta-token-diagnostics.ts",
+      "sha256_lf": "ebd76babfafd35e5023534d5150d02c1b4fa3fbc63b4352a84d4bed99fe91722"
+    },
+    {
+      "file": "src/lib/meta-sync.ts",
+      "sha256_lf": "1149e1418384d688b1582ca76f0bc2bf9fa973a53a24904100935dec20cdb26b"
+    },
+    {
+      "file": "src/lib/social-sync-scheduler.ts",
+      "sha256_lf": "f4316ad9bcb5c73453dee915bab6c441a6063ddb6f37cc30ee6ad66a1f05f217"
+    },
+    {
+      "file": "src/lib/social-inbox.ts",
+      "sha256_lf": "abbbe62f64e43405617fe62bcb15c30708d41a908b6209904e4cceb8e0b836a3"
+    },
+    {
+      "file": "src/app/app/integraties/social/meta/start/route.ts",
+      "sha256_lf": "3aa0c91914fb99b0ff3118da25cfedf37ca2a5170de79c8eea513a6fd9b60247"
+    },
+    {
+      "file": "src/app/app/integraties/social/meta/callback/route.ts",
+      "sha256_lf": "3d923672cd4b5dcc752b3b79c6a68ef4ccb018e8e7c6c40a595b3131159c68f5"
+    },
+    {
+      "file": "src/app/app/social/inbox/page.tsx",
+      "sha256_lf": "865b766dbcba1bbdec4eeefddb79037f305337fe6ee94a0f4af0da9ca3a1e18a"
+    },
+    {
+      "file": "src/app/app/social/inbox/actions.ts",
+      "sha256_lf": "9e20021d00ff899447097fe80c7da406774dfedd63c5c32fee37ae3a9b59520c"
+    },
+    {
+      "file": "src/app/api/cron/instagram-publication/route.ts",
+      "sha256_lf": "f132d2b33cfb5c5c993f205f3aefdd6daffb23ba1017a0ef86de180b8a650380"
+    },
+    {
+      "file": "supabase/migrations/20261108141811_social_inbox_local.sql",
+      "sha256_lf": "da4ca0ce77e4938c70cdb9ef8e7fbe567f004e67fba754bf640563808c725dcb"
+    }
+  ]
+}
