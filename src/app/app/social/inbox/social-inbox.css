@@ -1,0 +1,44 @@
+.social-inbox-view .social-inbox-list { padding: 0; list-style: none; }
+.social-inbox-view .social-inbox-list > li,
+.social-inbox-view section[aria-label="Gesprek"] {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 16px 0;
+}
+.social-inbox-view section > form {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+.social-inbox-view section label { display: grid; gap: 8px; max-width: 100%; }
+.social-inbox-view section textarea { width: min(440px, 100%); min-height: 90px; }
+.social-inbox-view section h3 { margin-top: 24px; }
+.social-inbox-view select { max-width: 100%; }
+.social-inbox-view p { overflow-wrap: anywhere; }
+.social-inbox-view section h2,
+.social-inbox-view section h3 { font-weight: 700; }
+.social-inbox-view button,
+.social-inbox-view select,
+.social-inbox-view textarea {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--ink);
+  background: var(--theme-field);
+}
+.social-inbox-view button { background: var(--theme-control); cursor: pointer; }
+.social-inbox-view button:hover { background: var(--theme-control-hover); }
+.social-inbox-view [role="alert"] {
+  border: 1px solid var(--theme-alert-border);
+  background: var(--theme-alert);
+  color: var(--theme-danger);
+  border-radius: 8px;
+  padding: 12px;
+}
+.social-inbox-view :is(button,select,textarea,a):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}

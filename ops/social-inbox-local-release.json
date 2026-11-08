@@ -1,0 +1,22 @@
+{
+  "work_item": "package6-social-inbox-local",
+  "base_commit": "e266d863a4211560b435a2d8a16ded953eba77d1",
+  "migration": {
+    "file": "20261108141811_social_inbox_local.sql",
+    "sha256_lf": "da4ca0ce77e4938c70cdb9ef8e7fbe567f004e67fba754bf640563808c725dcb"
+  },
+  "new_private_tables": 3,
+  "required_history_before_separate_apply": 154,
+  "expected_history_after_separate_apply": 155,
+  "runtime_default": "off",
+  "cloud_apply_authorized": false,
+  "server_deploy_authorized": false,
+  "live_provider_authorized": false,
+  "live_message_read_authorized": false,
+  "reply_authorized": false,
+  "moderation_authorized": false,
+  "oauth_scopes_changed": false,
+  "automatic_scheduler_added": false,
+  "provider_transport_included": false,
+  "fixture_only_adapter": true
+}
