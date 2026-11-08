@@ -1,0 +1,15 @@
+const labels:Record<string,string>={pending:'Volgende pagina gereed',processing:'Pagina wordt verwerkt',retry_wait:'Wachten op nieuwe poging',blocked:'Toegang controleren',attention:'Opvolging nodig',completed:'Leesronde afgerond',cancelled:'Geannuleerd'};
+const reasons:Record<string,string>={access_changed:'De toegang of accountkoppeling is gewijzigd.',permissions_required:'De vereiste rechten ontbreken.',token_invalid:'De koppeling moet gecontroleerd worden.',account_mismatch:'Het account komt niet overeen.',resource_mismatch:'Het bronobject hoort niet bij dit account.',invalid_response:'Het antwoord of de cursor kon niet worden bevestigd.',unsupported_message:'Dit berichttype vraagt afzonderlijke opvolging.',pagination_invalid:'De vervolgpagina kon niet veilig worden vastgesteld.',limit_reached:'De veilige grens van deze leesronde is bereikt.',rate_limited:'Meta vraagt tijdelijk te wachten.',provider_unavailable:'De verbinding is tijdelijk niet beschikbaar.',timeout:'De verbinding antwoordde niet op tijd.',cancelled:'De uitvoering werd onderbroken.',response_too_large:'Het antwoord overschrijdt de veilige omvang.',duplicate_conflict:'Een bestaand bericht-ID bevat afwijkende inhoud.',credentials_unavailable:'De afgeschermde koppeling is tijdelijk niet beschikbaar.',storage_rejected:'De opslag is niet bevestigd.'};
+type Job={id:string;state:string;pages_committed:number;attempts:number;reason:string|null;available_at:string;events?:{operation:string;reason:string|null;created_at?:string}[]};
+const operation:Record<string,string>={created:'Leesronde voorbereid',claimed:'Pagina toegewezen',committed:'Berichten en voortgang bevestigd',retry_wait:'Wachttijd ingesteld',blocked:'Toegang geblokkeerd',attention:'Opvolgpunt vastgelegd',cancelled:'Leesronde geannuleerd',restarted:'Leesronde opnieuw gestart'};
+// Read-only component. No page, action, worker or scheduler is wired in this package.
+export function InboxSyncStatus({jobs}:{jobs:Job[]}){
+ return <section aria-label="Voortgang inboxontvangst"><h2>Inboxontvangst</h2><p>Voortgang wordt alleen bevestigd nadat de berichten zijn opgeslagen. Een afgeronde leesronde is geen extern antwoord.</p>
+  {jobs.length===0?<p>Er zijn nog geen leesrondes gestart.</p>:<ul>{jobs.map(job=><li key={job.id}><h3>{labels[job.state]??'Ontvangst niet bevestigd'}</h3><p>{job.pages_committed} bevestigde pagina’s · {job.attempts} uitvoerpogingen</p>
+   {job.reason&&<p role="status">{reasons[job.reason]??'De ontvangst moet gecontroleerd worden.'}</p>}
+   {job.state==='retry_wait'&&<p>Nieuwe poging mogelijk vanaf <time>{new Date(job.available_at).toLocaleString('nl-BE',{timeZone:'Europe/Brussels'})}</time>.</p>}
+   {job.state==='processing'&&<p>Bij een onderbreking blijft de laatste bevestigde pagina bewaard. Een nieuwe uitvoerder kan de taak na de claimtermijn overnemen.</p>}
+   <ol>{job.events?.map((e,i)=><li key={i}>{operation[e.operation]??'Status gecontroleerd'}{e.reason?' · '+(reasons[e.reason]??'Afzonderlijke opvolging nodig.'):''}</li>)}</ol>
+  </li>)}</ul>}
+ </section>;
+}
