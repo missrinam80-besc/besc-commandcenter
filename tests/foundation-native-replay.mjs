@@ -75,13 +75,28 @@ for (const name of names) {
   if(name.endsWith('_creator_youtube_consent_kernel.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,198,'Existing schema preserved before five private creator consent tables');
   if(name.endsWith('_social_inbox_local.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,206,'Publication and historical schema preserved before three private social inbox tables');
   if(name.endsWith('_instagram_publication_local.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,204,'Creator and historical schema preserved before two private Instagram publication tables');
+  if(name.endsWith('_resumable_inbox_local.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,209,'All historical tables preserved before resumable inbox');
   try { sql(readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8")); }
   catch (error) { throw new Error(`Native replay failed at ${name}: ${error.stderr?.toString() ?? error.message}`); }
   if (name.startsWith("20260712190000_")) sql("insert into auth.users(id,email) values('00000000-0000-4000-8000-000000000001','fixture@example.invalid');update public.organization_members set role='admin',status='active';");
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length,209); // Existing 206 tables plus three private social inbox tables.
+assert.equal(effects.tables.length,212); // All 209 historical tables plus three private progress tables.
+const resumableTables=['rs_jobs','rs_receipts','rs_events'];
+assert.deepEqual(effects.tables.filter(t=>t.schema==='private'&&t.name.startsWith('rs_')).map(t=>t.name).sort(),resumableTables.toSorted());
+for(const name of resumableTables){
+ const table=effects.tables.find(t=>t.schema==='private'&&t.name===name);assert.ok(table?.rls);
+ for(const role of ['anon','authenticated','service_role'])assert.ok(Object.values(table.grants[role]).every(v=>v===false),`${name}: no direct ${role} grants`);
+}
+for(const [schema,name,definer,authenticated,service]of [
+ ['public','inbox_sync_owner',false,true,false],['public','inbox_sync_server',false,false,true],
+ ['private','rs_owner',true,true,false],['private','rs_server',true,false,true],['private','rs_access',true,false,false],
+ ['private','rs_initial',false,false,false],['private','rs_checkpoint_valid',false,false,false],
+]){
+ const fn=effects.functions.find(f=>f.schema===schema&&f.name===name);assert.ok(fn);assert.equal(fn.security_definer,definer);
+ assert.ok(fn.settings?.includes('search_path=""'));assert.equal(fn.anon_execute,false);assert.equal(fn.authenticated_execute,authenticated);assert.equal(fn.service_role_execute,service);
+}
 const inboxTables=['si_threads','si_messages','si_events'];
 assert.deepEqual(effects.tables.filter(t=>t.schema==='private'&&t.name.startsWith('si_')).map(t=>t.name).sort(),inboxTables.toSorted());
 for(const name of inboxTables){

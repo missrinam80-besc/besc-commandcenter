@@ -1,0 +1,27 @@
+{
+  "work_item": "package8-resumable-inbox-local",
+  "runtime_default": "off",
+  "required_history_before_separate_apply": 155,
+  "expected_history_after_separate_apply": 156,
+  "new_private_tables": 3,
+  "migration": {
+    "file": "20261108215708_resumable_inbox_local.sql",
+    "sha256_lf": "e9499f3a70f365d7c32711cbdfd4c647973d4c4e1c27c6b05f940084aed71665"
+  },
+  "runtime_factory_included": false,
+  "scheduler_added": false,
+  "cloud_apply_authorized": false,
+  "server_deploy_authorized": false,
+  "live_provider_authorized": false,
+  "activation_authorized": false,
+  "merge_authorized": false,
+  "reply_authorized": false,
+  "bounds": {
+    "page_size": 25,
+    "queue": 1000,
+    "seen_tasks": 10000,
+    "checkpoint_bytes": 1000000,
+    "lease_seconds": 120
+  },
+  "live_contract_verified": false
+}
