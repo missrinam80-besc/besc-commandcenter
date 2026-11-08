@@ -73,6 +73,7 @@ for (const name of names) {
   if(name.endsWith('_step11_agent_workflows.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,193,'RE02/RE03 baseline preserved before step 11');
   if(name.endsWith('_social_sync_notifications.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,197,'Existing schema preserved before social notification state');
   if(name.endsWith('_creator_youtube_consent_kernel.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,198,'Existing schema preserved before five private creator consent tables');
+  if(name.endsWith('_social_inbox_local.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,206,'Publication and historical schema preserved before three private social inbox tables');
   if(name.endsWith('_instagram_publication_local.sql'))assert.equal(JSON.parse(sql(readFileSync(new URL('../ops/foundation-effects-catalog.sql',import.meta.url),'utf8'))).tables.length,204,'Creator and historical schema preserved before two private Instagram publication tables');
   try { sql(readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8")); }
   catch (error) { throw new Error(`Native replay failed at ${name}: ${error.stderr?.toString() ?? error.message}`); }
@@ -80,7 +81,20 @@ for (const name of names) {
 }
 const effects = JSON.parse(sql(readFileSync(new URL("../ops/foundation-effects-catalog.sql", import.meta.url), "utf8")));
 assert.equal(effects.read_only, "on");
-assert.equal(effects.tables.length,206); // Existing 204 tables plus two private Instagram publication tables.
+assert.equal(effects.tables.length,209); // Existing 206 tables plus three private social inbox tables.
+const inboxTables=['si_threads','si_messages','si_events'];
+assert.deepEqual(effects.tables.filter(t=>t.schema==='private'&&t.name.startsWith('si_')).map(t=>t.name).sort(),inboxTables.toSorted());
+for(const name of inboxTables){
+ const table=effects.tables.find(t=>t.schema==='private'&&t.name===name);assert.ok(table?.rls,`${name} has RLS`);
+ for(const role of ['anon','authenticated','service_role'])assert.ok(Object.values(table.grants[role]).every(v=>v===false),`${name} has no direct ${role} grants`);
+}
+for(const [schema,name,definer,authenticated,service]of [
+ ['public','social_inbox_owner',false,true,false],['public','social_inbox_ingest',false,false,true],
+ ['private','si_owner',true,true,false],['private','si_ingest',true,false,true],['private','si_manager',true,false,false],
+]){
+ const fn=effects.functions.find(f=>f.schema===schema&&f.name===name);assert.ok(fn);assert.equal(fn.security_definer,definer);
+ assert.ok(fn.settings?.includes('search_path=""'));assert.equal(fn.anon_execute,false);assert.equal(fn.authenticated_execute,authenticated);assert.equal(fn.service_role_execute,service);
+}
 const instagramTables=['ig_publications','ig_publication_events'];
 assert.deepEqual(effects.tables.filter(t=>t.schema==='private'&&t.name.startsWith('ig_')).map(t=>t.name).sort(),instagramTables.toSorted());
 for(const name of instagramTables){
