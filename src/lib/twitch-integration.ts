@@ -14,6 +14,14 @@ export function twitchConfiguration() {
 
 type TwitchToken = { access_token?: string; refresh_token?: string; expires_in?: number; scope?: string[]; message?: string };
 
+class TwitchApiError extends Error {
+  readonly status: number;
+  constructor(status: number) {
+    super(status === 401 ? "Het Twitch OAuth-toegangstoken is niet meer geldig." : `Twitch API-fout (${status}).`);
+    this.status = status;
+  }
+}
+
 async function tokenRequest(parameters: URLSearchParams) {
   const response = await fetch("https://id.twitch.tv/oauth2/token", {
     method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: parameters, cache: "no-store",
@@ -38,7 +46,8 @@ export async function refreshTwitchToken(refreshToken: string) {
 export async function validateTwitchToken(accessToken: string) {
   const response = await fetch("https://id.twitch.tv/oauth2/validate", { headers: { Authorization: `OAuth ${accessToken}` }, cache: "no-store" });
   const body = await response.json() as { client_id?: string; user_id?: string; login?: string; scopes?: string[]; expires_in?: number; message?: string };
-  if (!response.ok || !body.user_id) throw new Error(body.message || "Het Twitch-token is niet meer geldig.");
+  if (!response.ok) throw new TwitchApiError(response.status);
+  if (!body.user_id) throw new Error("Twitch gaf geen geldige tokenidentiteit terug.");
   return body;
 }
 
@@ -46,7 +55,7 @@ async function helixJson<T>(path: string, accessToken: string): Promise<T> {
   const config = twitchConfiguration();
   const response = await fetch(`https://api.twitch.tv/helix/${path}`, { headers: { Authorization: `Bearer ${accessToken}`, "Client-Id": config.clientId }, cache: "no-store" });
   const body = await response.json() as T & { message?: string };
-  if (!response.ok) throw new Error(body.message || `Twitch API-fout (${response.status}).`);
+  if (!response.ok) throw new TwitchApiError(response.status);
   return body;
 }
 
@@ -55,11 +64,19 @@ export async function fetchTwitchOperationalData(accessToken: string, userId: st
     helixJson<{ data?: Array<{ id: string; login: string; display_name: string; view_count?: number }> }>(`users?id=${encodeURIComponent(userId)}`, accessToken),
     helixJson<{ data?: Array<{ broadcaster_id: string; broadcaster_login: string; broadcaster_name: string; game_name?: string; title?: string }> }>(`channels?broadcaster_id=${encodeURIComponent(userId)}`, accessToken),
     helixJson<{ data?: Array<{ id: string; viewer_count?: number; started_at?: string; type?: string }> }>(`streams?user_id=${encodeURIComponent(userId)}`, accessToken),
-    helixJson<{ data?: { segments?: Array<{ id: string; start_time: string; end_time: string; title: string }> } }>(`schedule?broadcaster_id=${encodeURIComponent(userId)}&first=25`, accessToken).catch(() => ({ data: { segments: [] } })),
+    helixJson<{ data?: { segments?: Array<{ id: string; start_time: string; end_time: string; title: string }> } }>(`schedule?broadcaster_id=${encodeURIComponent(userId)}&first=25`, accessToken).catch((error: unknown) => {
+      // Twitch documents 404 for a broadcaster without scheduled broadcasts.
+      // Authentication, quota, transport and provider failures must reach the worker.
+      if (error instanceof TwitchApiError && error.status === 404) return { data: { segments: [] } };
+      throw error;
+    }),
   ]);
   const user = users.data?.[0];
   if (!user?.id) throw new Error("Het gekoppelde Twitch-account kon niet worden gelezen.");
-  return { user, channel: channels.data?.[0] ?? null, stream: streams.data?.[0] ?? null, scheduleSegments: schedule.data?.segments ?? [] };
+  if (!Array.isArray(channels.data) || !Array.isArray(streams.data) || !Array.isArray(schedule.data?.segments)) {
+    throw new Error("Twitch gaf onvolledige kanaal-, stream- of planningsgegevens terug.");
+  }
+  return { user, channel: channels.data[0] ?? null, stream: streams.data[0] ?? null, scheduleSegments: schedule.data.segments };
 }
 
 type StoredCredentials = { access_token: string; refresh_token: string | null; expires_at: string | null };
@@ -73,7 +90,9 @@ export async function usableTwitchCredentials(accountId: string) {
   try {
     const validation = await validateTwitchToken(credentials.access_token);
     return { ...credentials, user_id: validation.user_id!, scopes: validation.scopes ?? [], expires_at: new Date(Date.now() + (validation.expires_in ?? 0) * 1000).toISOString() };
-  } catch {
+  } catch (error) {
+    // A transient validation failure is not evidence of an expired credential.
+    if (!(error instanceof TwitchApiError) || error.status !== 401) throw error;
     if (!credentials.refresh_token) throw new Error("Het Twitch-token is verlopen en er is geen refresh-token. Koppel het kanaal opnieuw.");
     const refreshed = await refreshTwitchToken(credentials.refresh_token);
     const expiresAt = new Date(Date.now() + (refreshed.expires_in ?? 14_400) * 1000).toISOString();

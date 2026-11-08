@@ -62,13 +62,27 @@ export async function syncYouTubeAccountById(accountId: string, trigger: Trigger
     const analyticsValues = new Map<string, number>();
     analytics.columnHeaders?.forEach((header, index) => {
       const raw = analytics.rows?.[0]?.[index];
-      if (typeof raw === "number" || (typeof raw === "string" && raw.trim() !== "")) analyticsValues.set(header.name, Number(raw));
+      if (typeof raw === "number" || (typeof raw === "string" && raw.trim() !== "")) {
+        const value = Number(raw);
+        if (!Number.isFinite(value) || value < 0) throw new Error("YouTube gaf een ongeldige meting terug.");
+        analyticsValues.set(header.name, value);
+      }
     });
     const statistics = channel.statistics ?? {};
+    const counts = [
+      ["viewCount", "lifetime_views", statistics.viewCount],
+      ["subscriberCount", "subscribers", statistics.subscriberCount],
+      ["videoCount", "published_videos", statistics.videoCount],
+    ].flatMap(([metric, normalized, raw]) => {
+      if (raw === undefined) return [];
+      if (typeof raw !== "string" || !/^\d+$/.test(raw) || !Number.isSafeInteger(Number(raw))) {
+        throw new Error("YouTube gaf een ongeldige kanaalteller terug.");
+      }
+      return [[metric, normalized, Number(raw), null, null]];
+    });
+    const partialError = counts.length < 3 ? "YouTube leverde niet alle kanaaltellers; ontbrekende metingen zijn niet als nul opgeslagen." : null;
     const snapshots = [
-      ["viewCount", "lifetime_views", Number(statistics.viewCount ?? 0), null, null],
-      ["subscriberCount", "subscribers", Number(statistics.subscriberCount ?? 0), null, null],
-      ["videoCount", "published_videos", Number(statistics.videoCount ?? 0), null, null],
+      ...counts,
       ...Array.from(analyticsValues.entries()).map(([metric, value]) => {
         const normalizedMetric = metric.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
         return [metric, `period_${normalizedMetric}`, value, start.toISOString(), end.toISOString()];
@@ -86,15 +100,16 @@ export async function syncYouTubeAccountById(accountId: string, trigger: Trigger
       source_url: `https://www.youtube.com/channel/${channel.id}`,
       source_metadata: { platform: "youtube", analytics_period: periodStart ? "last_28_complete_days" : "lifetime", fetched_via: "official_api" },
     }));
+    if (!snapshots.length) throw new Error("YouTube leverde geen bruikbare metingen.");
     const { error: snapshotError } = await admin.from("social_metric_snapshots").insert(snapshots);
     if (snapshotError) throw snapshotError;
     const finishedAt = new Date().toISOString();
     const [runUpdate, accountUpdate] = await Promise.all([
-      admin.from("social_sync_runs").update({ status: "succeeded", records_read: snapshots.length, records_written: snapshots.length, finished_at: finishedAt }).eq("id", run.id),
-      admin.from("social_accounts").update({ account_name: channel.snippet?.title || "BESC YouTube", external_account_id: channel.id, last_sync_at: finishedAt, last_error: null, token_expires_at: credentials.expires_at, updated_at: finishedAt }).eq("id", account.id),
+      admin.from("social_sync_runs").update({ status: partialError ? "partial" : "succeeded", error_message: partialError, records_read: snapshots.length, records_written: snapshots.length, finished_at: finishedAt }).eq("id", run.id),
+      admin.from("social_accounts").update({ account_name: channel.snippet?.title || "BESC YouTube", external_account_id: channel.id, last_sync_at: finishedAt, last_error: partialError, token_expires_at: credentials.expires_at, updated_at: finishedAt }).eq("id", account.id),
     ]);
     if (runUpdate.error || accountUpdate.error) throw runUpdate.error ?? accountUpdate.error;
-    return { runId: run.id, status: "succeeded" as const, recordsWritten: snapshots.length };
+    return { runId: run.id, status: partialError ? "partial" as const : "succeeded" as const, recordsWritten: snapshots.length };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Onbekende YouTube-fout";
     const finishedAt = new Date().toISOString();
