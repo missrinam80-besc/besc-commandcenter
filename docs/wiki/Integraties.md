@@ -25,6 +25,8 @@ De OAuth-routes blijven onder `/app/integraties/social/{youtube,meta,twitch,thre
 
 ### Planning en logs
 
+Zie [Dagelijkse werking van organisatiesocials](Organisatiesocials-dagelijkse-werking.md) voor de gecontroleerde accounts, de betekenis van quota en actualiteit, foutopvolging en de grenzen van het live bewijs.
+
 Op DEV controleert `besc-social-sync.timer` iedere 15 minuten welke ingeschakelde accounts aan de beurt zijn. Het accountinterval bepaalt wanneer een account daadwerkelijk wordt gesynchroniseerd. `ops/run-social-sync.sh` roept de beveiligde route aan met `CRON_SECRET`; `--check-auth` controleert weigering zonder token en `--dry-run` bekijkt verschuldigde accounts zonder een sync uit te voeren. Handmatige runs blijven mogelijk als automatische synchronisatie uitstaat.
 
 **Logs** opent `/app/integraties/logs`: de laatste 50 social synchronisatieruns, met account, tijd in Europe/Brussels, aanleiding, status, verwerkte aantallen en fouten. Dit zijn synchronisatielogs, geen volledig server- of Gmail-logboek. **Socialrapportage** opent de verzamelde metingen op `/app/rapportage/social`. Bij een fout: controleer eerst de run en accountstatus, daarna de platformrechten/configuratie en koppel zo nodig opnieuw.
